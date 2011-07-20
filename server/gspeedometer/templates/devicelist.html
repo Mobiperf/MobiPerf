@@ -1,0 +1,26 @@
+{# Template for devices listing. #}
+
+<div class="device-list-section">
+  <h2>Devices</h2>
+  <table class="device-list-table section-box">
+    <tr>
+      <th>ID</th>
+      <th>Last update (UTC)</th>
+      <th>Update count</th>
+      <th>Owner</th>
+      <th>App version</th>
+      <th>System</th>
+    </tr>
+    {% for dev in devices %}
+      <tr>
+        <td><a href="/device/view?device_id={{dev.key.name}}">{{dev.key.name}}</a></td>
+        <td>{{dev.last_update.timestamp}}</td>
+        <td>{{dev.num_updates}}</td>
+        <td>{{dev.user.email}}</td>
+        <td>{{dev.last_update.app_version}}</td>
+        <td>{{dev.manufacturer}}-{{dev.model}}-{{dev.os}}-{{dev.last_update.os_version}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+

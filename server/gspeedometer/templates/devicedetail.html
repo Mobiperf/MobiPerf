@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+{% if dev %}
+<br>
+<h2>Device details</h2>
+<table class="section-box">
+  <tr>
+    <th style="font-size:1.3em; padding: 5px 10px; background:#E7F3F1;">Device Info</th>
+  </tr>
+  <td style="vertical-align:top; padding: 5px 10px; background:#E7F3F1;">
+    <table class="device-detail-table">
+      <tr>
+        <td class="device-detail-prop-name">Device ID</td>
+        <td>{{device_id}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Last update</td>
+        <td>{{dev.deviceproperties_set.get.timestamp}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Owner</td>
+        <td>{{dev.user.email}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Manufacturer</td>
+        <td>{{dev.manufacturer}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Model</td>
+        <td>{{dev.model}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">OS</td>
+        <td>{{dev.os}}</td>
+      </tr>
+      </tr>
+    </table>
+  </td>
+</table>
+<br><br>
+{% endif %}
+
+{% if schedule %}
+{% include "schedulelist.html" %}
+{% endif %}
+
+{% if properties %}
+<div class="device-properties-list-section">
+  <h2>Device properties history</h2>
+  <table class="device-properties-list-table section-box">
+    <tr>
+      <th>Timestamp (UTC)</th>
+      <th>App version</th>
+      <th>IP address</th>
+      <th>OS version</th>
+      <th>Location</th>
+      <th>Location type</th>
+      <th>Network type</th>
+      <th>Carrier</th>
+    </tr>
+    {% for prop in properties %}
+      <tr>
+        <td>{{prop.timestamp}}</td>
+        <td>{{prop.app_version}}</td>
+        <td>{{prop.ip_address}}</td>
+        <td>{{prop.os_version}}</td>
+        <td>
+          {% if prop.location %}
+          <a href="http://maps.google.com/maps?q=loc:{{prop.location.lat}},{{prop.location.long}}" target="_blank">{{prop.location.lat}},{{prop.location.long}}</a>
+          {% else %}
+          N/A
+          {% endif %}
+        <td>{{prop.location_type}}</td>
+        <td>{{prop.network_type}}</td>
+        <td>{{prop.carrier}}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if measurements %}
+{% include "measurementlist.html" %}
+{% endif %}
+
+{% endblock %}

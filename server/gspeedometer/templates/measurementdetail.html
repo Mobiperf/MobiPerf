@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block body %}
+  <br>
+  <h2>Measurement details</h2>
+  <table class="section-box">
+    <tr>
+      <th style="font-size:1.3em; padding: 5px 10px; background:#EFF9FC;">Measurement Info</th>
+      <th style="font-size:1.3em; padding: 5px 10px; background:#E7F3F1;">Device Info</th>
+    </tr>
+    <tr><td style="vertical-align:top; padding: 5px 10px; background:#EFF9FC;">
+      <table class="measurement-detail-table">
+        <tr>
+          <td class="measurement-detail-prop-name">ID</td><td>{{measurement.key.id}}</td>
+        </tr><tr>
+        </tr><tr>
+        <td class="measurement-detail-prop-name">Type</td><td>{{measurement.type}}</td>
+        </tr><tr>
+          <td class="measurement-detail-prop-name">Started (UTC)</td><td>{{measurement.start_time}}</td>
+        </tr><tr>
+          <td class="measurement-detail-prop-name">Finished (UTC)</td><td>{{measurement.end_time}}</td>
+        </tr><tr>
+          <td class="measurement-detail-prop-name">Uploaded (UTC)</td><td>{{measurement.upload_time}}</td>
+        </tr>
+      </table>
+    </td><td style="vertical-align:top; padding: 5px 10px; background:#E7F3F1;">
+      <table class="measurement-detail-table">
+        <tr>
+          <td class="measurement-detail-prop-name">Device ID</td>
+          <td><a href="/devicedetail/view?device_id={{measurement.deviceid}}">{{measurement.deviceid}}</a></td>
+        </tr>
+      </table>
+    </td>
+  </table>
+  <br><br>
+
+{% endblock %}

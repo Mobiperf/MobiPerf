@@ -1,0 +1,33 @@
+{# Schedule management template. #}
+
+{% extends "base.html" %}
+
+{% block extra_meta_link %}
+  <meta http-equiv="refresh" content="60">
+{% endblock %}
+
+{% block body %}
+{% if add_form %}
+<form method="post" action="/schedule/add">
+<table>
+<tr>
+<td align=left width=40%>
+<table> {{ add_form.as_table }} </table>
+</td>
+<td align=left>
+<div class="make-smaller">
+<ul>
+<li> <b>Type</b> is the type of measurement to perform
+<li> <b>Target</b> is the target of the measurement (e.g., IP address or URL)
+</div>
+</td>
+</tr>
+</table>
+<input type="submit" /></form>
+{% endif %}
+
+{% if schedule %}
+{% include "schedulelist.html" %}
+{% endif %}
+
+{% endblock %}

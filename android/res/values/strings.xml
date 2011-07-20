@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="StatusText">Status text</string>
+    <string name="app_name">Speedometer</string>
+    <string name="accountlistactivity_name">Select Account</string>
+    <string name="LocationText">Location text</string>
+    <string name="SpeedText">Speed text</string>
+    <string name="SpeedometerServerURL">http://samoyed.sea.corp.google.com:8080</string>
+    <!-- <string name="SpeedometerServerURL">http://speedometer.googleplex.com</string> -->
+    <string name="measurementTypePrompt">Measurement Type</string>
+    <string-array name="measurementTypes">
+      <item>Dummy</item>
+      <item>Simple Speed Test</item>
+      <item>DNS Lookup</item>
+      <item>NDT</item>
+    </string-array>
+</resources>

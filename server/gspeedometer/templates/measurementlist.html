@@ -1,0 +1,50 @@
+{# Template for measurement listing. #}
+
+<div class="measurement-list-section">
+<h2>Measurements &nbsp;&nbsp;&nbsp;<button onclick="location.href='#'">Refresh
+</button></button></h2>
+
+<table class="measurement-list-table section-box">
+  <tr>
+    <th>ID</th>
+    <th>Task ID</th>
+    <th>Timestamp (UTC)</th>
+    <th>Device</th>
+    <th>Type</th>
+    <th>Params</th>
+    <th>Values</th>
+  </tr>
+  {% for m in measurements %}
+    <tr>
+      <td><a
+      href="/measurement/view?id={{m.key.id}}" target="_blank">{{m.key.id}}</a></td>
+      <td>{{m.task.key.id}}</td>
+      <td>{{m.timestamp}}</td>
+      <td><a href="/device/view?device_id={{m.device_properties.device_info.id}}"
+          target="_blank">{{m.device_properties.device_info.id}}</a></td>
+      <td>{{m.type}}</td>
+      <td>
+        <table class="task-param-table">
+          {% for key,value in m.Params.items %}
+          <tr>
+            <td class="task-param-name">{{key}}:</td>
+            <td>{{value}}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+      <td>
+        <table class="task-param-table">
+          {% for key,value in m.Values.items %}
+          <tr>
+            <td class="task-param-name">{{key}}:</td>
+            <td>{{value}}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+
+</div>

@@ -1,0 +1,168 @@
+
+body {
+  font-size: 80%;
+  font-family: Arial Unicode MS, Arial, sans-serif;
+  background:#ffffff;
+  padding: 0;
+  margin: 3px 8px;
+}
+
+#header {
+/*  height: 80px; */
+  overflow: hidden;
+  padding: 5px 15px;
+}
+
+.header .logo{vertical-align:top;border:0;margin:1em;}
+.header .productLink{text-decoration:none;}
+
+#main-content {
+  padding: 10px 15px 30px;
+  max-width: 1600px;
+}
+
+#project-title {
+  display: inline;
+  font:normal 60px Arial;
+  color:#000000;
+  text-shadow: 0 1px 0 #ccc,
+             0 2px 0 #c9c9c9,
+             0 3px 0 #bbb,
+             0 4px 0 #b9b9b9,
+             0 5px 0 #aaa,
+             0 6px 1px rgba(0,0,0,.1),
+             0 0 5px rgba(0,0,0,.1),
+             0 1px 3px rgba(0,0,0,.3),
+             0 3px 5px rgba(0,0,0,.2),
+             0 5px 10px rgba(0,0,0,.25),
+             0 10px 10px rgba(0,0,0,.2);
+}
+
+#applicationContainer{
+  margin:0;
+  max-width:1160px;
+  padding:0;
+  position:relative;
+}
+
+#topNav{
+  background-color:#E5ECF9;
+  border-top:1px solid #3366CC;
+  font-size:1em;
+  margin:0;
+  padding:0.1em 0;
+  white-space:nowrap;
+  width:100%;
+  word-wrap:normal;
+}
+#topNav h1{
+  padding:0 0 0 0.5em;
+  background-color:transparent;
+  border:0 none;
+  float:left;
+  font-size:1.5em;
+  font-weight:bold;
+  line-height:1.3em;
+  margin:0;
+}
+.rtl #topNav h1 {
+  padding:0 0.5em 0 0;
+  float:right;
+}
+#topNav ul {
+  line-height:1em;
+  list-style:none outside none;
+  margin:0;
+  padding:0.47em 0;
+  text-align:right;
+}
+.rtl #topNav ul {
+  text-align:left;
+}
+#topNav ul li {
+  display:inline;
+  float:none;
+  margin:0;
+  padding:0;
+}
+#topNav li a {
+  padding:0 0.8em;
+}
+
+.error {
+  color: red;
+  font-size: 1.5em;
+}
+
+.message {
+  color: #4040ff;
+}
+
+h2  {
+  font-size: 1.2em;
+  color: #036;
+  padding: 0 0 10px;
+}
+
+.device-list-section,
+.device-properties-list-section,
+.schedule-list-section,
+.measurement-list-section {
+  margin-top: 3em;
+}
+
+.device-list-table th,
+.device-properties-list-table th,
+.schedule-list-table th,
+.measurement-list-table th {
+  color: #777;
+}
+
+.device-list-table td,
+.device-list-table th,
+.device-properties-list-table td,
+.device-properties-list-table th,
+.schedule-list-table td,
+.schedule-list-table th,
+.measurement-list-table td,
+.measurement-list-table th {
+  padding: 5px 10px;
+  border: 1px solid #aaa;
+}
+
+.task-param-table td,
+.task-param-table th {
+  padding: 3px 3px;
+  border: 0px;
+}
+
+.measurement-list-url {
+  max-width: 300px;
+  overflow: hidden;
+}
+
+.measurement-detail-table {
+  display: inline-block;
+}
+
+.task-param-name,
+.measurement-detail-prop-name {
+  color: #555;
+  padding: 3px 10px 3px 0;
+  text-align: right;
+}
+
+.device-detail-table {
+  display: inline-block;
+}
+
+.device-detail-prop-name {
+  color: #555;
+  padding: 3px 10px 3px 0;
+  text-align: right;
+}
+
+.section-box {
+  border: 1px solid gray;
+  box-shadow: 2px 2px 1px #aaa;
+}

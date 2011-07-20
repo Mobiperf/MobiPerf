@@ -1,0 +1,61 @@
+{% spaceless %}
+{# Base template for the velodrome server. #}
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Google Speedometer - Measuring your mobile performance</title>
+<link rel="stylesheet" type="text/css" href="//www.google.com/css/gcs.css"/>
+<link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
+
+{% block extra_meta_link %}{% endblock %}
+
+</head>
+<body>
+  <div id="header">
+    <a class="productLink" href="/">
+      <img class="logo" src="/static/logo.png" height="80">
+    </a>
+  </div>
+
+  <div id="applicationContainer">
+    <div id="topNav">
+      <h1>Google Speedometer</h1>
+        <ul class="topNavTabs">
+        <li><a title="Speedometer home page"
+            href="/">Home</a></li>
+          <li><a title="Schedule management" href="/schedule/add">Manage schedule</a></li>
+          <li><a title="Speedometer documentation"
+            class="selected" href="http://goto.google.com/speedometer">Docs</a>
+          </li>
+          <li><a
+            title="Mobile speed team"
+            href="http://goto.google.com/mobile-speed">mobile-speed team</a></li>
+          <li> &nbsp;&nbsp;Hi, {{ user }} &nbsp;&nbsp;
+          <a href="{{logout_link}}">logout</a>
+        </ul>
+    </div>
+    <blockquote>
+    <br><b>Speedometer</b> is a mobile application and a Web-based
+    service for measuring mobile networking performance in the wild.
+    See <a href="http://goto.google.com/speedometer">go/speedometer</a>.
+   </blockquote>
+
+  <div id="main-content">
+    {% if error %}
+      <div class="error">
+        An error occurred: {{error}}
+      </div>
+    {% endif %}
+    {% if message %}
+      <div class="message">
+      {{message}}
+      </div>
+    {% endif %}
+
+    {% block body %}
+    {% endblock %}
+  </div>
+</body>
+</html>
+{% endspaceless %}
