@@ -31,6 +31,7 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     this.scheduler = MeasurementScheduler.getInstance(activity);
   }
     
+  /** Test what happens if a null task is added */
   public void testNullTaskAddition() {
     scheduler.setIsCheckinEnabled(false);
     scheduler.pause();
@@ -46,7 +47,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     
     HashMap<String, String> params = new HashMap<String, String>();
     params.put("url", "www.google.com");
-    //params.put("url", "inst.eecs.berkeley.edu/~cs150/Documents/CC2420.pdf");
     params.put("method", "GET");
     HttpDesc desc = new HttpDesc(null, null, null, 0, 0, 0, params);
     HttpTask task = new HttpTask(desc, this.activity);
@@ -65,7 +65,7 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     assertTrue(scheduler.getNextTaskToBeScheduled() == task);
   }
   
-  /** Test the ordering of tasks of the same priority*/
+  /** Test the ordering of tasks of the same priority */
   public void testPriorityQueueOnStartTime() {
     scheduler.removeAllUnscheduledTasks();
     scheduler.setIsCheckinEnabled(false);
@@ -75,7 +75,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     
     HashMap<String, String> params = new HashMap<String, String>();
     params.put("url", "www.google.com");
-    //params.put("url", "inst.eecs.berkeley.edu/~cs150/Documents/CC2420.pdf");
     params.put("method", "GET");
     long currentTime = System.currentTimeMillis(); 
     
@@ -97,7 +96,7 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     assertTrue(scheduler.getNextTaskToBeScheduled() == firstTask);
   }
   
-  /** Test the ordering of tasks of the same priority*/
+  /** Test the ordering of tasks of the same priority */
   public void testPriorityQueueOnPriority() {
     scheduler.removeAllUnscheduledTasks();
     scheduler.setIsCheckinEnabled(false);
@@ -107,7 +106,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     
     HashMap<String, String> params = new HashMap<String, String>();
     params.put("url", "www.google.com");
-    //params.put("url", "inst.eecs.berkeley.edu/~cs150/Documents/CC2420.pdf");
     params.put("method", "GET");
     long priority = 0;
     long currentTime = System.currentTimeMillis();

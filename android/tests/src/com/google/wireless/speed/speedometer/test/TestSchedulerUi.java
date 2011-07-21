@@ -36,7 +36,10 @@ public class TestSchedulerUi extends TestMeasurementTaskBase {
     
     // Stress test: checkin every two seconds, tons of tasks
     scheduler.setCheckinInterval(2);
-    // Monitor the the output of the scheduler from the system console on the phone
+    /* Monitor the the output of the scheduler from the system console on the phone
+     * TODO(Wenjie): need to define under what conditions is a scheduler behaving correctly
+     * rather than relying on user input 
+     */
     try {
       Thread.sleep(1000 * 60);
     } catch (InterruptedException e) {

@@ -36,7 +36,7 @@ public class MeasurementScheduler implements Runnable {
 
   // Default checkin interval is 30 minutes
   private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30 * 60;
-  private static final long PAUSE_BETWEEN_CHECKIN_CHANGE = 2L;
+  private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   private static MeasurementScheduler singleInstance = null;
   
   private ScheduledThreadPoolExecutor executor;
@@ -104,9 +104,9 @@ public class MeasurementScheduler implements Runnable {
     this.checkinIntervalSec = interval;
     if (this.checkinFuture != null) {
       this.checkinFuture.cancel(true);
-      // the new checkin schedule will start in 2 second
+      // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
       this.checkinFuture = checkinExecutor.scheduleAtFixedRate(this.checkinTask, 
-          PAUSE_BETWEEN_CHECKIN_CHANGE, this.checkinIntervalSec, TimeUnit.SECONDS);
+          PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
       Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
     }
   }
@@ -116,23 +116,26 @@ public class MeasurementScheduler implements Runnable {
     return this.checkinIntervalSec;
   }
   
-  /** Prevents new tasks to be scheduled. All scheduled tasks will still run */
+  /** Prevents new tasks from being scheduled. All scheduled tasks will still run 
+   * TODO(Wenjie): implement a call back in the MeasurementTask to indicate a task
+   * is bening run. Remove all scheduled but not yet started tasks from the executor.
+   * */
   public synchronized void pause() {
     this.pauseRequested = true;    
   }
   
-  /** Enables new tasks to be scheduled*/
+  /** Enables new tasks to be scheduled */
   public synchronized void resume() {
     this.pauseRequested = false;
     this.notify(); 
   }
   
-  /** Return whether new tasks can be scheduled*/
+  /** Return whether new tasks can be scheduled */
   public synchronized boolean isPauseRequested() {
     return this.pauseRequested;
   }
   
-  /** Remove all tasks that have not been scheduled*/
+  /** Remove all tasks that have not been scheduled */
   public synchronized void removeAllUnscheduledTasks() {
     this.taskQueue.clear();
   }
@@ -169,8 +172,7 @@ public class MeasurementScheduler implements Runnable {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
-    boolean result;
-    // Automatically notifies the scheduler waiting on taskQueue.take()
+      //Automatically notifies the scheduler waiting on taskQueue.take()
       return this.taskQueue.add(task);
     } catch (NullPointerException e) {
       Log.e(SpeedometerApp.TAG, "The task to be added is null");
