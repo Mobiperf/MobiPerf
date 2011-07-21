@@ -32,5 +32,9 @@
       android:label="@string/app_name"
       android:theme="@android:style/Theme.NoTitleBar">
     </activity>
+    <service 
+      android:name=".MeasurementScheduler" 
+      android:exported="false">
+    </service>
   </application>
 </manifest>

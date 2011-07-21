@@ -5,7 +5,8 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
+
+import android.content.Context;
 
 import java.io.InvalidClassException;
 import java.net.InetAddress;
@@ -58,7 +59,7 @@ public class DnsLookupTask extends MeasurementTask {
     
   }
   
-  public DnsLookupTask(MeasurementDesc desc, SpeedometerApp parent) {
+  public DnsLookupTask(MeasurementDesc desc, Context parent) {
     super(new DnsLookupDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);;
   }

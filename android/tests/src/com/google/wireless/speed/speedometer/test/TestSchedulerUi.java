@@ -1,7 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.test;
 
-import com.google.wireless.speed.speedometer.MeasurementScheduler;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
 import android.util.Log;
@@ -15,7 +14,6 @@ import android.util.Log;
  */
 public class TestSchedulerUi extends TestMeasurementTaskBase {
   public void testSchedulerBasedOnUi() {
-    MeasurementScheduler scheduler = MeasurementScheduler.getInstance(activity);
     scheduler.resume();
     // First test a reasonable checkin interval
     scheduler.setCheckinInterval(20);

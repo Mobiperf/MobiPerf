@@ -1,7 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.test;
 
-import com.google.wireless.speed.speedometer.MeasurementScheduler;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
@@ -23,12 +22,10 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
   
   // this constant reflects what's been set on the server
   private static final int TASKS_PER_CHECKIN = 2;
-  private MeasurementScheduler scheduler;
-  
+
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    this.scheduler = MeasurementScheduler.getInstance(activity);
   }
     
   public void testNullTaskAddition() {

@@ -4,7 +4,11 @@ package com.google.wireless.speed.speedometer;
 
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 
@@ -32,15 +36,13 @@ import java.util.concurrent.TimeUnit;
  * 
  * @author wenjiezeng@google.com (Steve Zeng)
  */
-public class MeasurementScheduler implements Runnable {
+public class MeasurementScheduler extends Service {
 
   // Default checkin interval is 30 minutes
   private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE = 2L;
-  private static MeasurementScheduler singleInstance = null;
   
   private ScheduledThreadPoolExecutor executor;
-  private SpeedometerApp parent;
   private Handler receiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
@@ -58,12 +60,28 @@ public class MeasurementScheduler implements Runnable {
       ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>> pendingTasks;
   private ScheduledExecutorService checkinExecutor;
   private ScheduledExecutorService cancelExecutor;
-  
+  private SchedulerThread schedulerThread = null;
+  // Binder given to clients
+  private final IBinder binder = new SchedulerBinder();
+    
+  public class SchedulerBinder extends Binder {
+    public MeasurementScheduler getService() {
+      return MeasurementScheduler.this;
+    }
+  }
 
-  // Singleton to enforce a single scheduler in the system
-  private MeasurementScheduler(SpeedometerApp parent) {
-    this.parent = parent;
-    this.checkin = new Checkin(parent);
+  /* (non-Javadoc)
+   * @see android.app.Service#onBind(android.content.Intent)
+   */
+  @Override
+  public IBinder onBind(Intent intent) {
+    return this.binder;
+  }
+  
+  // Service objects are by nature singletons enforced by Android
+  @Override
+  public void onCreate() {
+    this.checkin = new Checkin(this);
     this.checkinIntervalSec = DEDAULT_CHECKIN_INTERVAL_SEC;
     this.checkinFuture = null;
     this.checkinTask = new CheckinTask();
@@ -71,23 +89,25 @@ public class MeasurementScheduler implements Runnable {
     this.receiver = new UpdateHandler();
     this.executor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
     this.executor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
-    this.taskQueue = new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE, 
-        new TaskComparator());
-    this.pendingTasks = 
+    this.taskQueue =
+        new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE, 
+            new TaskComparator());
+    this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
   }
   
-  /** Returns the singleton instance of the MeasurementScheduler class */
-  public static synchronized MeasurementScheduler getInstance(SpeedometerApp parent) {
-    if (singleInstance == null) {
-      singleInstance = new MeasurementScheduler(parent);
-      return singleInstance;
-    } else {
-      return singleInstance;
+  @Override 
+  public int onStartCommand(Intent intent, int flags, int startId)  {
+    // Start up the thread running the service. Using one single thread for all requests
+    if (this.schedulerThread == null) {
+      Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
+      this.schedulerThread = new SchedulerThread();
+      new Thread(this.schedulerThread).start();
     }
+    return START_STICKY;
   }
-    
+      
   /** Check-in is by-default disabled. SpeedometerApp will enable it. 
    *  Users can request to stop check-in altogether */
   public synchronized void setIsCheckinEnabled(boolean val) {
@@ -196,7 +216,7 @@ public class MeasurementScheduler implements Runnable {
   
   private void sendStringMsg(String str) {
     UpdateIntent intent = new UpdateIntent(str);
-    parent.sendBroadcast(intent);    
+    this.sendBroadcast(intent);    
   }
   
   private synchronized void cleanUp() {
@@ -320,76 +340,77 @@ public class MeasurementScheduler implements Runnable {
     return this.stopRequested;
   }
   
-  /* Gets the next task whenever the last one finishes */
-  @Override
-  @SuppressWarnings("unchecked")
-  public void run() {
-    try {
-      synchronized (this) {
-        this.checkinFuture =
-            checkinExecutor.scheduleAtFixedRate(this.checkinTask, 0L, this.checkinIntervalSec,
-                TimeUnit.SECONDS);
-      }
-      
-      /* Loop invariant: pendingTasks always contains the scheduled tasks
-       * and taskQueue contains new tasks that have not been scheduled
-       */
-      while (!this.isStopRequested()) {
-        Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
-        synchronized (this) {
-          while (this.isPauseRequested()) {
-            try {
-              Log.i(SpeedometerApp.TAG, "User requested pause");      
-              this.wait();
-            } catch (InterruptedException e) {
-              Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
-            }
-          }
+  private class SchedulerThread implements Runnable {
+    /* Gets the next task whenever the last one finishes */
+    @SuppressWarnings("unchecked")
+    public void run() {
+      try {
+        synchronized (MeasurementScheduler.this) {
+          checkinFuture =
+              checkinExecutor.scheduleAtFixedRate(checkinTask, 0L, checkinIntervalSec,
+                  TimeUnit.SECONDS);
         }
-        /* Schedule the new tasks and move them from taskQueu to pendingTasks
-         * 
-         * TODO(Wenjie): We may also need a separate rule (taskStack) for user
-         * generated tasks because users may prefer to run the latest scheduled
-         * task first, which is LIFO and is different from the FIFO semantics in
-         * the priority queue.
+        
+        /* Loop invariant: pendingTasks always contains the scheduled tasks
+         * and taskQueue contains new tasks that have not been scheduled
          */
-        MeasurementTask task;
-        try {
-          while (!this.isPauseRequested() && (task = this.taskQueue.take()) != null) {
-            Log.i(SpeedometerApp.TAG, "New task arrived. There are " + this.taskQueue.size() + 
-            " tasks in taskQueue");
-            ScheduledFuture<MeasurementResult> future = null;
-            if (!task.isPassedDeadline()) {
-              future = executor.schedule(task, task.timeFromExecution(), TimeUnit.SECONDS);
-              if (task.measurementDesc.endTime != null) {
-                long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
-                CancelTask cancelTask = new CancelTask(future);
-                cancelExecutor.schedule(cancelTask, delay, TimeUnit.MILLISECONDS);
+        while (!isStopRequested()) {
+          Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
+          synchronized (MeasurementScheduler.this) {
+            while (isPauseRequested()) {
+              try {
+                Log.i(SpeedometerApp.TAG, "User requested pause");      
+                MeasurementScheduler.this.wait();
+              } catch (InterruptedException e) {
+                Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
               }
-  
-              Log.i(SpeedometerApp.TAG, "task " + task + " will start in " + 
-                  task.timeFromExecution() / 1000 + " seconds");
             }
-                                   
-            synchronized (this.pendingTasks) {
-              assert(this.pendingTasks.keySet().contains(task) == false);
-              this.pendingTasks.put(task, future);
-            }
-            Log.i(SpeedometerApp.TAG, "There are " + this.pendingTasks.size() + 
-                " in pendingTasks");
           }
-        } catch (InterruptedException e) {
-          Log.e(SpeedometerApp.TAG, "interrupted while waiting for new tasks");
+          /* Schedule the new tasks and move them from taskQueu to pendingTasks
+           * 
+           * TODO(Wenjie): We may also need a separate rule (taskStack) for user
+           * generated tasks because users may prefer to run the latest scheduled
+           * task first, which is LIFO and is different from the FIFO semantics in
+           * the priority queue.
+           */
+          MeasurementTask task;
+          try {
+            while (!isPauseRequested() && (task = taskQueue.take()) != null) {
+              Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size() + 
+              " tasks in taskQueue");
+              ScheduledFuture<MeasurementResult> future = null;
+              if (!task.isPassedDeadline()) {
+                future = executor.schedule(task, task.timeFromExecution(), TimeUnit.SECONDS);
+                if (task.measurementDesc.endTime != null) {
+                  long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
+                  CancelTask cancelTask = new CancelTask(future);
+                  cancelExecutor.schedule(cancelTask, delay, TimeUnit.MILLISECONDS);
+                }
+    
+                Log.i(SpeedometerApp.TAG, "task " + task + " will start in " + 
+                    task.timeFromExecution() / 1000 + " seconds");
+              }
+                                     
+              synchronized (pendingTasks) {
+                assert(pendingTasks.keySet().contains(task) == false);
+                pendingTasks.put(task, future);
+              }
+              Log.i(SpeedometerApp.TAG, "There are " + pendingTasks.size() + 
+                  " in pendingTasks");
+            }
+          } catch (InterruptedException e) {
+            Log.e(SpeedometerApp.TAG, "interrupted while waiting for new tasks");
+          }
         }
+      } finally {
+        /* either stop requested or unchecked exceptions occur. perform cleanup
+         * 
+         * TODO(Wenjie): If this is not a user requested stop, we should thrown
+         * a exception to notify Speedometer so that it can restart the scheduler
+         * thread.
+         */
+        cleanUp();
       }
-    } finally {
-      /* either stop requested or unchecked exceptions occur. perform cleanup
-       * 
-       * TODO(Wenjie): If this is not a user requested stop, we should thrown
-       * a exception to notify Speedometer so that it can restart the scheduler
-       * thread.
-       */
-      cleanUp();
     }
   }
   
@@ -397,5 +418,5 @@ public class MeasurementScheduler implements Runnable {
     return new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
       RuntimeUtil.getDeviceProperty(), task.getType(), Calendar.getInstance().getTime(), 
       false, task.measurementDesc);
-  }
+  } 
 }

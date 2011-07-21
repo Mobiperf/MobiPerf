@@ -3,11 +3,11 @@ package com.google.wireless.speed.speedometer;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
-// Copyright 2011 Google Inc. All Rights Reserved.
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,11 +30,11 @@ import java.io.IOException;
  *
  */
 public class AccountSelector {
-  private Activity parentActivity;
+  private Context parentActivity;
   private Checkin checkin;
   private Cookie cookie = null;
   
-  public AccountSelector(Activity parentActivity, Checkin checkin) {
+  public AccountSelector(Context parentActivity, Checkin checkin) {
     this.parentActivity = parentActivity;
     this.checkin = checkin;
   }
