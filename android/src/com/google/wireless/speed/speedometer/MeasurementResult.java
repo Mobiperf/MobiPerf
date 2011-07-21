@@ -1,14 +1,67 @@
+// Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
-import org.json.JSONObject;
+import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+
+import java.util.Date;
+import java.util.HashMap;
 
 /**
- * Interface representing result of a measurement.
- * 
- * @author mdw@google.com (Matt Welsh)
+ * POJO that represents the result of a measurement
+ * @author wenjiezeng@google.com (Wenjie Zeng)
+ * @see MeasurementDesc
  */
-public interface MeasurementResult {
-  public String type();
-  public String summary();
-  public JSONObject result();
+public class MeasurementResult {   
+
+  private String deviceId;
+  private DeviceProperty properties;
+  private Date timeStamp;
+  private boolean success;
+  private String taskKey;
+  private String type;
+  private MeasurementDesc parameters;
+  private HashMap<String, String> values;
+  
+  /**
+   * Use {@link MeasurementResult#addResult(ResultType, Object)} to add results
+   * @param deviceProperty
+   * @param type
+   * @param timeStamp
+   * @param success
+   * @param measurementDesc
+   */
+  public MeasurementResult(String id, DeviceProperty deviceProperty, String type, 
+                           Date timeStamp, boolean success, MeasurementDesc measurementDesc) {
+    super();
+    this.deviceId = id;
+    this.type = type;
+    this.properties = deviceProperty;
+    this.timeStamp = timeStamp;
+    this.success = success;
+    this.parameters = measurementDesc;
+    this.parameters.parameters = null;
+    this.values = new HashMap<String, String>();
+  }
+ 
+  /* Returns the type of this result */ 
+  public String getType() {
+    return parameters.getType();
+  }
+  
+  /* Add the measurement results of type String into the class */
+  public void addResult(String resultType, Object resultVal) {
+    this.values.put(resultType, MeasurementJsonConvertor.toJsonString(resultVal));
+  }
+  
+  /* Returns a string representation of the result */
+  @Override
+  public String toString() {
+    String result = "";
+    for (String key : values.keySet()) {
+      String val = values.get(key).toString();
+      return key + " is " + val + "\n";      
+    }
+    return result;
+  }  
 }
+ 

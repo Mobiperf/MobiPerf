@@ -1,12 +1,13 @@
+// Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-import java.util.concurrent.ExecutionException;
+import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
@@ -23,42 +24,37 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.content.Context;
-import android.content.res.Resources;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.telephony.TelephonyManager;
-import android.util.Log;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 /**
- * Handles checkins with the Speedometer server.
+ * Handles checkins with the SpeedometerApp server.
  * 
  * @author mdw@google.com (Matt Welsh)
+ * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Checkin {
-  private Speedometer speedometer;
+  private SpeedometerApp speedometer;
   private String serverUrl;
   private Date lastCheckin;
   private volatile Cookie authCookie = null;
   private AsyncTask<String, Void, Cookie> getCookieTask = null;
-  private TaskScheduler scheduler;
   
-  public Checkin(Speedometer speedometer, String serverUrl) {
+  public Checkin(SpeedometerApp speedometer, String serverUrl) {
     this.speedometer = speedometer;
     this.serverUrl = serverUrl;
-    this.scheduler = new TaskScheduler(this);
-    speedometer.setStatus("Server: " + this.serverUrl);
+    sendStringMsg("Server: " + this.serverUrl);
   }
   
-  public Checkin(Speedometer speedometer) {
+  public Checkin(SpeedometerApp speedometer) {
     this.speedometer = speedometer;
     this.serverUrl = speedometer.getResources().getString(
         R.string.SpeedometerServerURL);
-    speedometer.setStatus("Server: " + this.serverUrl);
-    this.scheduler = new TaskScheduler(this);
-    scheduler.start();
+    sendStringMsg("Server: " + this.serverUrl);
   }
   
   /** Returns whether the service is running on a testing server. */
@@ -90,70 +86,62 @@ public class Checkin {
     return serverUrl;
   }
   
-  public TaskScheduler getScheduler() {
-    return scheduler;
-  }
-  
   public List<MeasurementTask> checkin() throws IOException {
-    Log.i(Speedometer.TAG, "Checkin.checkin() called");
+    Log.i(SpeedometerApp.TAG, "Checkin.checkin() called");
     try {
       JSONObject status = new JSONObject();
-      status.put("id", Speedometer.getDeviceId());
-      // TODO(mdw): Replace these with real values
-      status.put("manufacturer", Build.MANUFACTURER);
-      status.put("model", Build.MODEL);
-      status.put("os", "Android");
-      status.put("properties", Speedometer.getDeviceProperties());
+      DeviceInfo info = RuntimeUtil.getDeviceInfo();
+      // TODO(Wenjie): There is duplicated info here, such as device ID. 
+      status.put("id", info.deviceId);
+      status.put("manufacturer", info.manufacturer);
+      status.put("model", info.model);
+      status.put("os", info.os);
+      status.put("properties", 
+          MeasurementJsonConvertor.encodeToJson(RuntimeUtil.getDeviceProperty()));
+      
+      Log.i(SpeedometerApp.TAG, status.toString());
       
       String result = speedometerServiceRequest("checkin", status.toString());
-      Log.i(Speedometer.TAG, "Checkin result: " + result);
+      Log.i(SpeedometerApp.TAG, "Checkin result: " + result);
       
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
-      Log.i(Speedometer.TAG, "Got " + jsonArray.length() + " entries in JSON array");
+      
       for (int i = 0; i < jsonArray.length(); i++) {
-        Log.i(Speedometer.TAG, "Parsing index " + i);
+        Log.i(SpeedometerApp.TAG, "Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
-        Log.i(Speedometer.TAG, "Value is " + json);
+        Log.i(SpeedometerApp.TAG, "Value is " + json);
         if (json != null) {
           try {
-            MeasurementTask t = MeasurementTask.parseJson(json);
-            schedule.add(t);
+            MeasurementTask task = 
+                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.speedometer);
+            Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(task.measurementDesc));
+            schedule.add(task);
           } catch (IllegalArgumentException e) {
-            Log.w(Speedometer.TAG, "Could not create task from JSON: " + e);
+            Log.w(SpeedometerApp.TAG, "Could not create task from JSON: " + e);
             // Just skip it, and try the next one
           }
         }
       }
       
       this.lastCheckin = new Date();
-      Log.i(Speedometer.TAG, "Checkin complete, got " + schedule.size() +
+      Log.i(SpeedometerApp.TAG, "Checkin complete, got " + schedule.size() +
           " new tasks");
       return schedule;
       
     } catch (Exception e) {
-      Log.e(Speedometer.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
+      Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
       throw new IOException(e.getMessage());
     }
   }
   
   public void uploadMeasurementResult(MeasurementResult result)
   throws IOException {
-    Log.i(Speedometer.TAG, "TaskSchedule.uploadMeasurementResult() called");
-    JSONObject resultJson = result.result();
-    try {
-      resultJson.put("device_id", Speedometer.getDeviceId());
-      resultJson.put("properties", Speedometer.getDeviceProperties());
-    } catch (JSONException e) {
-      Log.e(Speedometer.TAG, "Unable to set device_id or properties: " + e);
-    }
-    
-    // Currently only upload a single measurement - but API requires it to be an array
-    JSONArray resultArray = new JSONArray();
-    resultArray.put(resultJson);
+    Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() called");
+        
     String response = 
-      speedometerServiceRequest("postmeasurement", resultArray.toString());
+      speedometerServiceRequest("postmeasurement", MeasurementJsonConvertor.toJsonString(result));
     try {
       JSONObject responseJson = new JSONObject(response);
       if (!responseJson.getBoolean("success")) {
@@ -162,7 +150,7 @@ public class Checkin {
     } catch (JSONException e) {
       throw new IOException(e.getMessage());
     }
-    Log.i(Speedometer.TAG, "TaskSchedule.uploadMeasurementResult() complete");
+    Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() complete");
   }
   
   @SuppressWarnings("unused")
@@ -184,7 +172,7 @@ public class Checkin {
     CookieStore store = new BasicCookieStore();
     store.addCookie(authCookie);
     client.setCookieStore(store);
-    Log.i(Speedometer.TAG, "authCookie is: " + authCookie);
+    Log.i(SpeedometerApp.TAG, "authCookie is: " + authCookie);
     
     String fullurl = serverUrl + "/" + url;
     HttpGet getMethod = new HttpGet(fullurl);
@@ -214,7 +202,7 @@ public class Checkin {
     CookieStore store = new BasicCookieStore();
     store.addCookie(authCookie);
     client.setCookieStore(store);
-    Log.i(Speedometer.TAG, "authCookie is: " + authCookie);
+    Log.i(SpeedometerApp.TAG, "authCookie is: " + authCookie);
     
     String fullurl = serverUrl + "/" + url;
     HttpPost postMethod = new HttpPost(fullurl);
@@ -242,20 +230,20 @@ public class Checkin {
    */
   public synchronized void getCookie() {
     if (isTestingServer()) {
-      Log.i(Speedometer.TAG, "Setting fakeAuthCookie");
+      Log.i(SpeedometerApp.TAG, "Setting fakeAuthCookie");
       authCookie = getFakeAuthCookie();
       return;
     }
     if (getCookieTask == null) {
-	    try {
-	      getCookieTask = new AccountSelector(speedometer, this).authorize();
-	    } catch (OperationCanceledException e) {
-	      Log.e(Speedometer.TAG, "Unable to get auth cookie", e);
-	    } catch (AuthenticatorException e) {
-	      Log.e(Speedometer.TAG, "Unable to get auth cookie", e);
-	    } catch (IOException e) {
-	      Log.e(Speedometer.TAG, "Unable to get auth cookie", e);
-	    }
+      try {
+        getCookieTask = new AccountSelector(speedometer, this).authorize();
+      } catch (OperationCanceledException e) {
+        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
+      } catch (AuthenticatorException e) {
+        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
+      } catch (IOException e) {
+        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
+      }
     }
   }
   
@@ -265,19 +253,19 @@ public class Checkin {
       return true;
     }
     if (getCookieTask == null) {
-      Log.i(Speedometer.TAG, "checkGetCookie called too early");
+      Log.i(SpeedometerApp.TAG, "checkGetCookie called too early");
       return false;
     }
-	  if (getCookieTask.getStatus() == AsyncTask.Status.FINISHED) {
+    if (getCookieTask.getStatus() == AsyncTask.Status.FINISHED) {
       try {
         authCookie = getCookieTask.get();
-        Log.i(Speedometer.TAG, "Got authCookie: " + authCookie);
+        Log.i(SpeedometerApp.TAG, "Got authCookie: " + authCookie);
         return true;
       } catch (InterruptedException e) {
-        Log.e(Speedometer.TAG, "Unable to get auth cookie", e);
+        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
         return false;
       } catch (ExecutionException e) {
-        Log.e(Speedometer.TAG, "Unable to get auth cookie", e);
+        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
         return false;
       }
     } else {
@@ -285,5 +273,8 @@ public class Checkin {
     }
   }
   
-
+  private void sendStringMsg(String str) {
+    UpdateIntent intent = new UpdateIntent(str);
+    speedometer.sendBroadcast(intent);    
+  }
 }

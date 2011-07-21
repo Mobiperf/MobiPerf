@@ -1,187 +1,111 @@
+// Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.text.ParseException;
-import java.util.Date;
+
+import com.google.wireless.speed.speedometer.measurements.HttpTask;
+import com.google.wireless.speed.speedometer.measurements.PingTask;
+import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
+
+import java.io.InvalidClassException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.util.Log;
-
-import com.google.wireless.speed.speedometer.measurements.DnsLookup;
-import com.google.wireless.speed.speedometer.measurements.Dummy;
 
 /**
  * Represents a scheduled measurement task. Subclasses implement functionality
- * for performing the actual measurement.
+ * for performing the actual measurement. Comparable interface allow comparison
+ * inside the priority queue.
  * 
  * @author mdw@google.com (Matt Welsh)
+ * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 @SuppressWarnings("rawtypes")
-public abstract class MeasurementTask implements Callable<MeasurementResult> {
-  public String type;
-  public String taskKey;
-  public Date startTime, endTime;
-  public Integer count, interval, priority;
-  public Map<String, String> params;
-  
-  /** Perform the actual measurement. */
-  public abstract MeasurementResult call() throws MeasurementError;
-  
-  /** Return the string indicating the measurement type. */
-  public static String getType() {
-    return "None";
-  }
-  
-  @SuppressWarnings("unused")
-  private Date createTime = null;
-  
-  @SuppressWarnings("rawtypes")
+public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
+   
+  protected MeasurementDesc measurementDesc;
+  protected SpeedometerApp parent;
+  protected int progress;
   private static HashMap<String, Class> measurementTypes;
   
-  // Static initializer for type -> Measurement map
-  // Add new measurement types here to enable them
-  static {
+  // TODO(Wenjie): Static initializer for type -> Measurement map
+  // Add new measurement types here to enable them 
+  static {    
     measurementTypes = new HashMap<String, Class>();
-    measurementTypes.put(Dummy.getType(), Dummy.class);
-    measurementTypes.put(DnsLookup.getType(), DnsLookup.class);
+    measurementTypes.put(PingTask.TYPE, PingTask.class);
+    measurementTypes.put(HttpTask.TYPE, HttpTask.class);
+    measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
+  }
+  
+  public static Class getTaskClassForMeasurement(String type) {
+    return measurementTypes.get(type);
+  }
+  
+  /* This is put here for consistency that all MeasurementTask should
+   * have a getDescClassForMeasurement() method. However, the MeasurementDesc is abstract 
+   * and cannot be instantiated */
+  public static Class getDescClass() throws InvalidClassException {
+    throw new InvalidClassException("getDescClass() should only be invoked on "
+        + "subclasses of MeasurementTask.");
   }
   
   /**
-   * Factory for measurement tasks.
-   * @param type Type of measurement task to create.
-   * @param deadline Deadline by which it must be started.
-   * @param params Map<String, String> of parameters.
-   * @return A MeasurementTask instance.
+   * @param measurementDesc
+   * @param parent
    */
-  public static MeasurementTask makeMeasurementTask(
-      String type, String taskKey, Date startTime, Date endTime, Integer count, 
-      Integer interval, Integer priority, Map<String, String> params)
-      throws IllegalArgumentException {
-    Class mClass = measurementTypes.get(type);
-    if (mClass == null) {
-      throw new IllegalArgumentException("Unknown measurement type " + type);
+  protected MeasurementTask(MeasurementDesc measurementDesc, SpeedometerApp parent) {
+    super();
+    this.measurementDesc = measurementDesc;
+    this.parent = parent;
+    this.progress = 0;
+  }
+  
+  /* Compare priority as the first order. Then compare start time.*/
+  @Override
+  public int compareTo(Object t) {
+    MeasurementTask another = (MeasurementTask) t;
+    Long myPrority = this.measurementDesc.priority;
+    Long anotherPriority = another.measurementDesc.priority;
+    int priorityComparison = myPrority.compareTo(anotherPriority); 
+    if (priorityComparison == 0) {
+      return this.measurementDesc.startTime.compareTo(another.measurementDesc.startTime);
+    } else {
+      return priorityComparison;
     }
-    
-    Class[] types = { String.class, Date.class, Date.class, Integer.class, Integer.class,
-        Integer.class, Map.class };
-    Constructor constructor = null;
-    try {
-      constructor = mClass.getConstructor(types);
-    } catch (SecurityException e) {
-      Log.w(Speedometer.TAG, e.getMessage());
-      throw new IllegalArgumentException(
-          "Could not get consntructor for " + type, e);
-    } catch (NoSuchMethodException e) {
-      Log.w(Speedometer.TAG, e.getMessage());
-      throw new IllegalArgumentException(
-          "Could not get consntructor for " + type, e);
-    }
-    Object[] cstParams = { taskKey, startTime, endTime, count, interval, priority, params };
-    try {
-      return (MeasurementTask) constructor.newInstance(cstParams);
-    } catch (InstantiationException e) {
-      Log.w(Speedometer.TAG, e.getMessage());
-      throw new IllegalArgumentException(e);
-    } catch (IllegalAccessException e) {
-      Log.w(Speedometer.TAG, e.getMessage());
-      throw new IllegalArgumentException(e);
-    } catch (InvocationTargetException e) {
-      Log.w(Speedometer.TAG, e.getMessage());
-      throw new IllegalArgumentException(e);
+  }  
+  
+  public long timeFromExecution() {
+    return this.measurementDesc.startTime.getTime() - System.currentTimeMillis();
+  }
+  
+  public boolean isPassedDeadline() {
+    if (this.measurementDesc.endTime == null) { 
+      return false;
+    } else {
+      long endTime = this.measurementDesc.endTime.getTime();
+      return endTime <= System.currentTimeMillis();
     }
   }
   
-  public MeasurementTask(String taskKey, Date startTime, Date endTime, Integer count,
-      Integer interval, Integer priority, Map<String, String> params) {
-    this.createTime = new Date();
-    this.taskKey = taskKey;
-    this.startTime = startTime;
-    this.endTime = endTime;
-    this.count = count;
-    this.interval = interval;
-    this.priority = priority;
-    this.params = params;
+  public String getMeasurementType() {
+    return this.measurementDesc.type;
   }
   
-  public static MeasurementTask parseJson(JSONObject json) throws IOException {
-    String type, taskKey;
-    Date startTime, endTime;
-    Integer count, interval, priority;
-    HashMap<String, String> params = new HashMap<String, String>();
-    
-    try {
-      type = json.getString("type");
-    } catch (JSONException e) {
-      throw new IOException("No type specified");
-    }
-    
-    try {
-      taskKey = json.getString("key");
-    } catch (JSONException e) {
-      taskKey = null;
-    }
-    
-    try {
-     startTime = Util.parseDate(json.getString("start_time"));
-    } catch (JSONException e) {
-      startTime = null;
-    } catch (ParseException e) {
-      startTime = null;
-    }
-    
-    try {
-      endTime = Util.parseDate(json.getString("end_time"));
-    } catch (JSONException e) {
-      endTime = null;
-    } catch (ParseException e) {
-      endTime = null;
-    }
-    
-    try {
-      count = new Integer(json.getInt("count"));
-    } catch (JSONException e) {
-      count = null;
-    }
-    
-    try {
-      interval = new Integer(json.getInt("interval_sec"));
-    } catch (JSONException e) {
-      interval = null;
-    }
-    
-    try {
-      priority = new Integer(json.getInt("priority"));
-    } catch (JSONException e) {
-      priority = null;
-    }
-    
-    try {
-      JSONObject jsonParams = json.getJSONObject("parameters");
-      @SuppressWarnings("unchecked")
-      Iterator<String> itr = jsonParams.keys();
-      while (itr.hasNext()) {
-        String key = (String)itr.next();
-        params.put(key, jsonParams.getString(key));
-      }
-    } catch (JSONException e) {
-      Log.i(Speedometer.TAG, "Could not parse parameters");
-    }
-    
-    return makeMeasurementTask(type, taskKey, startTime, endTime, count, interval,
-        priority, params);
+  public MeasurementDesc getDescription() {
+    return this.measurementDesc;
   }
   
+  @Override
+  public abstract MeasurementResult call() throws MeasurementError; 
+  
+  /** Return the string indicating the measurement type. */
+  public abstract String getType();
+  
+  /* Place holder in case user wants to view the progress of active measurements*/
+  public int getProgress() {
+    return this.progress;
+  }
+    
+  @Override
   public String toString() {
-    return "<MeasurementTask> " + getType() + " params:" + params;
+    return this.measurementDesc.toString();
   }
-
 }

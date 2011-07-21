@@ -53,6 +53,10 @@ import java.util.List;
  * Phone related utilities.
  *
  * @author klm@google.com (Michael Klepikov)
+ * 
+ * Changed acquireLock() to acquire the power lock if and only if wifi is active  
+ * 
+ * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class PhoneUtils {
 
@@ -232,7 +236,7 @@ public class PhoneUtils {
 
   /** Returns mobile data network connection type. */
   private String getTelephonyNetworkType() {
-    assert NETWORK_TYPES[14] == "EHRPD";
+    assert NETWORK_TYPES[14].compareTo("EHRPD") == 0;
 
     int networkType = telephonyManager.getNetworkType();
     if (networkType < NETWORK_TYPES.length) {
@@ -333,17 +337,21 @@ public class PhoneUtils {
 
   /** Prevents the phone from going to low-power mode where WiFi turns off. */
   public synchronized void acquireWakeLock() {
-    if (wakeLock == null) {
-      PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-      wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
+    if (PhoneUtils.getPhoneUtils().getNetwork().compareToIgnoreCase(NETWORK_WIFI) == 0) {
+      if (wakeLock == null) {
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
+      }
+      Log.i(SpeedometerApp.TAG, "PowerLock acquired");
+      wakeLock.acquire();
     }
-    wakeLock.acquire();
   }
 
   /** Should be called on application shutdown. Releases global resources. */
   public synchronized void shutDown() {
     if (wakeLock != null) {
       wakeLock.release();
+      Log.i(SpeedometerApp.TAG, "PowerLock released");
     }
   }
 
@@ -471,7 +479,7 @@ public class PhoneUtils {
     }
 
     if (upIfs.size() > 1) {
-      for (String wifiInterface: new String[] {"eth0", "wlan0"}) {
+      for (String wifiInterface : new String[] {"eth0", "wlan0"}) {
         if (upIfs.contains(wifiInterface)) {
           // If both wifi and mobile-wireless interfaces exist, then the wifi one must be
           // inactive (otherwise the phone would have turned off the mobile-wireless interface),

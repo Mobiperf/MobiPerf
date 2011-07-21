@@ -1,28 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent" android:orientation="vertical">
-    <LinearLayout android:id="@+id/linearLayout2" android:layout_height="wrap_content" android:layout_width="match_parent" android:baselineAligned="false">
-        <LinearLayout android:id="@+id/linearLayout3" android:layout_height="match_parent" android:layout_width="wrap_content" android:orientation="vertical" android:layout_weight="1">
-            <TextView android:text="@string/StatusText" android:layout_width="fill_parent" android:id="@+id/StatusText" android:layout_height="wrap_content" android:layout_weight="5"></TextView>
-            <TextView android:text="@string/LocationText" android:id="@+id/LocationText" android:layout_height="wrap_content" android:layout_width="wrap_content" android:layout_weight="1"></TextView>
-            <TextView android:text="@string/SpeedText" android:id="@+id/SpeedText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1"></TextView>
-        </LinearLayout>
-    </LinearLayout>
-    <LinearLayout android:id="@+id/linearLayout1" android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="vertical">
-        <TextView
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@android:id/tabhost" 
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+  <LinearLayout 
+    android:orientation="vertical"
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent">
+    <TabWidget 
+      android:id="@android:id/tabs" 
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content" />
+    <FrameLayout 
+      android:id="@android:id/tabcontent"
+      android:layout_width="fill_parent" 
+      android:layout_height="fill_parent"
+      android:padding="5dp">
+      <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dip"
-        android:text="@string/measurementTypePrompt"
-        />
-        <Spinner
-          android:id="@+id/measurementTypeSpinner"
+        android:layout_height="fill_parent">
+        <TextView  
+          android:layout_width="fill_parent" 
           android:layout_height="wrap_content"
-          android:layout_width="match_parent"
-          android:prompt="@string/measurementTypePrompt"
-         />
-        <Button android:text="Run" android:id="@+id/runButton" android:layout_height="wrap_content" android:layout_width="match_parent"></Button>
-    </LinearLayout>
-    <Button android:text="Login" android:id="@+id/loginButton" android:layout_height="wrap_content" android:layout_width="wrap_content"></Button>
-</LinearLayout>
+          android:id="@+viewId/systemConsole"
+          android:maxLines="500"
+          android:scrollbars="vertical"
+          android:text=""/>
+        <ProgressBar  
+          style="@android:style/Widget.ProgressBar.Horizontal"
+          android:layout_width="fill_parent" 
+          android:layout_height="wrap_content"
+          android:id="@drawable/progress_bar"
+          android:layout_alignParentBottom="true"
+          android:visibility="invisible"
+          android:max="100"/>
+      </RelativeLayout>
+    </FrameLayout>>
+  </LinearLayout>
+</TabHost>
