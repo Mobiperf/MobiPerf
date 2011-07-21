@@ -88,7 +88,7 @@ public class MeasurementJsonConvertor {
       Log.w(SpeedometerApp.TAG, e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (InvocationTargetException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Log.w(SpeedometerApp.TAG, e.toString());
       throw new IllegalArgumentException(e);
     } 
   }
@@ -122,7 +122,7 @@ public class MeasurementJsonConvertor {
       }
     }
   }
-    
+  
   public static Date parseDate(String dateString) throws ParseException {
     return dateFormat.parse(dateString);
   }

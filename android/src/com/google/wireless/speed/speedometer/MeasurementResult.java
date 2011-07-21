@@ -23,7 +23,6 @@ public class MeasurementResult {
   private HashMap<String, String> values;
   
   /**
-   * Use {@link MeasurementResult#addResult(ResultType, Object)} to add results
    * @param deviceProperty
    * @param type
    * @param timeStamp
@@ -33,6 +32,7 @@ public class MeasurementResult {
   public MeasurementResult(String id, DeviceProperty deviceProperty, String type, 
                            Date timeStamp, boolean success, MeasurementDesc measurementDesc) {
     super();
+    this.taskKey = measurementDesc.key;
     this.deviceId = id;
     this.type = type;
     this.properties = deviceProperty;

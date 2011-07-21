@@ -22,7 +22,7 @@ public abstract class MeasurementDesc {
   public Date endTime;
   public double intervalSec;
   public long count;
-  public long priority;  
+  public long priority;
   public Map<String, String> parameters;
     
   /**
@@ -46,7 +46,7 @@ public abstract class MeasurementDesc {
     if (startTime == null) {
       this.startTime = Calendar.getInstance().getTime();
     } else {
-      this.startTime = startTime;
+      this.startTime = new Date(startTime.getTime());
     }
     this.endTime = endTime;
     this.intervalSec = intervalSec;

@@ -18,6 +18,11 @@ import java.util.HashMap;
  */
 public class TestTracerouteTask extends TestMeasurementTaskBase {
   
+  public TestTracerouteTask() {
+    // Disable the auto checkin so that our manually inserted task can be run
+    super(false);
+  }
+  
   /* TODO(Wenjie): Make this test case to be more self-contained without depending
    * on the external links */
   public void testPingTask() {

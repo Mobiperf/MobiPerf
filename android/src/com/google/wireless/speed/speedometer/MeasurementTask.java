@@ -20,7 +20,8 @@ import java.util.concurrent.Callable;
  */
 @SuppressWarnings("rawtypes")
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
-   
+  // the priority queue we use put the smallest element in the head of the queue
+  public static int USER_PRIORITY = Integer.MIN_VALUE;
   protected MeasurementDesc measurementDesc;
   protected SpeedometerApp parent;
   protected int progress;
@@ -65,7 +66,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     Long myPrority = this.measurementDesc.priority;
     Long anotherPriority = another.measurementDesc.priority;
     int priorityComparison = myPrority.compareTo(anotherPriority); 
-    if (priorityComparison == 0) {
+    if (priorityComparison == 0 && 
+        this.measurementDesc.startTime != null && another.measurementDesc.startTime != null) {
       return this.measurementDesc.startTime.compareTo(another.measurementDesc.startTime);
     } else {
       return priorityComparison;

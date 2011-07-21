@@ -135,12 +135,9 @@ public class TracerouteTask extends MeasurementTask {
     
   }
   
-  public TracerouteTask(MeasurementDesc measurementDesc, SpeedometerApp parent) {
-    /* TODO(Wenjie): This will not correctly generate a description. The next pending CL will
-     * fix it
-     */
-    super(measurementDesc, parent);
-    
+  public TracerouteTask(MeasurementDesc desc, SpeedometerApp parent) {
+    super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
+      desc.count, desc.priority, desc.parameters), parent);
   }
 
   @Override

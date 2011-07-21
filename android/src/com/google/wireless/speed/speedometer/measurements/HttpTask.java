@@ -6,7 +6,6 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
@@ -58,8 +57,9 @@ public class HttpTask extends MeasurementTask {
   // The default number of times we run a HTTP measurement
   private static final long DEFAULT_CNT = 1;
 
-  public HttpTask(MeasurementDesc measurementDesc, SpeedometerApp parent) {
-    super(measurementDesc, parent);
+  public HttpTask(MeasurementDesc desc, SpeedometerApp parent) {
+    super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
+      desc.count, desc.priority, desc.parameters), parent);
   }
   
   /**
@@ -124,13 +124,12 @@ public class HttpTask extends MeasurementTask {
     InputStream inputStream = null;
     
     try {
-      /* Prevents the phone from going to low-power mode where WiFi turns off */
-      PhoneUtils.getPhoneUtils().acquireWakeLock();
       // set the download URL, a URL that points to a file on the Internet
       // this is the file to be downloaded
       HttpDesc task = (HttpDesc) this.measurementDesc;
       String urlStr = task.url;
           
+      // TODO(Wenjie): Need to set timeout for the HTTP methods
       HttpClient client = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));      
       HttpRequestBase request = null;
       if (task.method.compareToIgnoreCase("head") == 0) {
@@ -164,6 +163,14 @@ public class HttpTask extends MeasurementTask {
       long startTime = System.currentTimeMillis();
       HttpResponse response = client.execute(request);
       
+      /* TODO(Wenjie): HttpClient does not automatically handle the following codes
+       * 301 Moved Permanently. HttpStatus.SC_MOVED_PERMANENTLY
+       * 302 Moved Temporarily. HttpStatus.SC_MOVED_TEMPORARILY
+       * 303 See Other. HttpStatus.SC_SEE_OTHER
+       * 307 Temporary Redirect. HttpStatus.SC_TEMPORARY_REDIRECT
+       * 
+       * We may want to fetch instead from the redirected page. 
+       */
       StatusLine statusLine = response.getStatusLine();
       if (statusLine != null) {
         statusCode = statusLine.getStatusCode();
@@ -198,8 +205,8 @@ public class HttpTask extends MeasurementTask {
         headers = "";
         for (Header hdr : responseHeaders) {
           /*
-           * TODO(Wenjie): There can be preceding and trailing whitespaces in
-           * each header field. I cannot find internal methods that returns the
+           * TODO(Wenjie): There can be preceding and trailing white spaces in
+           * each header field. I cannot find internal methods that return the
            * number of bytes in a header. The solution here assumes the encoding
            * is one byte per character.
            */
@@ -234,7 +241,6 @@ public class HttpTask extends MeasurementTask {
       errorMsg += e.getMessage() + "\n";
       Log.e(SpeedometerApp.TAG, e.getMessage());
     } finally {
-      PhoneUtils.getPhoneUtils().shutDown();
       if (inputStream != null) {
         try {
           inputStream.close();

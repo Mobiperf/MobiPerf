@@ -59,7 +59,8 @@ public class DnsLookupTask extends MeasurementTask {
   }
   
   public DnsLookupTask(MeasurementDesc desc, SpeedometerApp parent) {
-    super(desc, parent);
+    super(new DnsLookupDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
+      desc.count, desc.priority, desc.parameters), parent);;
   }
 
   @Override

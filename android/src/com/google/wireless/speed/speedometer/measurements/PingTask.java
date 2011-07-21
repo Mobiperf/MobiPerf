@@ -7,7 +7,6 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
@@ -23,7 +22,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
-import org.json.JSONException;
+import org.apache.http.params.HttpConnectionParams;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -77,7 +76,7 @@ public class PingTask extends MeasurementTask {
         throw new InvalidParameterException("PingTask cannot be created due "
             + " to null target string");
       }    
-    }      
+    }
     
     @Override
     protected void initalizeParams(Map<String, String> params) {
@@ -92,10 +91,10 @@ public class PingTask extends MeasurementTask {
       
       try {        
         String val = null;
-        if ((val = params.get("packet_size_byte")) != null) {
+        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         }
-        if ((val = params.get("ping_timeout_sec")) != null) {
+        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         }
       } catch (NumberFormatException e) {
@@ -115,7 +114,8 @@ public class PingTask extends MeasurementTask {
   }
   
   public PingTask(MeasurementDesc desc, SpeedometerApp parent) {
-    super(desc, parent);
+    super(new PingDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
+      desc.count, desc.priority, desc.parameters), parent);
   }
   
   /* We will use three methods to ping the requested resource in the order of PING_COMMAND, 
@@ -125,7 +125,6 @@ public class PingTask extends MeasurementTask {
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
-      PhoneUtils.getPhoneUtils().acquireWakeLock();
       return executePingCmdTask();
     } catch (MeasurementError e) {
       try {
@@ -135,9 +134,6 @@ public class PingTask extends MeasurementTask {
         Log.i(SpeedometerApp.TAG, "running http ping");
         return executeHttpPingTask();
       }
-    } finally {
-      PhoneUtils.getPhoneUtils().shutDown();
-      PhoneUtils.releaseGlobalContext();
     }
   }
   
@@ -191,7 +187,6 @@ public class PingTask extends MeasurementTask {
         ((double) rrtVals.size() / (double) this.measurementDesc.count));
     
     return result;
-
   }
 
   private void cleanUp(Process proc) {
@@ -230,10 +225,9 @@ public class PingTask extends MeasurementTask {
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
     pingTask.pingExe = parent.getString(R.string.ping_executable);
     try {
-      /* Prevents the phone from going to low-power mode where WiFi turns off */
-      PhoneUtils.getPhoneUtils().acquireWakeLock();
       String command = Util.constructCommand(pingTask.pingExe, "-i", pingTask.intervalSec,
-          "-s", pingTask.packetSizeByte, "-c", pingTask.count, pingTask.target);
+          "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", pingTask.count, 
+          pingTask.target);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -281,7 +275,6 @@ public class PingTask extends MeasurementTask {
       errorMsg += e.getMessage() + "\n";
     } finally {
       // All associated streams with the process will be closed upon destroy()
-      PhoneUtils.getPhoneUtils().shutDown();
       cleanUp(pingProc);
     }
     
@@ -300,7 +293,7 @@ public class PingTask extends MeasurementTask {
     String errorMsg = "";
 
     try {       
-      int timeOut = 2000;
+      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
       int successfulPingCnt = 0;
       long totalPingDelay = 0;
       for (int i = 0; i < pingTask.count; i++) {
@@ -308,13 +301,13 @@ public class PingTask extends MeasurementTask {
         boolean status = InetAddress.getByName(pingTask.target).isReachable(timeOut);
         pingEndTime = System.currentTimeMillis();
         long rrtVal = pingEndTime - pingStartTime;
-        if (status && rrtVal < timeOut) {
+        if (status) {
           totalPingDelay += rrtVal;
           rrts.add((double) rrtVal);
         }
         this.progress = 100 * i / (int) pingTask.count;
       }
-      
+      Log.i(SpeedometerApp.TAG, "java ping succeeds");
       return constructResult(rrts);        
     } catch (IllegalArgumentException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
@@ -323,7 +316,7 @@ public class PingTask extends MeasurementTask {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } 
-    
+    Log.i(SpeedometerApp.TAG, "java ping fails");
     throw new MeasurementError(errorMsg);
   }
   
@@ -348,17 +341,19 @@ public class PingTask extends MeasurementTask {
       headMethod.addHeader(new BasicHeader("Connection", "close"));
       headMethod.setParams(new BasicHttpParams().setParameter(
           CoreConnectionPNames.CONNECTION_TIMEOUT, 1000));
+      
+      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
+      HttpConnectionParams.setConnectionTimeout(headMethod.getParams(), timeOut);
                       
       for (int i = 0; i < pingTask.count; i++) {
         pingStartTime = System.currentTimeMillis();
-        HttpResponse response = client.execute(headMethod);          
+        HttpResponse response = client.execute(headMethod);  
         pingEndTime = System.currentTimeMillis();
         rrts.add((double) (pingEndTime - pingStartTime));
         this.progress = 100 * i / (int) pingTask.count;
       }
-      
+      Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
       return constructResult(rrts);
-      
     } catch (MalformedURLException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -366,6 +361,7 @@ public class PingTask extends MeasurementTask {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
     }
+    Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
     throw new MeasurementError(errorMsg);
   }
 }

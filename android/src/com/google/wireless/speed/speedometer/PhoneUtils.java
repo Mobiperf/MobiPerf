@@ -337,7 +337,8 @@ public class PhoneUtils {
 
   /** Prevents the phone from going to low-power mode where WiFi turns off. */
   public synchronized void acquireWakeLock() {
-    if (PhoneUtils.getPhoneUtils().getNetwork().compareToIgnoreCase(NETWORK_WIFI) == 0) {
+    String networkName = PhoneUtils.getPhoneUtils().getNetwork();
+    if (networkName != null && networkName.compareToIgnoreCase(NETWORK_WIFI) == 0) {
       if (wakeLock == null) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");

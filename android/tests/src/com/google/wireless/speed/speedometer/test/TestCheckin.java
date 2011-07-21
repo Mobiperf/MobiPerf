@@ -1,3 +1,4 @@
+// Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.test;
 
 import com.google.wireless.speed.speedometer.Checkin;
@@ -9,6 +10,11 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Test the basic checkin without the scheduler
+ * @author wenjiezeng@google.com (Steve Zeng)
+ *
+ */
 public class TestCheckin extends TestMeasurementTaskBase {
   
   /**

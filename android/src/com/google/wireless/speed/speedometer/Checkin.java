@@ -20,6 +20,9 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,6 +41,7 @@ import java.util.concurrent.ExecutionException;
  * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Checkin {
+  private static int POST_TIMEOUT_MILLISEC = 10 * 1000;
   private SpeedometerApp speedometer;
   private String serverUrl;
   private Date lastCheckin;
@@ -99,19 +103,19 @@ public class Checkin {
       status.put("properties", 
           MeasurementJsonConvertor.encodeToJson(RuntimeUtil.getDeviceProperty()));
       
-      Log.i(SpeedometerApp.TAG, status.toString());
+      Log.d(SpeedometerApp.TAG, status.toString());
       
       String result = speedometerServiceRequest("checkin", status.toString());
-      Log.i(SpeedometerApp.TAG, "Checkin result: " + result);
+      Log.d(SpeedometerApp.TAG, "Checkin result: " + result);
       
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
       
       for (int i = 0; i < jsonArray.length(); i++) {
-        Log.i(SpeedometerApp.TAG, "Parsing index " + i);
+        Log.d(SpeedometerApp.TAG, "Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
-        Log.i(SpeedometerApp.TAG, "Value is " + json);
+        Log.d(SpeedometerApp.TAG, "Value is " + json);
         if (json != null) {
           try {
             MeasurementTask task = 
@@ -136,12 +140,21 @@ public class Checkin {
     }
   }
   
-  public void uploadMeasurementResult(MeasurementResult result)
-  throws IOException {
-    Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() called");
-        
+  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
+  throws IOException {    
+    JSONArray resultArray = new JSONArray();
+    for (MeasurementResult result : finishedTasks) {
+      try {
+        resultArray.put(MeasurementJsonConvertor.encodeToJson(result));
+      } catch (JSONException e1) {
+        Log.e(SpeedometerApp.TAG, "Error when adding " + result);
+      }
+    }
+    
+    Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() uploading: " + 
+        resultArray.toString());
     String response = 
-      speedometerServiceRequest("postmeasurement", MeasurementJsonConvertor.toJsonString(result));
+      speedometerServiceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
       if (!responseJson.getBoolean("success")) {
@@ -172,7 +185,7 @@ public class Checkin {
     CookieStore store = new BasicCookieStore();
     store.addCookie(authCookie);
     client.setCookieStore(store);
-    Log.i(SpeedometerApp.TAG, "authCookie is: " + authCookie);
+    Log.d(SpeedometerApp.TAG, "authCookie is: " + authCookie);
     
     String fullurl = serverUrl + "/" + url;
     HttpGet getMethod = new HttpGet(fullurl);
@@ -195,7 +208,16 @@ public class Checkin {
       }
     }
     
-    DefaultHttpClient client = new DefaultHttpClient();
+    /* TODO(Wenjie): the post method sometimes takes a very long time to finish.
+     * POST_TIMEOUT_MILLISEC should be set in a more adaptive way based on the average
+     * network condition under test. */
+    HttpParams httpParameters = new BasicHttpParams();
+    // Set the timeout in milliseconds until a connection is established.
+    HttpConnectionParams.setConnectionTimeout(httpParameters, POST_TIMEOUT_MILLISEC);
+    // Set the default socket timeout (SO_TIMEOUT)
+    // in milliseconds which is the timeout for waiting for data.
+    HttpConnectionParams.setSoTimeout(httpParameters, POST_TIMEOUT_MILLISEC);
+    DefaultHttpClient client = new DefaultHttpClient(httpParameters);
     // TODO(mdw): For some reason this is not sending the cookie to the
     // test server, probably because the cookie itself is not properly
     // initialized. Below I manually set the Cookie header instead.
