@@ -242,7 +242,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void getTasksFromServer() {
-    Log.i(SpeedometerApp.TAG, "Download tasks from the server");
+    Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
     checkin.getCookie();
     try {
       List<MeasurementTask> tasksFromServer = checkin.checkin();
@@ -353,6 +353,7 @@ public class MeasurementScheduler extends Service {
   
   private class SchedulerThread implements Runnable {
     /* Gets the next task whenever the last one finishes */
+    @Override
     @SuppressWarnings("unchecked")
     public void run() {
       try {

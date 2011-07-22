@@ -6,7 +6,7 @@ import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
-import android.app.Service;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -43,21 +43,21 @@ import java.util.concurrent.ExecutionException;
  */
 public class Checkin {
   private static int POST_TIMEOUT_MILLISEC = 10 * 1000;
-  private Service scheduler;
+  private Context context;
   private String serverUrl;
   private Date lastCheckin;
   private volatile Cookie authCookie = null;
   private AsyncTask<String, Void, Cookie> getCookieTask = null;
   
-  public Checkin(Service scheduler, String serverUrl) {
-    this.scheduler = scheduler;
+  public Checkin(Context context, String serverUrl) {
+    this.context = context;
     this.serverUrl = serverUrl;
     sendStringMsg("Server: " + this.serverUrl);
   }
   
-  public Checkin(Service scheduler) {
-    this.scheduler = scheduler;
-    this.serverUrl = scheduler.getResources().getString(
+  public Checkin(Context context) {
+    this.context = context;
+    this.serverUrl = context.getResources().getString(
         R.string.SpeedometerServerURL);
     sendStringMsg("Server: " + this.serverUrl);
   }
@@ -120,7 +120,7 @@ public class Checkin {
         if (json != null) {
           try {
             MeasurementTask task = 
-                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.scheduler);
+                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
             Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(task.measurementDesc));
             schedule.add(task);
           } catch (IllegalArgumentException e) {
@@ -259,7 +259,7 @@ public class Checkin {
     }
     if (getCookieTask == null) {
       try {
-        getCookieTask = new AccountSelector(scheduler, this).authorize();
+        getCookieTask = new AccountSelector(context, this).authorize();
       } catch (OperationCanceledException e) {
         Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
       } catch (AuthenticatorException e) {
@@ -298,6 +298,6 @@ public class Checkin {
   
   private void sendStringMsg(String str) {
     UpdateIntent intent = new UpdateIntent(str);
-    scheduler.sendBroadcast(intent);    
+    context.sendBroadcast(intent);    
   }
 }
