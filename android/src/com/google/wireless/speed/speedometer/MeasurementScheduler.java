@@ -117,8 +117,8 @@ public class MeasurementScheduler implements Runnable {
   }
   
   /** Prevents new tasks from being scheduled. All scheduled tasks will still run 
-   * TODO(Wenjie): implement a call back in the MeasurementTask to indicate a task
-   * is bening run. Remove all scheduled but not yet started tasks from the executor.
+   * TODO(Wenjie): Implement a call back in the MeasurementTask to indicate a task that
+   * is being run. Remove all scheduled but not yet started tasks from the executor.
    * */
   public synchronized void pause() {
     this.pauseRequested = true;    
@@ -265,6 +265,9 @@ public class MeasurementScheduler implements Runnable {
           }
             
           if (future == null) {
+            /* Tasks that are scheduled after deadline are put into pendingTasks with a 
+             * null future.
+             */
             this.pendingTasks.remove(task);
             finishedTasks.add(this.getFailureResult(task));
           }
@@ -338,16 +341,7 @@ public class MeasurementScheduler implements Runnable {
        */
       while (!this.isStopRequested()) {
         Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
-        synchronized (this) {
-          while (this.isPauseRequested()) {
-            try {
-              Log.i(SpeedometerApp.TAG, "User requested pause");      
-              this.wait();
-            } catch (InterruptedException e) {
-              Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
-            }
-          }
-        }
+        
         /* Schedule the new tasks and move them from taskQueu to pendingTasks
          * 
          * TODO(Wenjie): We may also need a separate rule (taskStack) for user
@@ -357,9 +351,19 @@ public class MeasurementScheduler implements Runnable {
          */
         MeasurementTask task;
         try {
-          while (!this.isPauseRequested() && (task = this.taskQueue.take()) != null) {
+          while ((task = this.taskQueue.take()) != null) {
             Log.i(SpeedometerApp.TAG, "New task arrived. There are " + this.taskQueue.size() + 
             " tasks in taskQueue");
+            if (this.isPauseRequested()) {
+              synchronized (this) {
+                try {
+                  Log.i(SpeedometerApp.TAG, "User requested pause");
+                  this.wait();
+                } catch (InterruptedException e) {
+                  Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
+                }
+              }
+            }
             ScheduledFuture<MeasurementResult> future = null;
             if (!task.isPassedDeadline()) {
               future = executor.schedule(task, task.timeFromExecution(), TimeUnit.SECONDS);
