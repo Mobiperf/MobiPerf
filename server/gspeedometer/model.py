@@ -31,7 +31,7 @@ class DeviceInfo(db.Model):
       return query.fetch(1)[0]
     except IndexError:
       logging.exception("There are no device properties associated with the given device");
-      return None;
+      return None
 
 
   def num_updates(self):
