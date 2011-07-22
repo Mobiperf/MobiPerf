@@ -14,6 +14,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import model
+from gspeedometer.controllers import device
 from gspeedometer.helpers import error
 from gspeedometer.helpers import util
 
@@ -36,7 +37,6 @@ class Measurement(webapp.RequestHandler):
     logging.info('PostMeasurement: body is ' + self.request.body)
 
     measurement_list = json.loads(self.request.body)
-
     for measurement_dict in measurement_list:
       logging.info('Device ID: ' + measurement_dict['device_id'])
       device_info = model.DeviceInfo.get_or_insert(
@@ -47,6 +47,7 @@ class Measurement(webapp.RequestHandler):
         device_properties = model.DeviceProperties()
         device_properties.device_info = device_info
         properties_dict = measurement_dict['properties']
+        ## TODO(Wenjie): Sanitize input that contains bad fields
         util.ConvertFromDict(device_properties, properties_dict)
         # Don't want the embedded properties in the Measurement object
         del measurement_dict['properties']

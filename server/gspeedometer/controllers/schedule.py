@@ -20,7 +20,10 @@ from gspeedometer.controllers import measurement
 
 class AddToScheduleForm(forms.Form):
   type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
-  target = forms.CharField(required=False)
+  param1 = forms.CharField(required=False)
+  param2 = forms.CharField(required=False)
+  param3 = forms.CharField(required=False)
+  count = forms.CharField(required=False)
   tag = forms.CharField(required=False)
   filter = forms.CharField(required=False)
 
@@ -37,12 +40,14 @@ class Schedule(webapp.RequestHandler):
       add_to_schedule_form.full_clean()
       if add_to_schedule_form.is_valid():
         thetype = add_to_schedule_form.cleaned_data['type']
-        target = add_to_schedule_form.cleaned_data['target']
+        param1 = add_to_schedule_form.cleaned_data['param1']
+        param2 = add_to_schedule_form.cleaned_data['param2']
+        param3 = add_to_schedule_form.cleaned_data['param3']
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
+        count = add_to_schedule_form.cleaned_data['count']
 
         logging.info('Got TYPE: ' + thetype)
-        logging.info('Got TARGET: ' + target)
 
         task = model.Task()
         task.created = datetime.datetime.utcnow()
@@ -50,7 +55,23 @@ class Schedule(webapp.RequestHandler):
         task.type = thetype
         task.tag = tag
         task.filter = thefilter
-        task.mparam_target = target
+        task.count = int(count)
+
+        # Set up correct type-specific measurement parameters
+        if task.type == 'ping':
+          task.mparam_target = param1
+          task.mparam_ping_timeout_sec = param2
+          task.mparam_packet_size_byte = param3
+        elif task.type == 'traceroute':
+          task.mparam_target = param1
+          task.mparam_pings_per_hop= param2
+          task.mparam_max_ping_count = param3
+        elif task.type == 'http':
+          task.mparam_url = param1
+          task.mparam_method = param2
+          task.mparam_headers = param3
+        ## TODO(Wenjie):FINISH THIS...
+
         task.put()
 
     schedule = model.Task.all()

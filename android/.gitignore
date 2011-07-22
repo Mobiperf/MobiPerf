@@ -2,3 +2,4 @@ bin/*
 gen/*
 tests/bin/*
 tests/gen/*
+*.pyc
