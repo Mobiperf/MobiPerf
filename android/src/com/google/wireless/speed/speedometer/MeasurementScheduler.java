@@ -341,7 +341,16 @@ public class MeasurementScheduler implements Runnable {
        */
       while (!this.isStopRequested()) {
         Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
-        
+        if (this.isPauseRequested()) {
+          synchronized (this) {
+            try {
+              Log.i(SpeedometerApp.TAG, "User requested pause");
+              this.wait();
+            } catch (InterruptedException e) {
+              Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
+            }
+          }
+        }
         /* Schedule the new tasks and move them from taskQueu to pendingTasks
          * 
          * TODO(Wenjie): We may also need a separate rule (taskStack) for user
@@ -351,19 +360,9 @@ public class MeasurementScheduler implements Runnable {
          */
         MeasurementTask task;
         try {
-          while ((task = this.taskQueue.take()) != null) {
+          while (!this.isStopRequested() && (task = this.taskQueue.take()) != null) {
             Log.i(SpeedometerApp.TAG, "New task arrived. There are " + this.taskQueue.size() + 
             " tasks in taskQueue");
-            if (this.isPauseRequested()) {
-              synchronized (this) {
-                try {
-                  Log.i(SpeedometerApp.TAG, "User requested pause");
-                  this.wait();
-                } catch (InterruptedException e) {
-                  Log.e(SpeedometerApp.TAG, "scheduler pause is interrupted");
-                }
-              }
-            }
             ScheduledFuture<MeasurementResult> future = null;
             if (!task.isPassedDeadline()) {
               future = executor.schedule(task, task.timeFromExecution(), TimeUnit.SECONDS);
