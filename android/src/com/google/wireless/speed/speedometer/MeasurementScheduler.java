@@ -39,9 +39,8 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementScheduler extends Service {
 
   // Default checkin interval is 30 minutes
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30 * 60;
+  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
-  private static MeasurementScheduler singleInstance = null;
   
   private ScheduledThreadPoolExecutor executor;
   private Handler receiver;
@@ -71,7 +70,7 @@ public class MeasurementScheduler extends Service {
     }
   }
 
-  /* (non-Javadoc)
+  /* Returns a IBinder that contains the instance of the MeasurementScheduler object
    * @see android.app.Service#onBind(android.content.Intent)
    */
   @Override
@@ -82,11 +81,16 @@ public class MeasurementScheduler extends Service {
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
+    this.isCheckinEnabled = false;
     this.checkin = new Checkin(this);
     this.checkinIntervalSec = DEDAULT_CHECKIN_INTERVAL_SEC;
     this.checkinFuture = null;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
+    
+    this.pauseRequested = true;
+    this.stopRequested = false;
+    
     this.receiver = new UpdateHandler();
     this.executor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
     this.executor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
@@ -103,6 +107,9 @@ public class MeasurementScheduler extends Service {
     // Start up the thread running the service. Using one single thread for all requests
     if (this.schedulerThread == null) {
       Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
+      this.resume();
+      this.setIsCheckinEnabled(true);
+      this.setCheckinInterval(DEDAULT_CHECKIN_INTERVAL_SEC);
       this.schedulerThread = new SchedulerThread();
       new Thread(this.schedulerThread).start();
     }
@@ -383,8 +390,9 @@ public class MeasurementScheduler extends Service {
                 CancelTask cancelTask = new CancelTask(future);
                 cancelExecutor.schedule(cancelTask, delay, TimeUnit.MILLISECONDS);
               }
-              Log.i(SpeedometerApp.TAG, "There are " + pendingTasks.size() + 
-                  " in pendingTasks");
+            }
+            synchronized (pendingTasks) {
+              pendingTasks.put(task, future);
             }
           } 
         } catch (InterruptedException e) {
