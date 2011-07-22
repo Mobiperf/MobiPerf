@@ -3,3 +3,4 @@ gen/*
 tests/bin/*
 tests/gen/*
 *.pyc
+server/index.yaml
