@@ -6,6 +6,8 @@
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
+import logging
+
 from google.appengine.ext import db
 from gspeedometer.helpers import util
 
@@ -25,7 +27,12 @@ class DeviceInfo(db.Model):
   def last_update(self):
     query = self.deviceproperties_set
     query.order('-timestamp')
-    return query.fetch(1)[0]
+    try:
+      return query.fetch(1)[0]
+    except IndexError:
+      logging.exception("There are no device properties associated with the given device");
+      return None;
+
 
   def num_updates(self):
     query = self.deviceproperties_set
@@ -59,8 +66,9 @@ class DeviceProperties(db.Model):
   carrier = db.StringProperty()
 
   def JSON_DECODE_location(self, inputval):
-    self.location.lat = inputval['latitude']
-    self.location.lon = inputval['longitude']
+    lat = float(inputval['latitude'])
+    lon = float(inputval['longitude'])
+    self.location = db.GeoPt(lat, lon) 
 
   def JSON_DECODE_timestamp(self, inputval):
     self.timestamp = util.StringToTime(inputval['timestamp'])
@@ -148,7 +156,11 @@ class Measurement(db.Expando):
 
   def JSON_DECODE_values(self, input_dict):
     for k, v in input_dict.items():
-      setattr(self, 'mval_' + k, v)
+      # body and headers can be fairly long. Use the Text data type instead
+      if (k == "body" or k == "headers"):
+        setattr(self, 'mval_' + k, db.Text(v))
+      else:
+        setattr(self, 'mval_' + k, v)
 
   def JSON_DECODE_task_key(self, task_key):
     # Look up the task_key and set the 'task' field accordingly.
