@@ -1,13 +1,13 @@
+// Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
-// Copyright 2011 Google Inc. All Rights Reserved.
 import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,12 +30,12 @@ import java.io.IOException;
  *
  */
 public class AccountSelector {
-  private Activity parentActivity;
+  private Context context;
   private Checkin checkin;
   private Cookie cookie = null;
   
-  public AccountSelector(Activity parentActivity, Checkin checkin) {
-    this.parentActivity = parentActivity;
+  public AccountSelector(Context context, Checkin checkin) {
+    this.context = context;
     this.checkin = checkin;
   }
   
@@ -45,16 +45,16 @@ public class AccountSelector {
     Log.i(SpeedometerApp.TAG, "AccountSelector.authorize() running");
     
     AccountManager accountManager = AccountManager.get(
-        parentActivity.getApplicationContext());
+        context.getApplicationContext());
     Account[] accounts = accountManager.getAccountsByType("com.google");
     Log.i(SpeedometerApp.TAG, "Got " + accounts.length + " accounts");
     
     if (accounts != null && accounts.length > 0) {
     // TODO(mdw): If multiple accounts, need to pick the correct one
-      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accounts[0]);
+      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accounts[1]);
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
-          accounts[0], "ah", false, new AccountManagerCallback<Bundle>() {
+          accounts[1], "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
@@ -80,7 +80,8 @@ public class AccountSelector {
         // User input required. (A UI will pop up for user's consent to allow
         // this app access account information.)
         Log.i(SpeedometerApp.TAG, "Starting account manager activity");
-        parentActivity.startActivity(intent);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
       } else {
         Log.i(SpeedometerApp.TAG, "Executing getCookie task");
         String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);

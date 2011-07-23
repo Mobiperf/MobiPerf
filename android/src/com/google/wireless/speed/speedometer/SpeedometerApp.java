@@ -70,6 +70,8 @@ public class SpeedometerApp extends TabActivity {
     // We only need one instance of scheduler thread
     if (this.scheduler != null) {
       new Thread(this.scheduler).start();
+      this.scheduler.resume();
+      this.scheduler.setIsCheckinEnabled(true);
     } else {
       // Should never happen
       Log.wtf(TAG, "Scheduler thread cannot be started");

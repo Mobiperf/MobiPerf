@@ -103,27 +103,27 @@ public class TracerouteTask extends MeasurementTask {
       this.target = params.get("target");
       try {        
         String val;
-        if ((val = params.get("packet_size_byte")) != null) {
+        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         } else {
           this.packetSizeByte = TracerouteTask.DEFAULT_PING_PACKET_SIZE;
         }
-        if ((val = params.get("ping_timeout_sec")) != null) {
+        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         } else {
           this.pingTimeoutSec = TracerouteTask.DEFAULT_PING_TIMEOUT;
         }
-        if ((val = params.get("ping_interval_sec")) != null) {
+        if ((val = params.get("ping_interval_sec")) != null && val.length() > 0) {
           this.pingIntervalSec = Integer.parseInt(val);  
         } else {
           this.pingIntervalSec = TracerouteTask.DEFAULT_PING_INTERVAL;
         }
-        if ((val = params.get("pings_per_hop")) != null) {
+        if ((val = params.get("pings_per_hop")) != null && val.length() > 0) {
           this.pingsPerHop = Integer.parseInt(val);  
         } else {
           this.pingsPerHop = TracerouteTask.DEFAULT_PINGS_PER_HOP;
         }
-        if ((val = params.get("max_ping_count")) != null) {
+        if ((val = params.get("max_ping_count")) != null && val.length() > 0) {
           this.maxPingCount = Integer.parseInt(val);  
         } else {
           this.maxPingCount = TracerouteTask.DEFAULT_MAX_PING_CNT;

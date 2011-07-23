@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementScheduler implements Runnable {
 
   // Default checkin interval is 30 minutes
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30 * 60;
+  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   private static MeasurementScheduler singleInstance = null;
   
@@ -258,6 +258,7 @@ public class MeasurementScheduler implements Runnable {
                */
               Log.e(SpeedometerApp.TAG, e.getMessage());
             } catch (ExecutionException e) {
+              finishedTasks.add(this.getFailureResult(task));
               Log.e(SpeedometerApp.TAG, e.getMessage());
             } catch (CancellationException e) {
               Log.e(SpeedometerApp.TAG, e.getMessage());
@@ -285,7 +286,7 @@ public class MeasurementScheduler implements Runnable {
       try {
         this.checkin.uploadMeasurementResult(finishedTasks);
       } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, e.getMessage());
+        Log.e(SpeedometerApp.TAG, "Error when uploading message");
       }
     }
     
@@ -296,10 +297,15 @@ public class MeasurementScheduler implements Runnable {
   private class CheckinTask implements Runnable {
     @Override
     public void run() {
-      if (getIsCheckinEnabled()) {
-        uploadResults();
-        getTasksFromServer();
-      }
+      parent.runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          if (getIsCheckinEnabled()) {
+            uploadResults();
+            getTasksFromServer();
+          }
+        }
+      });
     }
   }
   
