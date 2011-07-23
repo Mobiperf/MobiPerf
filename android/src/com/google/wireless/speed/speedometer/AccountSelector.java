@@ -51,10 +51,21 @@ public class AccountSelector {
     
     if (accounts != null && accounts.length > 0) {
     // TODO(mdw): If multiple accounts, need to pick the correct one
-      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accounts[1]);
+      Account accountToUse = accounts[0];
+      // We prefer google's corporate account to personal account
+      for (Account account : accounts) {
+        if (account.name.endsWith("google.com")) {
+          Log.i(SpeedometerApp.TAG, 
+              "Choose to use preferred google.com account: " + account.name);
+          accountToUse = account;
+          break;
+        }
+      }
+      
+      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accountToUse);
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
-          accounts[1], "ah", false, new AccountManagerCallback<Bundle>() {
+        accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");

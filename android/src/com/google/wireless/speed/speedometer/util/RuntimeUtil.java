@@ -4,6 +4,7 @@ package com.google.wireless.speed.speedometer.util;
 
 import com.google.wireless.speed.speedometer.DeviceInfo;
 import com.google.wireless.speed.speedometer.DeviceProperty;
+import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
@@ -66,10 +67,7 @@ public class RuntimeUtil {
   public static Location getLocation() {
     /* LocationManager locationManager = 
         (LocationManager) this.getSystemService(Context.LOCATION_SERVICE); */
-    Location dummyLocation =  new Location(LocationManager.GPS_PROVIDER);
-    dummyLocation.setLatitude(0);
-    dummyLocation.setLongitude(0);
-    return dummyLocation;
+    return PhoneUtils.getPhoneUtils().getLocation();
   }
   
   private static ConnectivityManager getConnManager() {      
