@@ -20,7 +20,7 @@ from gspeedometer.controllers import measurement
 
 class AddToScheduleForm(forms.Form):
   type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
-  param1 = forms.CharField(required=False)
+  param1 = forms.CharField(required=True)
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
   count = forms.CharField(required=False)
@@ -40,9 +40,24 @@ class Schedule(webapp.RequestHandler):
       add_to_schedule_form.full_clean()
       if add_to_schedule_form.is_valid():
         thetype = add_to_schedule_form.cleaned_data['type']
-        param1 = add_to_schedule_form.cleaned_data['param1']
-        param2 = add_to_schedule_form.cleaned_data['param2']
-        param3 = add_to_schedule_form.cleaned_data['param3']
+        if thetype == 'ping':
+          param1 = add_to_schedule_form.cleaned_data['target']
+          param2 = add_to_schedule_form.cleaned_data['ping packet size (bytes)']
+          param3 = add_to_schedule_form.cleaned_data['ping timeout (seconds)']
+        elif thetype == 'http':
+          param1 = add_to_schedule_form.cleaned_data['URL']
+          param2 = add_to_schedule_form.cleaned_data['http method']
+          param3 = add_to_schedule_form.cleaned_data['headers (RFC 2616 format)']
+        elif thetype == 'traceroute':
+          param1 = add_to_schedule_form.cleaned_data['target']
+          param2 = add_to_schedule_form.cleaned_data['pings per hop']
+          param3 = add_to_schedule_form.cleaned_data['maximum # of pings']
+        elif thetype == 'dns_lookup':
+          param1 = add_to_schedule_form.cleaned_data['target']
+          param2 = add_to_schedule_form.cleaned_data['DNS server']
+        else:
+          ## TODO(Wenjie): finish it as we add more types
+
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count']

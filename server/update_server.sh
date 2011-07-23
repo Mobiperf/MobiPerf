@@ -2,5 +2,5 @@
 
 echo "Password is: yeuqakmysyglasja"
 
-appcfg.py -e mdw@google.com update .
+appcfg.py -e wenjiezeng@google.com update .
 

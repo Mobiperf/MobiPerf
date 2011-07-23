@@ -300,9 +300,19 @@ public class MeasurementScheduler implements Runnable {
       parent.runOnUiThread(new Runnable() {
         @Override
         public void run() {
-          if (getIsCheckinEnabled()) {
-            uploadResults();
-            getTasksFromServer();
+          try {
+            if (getIsCheckinEnabled()) {
+              uploadResults();
+              getTasksFromServer();
+            }
+          } catch (Exception e) {
+            /* Executor stops all subsequent execution of a periodic task if an execution
+             * is raised. We catch all undeclared exceptions here 
+             */
+            Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught");
+            if (e.getMessage() != null) {
+              Log.e(SpeedometerApp.TAG, e.getMessage());  
+            }
           }
         }
       });

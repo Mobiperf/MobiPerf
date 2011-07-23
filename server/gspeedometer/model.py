@@ -165,12 +165,15 @@ class Measurement(db.Expando):
   def JSON_DECODE_task_key(self, task_key):
     # Look up the task_key and set the 'task' field accordingly.
     # If the task does not exist, just don't set this field
-    task = Task.get_by_key_name(task_key)
-    if not task:
-      task = Task.get_by_id(int(task_key))
+    if (task_key != None): 
+      task = Task.get_by_key_name(task_key)
       if not task:
-        return
-    self.task = task
+        task = Task.get_by_id(int(task_key))
+        if not task:
+          return
+      self.task = task
+    else:
+      return
 
   def __str__(self):
     return 'Measurement <device %s, type %s>' % (
