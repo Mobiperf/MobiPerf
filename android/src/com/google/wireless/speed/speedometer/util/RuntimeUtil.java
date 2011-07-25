@@ -65,8 +65,6 @@ public class RuntimeUtil {
   
   /* TODO(Wenjie): Implements this using the location service.*/
   public static Location getLocation() {
-    /* LocationManager locationManager = 
-        (LocationManager) this.getSystemService(Context.LOCATION_SERVICE); */
     return PhoneUtils.getPhoneUtils().getLocation();
   }
   
