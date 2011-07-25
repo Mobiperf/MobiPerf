@@ -20,7 +20,7 @@ from gspeedometer.controllers import measurement
 
 class AddToScheduleForm(forms.Form):
   type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
-  param1 = forms.CharField(required=False)
+  param1 = forms.CharField(required=True)
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
   count = forms.CharField(required=False)
@@ -70,6 +70,9 @@ class Schedule(webapp.RequestHandler):
           task.mparam_url = param1
           task.mparam_method = param2
           task.mparam_headers = param3
+        elif task.type =='dns_lookup'
+          task.mparam_target = param1
+          task.mparam_server = param2
         ## TODO(Wenjie):FINISH THIS...
 
         task.put()
