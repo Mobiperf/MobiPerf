@@ -30,8 +30,11 @@ import java.io.IOException;
  *
  */
 public class AccountSelector {
+  private static final String ACCOUNT_TYPE = "com.google";
+  private static final String ACCOUNT_NAME = "@google.com";
   private Context context;
   private Checkin checkin;
+  private String authToken = null;
   private Cookie cookie = null;
   
   public AccountSelector(Context context, Checkin checkin) {
@@ -46,15 +49,20 @@ public class AccountSelector {
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
-    Account[] accounts = accountManager.getAccountsByType("com.google");
+    if (this.authToken != null) {
+      // There will be no effect on the token if it is still valid
+      accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
+    }
+    
+    Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
     Log.i(SpeedometerApp.TAG, "Got " + accounts.length + " accounts");
     
     if (accounts != null && accounts.length > 0) {
     // TODO(mdw): If multiple accounts, need to pick the correct one
       Account accountToUse = accounts[0];
-      // We prefer google's corporate account to personal account
+      // We prefer google's corporate account to personal accounts such as somebody@gmail.com
       for (Account account : accounts) {
-        if (account.name.endsWith("google.com")) {
+        if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
           Log.i(SpeedometerApp.TAG, 
               "Choose to use preferred google.com account: " + account.name);
           accountToUse = account;
@@ -75,7 +83,7 @@ public class AccountSelector {
       Log.i(SpeedometerApp.TAG, "AccountManager.getAuthToken returned " + future);
       return cookieTask;
     } else {
-      throw new RuntimeException("No @google.com account found");
+      throw new RuntimeException("No google account found");
     }
   }
   
@@ -95,7 +103,7 @@ public class AccountSelector {
         context.startActivity(intent);
       } else {
         Log.i(SpeedometerApp.TAG, "Executing getCookie task");
-        String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+        this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
         cookieTask.execute(authToken);
       }
     } catch (OperationCanceledException e) {
