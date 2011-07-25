@@ -2,6 +2,7 @@
 package com.google.wireless.speed.speedometer;
 
 
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
@@ -34,6 +35,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementTypes.put(PingTask.TYPE, PingTask.class);
     measurementTypes.put(HttpTask.TYPE, HttpTask.class);
     measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
+    measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
   }
   
   public static Class getTaskClassForMeasurement(String type) {

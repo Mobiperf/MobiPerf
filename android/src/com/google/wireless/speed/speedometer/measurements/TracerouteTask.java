@@ -44,7 +44,7 @@ public class TracerouteTask extends MeasurementTask {
   public static final int DEFAULT_PING_CNT_PER_TASK = 10;
   public static final double DEFAULT_PING_INTERVAL = 0.5;
   public static final int DEFAULT_PING_TIMEOUT = 10;
-  public static final int DEFAULT_MAX_PING_CNT = 10;
+  public static final int DEFAULT_MAX_PING_CNT = 30;
   public static final int DEFAULT_PINGS_PER_HOP = 3;
   private static final long DEFAULT_CNT = 1;
   

@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementScheduler implements Runnable {
 
   // Default checkin interval is 30 minutes
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 60;
+  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   private static MeasurementScheduler singleInstance = null;
   
