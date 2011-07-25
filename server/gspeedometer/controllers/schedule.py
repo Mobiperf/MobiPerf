@@ -20,7 +20,7 @@ from gspeedometer.controllers import measurement
 
 class AddToScheduleForm(forms.Form):
   type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
-  param1 = forms.CharField(required=True)
+  param1 = forms.CharField(required=False)
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
   count = forms.CharField(required=False)
