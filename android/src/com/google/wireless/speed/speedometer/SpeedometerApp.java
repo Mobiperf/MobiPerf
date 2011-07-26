@@ -19,6 +19,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.TabHost;
 
+import java.security.Security;
+
 /**
  * The main UI thread that manages different tabs
  * TODO(Wenjie): Implement button handler to stop all threads and the Speedometer app
@@ -62,6 +64,15 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    
+    /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
+     * However, it is known that the current Android OS does not take actions
+     * on these properties but may be enforced in future versions.
+     */ 
+    System.setProperty( "networkaddress.cache.ttl", "0");
+    System.setProperty( "networkaddress.cache.negative.ttl", "0");
+    Security.setProperty( "networkaddress.cache.ttl", "0");
+    Security.setProperty( "networkaddress.cache.negative.ttl", "0"); 
 
     Resources res = getResources(); // Resource object to get Drawables
     TabHost tabHost = getTabHost();  // The activity TabHost
