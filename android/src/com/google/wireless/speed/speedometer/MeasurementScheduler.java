@@ -39,10 +39,10 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementScheduler extends Service {
 
   // Default checkin interval is 30 minutes
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 30 * 60;
+  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   
-  private ScheduledThreadPoolExecutor executor;
+  private ScheduledThreadPoolExecutor measurementExecutor;
   private Handler receiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
@@ -64,6 +64,9 @@ public class MeasurementScheduler extends Service {
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
     
+  /**
+   * The Binder class that returns an instance of running scheduler 
+   */
   public class SchedulerBinder extends Binder {
     public MeasurementScheduler getService() {
       return MeasurementScheduler.this;
@@ -81,6 +84,7 @@ public class MeasurementScheduler extends Service {
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
+    PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.isCheckinEnabled = false;
     this.checkin = new Checkin(this);
     this.checkinIntervalSec = DEDAULT_CHECKIN_INTERVAL_SEC;
@@ -92,8 +96,8 @@ public class MeasurementScheduler extends Service {
     this.stopRequested = false;
     
     this.receiver = new UpdateHandler();
-    this.executor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
-    this.executor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
+    this.measurementExecutor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
+    this.measurementExecutor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
     this.taskQueue =
         new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE, 
             new TaskComparator());
@@ -107,9 +111,11 @@ public class MeasurementScheduler extends Service {
     // Start up the thread running the service. Using one single thread for all requests
     if (this.schedulerThread == null) {
       Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
-      this.setCheckinInterval(DEDAULT_CHECKIN_INTERVAL_SEC);
+      this.setCheckinInterval(checkinIntervalSec);
       this.schedulerThread = new SchedulerThread();
       new Thread(this.schedulerThread).start();
+      this.resume();
+      this.setIsCheckinEnabled(true);
     }
     return START_STICKY;
   }
@@ -193,6 +199,7 @@ public class MeasurementScheduler extends Service {
   public synchronized void requestStop() {
     this.stopRequested = true;
     this.notifyAll();
+    this.cleanUp();
   }
   
   /** Submit a MeasurementTask to the scheduler */
@@ -230,15 +237,17 @@ public class MeasurementScheduler extends Service {
   private synchronized void cleanUp() {
     this.taskQueue.clear();
     // remove all future tasks
-    this.executor.shutdown();
+    this.measurementExecutor.shutdown();
     // remove and stop all active tasks
-    this.executor.shutdownNow();
+    this.measurementExecutor.shutdownNow();
+    this.checkin.shutDown();
     this.checkinExecutor.shutdown();
     this.checkinExecutor.shutdownNow();
     this.cancelExecutor.shutdown();
     this.cancelExecutor.shutdownNow();
     this.notifyAll();
-    Log.i(SpeedometerApp.TAG, "Shut down all executors");
+    this.stopSelf();
+    Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
   
   private void getTasksFromServer() {
@@ -284,6 +293,7 @@ public class MeasurementScheduler extends Service {
                */
               Log.e(SpeedometerApp.TAG, e.getMessage());
             } catch (ExecutionException e) {
+              finishedTasks.add(this.getFailureResult(task));
               Log.e(SpeedometerApp.TAG, e.getMessage());
             } catch (CancellationException e) {
               Log.e(SpeedometerApp.TAG, e.getMessage());
@@ -311,7 +321,7 @@ public class MeasurementScheduler extends Service {
       try {
         this.checkin.uploadMeasurementResult(finishedTasks);
       } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, e.getMessage());
+        Log.e(SpeedometerApp.TAG, "Error when uploading message");
       }
     }
     
@@ -322,9 +332,21 @@ public class MeasurementScheduler extends Service {
   private class CheckinTask implements Runnable {
     @Override
     public void run() {
-      if (getIsCheckinEnabled()) {
-        uploadResults();
-        getTasksFromServer();
+      Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
+      try {
+        if (getIsCheckinEnabled()) {
+          uploadResults();
+          getTasksFromServer();
+        }
+      } catch (Exception e) {
+        /*
+         * Executor stops all subsequent execution of a periodic task if an
+         * execution is raised. We catch all undeclared exceptions here
+         */
+        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught");
+        if (e.getMessage() != null) {
+          Log.e(SpeedometerApp.TAG, e.getMessage());
+        }
       }
     }
   }
@@ -393,7 +415,8 @@ public class MeasurementScheduler extends Service {
                   + " tasks in taskQueue");
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {
-                future = executor.schedule(task, task.timeFromExecution(), TimeUnit.SECONDS);
+                future = measurementExecutor.schedule(task, task.timeFromExecution(), 
+                    TimeUnit.SECONDS);
                 if (task.measurementDesc.endTime != null) {
                   long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
                   CancelTask cancelTask = new CancelTask(future);

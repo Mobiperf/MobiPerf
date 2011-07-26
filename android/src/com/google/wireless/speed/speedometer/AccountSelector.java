@@ -9,7 +9,6 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -21,6 +20,10 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Helper class for google account checkins
@@ -30,46 +33,83 @@ import java.io.IOException;
  *
  */
 public class AccountSelector {
+  private static final String ACCOUNT_TYPE = "com.google";
+  private static final String ACCOUNT_NAME = "@google.com";
   private Context context;
   private Checkin checkin;
-  private Cookie cookie = null;
+  private String authToken = null;
+  private ExecutorService checkinExecutor = null;
+  private Future<Cookie> checkinFuture = null;
   
   public AccountSelector(Context context, Checkin checkin) {
     this.context = context;
     this.checkin = checkin;
+    this.checkinExecutor = Executors.newFixedThreadPool(1);
   }
   
-  public AsyncTask<String, Void, Cookie> authorize() 
+  /** Returns the Future to monitor the checkin progress */
+  public synchronized Future<Cookie> getCheckinFuture() {
+    return this.checkinFuture;
+  }
+  
+  /** After checkin finishes, the client of AccountSelector SHOULD reset checkinFuture */
+  public synchronized void resetCheckinFuture() {
+    this.checkinFuture = null;
+  }
+  
+  /** Shuts down the executor thread */
+  public void shutDown() {
+    // shutdown() removes all previously submitted task and no new tasks are accepted 
+    this.checkinExecutor.shutdown();
+    // shutdownNow stops all currently executing tasks
+    this.checkinExecutor.shutdownNow();
+  }
+  
+  /** Starts an authentication request  */
+  public void authenticate() 
     throws OperationCanceledException, AuthenticatorException, IOException {
-    final GetCookieTask cookieTask = new GetCookieTask();
-    Log.i(SpeedometerApp.TAG, "AccountSelector.authorize() running");
+    Log.i(SpeedometerApp.TAG, "AccountSelector.authenticate() running");
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
-    Account[] accounts = accountManager.getAccountsByType("com.google");
+    if (this.authToken != null) {
+      // There will be no effect on the token if it is still valid
+      accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
+    }
+    
+    Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
     Log.i(SpeedometerApp.TAG, "Got " + accounts.length + " accounts");
     
     if (accounts != null && accounts.length > 0) {
-    // TODO(mdw): If multiple accounts, need to pick the correct one
-      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accounts[0]);
+      // TODO(mdw): If multiple accounts, need to pick the correct one
+      Account accountToUse = accounts[0];
+      // We prefer google's corporate account to personal accounts such as somebody@gmail.com
+      for (Account account : accounts) {
+        if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
+          Log.i(SpeedometerApp.TAG, 
+              "Using the preferred google.com account: " + account.name);
+          accountToUse = account;
+          break;
+        }
+      }
+      
+      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accountToUse);
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
-          accounts[0], "ah", false, new AccountManagerCallback<Bundle>() {
+          accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
-          getAuthToken(result, cookieTask);
+          getAuthToken(result);
         }},
         null);
       Log.i(SpeedometerApp.TAG, "AccountManager.getAuthToken returned " + future);
-      return cookieTask;
     } else {
-      throw new RuntimeException("No @google.com account found");
+      throw new RuntimeException("No google account found");
     }
   }
   
-  private void getAuthToken(AccountManagerFuture<Bundle> result,
-      GetCookieTask cookieTask) {
+  private void getAuthToken(AccountManagerFuture<Bundle> result) {
     Log.i(SpeedometerApp.TAG, "getAuthToken() called, result " + result);
     String errMsg = "Failed to get login cookie. ";
     Bundle bundle;
@@ -80,11 +120,14 @@ public class AccountSelector {
         // User input required. (A UI will pop up for user's consent to allow
         // this app access account information.)
         Log.i(SpeedometerApp.TAG, "Starting account manager activity");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
       } else {
         Log.i(SpeedometerApp.TAG, "Executing getCookie task");
-        String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-        cookieTask.execute(authToken);
+        synchronized (this) {
+          this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+          this.checkinFuture = checkinExecutor.submit(new GetCookieTask());
+        }
       }
     } catch (OperationCanceledException e) {
       Log.e(SpeedometerApp.TAG, errMsg, e);
@@ -98,10 +141,10 @@ public class AccountSelector {
     }
   }
   
-  private class GetCookieTask extends AsyncTask<String, Void, Cookie> {
+  private class GetCookieTask implements Callable<Cookie> {    
     @Override
-    protected Cookie doInBackground(String... tokens) {
-      Log.i(SpeedometerApp.TAG, "GetCookieTask running: " + tokens[0]);
+    public Cookie call() {
+      Log.i(SpeedometerApp.TAG, "GetCookieTask running: " + authToken);
       DefaultHttpClient httpClient = new DefaultHttpClient();
       try {
         String loginUrlPrefix = checkin.getServerUrl() +
@@ -110,9 +153,9 @@ public class AccountSelector {
         // Don't follow redirects
         httpClient.getParams().setBooleanParameter(
             ClientPNames.HANDLE_REDIRECTS, false);
-        HttpGet httpGet = new HttpGet(loginUrlPrefix + tokens[0]);
+        HttpGet httpGet = new HttpGet(loginUrlPrefix + authToken);
         HttpResponse response;
-        Log.i(SpeedometerApp.TAG, "Accessing: " + loginUrlPrefix + tokens[0]);
+        Log.i(SpeedometerApp.TAG, "Accessing: " + loginUrlPrefix + authToken);
         response = httpClient.execute(httpGet);
         if (response.getStatusLine().getStatusCode() != 302) {
           // Response should be a redirect to the "continue" URL.
