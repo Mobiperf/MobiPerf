@@ -58,8 +58,10 @@ public class AccountSelector {
   }
   
   /** Shuts down the executor thread */
-  public void shutDown() { 
+  public void shutDown() {
+    // shutdown() removes all previously submitted task and no new tasks are accepted 
     this.checkinExecutor.shutdown();
+    // shutdownNow stops all currently executing tasks
     this.checkinExecutor.shutdownNow();
   }
   

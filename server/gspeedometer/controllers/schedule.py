@@ -70,6 +70,9 @@ class Schedule(webapp.RequestHandler):
           task.mparam_url = param1
           task.mparam_method = param2
           task.mparam_headers = param3
+        elif task.type == 'dns_lookup':
+          task.mparam_target = param1
+          task.mparam_server = param2
         ## TODO(Wenjie):FINISH THIS...
 
         task.put()
