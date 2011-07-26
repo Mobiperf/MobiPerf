@@ -128,7 +128,7 @@ public class MeasurementJsonConvertor {
     return dateFormat.parse(dateString);
   }
 
-  private static String formatDate(Date date) {
+  public static String formatDate(Date date) {
     return dateFormat.format(date);
   }
 

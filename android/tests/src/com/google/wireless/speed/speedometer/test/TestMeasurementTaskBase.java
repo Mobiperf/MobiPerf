@@ -21,7 +21,7 @@ public class TestMeasurementTaskBase extends
   protected Instrumentation inst;
   // The system console for the test case to print debugging message to the phone screen
   protected TextView systemConsole;
-  protected MeasurementScheduler scheduler;  
+  protected MeasurementScheduler scheduler;
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase() {

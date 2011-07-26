@@ -19,6 +19,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.TabHost;
 
+import java.security.Security;
+
 /**
  * The main UI thread that manages different tabs
  * TODO(Wenjie): Implement button handler to stop all threads and the Speedometer app
@@ -62,6 +64,15 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    
+    /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
+     * However, it is known that the current Android OS does not take actions
+     * on these properties but may be enforced in future versions.
+     */ 
+    System.setProperty( "networkaddress.cache.ttl", "0" );
+    System.setProperty( "networkaddress.cache.negative.ttl", "0" );
+    Security.setProperty( "networkaddress.cache.ttl", "0" );
+    Security.setProperty( "networkaddress.cache.negative.ttl", "0" );
 
     Resources res = getResources(); // Resource object to get Drawables
     TabHost tabHost = getTabHost();  // The activity TabHost
@@ -73,21 +84,19 @@ public class SpeedometerApp extends TabActivity {
 
     // Initialize a TabSpec for each tab and add it to the TabHost
     spec = tabHost.newTabSpec("measurement_monitor").setIndicator("Console",
-      res.getDrawable(R.drawable.tablet)).setContent(intent);
+        res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec("measurement_creation").setIndicator("Create Measurement",
-      res.getDrawable(R.drawable.tablet)).setContent(intent);
+        res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
     tabHost.setCurrentTab(0);
     
     createAlertDialog();
     RuntimeUtil.setActivity(this);
-    
-    PhoneUtils.setGlobalContext(getApplicationContext());
     
     // We only need one instance of scheduler thread
     Intent schedulerIntent = new Intent(this, MeasurementScheduler.class);
@@ -105,7 +114,6 @@ public class SpeedometerApp extends TabActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    PhoneUtils.releaseGlobalContext();
     if (isBounded) {
       unbindService(serviceConn);
       isBounded = false;
@@ -133,7 +141,7 @@ public class SpeedometerApp extends TabActivity {
     builder.setMessage("Do you want to exit Speedometer?")
            .setCancelable(false)
            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-             @Override
+               @Override
                public void onClick(DialogInterface dialog, int id) {
                  Log.i(TAG, "User requests exit. Stopping all threads");
                  SpeedometerApp.this.scheduler.requestStop();

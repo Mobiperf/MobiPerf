@@ -7,7 +7,6 @@ import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import org.apache.http.client.ClientProtocolException;
@@ -34,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Handles checkins with the SpeedometerApp server.
@@ -47,7 +47,7 @@ public class Checkin {
   private String serverUrl;
   private Date lastCheckin;
   private volatile Cookie authCookie = null;
-  private AsyncTask<String, Void, Cookie> getCookieTask = null;
+  private AccountSelector accountSelector = null;
   
   public Checkin(Context context, String serverUrl) {
     this.context = context;
@@ -68,6 +68,13 @@ public class Checkin {
       return true;
     } else {
       return false;
+    }
+  }
+  
+  /** Shuts down the checkin thread */
+  public void shutDown() {
+    if (this.accountSelector != null) {
+      this.accountSelector.shutDown();
     }
   }
   
@@ -142,7 +149,7 @@ public class Checkin {
   }
   
   public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
-  throws IOException {    
+      throws IOException {    
     JSONArray resultArray = new JSONArray();
     for (MeasurementResult result : finishedTasks) {
       try {
@@ -199,7 +206,7 @@ public class Checkin {
   }
   
   private String speedometerServiceRequest(String url, String jsonString) 
-    throws IOException {
+      throws IOException {
     
     synchronized (this) {
       if (authCookie == null) {
@@ -257,9 +264,10 @@ public class Checkin {
       authCookie = getFakeAuthCookie();
       return;
     }
-    if (getCookieTask == null) {
+    if (this.accountSelector == null) {
       try {
-        getCookieTask = new AccountSelector(context, this).authorize();
+        accountSelector = new AccountSelector(context, this);
+        accountSelector.authorize();
       } catch (OperationCanceledException e) {
         Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
       } catch (AuthenticatorException e) {
@@ -275,14 +283,16 @@ public class Checkin {
       authCookie = getFakeAuthCookie();
       return true;
     }
-    if (getCookieTask == null) {
+    Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
+    if (getCookieFuture == null) {
       Log.i(SpeedometerApp.TAG, "checkGetCookie called too early");
       return false;
     }
-    if (getCookieTask.getStatus() == AsyncTask.Status.FINISHED) {
+    if (getCookieFuture.isDone()) {
       try {
-        authCookie = getCookieTask.get();
+        authCookie = getCookieFuture.get();
         Log.i(SpeedometerApp.TAG, "Got authCookie: " + authCookie);
+        accountSelector.resetCheckinFuture();
         return true;
       } catch (InterruptedException e) {
         Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);

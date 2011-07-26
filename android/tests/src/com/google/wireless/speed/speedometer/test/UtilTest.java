@@ -7,6 +7,7 @@ import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,12 +33,10 @@ public class UtilTest extends AndroidTestCase {
   
   @SuppressWarnings("cast")
   public void testGson() {
-    String pingExe = "/system/bin/ping";
     String pingServer = "www.dealsea.com";
     Date startTime = Calendar.getInstance().getTime();
 
     HashMap<String, String> params = new HashMap<String, String>();
-    params.put("ping_exe", pingExe);
     params.put("target", pingServer);
     PingDesc pingDesc = new PingDesc(null, startTime, null, 0, 0, 0, params);
     
@@ -53,5 +52,10 @@ public class UtilTest extends AndroidTestCase {
     } catch (JSONException e1) {
       assertTrue("JSON encodign fails", false);      
     }
+  }
+  
+  public void testTimeStamp() {
+    Log.i(SpeedometerApp.TAG, 
+        MeasurementJsonConvertor.formatDate(Calendar.getInstance().getTime()));
   }
 }

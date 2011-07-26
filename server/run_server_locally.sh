@@ -8,4 +8,3 @@ CLEAR=""
 
 $PYTHON $APPSERVER $CLEAR -d --auth_domain google.com --address 0.0.0.0 .
 
-

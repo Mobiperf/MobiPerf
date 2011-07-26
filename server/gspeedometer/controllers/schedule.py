@@ -65,11 +65,14 @@ class Schedule(webapp.RequestHandler):
         elif task.type == 'traceroute':
           task.mparam_target = param1
           task.mparam_pings_per_hop= param2
-          task.mparam_max_ping_count = param3
+          task.mparam_max_hop_count = param3
         elif task.type == 'http':
           task.mparam_url = param1
           task.mparam_method = param2
           task.mparam_headers = param3
+        elif task.type == 'dns_lookup':
+          task.mparam_target = param1
+          task.mparam_server = param2
         ## TODO(Wenjie):FINISH THIS...
 
         task.put()
