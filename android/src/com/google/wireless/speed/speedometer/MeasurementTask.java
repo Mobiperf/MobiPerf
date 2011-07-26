@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
 @SuppressWarnings("rawtypes")
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
   // the priority queue we use put the smallest element in the head of the queue
-  public static int USER_PRIORITY = Integer.MIN_VALUE;
+  public static final int USER_PRIORITY = Integer.MIN_VALUE;
   protected MeasurementDesc measurementDesc;
   protected Context parent;
   protected int progress;
