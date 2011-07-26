@@ -6,6 +6,8 @@ import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 
+import android.content.Context;
+
 import java.io.InvalidClassException;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
@@ -23,7 +25,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   // the priority queue we use put the smallest element in the head of the queue
   public static int USER_PRIORITY = Integer.MIN_VALUE;
   protected MeasurementDesc measurementDesc;
-  protected SpeedometerApp parent;
+  protected Context parent;
   protected int progress;
   private static HashMap<String, Class> measurementTypes;
   
@@ -52,7 +54,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
    * @param measurementDesc
    * @param parent
    */
-  protected MeasurementTask(MeasurementDesc measurementDesc, SpeedometerApp parent) {
+  protected MeasurementTask(MeasurementDesc measurementDesc, Context parent) {
     super();
     this.measurementDesc = measurementDesc;
     this.parent = parent;

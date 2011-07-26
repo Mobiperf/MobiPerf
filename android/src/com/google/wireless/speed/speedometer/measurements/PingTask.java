@@ -13,6 +13,7 @@ import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
 
+import android.content.Context;
 import android.net.http.AndroidHttpClient;
 import android.util.Log;
 
@@ -113,7 +114,7 @@ public class PingTask extends MeasurementTask {
     return PingDesc.class;
   }
   
-  public PingTask(MeasurementDesc desc, SpeedometerApp parent) {
+  public PingTask(MeasurementDesc desc, Context parent) {
     super(new PingDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
   }

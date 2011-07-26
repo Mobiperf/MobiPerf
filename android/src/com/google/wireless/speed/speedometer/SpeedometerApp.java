@@ -2,15 +2,20 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TabActivity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.TabHost;
 
@@ -23,15 +28,33 @@ import android.widget.TabHost;
 public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
-  private MeasurementScheduler scheduler;
-  AlertDialog exitConfirmationDialog;
-  
   private final int EXIT_DIALOG_ID = 0;
   
-  public void submitTask(MeasurementTask task) {
-    this.scheduler.submitTask(task);
-    synchronized (scheduler) {
-      scheduler.notify();
+  private MeasurementScheduler scheduler;
+  private AlertDialog exitConfirmationDialog;
+  private boolean isBounded = false;  
+  /** Defines callbacks for service binding, passed to bindService() */
+  private ServiceConnection serviceConn = new ServiceConnection() {
+      @Override
+      public void onServiceConnected(ComponentName className,
+              IBinder service) {
+          // We've bound to LocalService, cast the IBinder and get LocalService instance
+          SchedulerBinder binder = (SchedulerBinder) service;
+          scheduler = binder.getService();
+          isBounded = true;
+      }
+
+      @Override
+      public void onServiceDisconnected(ComponentName arg0) {
+        isBounded = false;
+      }
+  };
+  
+  public MeasurementScheduler getScheduler() {
+    if (isBounded) {
+      return this.scheduler;
+    } else {
+      return null;
     }
   }
     
@@ -64,23 +87,29 @@ public class SpeedometerApp extends TabActivity {
     createAlertDialog();
     RuntimeUtil.setActivity(this);
     
-    this.scheduler = MeasurementScheduler.getInstance(this);
     PhoneUtils.setGlobalContext(getApplicationContext());
     
     // We only need one instance of scheduler thread
-    if (this.scheduler != null) {
-      new Thread(this.scheduler).start();
-    } else {
-      // Should never happen
-      Log.wtf(TAG, "Scheduler thread cannot be started");
-    }
-    
+    Intent schedulerIntent = new Intent(this, MeasurementScheduler.class);
+    this.startService(schedulerIntent);
+  }
+  
+  @Override
+  protected void onStart() {
+    super.onStart();
+    // Bind to LocalService
+    Intent intent = new Intent(this, MeasurementScheduler.class);
+    bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
   }
   
   @Override
   protected void onStop() {
     super.onStop();
     PhoneUtils.releaseGlobalContext();
+    if (isBounded) {
+      unbindService(serviceConn);
+      isBounded = false;
+    }
   }
    
   /* TODO(Wenjie): This is a temporary solution to cleanly stop the app as well as all
@@ -88,9 +117,10 @@ public class SpeedometerApp extends TabActivity {
    * Later should provide explicit buttons for user to stop the background threads and the app
    * in a context menu.
    * */
+  
   @Override
   public void onBackPressed() {
-    this.showDialog(this.EXIT_DIALOG_ID);   
+    this.showDialog(this.EXIT_DIALOG_ID);
   }
   
   @Override

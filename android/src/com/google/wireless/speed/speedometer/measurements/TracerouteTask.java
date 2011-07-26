@@ -13,6 +13,7 @@ import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -135,7 +136,7 @@ public class TracerouteTask extends MeasurementTask {
     
   }
   
-  public TracerouteTask(MeasurementDesc desc, SpeedometerApp parent) {
+  public TracerouteTask(MeasurementDesc desc, Context parent) {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
   }

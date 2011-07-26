@@ -51,7 +51,7 @@ public class TestPingTask extends TestMeasurementTaskBase {
     });
     
     // submitTask will notify the waiting scheduler thread upon success
-    this.activity.submitTask(pingTask);
+    this.scheduler.submitTask(pingTask);
     
     /* TODO(Wenjie): Before we figure out how to verify the output of a ping
      * measurement is correct, we simply use this test case as a driver to submit

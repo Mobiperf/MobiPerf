@@ -44,7 +44,7 @@ public class TestHttpTask extends TestMeasurementTaskBase {
     });
     
     // submitTask will notify the waiting scheduler thread upon success
-    this.activity.submitTask(task);
+    this.scheduler.submitTask(task);
     
     /* TODO(Wenjie): Before we know how to figure out the output of a HTTP
      * measurement is correct, we simply use this test case as a driver to submit

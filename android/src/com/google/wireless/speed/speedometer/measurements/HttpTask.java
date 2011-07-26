@@ -11,9 +11,10 @@ import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
 
+import android.content.Context;
 import android.net.http.AndroidHttpClient;
-import android.util.Log;
 import android.util.Base64;
+import android.util.Log;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -57,7 +58,7 @@ public class HttpTask extends MeasurementTask {
   // The default number of times we run a HTTP measurement
   private static final long DEFAULT_CNT = 1;
 
-  public HttpTask(MeasurementDesc desc, SpeedometerApp parent) {
+  public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
   }
