@@ -166,15 +166,15 @@ class Measurement(db.Expando):
     # task_key is optional and can be None.
     # Look up the task_key and set the 'task' field accordingly.
     # If the task does not exist, just don't set this field
-    if (task_key != None):
-      task = Task.get_by_key_name(task_key)
-      if not task:
-        task = Task.get_by_id(int(task_key))
-        if not task:
-          return
-      self.task = task
-    else:
+    if (task_key is None):
       return
+
+    task = Task.get_by_key_name(task_key)
+    if not task:
+      task = Task.get_by_id(int(task_key))
+      if not task:
+        return
+    self.task = task
 
   def __str__(self):
     return 'Measurement <device %s, type %s>' % (
