@@ -267,7 +267,7 @@ public class Checkin {
     if (this.accountSelector == null) {
       try {
         accountSelector = new AccountSelector(context, this);
-        accountSelector.authorize();
+        accountSelector.authenticate();
       } catch (OperationCanceledException e) {
         Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
       } catch (AuthenticatorException e) {

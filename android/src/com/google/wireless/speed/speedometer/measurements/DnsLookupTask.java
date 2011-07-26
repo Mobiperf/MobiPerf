@@ -100,8 +100,8 @@ public class DnsLookupTask extends MeasurementTask {
     if (resultInet != null) {
       Log.i(SpeedometerApp.TAG, "Successfully resolved target address");
       MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-        RuntimeUtil.getDeviceProperty(), DnsLookupTask.TYPE, Calendar.getInstance().getTime(), 
-        true, this.measurementDesc);
+          RuntimeUtil.getDeviceProperty(), DnsLookupTask.TYPE, Calendar.getInstance().getTime(), 
+          true, this.measurementDesc);
       result.addResult("address", resultInet.getHostAddress());
       result.addResult("real_hostname", resultInet.getCanonicalHostName());
       result.addResult("time_ms", totalTime / successCnt);

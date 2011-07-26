@@ -52,7 +52,7 @@ public class AccountSelector {
     return this.checkinFuture;
   }
   
-  /** After checkin finishes, the client of AccountSelector resets the Future */
+  /** After checkin finishes, the client of AccountSelector SHOULD reset checkinFuture */
   public synchronized void resetCheckinFuture() {
     this.checkinFuture = null;
   }
@@ -63,7 +63,8 @@ public class AccountSelector {
     this.checkinExecutor.shutdownNow();
   }
   
-  public void authorize() 
+  /** Starts an authentication request  */
+  public void authenticate() 
     throws OperationCanceledException, AuthenticatorException, IOException {
     Log.i(SpeedometerApp.TAG, "AccountSelector.authorize() running");
     
@@ -78,13 +79,13 @@ public class AccountSelector {
     Log.i(SpeedometerApp.TAG, "Got " + accounts.length + " accounts");
     
     if (accounts != null && accounts.length > 0) {
-    // TODO(mdw): If multiple accounts, need to pick the correct one
+      // TODO(mdw): If multiple accounts, need to pick the correct one
       Account accountToUse = accounts[0];
       // We prefer google's corporate account to personal accounts such as somebody@gmail.com
       for (Account account : accounts) {
         if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
           Log.i(SpeedometerApp.TAG, 
-              "Choose to use preferred google.com account: " + account.name);
+              "Using the preferred google.com account: " + account.name);
           accountToUse = account;
           break;
         }
@@ -93,7 +94,7 @@ public class AccountSelector {
       Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accountToUse);
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
-        accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
+          accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
@@ -121,8 +122,8 @@ public class AccountSelector {
         context.startActivity(intent);
       } else {
         Log.i(SpeedometerApp.TAG, "Executing getCookie task");
-        this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
         synchronized (this) {
+          this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
           this.checkinFuture = checkinExecutor.submit(new GetCookieTask());
         }
       }

@@ -163,6 +163,7 @@ class Measurement(db.Expando):
         setattr(self, 'mval_' + k, v)
 
   def JSON_DECODE_task_key(self, task_key):
+    # task_key is an optional field
     # Look up the task_key and set the 'task' field accordingly.
     # If the task does not exist, just don't set this field
     if (task_key != None): 

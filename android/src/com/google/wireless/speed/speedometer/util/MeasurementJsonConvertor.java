@@ -124,11 +124,11 @@ public class MeasurementJsonConvertor {
     }
   }
   
-  public static Date parseDate(String dateString) throws ParseException {
+  private static Date parseDate(String dateString) throws ParseException {
     return dateFormat.parse(dateString);
   }
 
-  public static String formatDate(Date date) {
+  private static String formatDate(Date date) {
     return dateFormat.format(date);
   }
 

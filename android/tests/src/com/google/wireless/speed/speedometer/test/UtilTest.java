@@ -53,9 +53,4 @@ public class UtilTest extends AndroidTestCase {
       assertTrue("JSON encodign fails", false);      
     }
   }
-  
-  public void testTimeStamp() {
-    Log.i(SpeedometerApp.TAG, 
-        MeasurementJsonConvertor.formatDate(Calendar.getInstance().getTime()));
-  }
 }
