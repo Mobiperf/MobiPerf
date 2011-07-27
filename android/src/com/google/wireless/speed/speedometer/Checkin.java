@@ -265,16 +265,17 @@ public class Checkin {
       return;
     }
     if (this.accountSelector == null) {
-      try {
-        accountSelector = new AccountSelector(context, this);
-        accountSelector.authenticate();
-      } catch (OperationCanceledException e) {
-        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
-      } catch (AuthenticatorException e) {
-        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
-      } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
-      }
+      accountSelector = new AccountSelector(context, this);
+    }
+    
+    try {
+      accountSelector.authenticate();
+    } catch (OperationCanceledException e) {
+      Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
+    } catch (AuthenticatorException e) {
+      Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
+    } catch (IOException e) {
+      Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
     }
   }
   
