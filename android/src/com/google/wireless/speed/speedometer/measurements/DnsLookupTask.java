@@ -33,7 +33,7 @@ public class DnsLookupTask extends MeasurementTask {
     private String target;
     private String server;
     
-    protected DnsLookupDesc(String key, Date startTime, Date endTime,
+    public DnsLookupDesc(String key, Date startTime, Date endTime,
         double intervalSec, long count, long priority, Map<String, String> params) {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);

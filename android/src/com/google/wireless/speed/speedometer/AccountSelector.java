@@ -36,7 +36,7 @@ public class AccountSelector {
   private static final String ACCOUNT_TYPE = "com.google";
   private static final String ACCOUNT_NAME = "@google.com";
   // The authentication period in milliseconds
-  private static final long AUTHENTICATE_PERIOD_MILLI = 24 * 3600 * 1000;
+  private static final long AUTHENTICATE_PERIOD_MSEC = 24 * 3600 * 1000;
   private Context context;
   private Checkin checkin;
   private String authToken = null;
@@ -98,7 +98,7 @@ public class AccountSelector {
      */
     long authTimeLast = this.getLastAuthTime();
     if (!this.shouldAuthImmediately() && authTimeLast != 0 &&
-        (System.currentTimeMillis() - authTimeLast < AUTHENTICATE_PERIOD_MILLI)) {
+        (System.currentTimeMillis() - authTimeLast < AUTHENTICATE_PERIOD_MSEC)) {
       return;
     }
     
