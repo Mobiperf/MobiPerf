@@ -7,7 +7,6 @@ import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 
 import android.test.AndroidTestCase;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
