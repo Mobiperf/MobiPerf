@@ -33,10 +33,12 @@ public class UtilTest extends AndroidTestCase {
   
   @SuppressWarnings("cast")
   public void testGson() {
+    String pingExe = "/system/bin/ping";
     String pingServer = "www.dealsea.com";
     Date startTime = Calendar.getInstance().getTime();
 
     HashMap<String, String> params = new HashMap<String, String>();
+    params.put("ping_exe", pingExe);
     params.put("target", pingServer);
     PingDesc pingDesc = new PingDesc(null, startTime, null, 0, 0, 0, params);
     

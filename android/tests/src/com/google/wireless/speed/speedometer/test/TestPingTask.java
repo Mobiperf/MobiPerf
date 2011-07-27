@@ -38,7 +38,6 @@ public class TestPingTask extends TestMeasurementTaskBase {
     HashMap<String, String> params = new HashMap<String, String>();
     params.put("ping_exe", pingExe);
     params.put("target", pingServer);    
-    params.put("packet_size_byte", "");
     PingDesc pingDesc = new PingDesc(null, null, null, 0, 0, 0, params);
     Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(pingDesc));
     MeasurementDesc desc;
