@@ -3,7 +3,7 @@
     <item android:id="@+id/menuQuit"
           android:icon="@android:drawable/ic_menu_close_clear_cancel"
           android:title="@string/menuQuit" />
-    <item android:id="@+id/menuPause"
+    <item android:id="@+id/menuPauseResume"
           android:icon="@android:drawable/ic_media_play" 
           android:title="@string/menuResume" />
     <item android:id="@+id/menuSettings"
