@@ -4,13 +4,13 @@ package com.google.wireless.speed.speedometer.util;
 
 import com.google.wireless.speed.speedometer.DeviceInfo;
 import com.google.wireless.speed.speedometer.DeviceProperty;
+import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
 import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
@@ -64,12 +64,7 @@ public class RuntimeUtil {
   
   /* TODO(Wenjie): Implements this using the location service.*/
   public static Location getLocation() {
-    /* LocationManager locationManager = 
-        (LocationManager) this.getSystemService(Context.LOCATION_SERVICE); */
-    Location dummyLocation =  new Location(LocationManager.GPS_PROVIDER);
-    dummyLocation.setLatitude(0);
-    dummyLocation.setLongitude(0);
-    return dummyLocation;
+    return PhoneUtils.getPhoneUtils().getLocation();
   }
   
   private static ConnectivityManager getConnManager() {      
