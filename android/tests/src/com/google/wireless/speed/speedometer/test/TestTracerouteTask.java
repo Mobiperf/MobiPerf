@@ -32,7 +32,7 @@ public class TestTracerouteTask extends TestMeasurementTaskBase {
     HashMap<String, String> params = new HashMap<String, String>();
     params.put("ping_exe", pingExe);
     params.put("target", target);
-    params.put("max_ping_count", String.valueOf(100));
+    params.put("max_hop_count", String.valueOf(100));
     TracerouteDesc desc = new TracerouteDesc(null, null, null, 0, 1, 0, params);
     Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(desc));
     TracerouteTask task = new TracerouteTask(desc, this.activity);
@@ -46,6 +46,7 @@ public class TestTracerouteTask extends TestMeasurementTaskBase {
     
     // submitTask will notify the waiting scheduler thread upon success
     this.scheduler.submitTask(task);
+    this.scheduler.resume();
     
     /* TODO(Wenjie): Before we figure out how to verify the output of a traceroute
      * measurement is correct, we simply use this test case as a driver to submit

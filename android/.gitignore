@@ -2,4 +2,4 @@ bin/*
 gen/*
 tests/bin/*
 tests/gen/*
-*.pyc
+tests/src/com/google/wireless/speed/speedometer/test/TestSchedulerUi.java
