@@ -2,6 +2,7 @@
 package com.google.wireless.speed.speedometer;
 
 
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
@@ -23,7 +24,7 @@ import java.util.concurrent.Callable;
 @SuppressWarnings("rawtypes")
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
   // the priority queue we use put the smallest element in the head of the queue
-  public static int USER_PRIORITY = Integer.MIN_VALUE;
+  public static final int USER_PRIORITY = Integer.MIN_VALUE;
   protected MeasurementDesc measurementDesc;
   protected Context parent;
   protected int progress;
@@ -36,6 +37,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementTypes.put(PingTask.TYPE, PingTask.class);
     measurementTypes.put(HttpTask.TYPE, HttpTask.class);
     measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
+    measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
   }
   
   public static Class getTaskClassForMeasurement(String type) {
