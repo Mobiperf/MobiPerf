@@ -35,11 +35,15 @@ import java.util.concurrent.Future;
 public class AccountSelector {
   private static final String ACCOUNT_TYPE = "com.google";
   private static final String ACCOUNT_NAME = "@google.com";
+  // The authentication period in milliseconds
+  private static final long AUTHENTICATE_PERIOD_MILLI = 24 * 3600 * 1000;
   private Context context;
   private Checkin checkin;
   private String authToken = null;
   private ExecutorService checkinExecutor = null;
   private Future<Cookie> checkinFuture = null;
+  private long lastAuthTime = 0;
+  private boolean authImmediately = false;
   
   public AccountSelector(Context context, Checkin checkin) {
     this.context = context;
@@ -65,10 +69,38 @@ public class AccountSelector {
     this.checkinExecutor.shutdownNow();
   }
   
+  /** Allows clients of AccountSelector to request an authentication upon the next call
+   * to authenticate() */
+  public synchronized void authImmediately() {
+    this.authImmediately = true;
+  }
+  
+  private synchronized boolean shouldAuthImmediately() {
+    return this.authImmediately;
+  }
+  
+  private synchronized void setLastAuthTime(long lastTime) {
+    this.lastAuthTime = lastTime;
+  }
+  
+  private synchronized long getLastAuthTime() {
+    return this.lastAuthTime;
+  }
+  
   /** Starts an authentication request  */
   public void authenticate() 
     throws OperationCanceledException, AuthenticatorException, IOException {
     Log.i(SpeedometerApp.TAG, "AccountSelector.authenticate() running");
+    /* We only need to authenticate every AUTHENTICATE_PERIOD_MILLI milliseconds, during
+     * which we can reuse the cookie. If authentication fails due to expired
+     * authToken, the client of AccountSelector can call authImmedately() to request
+     * authenticate() upon the next checkin
+     */
+    long authTimeLast = this.getLastAuthTime();
+    if (!this.shouldAuthImmediately() && authTimeLast != 0 &&
+        (System.currentTimeMillis() - authTimeLast < AUTHENTICATE_PERIOD_MILLI)) {
+      return;
+    }
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
@@ -175,6 +207,11 @@ public class AccountSelector {
           if (cookie.getName().equals("SACSID")
               || cookie.getName().equals("ACSID")) {
             Log.i(SpeedometerApp.TAG, "Got cookie " + cookie);
+            setLastAuthTime(System.currentTimeMillis());
+            // We've successfully authenticated. Need not authenticate immediately again.
+            synchronized (AccountSelector.this) {
+              authImmediately = false;
+            }
             return cookie;
           }
         }
