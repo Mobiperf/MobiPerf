@@ -6,4 +6,16 @@
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
     <string name="SpeedometerServerURL">http://speedometer.googleplex.com</string>
+    <string name="measurementTypePrompt">Measurement Type</string>
+    <string name="countLabel">Repetitions</string>
+    <string name="startTimeText">Start Time</string>
+    <string name="pickStartTimeText">Change</string>
+    <string name="pingTargetHint">e.g. www.google.com</string>
+    <string name="pingTargetLabel">Where to ping?</string>
+    <string name="tracerouteTargetLabel">Target hostname/IP?</string>
+    <string name="httpMethodLabel">HTTP Method</string>
+    <string name="httpGetRadioText">Get</string>
+    <string name="httpHeadRadioText">Head</string>
+    <string name="httpUrlHint">www.example.com/sample.pdf</string>
+    <string name="httpUrlLabel">URL Address</string>   
 </resources>
