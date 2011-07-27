@@ -84,21 +84,19 @@ public class SpeedometerApp extends TabActivity {
 
     // Initialize a TabSpec for each tab and add it to the TabHost
     spec = tabHost.newTabSpec("measurement_monitor").setIndicator("Console",
-      res.getDrawable(R.drawable.tablet)).setContent(intent);
+        res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec("measurement_creation").setIndicator("Create Measurement",
-      res.getDrawable(R.drawable.tablet)).setContent(intent);
+        res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
     tabHost.setCurrentTab(0);
     
     createAlertDialog();
     RuntimeUtil.setActivity(this);
-    
-    PhoneUtils.setGlobalContext(getApplicationContext());
     
     // We only need one instance of scheduler thread
     Intent schedulerIntent = new Intent(this, MeasurementScheduler.class);
@@ -116,7 +114,6 @@ public class SpeedometerApp extends TabActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    PhoneUtils.releaseGlobalContext();
     if (isBounded) {
       unbindService(serviceConn);
       isBounded = false;
@@ -144,7 +141,7 @@ public class SpeedometerApp extends TabActivity {
     builder.setMessage("Do you want to exit Speedometer?")
            .setCancelable(false)
            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-             @Override
+               @Override
                public void onClick(DialogInterface dialog, int id) {
                  Log.i(TAG, "User requests exit. Stopping all threads");
                  SpeedometerApp.this.scheduler.requestStop();

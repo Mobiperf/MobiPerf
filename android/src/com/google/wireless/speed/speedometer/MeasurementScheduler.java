@@ -246,6 +246,7 @@ public class MeasurementScheduler extends Service {
     this.cancelExecutor.shutdown();
     this.cancelExecutor.shutdownNow();
     this.notifyAll();
+    PhoneUtils.releaseGlobalContext();
     this.stopSelf();
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
