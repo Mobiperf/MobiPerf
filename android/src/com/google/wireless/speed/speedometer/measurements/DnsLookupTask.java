@@ -29,7 +29,8 @@ import java.util.Map;
 public class DnsLookupTask extends MeasurementTask {
   
   public static final String TYPE = "dns_lookup";
-  public static final String DEFAULT_TARGET = "www.google.com";
+  private static final String DEFAULT_TARGET = "www.google.com";
+  private static int DEFAULT_DNS_CNT_PER_TASK = 10;
 
   /**
    * The description of DNS lookup measurement 
@@ -56,11 +57,11 @@ public class DnsLookupTask extends MeasurementTask {
     @Override
     protected void initalizeParams(Map<String, String> params) {
       if (this.count == 0) {
-        this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
+        this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
       
       if ((this.target = params.get("target")) == null) {
-        this.target = DnsLookupTask.DEFAULT_TARGET;
+        this.target = DEFAULT_TARGET;
       }
       
       this.server = params.get("server");
