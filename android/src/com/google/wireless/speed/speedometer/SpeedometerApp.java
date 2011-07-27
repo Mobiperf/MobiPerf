@@ -17,6 +17,9 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TabHost;
 
 import java.security.Security;
@@ -52,12 +55,66 @@ public class SpeedometerApp extends TabActivity {
       }
   };
   
+  /** Returns the scheduler singleton instance */
   public MeasurementScheduler getScheduler() {
     if (isBounded) {
       return this.scheduler;
     } else {
       return null;
     }
+  }
+  
+  private void setPauseIconBasedOnSchedulerState(MenuItem item) {
+    if (this.scheduler != null && item != null) {
+      if (this.scheduler.isPauseRequested()) {
+        item.setIcon(android.R.drawable.ic_media_play);
+        item.setTitle(R.string.menuResume);
+      } else {
+        item.setIcon(android.R.drawable.ic_media_pause);
+        item.setTitle(R.string.menumPause);
+      }
+    }
+  }
+  
+  /** Populate the application menu. Only called once per onCreate() */
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.main_menu, menu);
+    return true;
+  }
+  
+  /** Adjust menu items depending on system state. Called every time the 
+   *  menu pops up */
+  @Override
+  public boolean onPrepareOptionsMenu (Menu menu) {
+    setPauseIconBasedOnSchedulerState(menu.findItem(R.id.menuPause));
+    return true;
+  }
+  
+  /** React to menu item selections */
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+      // Handle item selection
+      switch (item.getItemId()) {
+      case R.id.menuPause:
+        if (this.scheduler != null) {
+          if (this.scheduler.isPauseRequested()) {
+            this.scheduler.resume();
+          } else {
+            this.scheduler.pause();
+          }
+        }
+        return true;
+      case R.id.menuQuit:
+        this.showDialog(this.EXIT_DIALOG_ID);
+        return true;
+      case R.id.menuSettings:
+        // TODO(Wenjie): Add the settings page
+        return true;        
+      default:
+        return super.onOptionsItemSelected(item);
+      }
   }
     
   @Override
@@ -127,13 +184,17 @@ public class SpeedometerApp extends TabActivity {
    * */
   
   @Override
-  public void onBackPressed() {
-    this.showDialog(this.EXIT_DIALOG_ID);
-  }
-  
-  @Override
   protected Dialog onCreateDialog(int id, Bundle args) {
     return this.exitConfirmationDialog;
+  }
+  
+  private void quitApp() {
+    if (this.scheduler != null) {
+      scheduler.requestStop();
+    }
+    this.finish();
+    System.gc();
+    System.exit(0);
   }
   
   private void createAlertDialog() {
@@ -144,10 +205,7 @@ public class SpeedometerApp extends TabActivity {
                @Override
                public void onClick(DialogInterface dialog, int id) {
                  Log.i(TAG, "User requests exit. Stopping all threads");
-                 SpeedometerApp.this.scheduler.requestStop();
-                 SpeedometerApp.this.finish();
-                 System.gc();
-                 System.exit(0);
+                 quitApp();
                }
            })
            .setNegativeButton("No", new DialogInterface.OnClickListener() {
