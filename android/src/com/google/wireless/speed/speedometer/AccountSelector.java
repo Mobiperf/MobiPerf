@@ -97,8 +97,11 @@ public class AccountSelector {
      * authenticate() upon the next checkin
      */
     long authTimeLast = this.getLastAuthTime();
+    long timeSinceLastAuth = System.currentTimeMillis() - authTimeLast;
     if (!this.shouldAuthImmediately() && authTimeLast != 0 &&
-        (System.currentTimeMillis() - authTimeLast < AUTHENTICATE_PERIOD_MSEC)) {
+        (timeSinceLastAuth < AUTHENTICATE_PERIOD_MSEC)) {
+      Log.i(SpeedometerApp.TAG, "last authentication is " + timeSinceLastAuth / 1000 / 60 + 
+        " minutes ago. Need not to authenticate now.");
       return;
     }
     
