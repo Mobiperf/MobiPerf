@@ -1,7 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
-import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask.HttpDesc;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
@@ -47,11 +46,8 @@ import java.util.Map;
  */
 public class MeasurementCreationActivity extends Activity {
   
-  private static Map<String, String> taskNames;
   private static final int START_TIME_DIALOG_ID = 0;
   private static final int NUMBER_OF_COMMON_VIEWS = 3;
-  private static final String[] SPINNER_NAMES = {"Ping", "Traceroute", "HTTP", "DNS Lookup", 
-                                                 "NDT"};
   private static final DateFormat startTimeFormat = new SimpleDateFormat("HH:mm");
   
   private SpeedometerApp parent;
@@ -61,15 +57,7 @@ public class MeasurementCreationActivity extends Activity {
   private EditText startTimeView;
   private TextView countText;
   private int count;
-  
-  static {
-    taskNames = new HashMap<String, String>();
-    taskNames.put(SPINNER_NAMES[0], PingTask.TYPE);
-    taskNames.put(SPINNER_NAMES[1], TracerouteTask.TYPE);
-    taskNames.put(SPINNER_NAMES[2], HttpTask.TYPE);
-    taskNames.put(SPINNER_NAMES[3], DnsLookupTask.TYPE);
-    //TODO(Wenjie): add other measurement types as needed
-  }
+  private ArrayAdapter<String> spinnerValues;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -81,15 +69,14 @@ public class MeasurementCreationActivity extends Activity {
     
     /* Initialize the measurement type spinner */
     Spinner spinner = (Spinner) findViewById(R.id.measurementTypeSpinner);
-    ArrayAdapter<String> adapter = 
+    spinnerValues = 
         new ArrayAdapter<String>(this.getApplicationContext(), R.layout.spinner_layout);
-    for (String item : SPINNER_NAMES) {
-      adapter.add(item);
+    for (String name : MeasurementTask.getMeasurementNames()) {
+      spinnerValues.add(name);
     }
-    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    spinner.setAdapter(adapter);
+    spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    spinner.setAdapter(spinnerValues);
     spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
-    this.measurementTypeUnderEdit = PingTask.TYPE;
     
     /* Initialize the repeat-count seek bar and text */
     this.countText = (TextView) this.findViewById(R.id.countText);
@@ -286,7 +273,8 @@ public class MeasurementCreationActivity extends Activity {
      */
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-      measurementTypeUnderEdit = taskNames.get(SPINNER_NAMES[(int) id]);
+      measurementTypeUnderEdit = 
+          MeasurementTask.getTypeForMeasurementName(spinnerValues.getItem((int) id));
       if (measurementTypeUnderEdit != null) {
         populateMeasurementSpecificArea();
       }

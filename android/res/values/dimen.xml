@@ -4,5 +4,5 @@
     <dimen name="marginBetweenRows">20dip</dimen>
     <dimen name="regularTextSize">12sp</dimen>
     <dimen name="smallTextSize">10sp</dimen>
-    <dimen name="editTextBoxHeight">30dip</dimen>
+    <dimen name="editTextBoxHeight">35dip</dimen>
 </resources>

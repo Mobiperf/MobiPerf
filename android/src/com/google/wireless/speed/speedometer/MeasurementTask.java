@@ -11,6 +11,7 @@ import android.content.Context;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
@@ -29,15 +30,33 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   protected Context parent;
   protected int progress;
   private static HashMap<String, Class> measurementTypes;
+  // Maps between the type of task and its readable name
+  private static HashMap<String, String> measurementNameToType;
   
   // TODO(Wenjie): Static initializer for type -> Measurement map
   // Add new measurement types here to enable them 
   static {    
     measurementTypes = new HashMap<String, Class>();
+    measurementNameToType = new HashMap<String, String>();
     measurementTypes.put(PingTask.TYPE, PingTask.class);
+    measurementNameToType.put("Ping", PingTask.TYPE);
     measurementTypes.put(HttpTask.TYPE, HttpTask.class);
+    measurementNameToType.put("Http", HttpTask.TYPE);
     measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
+    measurementNameToType.put("Traceroute", TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
+    measurementNameToType.put("DNS Lookup", DnsLookupTask.TYPE);
+  }
+  
+  /** Gets the currently available measurement types*/
+  public static Set<String> getMeasurementNames() {
+    return measurementNameToType.keySet();
+  }
+  
+  /** Get the type of a measurement based on its name. Type is for JSON interface only
+   * where as measurement name is a readable string for the UI */
+  public static String getTypeForMeasurementName(String name) {
+    return measurementNameToType.get(name);
   }
   
   public static Class getTaskClassForMeasurement(String type) {
