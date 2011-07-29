@@ -135,7 +135,15 @@ public class AccountSelector {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
-          getAuthToken(result);
+          try {
+            getAuthToken(result);
+          } catch (RuntimeException e) {
+            Log.e(SpeedometerApp.TAG, "Failed to get authToken");
+            /* TODO(Wenjie): May ask the user whether to quit the app nicely here if a number
+             * of trials have been made and failed. Since Speedometer is basically useless 
+             * without checkin
+             */
+          }
         }},
         null);
       Log.i(SpeedometerApp.TAG, "AccountManager.getAuthToken returned " + future);
