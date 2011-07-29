@@ -13,6 +13,7 @@ import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -44,7 +45,7 @@ public class TracerouteTask extends MeasurementTask {
   public static final int DEFAULT_PING_CNT_PER_TASK = 10;
   public static final double DEFAULT_PING_INTERVAL = 0.5;
   public static final int DEFAULT_PING_TIMEOUT = 10;
-  public static final int DEFAULT_MAX_PING_CNT = 10;
+  public static final int DEFAULT_MAX_HOP_CNT = 30;
   public static final int DEFAULT_PINGS_PER_HOP = 3;
   private static final long DEFAULT_CNT = 1;
   
@@ -63,7 +64,7 @@ public class TracerouteTask extends MeasurementTask {
     // the number of pings we use for each ttl value
     private int pingsPerHop;        
     // the total number of pings will send before we declarethe traceroute fails
-    private int maxPingCount;        
+    private int maxHopCount;        
     // the location of the ping binary. Only used internally
     private String pingExe;         
     
@@ -90,6 +91,7 @@ public class TracerouteTask extends MeasurementTask {
       if (params == null) {
         return;
       }
+      
       // Common parameters that every MeasurementDesc has
       if (this.count == 0) {
         this.count = TracerouteTask.DEFAULT_CNT;
@@ -103,30 +105,30 @@ public class TracerouteTask extends MeasurementTask {
       this.target = params.get("target");
       try {        
         String val;
-        if ((val = params.get("packet_size_byte")) != null) {
+        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         } else {
           this.packetSizeByte = TracerouteTask.DEFAULT_PING_PACKET_SIZE;
         }
-        if ((val = params.get("ping_timeout_sec")) != null) {
+        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         } else {
           this.pingTimeoutSec = TracerouteTask.DEFAULT_PING_TIMEOUT;
         }
-        if ((val = params.get("ping_interval_sec")) != null) {
+        if ((val = params.get("ping_interval_sec")) != null && val.length() > 0) {
           this.pingIntervalSec = Integer.parseInt(val);  
         } else {
           this.pingIntervalSec = TracerouteTask.DEFAULT_PING_INTERVAL;
         }
-        if ((val = params.get("pings_per_hop")) != null) {
+        if ((val = params.get("pings_per_hop")) != null && val.length() > 0) {
           this.pingsPerHop = Integer.parseInt(val);  
         } else {
           this.pingsPerHop = TracerouteTask.DEFAULT_PINGS_PER_HOP;
         }
-        if ((val = params.get("max_ping_count")) != null) {
-          this.maxPingCount = Integer.parseInt(val);  
+        if ((val = params.get("max_hop_count")) != null && val.length() > 0) {
+          this.maxHopCount = Integer.parseInt(val);  
         } else {
-          this.maxPingCount = TracerouteTask.DEFAULT_MAX_PING_CNT;
+          this.maxHopCount = TracerouteTask.DEFAULT_MAX_HOP_CNT;
         }
       } catch (NumberFormatException e) {
         throw new InvalidParameterException("PingTask cannot be created due to invalid params");
@@ -135,7 +137,7 @@ public class TracerouteTask extends MeasurementTask {
     
   }
   
-  public TracerouteTask(MeasurementDesc desc, SpeedometerApp parent) {
+  public TracerouteTask(MeasurementDesc desc, Context parent) {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
   }
@@ -143,7 +145,7 @@ public class TracerouteTask extends MeasurementTask {
   @Override
   public MeasurementResult call() throws MeasurementError {
     TracerouteDesc task = (TracerouteDesc) this.measurementDesc;
-    int maxPingCnt = task.maxPingCount;
+    int maxPingCnt = task.maxHopCount;
     int ttl = 1;
     String hostIp = null;
     Process pingProc = null;

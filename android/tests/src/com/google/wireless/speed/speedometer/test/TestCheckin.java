@@ -21,7 +21,7 @@ public class TestCheckin extends TestMeasurementTaskBase {
    * Test the checkin by manually invoking the methods
    */
   public void testCheckin() {
-    Checkin checkin = new Checkin(this.getActivity());
+    Checkin checkin = new Checkin(this.scheduler);
     checkin.getCookie();
     try {
       List<MeasurementTask> list = checkin.checkin();

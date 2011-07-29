@@ -1,6 +1,7 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.test;
 
+import com.google.wireless.speed.speedometer.MeasurementScheduler;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
 import android.app.Instrumentation;
@@ -20,6 +21,7 @@ public class TestMeasurementTaskBase extends
   protected Instrumentation inst;
   // The system console for the test case to print debugging message to the phone screen
   protected TextView systemConsole;
+  protected MeasurementScheduler scheduler;
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase() {
@@ -35,8 +37,9 @@ public class TestMeasurementTaskBase extends
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    this.inst = getInstrumentation();
     this.activity = getActivity();
+    this.inst = getInstrumentation();
+    this.scheduler = this.activity.getScheduler();
     this.systemConsole = (TextView) 
         activity.findViewById(com.google.wireless.speed.speedometer.R.viewId.systemConsole);
   }

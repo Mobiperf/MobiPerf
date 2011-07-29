@@ -16,6 +16,7 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -57,7 +58,7 @@ public class MeasurementJsonConvertor {
   }
   
   @SuppressWarnings("unchecked")
-  public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, SpeedometerApp app) 
+  public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, Context context) 
       throws IllegalArgumentException {  
     try {
       String type = String.valueOf(json.getString("type"));   
@@ -66,9 +67,9 @@ public class MeasurementJsonConvertor {
       // The getDescClassForMeasurement() is static and takes no arguments
       Class descClass = (Class) getDescMethod.invoke(null, (Object[]) null);
       MeasurementDesc measurementDesc = gson.fromJson(json.toString(), descClass);
-      Object[] cstParams = {measurementDesc, app};
+      Object[] cstParams = {measurementDesc, context};
       Constructor<MeasurementTask> constructor = 
-          taskClass.getConstructor(MeasurementDesc.class, SpeedometerApp.class);
+          taskClass.getConstructor(MeasurementDesc.class, Context.class);
       return constructor.newInstance(cstParams);
     } catch (JSONException e) {
       throw new IllegalArgumentException(e);
@@ -123,7 +124,7 @@ public class MeasurementJsonConvertor {
     }
   }
   
-  public static Date parseDate(String dateString) throws ParseException {
+  private static Date parseDate(String dateString) throws ParseException {
     return dateFormat.parse(dateString);
   }
 
