@@ -27,8 +27,11 @@ import java.util.Map;
  *
  */
 public class DnsLookupTask extends MeasurementTask {
-  
+  // Type name for internal use
   public static final String TYPE = "dns_lookup";
+  // Human readable name for the task
+  public static final String DESCRIPTOR = "DNS Lookup";
+  
   private static final String DEFAULT_TARGET = "www.google.com";
   private static int DEFAULT_DNS_CNT_PER_TASK = 10;
 

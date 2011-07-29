@@ -16,6 +16,6 @@
     <string name="httpMethodLabel">HTTP Method</string>
     <string name="httpGetRadioText">Get</string>
     <string name="httpHeadRadioText">Head</string>
-    <string name="httpUrlHint">www.example.com/sample.pdf</string>
+    <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>   
 </resources>

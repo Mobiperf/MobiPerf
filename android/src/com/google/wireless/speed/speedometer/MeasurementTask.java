@@ -31,32 +31,32 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   protected int progress;
   private static HashMap<String, Class> measurementTypes;
   // Maps between the type of task and its readable name
-  private static HashMap<String, String> measurementNameToType;
+  private static HashMap<String, String> measurementDescToType;
   
   // TODO(Wenjie): Static initializer for type -> Measurement map
   // Add new measurement types here to enable them 
   static {    
     measurementTypes = new HashMap<String, Class>();
-    measurementNameToType = new HashMap<String, String>();
+    measurementDescToType = new HashMap<String, String>();
     measurementTypes.put(PingTask.TYPE, PingTask.class);
-    measurementNameToType.put("Ping", PingTask.TYPE);
+    measurementDescToType.put(PingTask.DESCRIPTOR, PingTask.TYPE);
     measurementTypes.put(HttpTask.TYPE, HttpTask.class);
-    measurementNameToType.put("Http", HttpTask.TYPE);
+    measurementDescToType.put(HttpTask.DESCRIPTOR, HttpTask.TYPE);
     measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
-    measurementNameToType.put("Traceroute", TracerouteTask.TYPE);
+    measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
-    measurementNameToType.put("DNS Lookup", DnsLookupTask.TYPE);
+    measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
   }
   
   /** Gets the currently available measurement types*/
   public static Set<String> getMeasurementNames() {
-    return measurementNameToType.keySet();
+    return measurementDescToType.keySet();
   }
   
   /** Get the type of a measurement based on its name. Type is for JSON interface only
    * where as measurement name is a readable string for the UI */
   public static String getTypeForMeasurementName(String name) {
-    return measurementNameToType.get(name);
+    return measurementDescToType.get(name);
   }
   
   public static Class getTaskClassForMeasurement(String type) {
