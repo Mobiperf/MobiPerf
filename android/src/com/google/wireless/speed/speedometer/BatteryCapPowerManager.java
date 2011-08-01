@@ -63,7 +63,6 @@ public class BatteryCapPowerManager {
   }
   
   public void stop() {
-    this.context.unregisterReceiver(receiver);
   }
   
   private void notifyListeners() {
