@@ -130,7 +130,7 @@ public class MeasurementScheduler extends Service {
       this.schedulerThread = new SchedulerThread();
       new Thread(this.schedulerThread).start();
       this.resume();
-      //this.setIsCheckinEnabled(true);
+      this.setIsCheckinEnabled(true);
     }
     return START_STICKY;
   }
