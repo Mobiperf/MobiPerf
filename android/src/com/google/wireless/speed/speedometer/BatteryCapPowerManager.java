@@ -25,8 +25,8 @@ public class BatteryCapPowerManager {
   private static final int DEFAULT_BATTERY_SCALE = 100;
   private static final int DEFAULT_PLUGGED_STATE = 0;
   
-  private int batteryCap;
   private Context context;
+  private int batteryCap;
   private boolean isPlugged;
   // Current battery level in percentage 
   private int curBatLevel;
@@ -44,26 +44,38 @@ public class BatteryCapPowerManager {
   /** Sets the minimum battery percentage below which measurements cannot be run */
   public synchronized void setBatteryCap(int batteryCap) {
     this.batteryCap = batteryCap;
+    updateBatteryStat();
   }
   
   /** 
-   * Returns whether a measurement can be run based on a periodic quota
+   * Returns whether a measurement can be run
    */
   public synchronized boolean canScheduleExperiment() {
-    return this.isPlugged || curBatLevel > this.batteryCap;
+    return (this.isPlugged || curBatLevel > this.batteryCap);
   }
 
-  /***/
+  /** Sets the listener for power manager events. The listeners receive onPowerStateChange() 
+   * calls when measurements can be scheduled */
   public synchronized void setOnStateChangeListener(PowerManagerListener listener) {
     if (listener != null && !listeners.contains(listener)) {
       this.listeners.add(listener);
     }
   }
   
+  public void stop() {
+    this.context.unregisterReceiver(receiver);
+  }
+  
   private void notifyListeners() {
     for (PowerManagerListener listener : listeners) {
       listener.onPowerStateChange();
     }
+  }
+  
+  private void updateBatteryStat() {
+    Intent powerIntent = context.registerReceiver(null, 
+      new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    updateBatteryStat(powerIntent);
   }
   
   private synchronized void updateBatteryStat(Intent powerIntent) {
@@ -92,6 +104,11 @@ public class BatteryCapPowerManager {
     
   }
   
+  /**
+   * Listener interface for power manager events
+   * @author wenjiezeng@google.com (Steve Zeng)
+   *
+   */
   public static interface PowerManagerListener {
     /**
      * Callback whenever the power manager has resource to schedule new tasks

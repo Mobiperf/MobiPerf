@@ -110,6 +110,12 @@ public class MeasurementScheduler extends Service {
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
     this.powerManager = new BatteryCapPowerManager(DEFAULT_BATTERY_CAP, this);
+    this.powerManager.setOnStateChangeListener(new BatteryCapPowerManager.PowerManagerListener() {
+      @Override
+      public void onPowerStateChange() {
+                
+      }
+    });
   }
   
   @Override 
@@ -420,6 +426,17 @@ public class MeasurementScheduler extends Service {
             while ((task = taskQueue.take()) != null) {
               Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size()
                   + " tasks in taskQueue");
+              
+              while (!powerManager.canScheduleExperiment()) {
+                synchronized (MeasurementScheduler.this) {
+                  try {
+                    MeasurementScheduler.this.wait();
+                  } catch (InterruptedException e) {
+                    Log.e(SpeedometerApp.TAG, "wait for power manager is interrupted");    
+                  }
+                }
+              }
+              
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {
                 future = measurementExecutor.schedule(task, task.timeFromExecution(), 
