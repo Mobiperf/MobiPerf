@@ -113,7 +113,10 @@ public class MeasurementScheduler extends Service {
     this.powerManager.setOnStateChangeListener(new BatteryCapPowerManager.PowerManagerListener() {
       @Override
       public void onPowerStateChange() {
-        //this.notify();
+        synchronized (powerManager) {
+          Log.i(SpeedometerApp.TAG, "Power state has changed. Trying to resume task scheduling");
+          powerManager.notify();
+        }
       }
     });
   }
@@ -440,9 +443,9 @@ public class MeasurementScheduler extends Service {
               while (!powerManager.canScheduleExperiment()) {
                 Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
                     "Waiting for battery levelt to change.");
-                synchronized (MeasurementScheduler.this) {
+                synchronized (MeasurementScheduler.this.powerManager) {
                   try {
-                    MeasurementScheduler.this.wait();
+                    MeasurementScheduler.this.powerManager.wait();
                   } catch (InterruptedException e) {
                     Log.e(SpeedometerApp.TAG, "wait for power manager is interrupted");    
                   }
