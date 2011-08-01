@@ -41,6 +41,8 @@ public class MeasurementScheduler extends Service {
   // The default checkin interval in seconds
   private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
+  // default minimum battery percentage to run measurements
+  private static final int DEFAULT_BATTERY_CAP = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
   private Handler receiver;
@@ -51,6 +53,8 @@ public class MeasurementScheduler extends Service {
   private long checkinIntervalSec;
   private ScheduledFuture<?> checkinFuture;
   private CheckinTask checkinTask;
+  
+  private BatteryCapPowerManager powerManager;
   // TODO(Wenjie): add capacity control to the two queues.
   /* Both taskQueue and pendingTasks are thread safe and operations on them are atomic. 
    * To guarantee reliable value propagation between threads, use volatile keyword.
@@ -104,6 +108,8 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
+    
+    this.powerManager = new BatteryCapPowerManager(DEFAULT_BATTERY_CAP, this);
   }
   
   @Override 
