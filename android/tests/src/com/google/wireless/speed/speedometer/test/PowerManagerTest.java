@@ -18,17 +18,17 @@ public class PowerManagerTest extends TestMeasurementTaskBase {
   private static final int DUMMY_TASK_BATCH_COUNT = 10; 
   
   public void testBasics() {
-    this.scheduler.pause();
+    this.scheduler.resume();
     this.scheduler.setIsCheckinEnabled(false);
     this.scheduler.removeAllUnscheduledTasks();
     // First set the battery cap to 100, so no measurement will be scheduled
-    this.scheduler.setMinBatteryCap(100);
+    this.scheduler.getPowerManager().setBatteryCap(100);
     DummyDesc desc = new DummyDesc(null, null, null, null, 0, 1, 0, null);
     DummyTask task = new DummyTask(desc, this.activity);
     this.scheduler.submitTask(task);
     assertTrue(this.scheduler.getPendingTaskCount() == 0);
     // Then sets it to 0, then we should be able to schedule
-    this.scheduler.setMinBatteryCap(0);
+    this.scheduler.getPowerManager().setBatteryCap(0);
     try {
       Thread.sleep(500);
     } catch (InterruptedException e) {
@@ -36,13 +36,13 @@ public class PowerManagerTest extends TestMeasurementTaskBase {
     }
     assertTrue(this.scheduler.getPendingTaskCount() == 1);
     // Setting threshold back to 100, now we cannot schedule new task again
-    this.scheduler.setMinBatteryCap(100);
+    this.scheduler.getPowerManager().setBatteryCap(100);
     for (int i = 0; i < DUMMY_TASK_BATCH_COUNT; i++) {
       task = new DummyTask(desc, this.activity);
       this.scheduler.submitTask(task);
     }
     assertTrue(this.scheduler.getPendingTaskCount() == 1);
-    this.scheduler.setMinBatteryCap(100);
+    this.scheduler.getPowerManager().setBatteryCap(0);
     // Give some time for the schedule to schedule new tasks
     try {
       Thread.sleep(500);

@@ -66,6 +66,10 @@ public class BatteryCapPowerManager {
     }
   }
   
+  public synchronized int getBatteryCap() {
+    return this.batteryCap;
+  }
+  
   /** 
    * Returns whether a measurement can be run.
    */

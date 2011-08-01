@@ -113,7 +113,7 @@ public class MeasurementScheduler extends Service {
     this.powerManager.setOnStateChangeListener(new BatteryCapPowerManager.PowerManagerListener() {
       @Override
       public void onPowerStateChange() {
-                
+        //this.notify();
       }
     });
   }
@@ -127,17 +127,16 @@ public class MeasurementScheduler extends Service {
       this.schedulerThread = new SchedulerThread();
       new Thread(this.schedulerThread).start();
       this.resume();
-      this.setIsCheckinEnabled(true);
+      //this.setIsCheckinEnabled(true);
     }
     return START_STICKY;
   }
   
   /**
-   * Sets for the underlying power manager the minimum battery percentage below 
-   * which measurements cannot be run.
+   * Returns the power manager used by the scheduler
    * */
-  public void setMinBatteryCap(int cap) {
-    this.powerManager.setBatteryCap(cap);
+  public BatteryCapPowerManager getPowerManager() {
+    return this.powerManager;
   }
       
   /** Check-in is by-default disabled. SpeedometerApp will enable it. 
@@ -439,6 +438,8 @@ public class MeasurementScheduler extends Service {
                   + " tasks in taskQueue");
               
               while (!powerManager.canScheduleExperiment()) {
+                Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
+                    "Waiting for battery levelt to change.");
                 synchronized (MeasurementScheduler.this) {
                   try {
                     MeasurementScheduler.this.wait();
