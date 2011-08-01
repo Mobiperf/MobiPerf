@@ -131,6 +131,14 @@ public class MeasurementScheduler extends Service {
     }
     return START_STICKY;
   }
+  
+  /**
+   * Sets for the underlying power manager the minimum battery percentage below 
+   * which measurements cannot be run.
+   * */
+  public void setMinBatteryCap(int cap) {
+    this.powerManager.setBatteryCap(cap);
+  }
       
   /** Check-in is by-default disabled. SpeedometerApp will enable it. 
    *  Users can request to stop check-in altogether */
@@ -257,6 +265,9 @@ public class MeasurementScheduler extends Service {
     this.checkinExecutor.shutdownNow();
     this.cancelExecutor.shutdown();
     this.cancelExecutor.shutdownNow();
+    
+    this.powerManager.stop();
+    
     this.notifyAll();
     PhoneUtils.releaseGlobalContext();
     this.stopSelf();
