@@ -85,7 +85,9 @@ public class TestMeasurementTaskBase extends
       super(measurementDesc, parent);
     }
 
-    /** Dummy call() that does nothing but sleep forever */
+    /** 
+     * Dummy call() that does nothing but sleeps forever 
+     * */
     @Override
     public MeasurementResult call() throws MeasurementError {
       try {
@@ -96,7 +98,9 @@ public class TestMeasurementTaskBase extends
       return null;
     }
 
-    /** @see com.google.wireless.speed.speedometer.MeasurementTask#getType() */
+    /** 
+     * @see com.google.wireless.speed.speedometer.MeasurementTask#getType() 
+     * */
     @Override
     public String getType() {
       return "DummyEverlastingMeasurement";

@@ -442,7 +442,7 @@ public class MeasurementScheduler extends Service {
               
               while (!powerManager.canScheduleExperiment()) {
                 Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
-                    "Waiting for battery levelt to change.");
+                    "Waiting for battery level to change.");
                 synchronized (MeasurementScheduler.this.powerManager) {
                   try {
                     MeasurementScheduler.this.powerManager.wait();
