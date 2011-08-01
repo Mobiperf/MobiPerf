@@ -109,6 +109,7 @@ public class AccountSelector {
         context.getApplicationContext());
     if (this.authToken != null) {
       // There will be no effect on the token if it is still valid
+      Log.i(SpeedometerApp.TAG, "Invalidating token");
       accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
     }
     

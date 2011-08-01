@@ -146,6 +146,7 @@ public class Checkin {
       Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
       // Failure probably due to authToken expiration. Will authenticate upon next checkin.
       this.accountSelector.authImmediately();
+      this.authCookie = null;
       throw new IOException(e.getMessage());
     }
   }
@@ -305,6 +306,7 @@ public class Checkin {
         return false;
       }
     } else {
+      Log.i(SpeedometerApp.TAG, "getCookieFuture is not yet finished");
       return false;
     }
   }
