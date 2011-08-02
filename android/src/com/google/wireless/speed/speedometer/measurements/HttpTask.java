@@ -43,8 +43,10 @@ import java.util.Map;
  *
  */
 public class HttpTask extends MeasurementTask {
-  
+  // Type name for internal use
   public static final String TYPE = "http";
+  // Human readable name for the task
+  public static final String DESCRIPTOR = "HTTP";
   /* TODO(Wenjie): Depending on state machine configuration of cell tower's radio,
    * the size to find the 'real' bandwidth of the phone may be network dependent.  
    */

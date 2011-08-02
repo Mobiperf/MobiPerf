@@ -10,4 +10,21 @@
     <string name="menumPause">Pause</string>
     <string name="menuResume">Resume</string>
     <string name="menuSettings">Settings</string>
+    <string name="measurementTypePrompt">Measurement Type</string>
+    <string name="countLabel">Repetitions</string>
+    <string name="startTimeText">Start Time</string>
+    <string name="pickStartTimeText">Change</string>
+    <string name="pingTargetHint">e.g. www.google.com</string>
+    <string name="pingTargetLabel">Where to ping?</string>
+    <string name="tracerouteTargetLabel">Target hostname/IP?</string>
+    <string name="httpMethodLabel">HTTP Method</string>
+    <string name="httpGetRadioText">Get</string>
+    <string name="httpHeadRadioText">Head</string>
+    <string name="httpUrlHint">www.google.com</string>
+    <string name="httpUrlLabel">URL Address</string>
+    <string name="checkinEnabledPrefKey">KEY_CHEKCEDIN_ENABLED</string>
+    <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
+    <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
+    <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
+    <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>      
 </resources>

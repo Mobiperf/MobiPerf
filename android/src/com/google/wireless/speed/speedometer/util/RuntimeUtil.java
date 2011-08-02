@@ -148,7 +148,7 @@ public class RuntimeUtil {
     Location location = getLocation();
     ConnectivityManager connMan = getConnManager();
     NetworkInfo activeNetwork = connMan.getActiveNetworkInfo();
-    String networkType = "";
+    String networkType = PhoneUtils.getPhoneUtils().getNetwork();
     String activeIp = getIp();
     if (activeNetwork != null && activeIp.compareTo("") == 0) {
       networkType = activeNetwork.getTypeName();

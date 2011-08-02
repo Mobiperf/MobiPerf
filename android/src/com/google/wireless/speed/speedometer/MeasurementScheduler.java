@@ -6,10 +6,12 @@ import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.IOException;
@@ -39,14 +41,17 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementScheduler extends Service {
 
   // The default checkin interval in seconds
+  private static final boolean DEFAULT_CHECKIN_ENABLED = false;
   private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
+  //default minimum battery percentage to run measurements
+  private static final int DEFAULT_BATTERY_THRES_PRECENT = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
   private Handler receiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
-  private boolean isCheckinEnabled = false;
+  private boolean isCheckinEnabled = DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
   private ScheduledFuture<?> checkinFuture;
@@ -85,9 +90,7 @@ public class MeasurementScheduler extends Service {
   @Override
   public void onCreate() {
     PhoneUtils.setGlobalContext(this.getApplicationContext());
-    this.isCheckinEnabled = false;
     this.checkin = new Checkin(this);
-    this.checkinIntervalSec = DEDAULT_CHECKIN_INTERVAL_SEC;
     this.checkinFuture = null;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
@@ -104,6 +107,8 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
+    
+    updateFromPreference();
   }
   
   @Override 
@@ -219,6 +224,17 @@ public class MeasurementScheduler extends Service {
   /** Returns the handler for inter-thread communication */
   public Handler getHandler() {
     return receiver;
+  }
+  
+  private void updateFromPreference() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
+        DEFAULT_CHECKIN_ENABLED);
+    this.checkinIntervalSec = prefs.getInt(getString(R.string.checkinIntervalPrefKey), 
+      DEDAULT_CHECKIN_INTERVAL_SEC);
+    int minBatThres = prefs.getInt(getString(R.string.batteryMinThresPrefKey), 
+        DEFAULT_BATTERY_THRES_PRECENT);
+    // TODO(Wenjie): Add code to deal with minBatThres, measureWhenPlugged, and startOnBoot.
   }
   
   //Place holder to receive message from the UI thread
