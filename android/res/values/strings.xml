@@ -21,5 +21,10 @@
     <string name="httpGetRadioText">Get</string>
     <string name="httpHeadRadioText">Head</string>
     <string name="httpUrlHint">www.google.com</string>
-    <string name="httpUrlLabel">URL Address</string>   
+    <string name="httpUrlLabel">URL Address</string>
+    <string name="checkinEnabledPrefKey">KEY_CHEKCEDIN_ENABLED</string>
+    <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
+    <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
+    <string name="batteryCapPrefKey">KEY_BATTERY_CAP</string>
+    <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>      
 </resources>

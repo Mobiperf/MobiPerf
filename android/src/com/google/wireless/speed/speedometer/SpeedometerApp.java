@@ -106,7 +106,9 @@ public class SpeedometerApp extends TabActivity {
         quitApp();
         return true;
       case R.id.menuSettings:
-        // TODO(Wenjie): Add the settings page
+        Intent settingsActivity = new Intent(getBaseContext(),
+            SpeedometerPreferenceActivity.class);
+        startActivity(settingsActivity);
         return true;
       default:
         return super.onOptionsItemSelected(item);
@@ -178,5 +180,9 @@ public class SpeedometerApp extends TabActivity {
     }
     this.finish();
     System.exit(0);
+  }
+  
+  private static class SpeedometerPreference {
+    private boolean isPaused;
   }
 }

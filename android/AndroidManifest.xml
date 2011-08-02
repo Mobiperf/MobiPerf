@@ -36,6 +36,11 @@
       android:launchMode="singleTask"
       android:theme="@android:style/Theme.NoTitleBar">
     </activity>
+    <activity 
+      android:name=".SpeedometerPreferenceActivity" 
+      android:label="@string/app_name"
+      android:theme="@android:style/Theme.NoTitleBar">
+    </activity>
     <service 
       android:name=".MeasurementScheduler" 
       android:exported="false">
