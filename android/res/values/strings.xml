@@ -25,6 +25,6 @@
     <string name="checkinEnabledPrefKey">KEY_CHEKCEDIN_ENABLED</string>
     <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
-    <string name="batteryCapPrefKey">KEY_BATTERY_CAP</string>
+    <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>      
 </resources>

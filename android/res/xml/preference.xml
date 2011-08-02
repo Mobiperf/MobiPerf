@@ -3,27 +3,27 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:title="Preferences">
   <CheckBoxPreference
-    android:title="Enable Checkin"
     android:defaultValue="true"
     android:summary="Automatically fetch and push experiments?"
-    android:key="@string/checkinEnabledPrefKey" />
+    android:key="@string/checkinEnabledPrefKey" 
+    android:title="Checkin"/>
   <EditTextPreference
-    android:title="Set Checkin Interval"
     android:defaultValue="12"
-    android:inputType="number"
     android:summary="The interval (hours) speedometer fetches and pushes measurements"
-    android:key="@string/checkinIntervalPrefKey" />    
+    android:key="@string/checkinIntervalPrefKey" 
+    android:inputType="number" 
+    android:title="Checkin Interval"/>    
   <EditTextPreference
-    android:title="Set Battery Threshold"
     android:defaultValue="60"
-    android:inputType="number"
     android:summary="The minimum battery percentage to pause all measurements"
-    android:key="@string/batteryCapPrefKey" />
+    android:key="@string/batteryMinThresPrefKey" 
+    android:title="Battery Threshold" 
+    android:inputType="number"/>
   <CheckBoxPreference
     android:title="Measure When Plugged"
     android:defaultValue="true"
-    android:summary="Automatically download and upload experiments when the phone is plugged?"
-    android:key="@string/measureWhenPluggedPrefKey" />    
+    android:key="@string/measureWhenPluggedPrefKey" 
+    android:summary="Automatically download and upload experiments when the phone is charging?"/>    
   <CheckBoxPreference
     android:title="Start on Boot"
     android:defaultValue="true"

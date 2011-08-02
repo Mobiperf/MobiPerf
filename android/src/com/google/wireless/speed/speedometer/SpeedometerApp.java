@@ -181,8 +181,4 @@ public class SpeedometerApp extends TabActivity {
     this.finish();
     System.exit(0);
   }
-  
-  private static class SpeedometerPreference {
-    private boolean isPaused;
-  }
 }
