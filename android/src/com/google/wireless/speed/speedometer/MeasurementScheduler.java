@@ -37,13 +37,6 @@ import java.util.concurrent.TimeUnit;
  * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
-
-  // TODO(Wenjie): Think about moving all constants to Config.java
-  // The default checkin interval in seconds
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
-  private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
-  // default minimum battery percentage to run measurements
-  private static final int DEFAULT_BATTERY_CAP_PRECENT = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
   private Handler receiver;
@@ -92,7 +85,7 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.isCheckinEnabled = false;
     this.checkin = new Checkin(this);
-    this.checkinIntervalSec = DEDAULT_CHECKIN_INTERVAL_SEC;
+    this.checkinIntervalSec = Config.DEDAULT_CHECKIN_INTERVAL_SEC;
     this.checkinFuture = null;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
@@ -110,7 +103,7 @@ public class MeasurementScheduler extends Service {
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
-    this.powerManager = new BatteryCapPowerManager(DEFAULT_BATTERY_CAP_PRECENT, this);
+    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_CAP_PRECENT, this);
     this.powerManager.setOnStateChangeListener(new BatteryCapPowerManager.PowerManagerListener() {
       @Override
       public void onPowerStateChange() {
@@ -161,7 +154,7 @@ public class MeasurementScheduler extends Service {
       this.checkinFuture.cancel(true);
       // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
       this.checkinFuture = checkinExecutor.scheduleAtFixedRate(this.checkinTask, 
-          PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
+          Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
       Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
     }
   }
@@ -428,7 +421,7 @@ public class MeasurementScheduler extends Service {
               }
             }
           }
-          /* Schedule the new tasks and move them from taskQueu to pendingTasks
+          /* Schedule the new tasks and move them from taskQueue to pendingTasks
            * 
            * TODO(Wenjie): We may also need a separate rule (taskStack) for user
            * generated tasks because users may prefer to run the latest scheduled
@@ -441,10 +434,11 @@ public class MeasurementScheduler extends Service {
               Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size()
                   + " tasks in taskQueue");
               
-              while (!powerManager.canScheduleExperiment()) {
-                Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
-                    "Waiting for battery level to change.");
-                synchronized (MeasurementScheduler.this.powerManager) {
+              synchronized (MeasurementScheduler.this.powerManager) {
+                while (!powerManager.canScheduleExperiment()) {
+                  Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
+                      "Waiting for battery level to change.");       
+                  
                   try {
                     MeasurementScheduler.this.powerManager.wait();
                   } catch (InterruptedException e) {

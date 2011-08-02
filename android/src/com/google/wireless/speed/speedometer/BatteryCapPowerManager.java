@@ -20,10 +20,8 @@ import java.util.ArrayList;
  *
  */
 public class BatteryCapPowerManager {
-  /** The default battery level if we cannot read it from the system */
-  private static final int DEFAULT_BATTERY_LEVEL = 0;
-  /** The default maximum battery level if we cannot read it from the system */
-  private static final int DEFAULT_BATTERY_SCALE = 100;
+  
+  private static BatteryCapPowerManager singleInstance = null;
   
   /** The application context needed to receive intent broadcasts */
   private Context context;
@@ -101,8 +99,8 @@ public class BatteryCapPowerManager {
   }
   
   private synchronized void updateBatteryStat(Intent powerIntent) {
-    int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, DEFAULT_BATTERY_SCALE);
-    int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, DEFAULT_BATTERY_LEVEL);
+    int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, Config.DEFAULT_BATTERY_SCALE);
+    int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, Config.DEFAULT_BATTERY_LEVEL);
     // change to the unit of percentage
     this.curBatLevel = (int) ((double) level * 100 / scale);
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
