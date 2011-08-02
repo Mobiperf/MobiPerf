@@ -24,15 +24,13 @@ public class BatteryCapPowerManager {
   private static final int DEFAULT_BATTERY_LEVEL = 0;
   /** The default maximum battery level if we cannot read it from the system */
   private static final int DEFAULT_BATTERY_SCALE = 100;
-  /** The default state of 0 means that the phone is on battery by default */
-  private static final int DEFAULT_PLUGGED_STATE = 0;
   
-  /** The application context needed to receive intent broadcasts. */
+  /** The application context needed to receive intent broadcasts */
   private Context context;
-  /** The minimum threshold below which no measurements will be scheduled*/
+  /** The minimum threshold below which no measurements will be scheduled */
   private int minBatThreshold;
-  /** Tells whether the phone is plugged to some power source*/
-  private boolean isPlugged;
+  /** Tells whether the phone is charging */
+  private boolean isCharging;
   /** Current battery level in percentage */ 
   private int curBatLevel;
   /** Listeners registered by clients who will be notified upon battery changes */
@@ -74,7 +72,7 @@ public class BatteryCapPowerManager {
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return (isPlugged || curBatLevel > minBatThreshold);
+    return (isCharging || curBatLevel > minBatThreshold);
   }
 
   /** 
@@ -107,12 +105,11 @@ public class BatteryCapPowerManager {
     int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, DEFAULT_BATTERY_LEVEL);
     // change to the unit of percentage
     this.curBatLevel = (int) ((double) level * 100 / scale);
-    // a return integer of 0 means the phone is on battery
-    this.isPlugged = powerIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 
-        DEFAULT_PLUGGED_STATE) != 0;
+    this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
+        BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
     
     Log.i(SpeedometerApp.TAG, 
-        "Current power level is " + curBatLevel + " and isPlugged = " + isPlugged);
+        "Current power level is " + curBatLevel + " and isCharging = " + isCharging);
     if (canScheduleExperiment()) {
       this.notifyListeners();
     }

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MeasurementScheduler extends Service {
 
+  // TODO(Wenjie): Think about moving all constants to Config.java
   // The default checkin interval in seconds
   private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
