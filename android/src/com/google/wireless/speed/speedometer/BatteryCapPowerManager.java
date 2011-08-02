@@ -30,7 +30,7 @@ public class BatteryCapPowerManager {
   /** The application context needed to receive intent broadcasts. */
   private Context context;
   /** The minimum threshold below which no measurements will be scheduled*/
-  private int batteryCap;
+  private int minBatThreshold;
   /** Tells whether the phone is plugged to some power source*/
   private boolean isPlugged;
   /** Current battery level in percentage */ 
@@ -42,7 +42,7 @@ public class BatteryCapPowerManager {
   private BroadcastReceiver broadcastReceiver;
   
   public BatteryCapPowerManager(int batteryCap, Context context) {
-    this.batteryCap = batteryCap;
+    this.minBatThreshold = batteryCap;
     this.context = context;
     this.broadcastReceiver = new PowerStateChangeReceiver();
     // Registers a receiver for battery change events.
@@ -60,21 +60,21 @@ public class BatteryCapPowerManager {
     if (batteryCap < 0 || batteryCap > 100) {
       throw new IllegalArgumentException("batteryCap must fall between 0 and 100, inclusive");
     }
-    this.batteryCap = batteryCap;
+    this.minBatThreshold = batteryCap;
     if (canScheduleExperiment()) {
       this.notifyListeners();
     }
   }
   
   public synchronized int getBatteryCap() {
-    return this.batteryCap;
+    return this.minBatThreshold;
   }
   
   /** 
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return (isPlugged || curBatLevel > batteryCap);
+    return (isPlugged || curBatLevel > minBatThreshold);
   }
 
   /** 
