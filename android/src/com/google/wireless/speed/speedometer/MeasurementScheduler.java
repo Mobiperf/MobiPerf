@@ -436,7 +436,7 @@ public class MeasurementScheduler extends Service {
                     TimeUnit.SECONDS);
                 /*
                  * endTime should never be null as it is always initialized in
-                 * MeasurementDesc cancelExecutor are scheduled to remove stale
+                 * MeasurementDesc. cancelExecutor are scheduled to remove stale
                  * experiments that 1. has been scheduled but not run for longer
                  * than Config.TASK_EXPIRATION_MSEC 2. has passed their endTime
                  * 
