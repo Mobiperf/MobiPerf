@@ -20,9 +20,7 @@ import java.util.ArrayList;
  *
  */
 public class BatteryCapPowerManager {
-  
-  private static BatteryCapPowerManager singleInstance = null;
-  
+    
   /** The application context needed to receive intent broadcasts */
   private Context context;
   /** The minimum threshold below which no measurements will be scheduled */

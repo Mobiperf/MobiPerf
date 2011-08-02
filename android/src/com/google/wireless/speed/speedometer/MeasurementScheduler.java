@@ -411,8 +411,8 @@ public class MeasurementScheduler extends Service {
         while (!isStopRequested()) {
           Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
           
-          if (isPauseRequested()) {
-            synchronized (MeasurementScheduler.this) {
+          synchronized (MeasurementScheduler.this) {
+            if (isPauseRequested()) {
               try {
                 Log.i(SpeedometerApp.TAG, "User requested pause");
                 MeasurementScheduler.this.wait();
@@ -427,6 +427,8 @@ public class MeasurementScheduler extends Service {
            * generated tasks because users may prefer to run the latest scheduled
            * task first, which is LIFO and is different from the FIFO semantics in
            * the priority queue.
+           * 
+           * TODO(Wenjie): Add logic to remove stale experiments
            */
           MeasurementTask task;
           try {
