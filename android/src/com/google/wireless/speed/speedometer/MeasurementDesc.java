@@ -28,8 +28,11 @@ public abstract class MeasurementDesc {
   /**
    * @param type Type of measurement (ping, dns, traceroute, etc.) 
    * that should execute this measurement task.
-   * @param startTime Earliest time that measurements can be taken using this Task descriptor.
-   * @param endTime Latest time that measurements can be taken using this Task descriptor.
+   * @param startTime Earliest time that measurements can be taken using this Task descriptor. The
+   * current time will be used in place of a null startTime parameter
+   * @param endTime Latest time that measurements can be taken using this Task descriptor. Tasks 
+   * longer than 24 hours will run only for 24 hours. Tasks with an endTime before startTime will
+   * be canceld.
    * @param intervalSec Minimum number of seconds to elapse between consecutive measurements taken 
    * with this description.
    * @param count Maximum number of times that a measurement should be taken with this 
@@ -48,7 +51,14 @@ public abstract class MeasurementDesc {
     } else {
       this.startTime = new Date(startTime.getTime());
     }
-    this.endTime = endTime;
+    long now = System.currentTimeMillis();
+    if (endTime == null || 
+        endTime.getTime() - now > Config.TASK_EXPIRATION_MSEC) {
+      this.endTime = new Date(now + Config.TASK_EXPIRATION_MSEC);
+    } else {
+      this.endTime = endTime;
+    }
+    
     this.intervalSec = intervalSec;
     this.count = count;
     this.priority = priority;
