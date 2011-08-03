@@ -115,6 +115,7 @@ public class MeasurementScheduler extends Service {
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);
     filter.addAction(UpdateIntent.MSG_ACTION);
     this.broadcastReceiver = new BroadcastReceiver() {
+      // If preferences are changed by the user, the scheduler will receive the update 
       @Override
       public void onReceive(Context context, Intent intent) {
         if (intent.getAction().compareToIgnoreCase(UpdateIntent.PREFERENCE_ACTION) == 0) {
@@ -240,11 +241,11 @@ public class MeasurementScheduler extends Service {
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     try {
-      this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
-          DEFAULT_CHECKIN_ENABLED);
-      this.checkinIntervalSec = Integer.parseInt(prefs.getString(
+      this.setIsCheckinEnabled(prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
+          DEFAULT_CHECKIN_ENABLED));
+      this.setCheckinInterval(Integer.parseInt(prefs.getString(
           getString(R.string.checkinIntervalPrefKey),
-          String.valueOf(DEFAULT_CHECKIN_INTERVAL_HOUR))) * 3600;
+          String.valueOf(DEFAULT_CHECKIN_INTERVAL_HOUR))) * 3600);
       int minBatThres = Integer.parseInt(prefs.getString(
           getString(R.string.batteryMinThresPrefKey),
           String.valueOf(DEFAULT_BATTERY_THRES_PRECENT)));

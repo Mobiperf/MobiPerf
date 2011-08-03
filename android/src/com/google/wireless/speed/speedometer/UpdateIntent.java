@@ -22,7 +22,7 @@ public class UpdateIntent extends Intent {
   public static final String PREFERENCE_ACTION = PACKAGE_PREFIX + ".PREFERENCE_ACTION";
   
   /**
-   * @param strMsg the message for the UI thread to print to the console
+   * Creates an intent of the specified action with an optional message
    */
   protected UpdateIntent(String strMsg, String action) 
       throws InvalidParameterException {
