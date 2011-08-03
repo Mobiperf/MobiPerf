@@ -24,10 +24,12 @@ public class UpdateIntent extends Intent {
   /**
    * Creates an intent of the specified action with an optional message
    */
-  protected UpdateIntent(String strMsg, String action) 
-      throws InvalidParameterException {
+  protected UpdateIntent(String strMsg, String action) throws InvalidParameterException {
     super();
+    if (action == null) {
+      throw new InvalidParameterException("action of UpdateIntent should not be null");
+    }
     this.setAction(action);
     this.putExtra(STRING_PAYLOAD, strMsg);
-  }  
+  }
 }
