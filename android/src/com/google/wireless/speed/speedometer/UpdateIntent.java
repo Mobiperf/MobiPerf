@@ -18,15 +18,16 @@ public class UpdateIntent extends Intent {
   public static final String STRING_PAYLOAD = "STRING_PAYLOAD";
   // Different types of actions that this intent can represent
   private static final String PACKAGE_PREFIX = UpdateIntent.class.getPackage().getName();
-  public static final String ACTION = PACKAGE_PREFIX + ".UPDATE_ACTION";
+  public static final String MSG_ACTION = PACKAGE_PREFIX + ".MSG_ACTION";
+  public static final String PREFERENCE_ACTION = PACKAGE_PREFIX + ".PREFERENCE_ACTION";
   
   /**
    * @param strMsg the message for the UI thread to print to the console
    */
-  protected UpdateIntent(String strMsg) 
+  protected UpdateIntent(String strMsg, String action) 
       throws InvalidParameterException {
     super();
-    this.setAction(ACTION);
+    this.setAction(action);
     this.putExtra(STRING_PAYLOAD, strMsg);
   }  
 }

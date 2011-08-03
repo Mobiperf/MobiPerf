@@ -60,7 +60,7 @@ public class MeasurementMonitorActivity extends Activity {
     setContentView(R.layout.main);
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
-    filter.addAction(UpdateIntent.ACTION);
+    filter.addAction(UpdateIntent.MSG_ACTION);
     this.registerReceiver(this.receiver, filter);
     this.consoleView = (TextView) this.findViewById(R.viewId.systemConsole);
     this.consoleView.setMovementMethod(new ScrollingMovementMethod());

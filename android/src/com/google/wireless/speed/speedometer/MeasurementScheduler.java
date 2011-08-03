@@ -5,7 +5,10 @@ package com.google.wireless.speed.speedometer;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
@@ -42,13 +45,13 @@ public class MeasurementScheduler extends Service {
 
   // The default checkin interval in seconds
   private static final boolean DEFAULT_CHECKIN_ENABLED = false;
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
+  private static final int DEFAULT_CHECKIN_INTERVAL_HOUR = 12;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   //default minimum battery percentage to run measurements
   private static final int DEFAULT_BATTERY_THRES_PRECENT = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
-  private Handler receiver;
+  private BroadcastReceiver broadcastReceiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
   private boolean isCheckinEnabled = DEFAULT_CHECKIN_ENABLED;
@@ -98,7 +101,6 @@ public class MeasurementScheduler extends Service {
     this.pauseRequested = true;
     this.stopRequested = false;
     
-    this.receiver = new UpdateHandler();
     this.measurementExecutor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
     this.measurementExecutor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
     this.taskQueue =
@@ -107,6 +109,20 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
+    
+    // Register activity specific BroadcastReceiver here    
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.PREFERENCE_ACTION);
+    filter.addAction(UpdateIntent.MSG_ACTION);
+    this.broadcastReceiver = new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        if (intent.getAction().compareToIgnoreCase(UpdateIntent.PREFERENCE_ACTION) == 0) {
+          updateFromPreference();
+        }
+      }
+    };
+    this.registerReceiver(this.broadcastReceiver, filter);
     
     updateFromPreference();
   }
@@ -221,19 +237,23 @@ public class MeasurementScheduler extends Service {
     }
   }
   
-  /** Returns the handler for inter-thread communication */
-  public Handler getHandler() {
-    return receiver;
-  }
-  
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
-        DEFAULT_CHECKIN_ENABLED);
-    this.checkinIntervalSec = prefs.getInt(getString(R.string.checkinIntervalPrefKey), 
-      DEDAULT_CHECKIN_INTERVAL_SEC);
-    int minBatThres = prefs.getInt(getString(R.string.batteryMinThresPrefKey), 
-        DEFAULT_BATTERY_THRES_PRECENT);
+    try {
+      this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
+          DEFAULT_CHECKIN_ENABLED);
+      this.checkinIntervalSec = Integer.parseInt(prefs.getString(
+          getString(R.string.checkinIntervalPrefKey),
+          String.valueOf(DEFAULT_CHECKIN_INTERVAL_HOUR))) * 3600;
+      int minBatThres = Integer.parseInt(prefs.getString(
+          getString(R.string.batteryMinThresPrefKey),
+          String.valueOf(DEFAULT_BATTERY_THRES_PRECENT)));
+      Log.i(SpeedometerApp.TAG, "Reading from SharedPreference. isCheckinEnabled = " + 
+          isCheckinEnabled + ", checkinInterval = " + checkinIntervalSec + 
+          ", minBatThres = " + minBatThres);
+    } catch (ClassCastException e) {
+      Log.e(SpeedometerApp.TAG, "exception when casting preference values");
+    }
     // TODO(Wenjie): Add code to deal with minBatThres, measureWhenPlugged, and startOnBoot.
   }
   
@@ -246,7 +266,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void sendStringMsg(String str) {
-    UpdateIntent intent = new UpdateIntent(str);
+    UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
     this.sendBroadcast(intent);    
   }
   

@@ -44,8 +44,13 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     });
   }
   
+  /** 
+   * As we leave the settings page, changes should be reflected in various applicable components
+   * */
   @Override
   protected void onDestroy() {
-    // TODO(Wenjie): Propagate the changes to scheduler
+    super.onDestroy();
+    // The scheduler has a receiver monitoring this intent to get the update
+    this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
   }
 }

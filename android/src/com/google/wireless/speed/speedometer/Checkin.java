@@ -308,7 +308,7 @@ public class Checkin {
   }
   
   private void sendStringMsg(String str) {
-    UpdateIntent intent = new UpdateIntent(str);
+    UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
     context.sendBroadcast(intent);    
   }
 }
