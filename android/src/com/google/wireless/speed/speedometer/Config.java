@@ -22,4 +22,7 @@ public interface Config {
   public static final long MARGIN_TIME_BEFORE_TASK_SCHEDULE = 500;
   public static final long SCHEDULE_POLLING_INTERVAL = 500;
   public static final String INVALID_IP = "";
+  
+  /** Tasks expire in one day. Expired tasks will be removed from the scheduler */
+  public static final long TASK_EXPIRATION_MSEC = 24 * 3600 * 1000;
 }

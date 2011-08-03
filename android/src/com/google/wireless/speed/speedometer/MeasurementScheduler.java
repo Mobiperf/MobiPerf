@@ -434,11 +434,25 @@ public class MeasurementScheduler extends Service {
               if (!task.isPassedDeadline()) {
                 future = measurementExecutor.schedule(task, task.timeFromExecution(), 
                     TimeUnit.SECONDS);
-                if (task.measurementDesc.endTime != null) {
-                  long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
-                  CancelTask cancelTask = new CancelTask(future);
-                  cancelExecutor.schedule(cancelTask, delay, TimeUnit.MILLISECONDS);
-                }
+                /*
+                 * endTime should never be null as it is always initialized in
+                 * MeasurementDesc. cancelExecutor are scheduled to remove stale
+                 * experiments that 1. has been scheduled but not run for longer
+                 * than Config.TASK_EXPIRATION_MSEC 2. has passed their endTime
+                 * 
+                 * TODO(Wenjie): Note that the cancelTask will remain in the
+                 * queue of canclExecutor even when the task it is supposed to
+                 * cancel has finished. In other words, each cancelTask has a
+                 * life cycle of Config.TASK_EXPIRATION_MSEC. Assuming there
+                 * will be limited amount of tasks scheduled within this period,
+                 * we keep the code simple and not remove the cancelTask explicitly
+                 * when a task finishes before its endTime. If the app runs into
+                 * memory problems, this should be optimized.
+                 */
+                assert (task.measurementDesc.endTime != null);  
+                long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
+                CancelTask cancelTask = new CancelTask(future);
+
                 Log.i(SpeedometerApp.TAG,
                     "task " + task + " will start in " + task.timeFromExecution() / 1000
                         + " seconds");
