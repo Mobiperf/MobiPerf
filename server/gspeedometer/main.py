@@ -30,6 +30,7 @@ from gspeedometer.controllers import device
 from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
+from gspeedometer.controllers import googlemapview
 
 import routes
 
@@ -61,6 +62,10 @@ m.connect('/schedule/add',
 m.connect('/schedule/delete',
           controller='schedule:Schedule',
           action='Delete')
+
+m.connect('/maps',
+          controller='googlemapview:GoogleMapView',
+          action='MapView')
 
 application = wsgi.WSGIApplication(m, debug=True)
 
