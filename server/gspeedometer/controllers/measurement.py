@@ -96,7 +96,10 @@ class Measurement(webapp.RequestHandler):
 
     output = []
     for measurement in results:
-      output.append(util.ConvertToDict(measurement))
+      mdict = util.ConvertToDict(measurement)
+      mdict['parameters'] = measurement.Params()
+      mdict['values'] = measurement.Values()
+      output.append(mdict)
     self.response.out.write(json.dumps(output))
 
 
