@@ -68,6 +68,38 @@ class Measurement(webapp.RequestHandler):
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps(response))
 
+  def ListMeasurements(self, **unused_args):
+    """Handles /measurements REST request."""
+
+    # This is very limited and only supports time range and limit
+    # queries. You might want to extend this to filter by other
+    # properties, but for the purpose of measurement archiving
+    # this is all we need.
+
+    start_time = self.request.get('start_time')
+    end_time = self.request.get('end_time')
+    limit = self.request.get('limit')
+
+    query = model.Measurement.all()
+
+    if start_time:
+      dt = util.MicrosecondsSinceEpochToTime(int(start_time))
+      query.filter('timestamp >=', dt)
+    if end_time:
+      dt = util.MicrosecondsSinceEpochToTime(int(end_time))
+      query.filter('timestamp <', dt)
+    query.order('timestamp')
+    if limit:
+      results = query.fetch(int(limit))
+    else:
+      results = query
+
+    output = []
+    for measurement in results:
+      output.append(util.ConvertToDict(measurement))
+    self.response.out.write(json.dumps(output))
+
+
   def MeasurementDetail(self, **unused_args):
     """Handler to display measurement detail."""
     try:

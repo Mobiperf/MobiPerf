@@ -44,7 +44,26 @@ def TimeToString(dt):
   return dt.isoformat() + 'Z'
 
 
+def MicrosecondsSinceEpochToTime(microsec_since_epoch):
+  """Convert microseconds since epoch UTC to a datetime object."""
+  sec = int(microsec_since_epoch / 1000000)
+  usec = int(microsec_since_epoch % 1000000)
+  dt = datetime.datetime.utcfromtimestamp(sec)
+  dt = dt.replace(microsecond=usec)
+  return dt
+
+
+def TimeToMicrosecondsSinceEpoch(dt):
+  """Convert a datetime object to microseconds since the epoch UTC."""
+  epoch = datetime.datetime(1970, 1, 1)
+  diff = dt - epoch
+  microsec_since_epoch = int(((diff.days * 86400) + (diff.seconds)) * 1000000)
+  microsec_since_epoch += diff.microseconds
+  return microsec_since_epoch
+
+
 _SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
+
 
 def ConvertToDict(model, include_fields=None, exclude_fields=None):
   """Convert an AppEngine Model object to a Python dict ready for json dump.
@@ -60,12 +79,15 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None):
     if value is None or isinstance(value, _SIMPLE_TYPES):
       output[key] = value
     elif isinstance(value, datetime.date):
+      # TODO(wenjie): Update this to use TimeToMicrosecondsSinceEpoch
+      # and make sure Android app understands that format
+      #output[key] = TimeToMicrosecondsSinceEpoch(value)
       output[key] = TimeToString(value)
     elif isinstance(value, db.GeoPt):
       output[key] = {'latitude': value.lat, 'longitude': value.lon}
     elif isinstance(value, db.Model):
       output[key] = ConvertToDict(value, include_fields, exclude_fields)
-    elif isinstance(value, db.UserProperty):
+    elif isinstance(value, users.User):
       output[key] = value.email()
     else:
       raise ValueError('cannot encode ' + repr(prop))
@@ -74,27 +96,11 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None):
 
 def ConvertToJson(model, include_fields=None, exclude_fields=None):
   """Convert an AppEngine Model object to a JSON-encoded string."""
-  return json.dumps(ConvertToDict(include_fields, exclude_fields))
-
-#  output = {}
-#  for key, prop in model.properties().iteritems():
-#    if fields is not None and key not in fields: continue
-#    if key in fields_to_exclude: continue
-#    value = getattr(model, key)
-#    if value is None or isinstance(value, _SIMPLE_TYPES):
-#      output[key] = value
-#    elif isinstance(value, datetime.date):
-#      output[key] = TimeToString(value)
-#    elif isinstance(value, db.GeoPt):
-#      output[key] = {'latitude': value.lat, 'longitude': value.lon}
-#    elif isinstance(value, db.Model):
-#      output[key] = ConvertToJson(value, fields, fields_to_exclude)
-#    else:
-#      raise ValueError('cannot encode ' + repr(prop))
-#  return json.dumps(output)
+  return json.dumps(ConvertToDict(model, include_fields, exclude_fields))
 
 
-def ConvertFromDict(model, input_dict, fields_to_exclude=[]):
+def ConvertFromDict(model, input_dict, include_fields=None,
+                    exclude_fields=None):
   """Fill in Model fields with values from a dict.
 
      For each key in the dict, set the value of the corresponding field
@@ -106,7 +112,8 @@ def ConvertFromDict(model, input_dict, fields_to_exclude=[]):
      behavior on a per-key basis.
   """
   for k, v in input_dict.items():
-    if k in fields_to_exclude: continue
+    if include_fields is not None and k not in include_fields: continue
+    if exclude_fields is not None and k in exclude_fields: continue
     if hasattr(model, 'JSON_DECODE_' + k):
       method = getattr(model, 'JSON_DECODE_' + k)
       method(v)
