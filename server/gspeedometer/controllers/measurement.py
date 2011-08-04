@@ -96,9 +96,17 @@ class Measurement(webapp.RequestHandler):
 
     output = []
     for measurement in results:
-      mdict = util.ConvertToDict(measurement)
+      mdict = util.ConvertToDict(measurement, timestamps_in_microseconds=True)
+
+      # Fill in additional fields
+      mdict['id'] = str(measurement.key().id())
       mdict['parameters'] = measurement.Params()
       mdict['values'] = measurement.Values()
+
+      if 'task' in mdict:
+        mdict['task']['id'] = str(measurement.task.key().id())
+        mdict['task']['parameters'] = measurement.task.Params()
+
       output.append(mdict)
     self.response.out.write(json.dumps(output))
 

@@ -65,7 +65,8 @@ def TimeToMicrosecondsSinceEpoch(dt):
 _SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
 
-def ConvertToDict(model, include_fields=None, exclude_fields=None):
+def ConvertToDict(model, include_fields=None, exclude_fields=None,
+                  timestamps_in_microseconds=False):
   """Convert an AppEngine Model object to a Python dict ready for json dump.
 
      For each property in the model, set a value in the returned dict
@@ -79,14 +80,15 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None):
     if value is None or isinstance(value, _SIMPLE_TYPES):
       output[key] = value
     elif isinstance(value, datetime.date):
-      # TODO(wenjie): Update this to use TimeToMicrosecondsSinceEpoch
-      # and make sure Android app understands that format
-      #output[key] = TimeToMicrosecondsSinceEpoch(value)
-      output[key] = TimeToString(value)
+      if timestamps_in_microseconds:
+        output[key] = TimeToMicrosecondsSinceEpoch(value)
+      else:
+        output[key] = TimeToString(value)
     elif isinstance(value, db.GeoPt):
       output[key] = {'latitude': value.lat, 'longitude': value.lon}
     elif isinstance(value, db.Model):
-      output[key] = ConvertToDict(value, include_fields, exclude_fields)
+      output[key] = ConvertToDict(value, include_fields, exclude_fields,
+                                  timestamps_in_microseconds)
     elif isinstance(value, users.User):
       output[key] = value.email()
     else:
