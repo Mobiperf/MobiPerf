@@ -68,9 +68,11 @@ class DeviceProperties(db.Model):
   def JSON_DECODE_location(self, inputval):
     lat = float(inputval['latitude'])
     lon = float(inputval['longitude'])
-    self.location = db.GeoPt(lat, lon) 
+    self.location = db.GeoPt(lat, lon)
 
   def JSON_DECODE_timestamp(self, inputval):
+    # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
+    # and update the Android app to use that format
     self.timestamp = util.StringToTime(inputval['timestamp'])
 
   def __str__(self):
@@ -148,6 +150,8 @@ class Measurement(db.Expando):
                 k in self.dynamic_properties() if k.startswith('mval_'))
 
   def JSON_DECODE_timestamp(self, inputval):
+    # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
+    # and update the Android app to use that format
     self.timestamp = util.StringToTime(inputval['timestamp'])
 
   def JSON_DECODE_parameters(self, input_dict):
