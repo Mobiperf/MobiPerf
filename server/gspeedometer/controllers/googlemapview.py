@@ -31,21 +31,8 @@ class GoogleMapView(webapp.RequestHandler):
                                 "ORDER BY timestamp DESC "
                                 "LIMIT 30", 
                                 "ping")
-    markers = []
-    random.seed()
-    for measurement in measurements:
-      prop_entity = measurement.device_properties
-      random_radius = 0.001
-      rand_lat = (random.random() - 0.5) * random_radius
-      rand_lon = (random.random() - 0.5) * random_radius
-      markers += [{"ts" : measurement.timestamp, "lat" : prop_entity.location.lat + rand_lat, 
-          "lon" : prop_entity.location.lon + rand_lon, "rrt" : float(measurement.mval_mean_rtt_ms)}]
-      logging.info("ts=%s, lat=%f, lon=%f, ping_mean_rtt=%f", measurement.timestamp, 
-                    prop_entity.location.lat, prop_entity.location.lon, 
-                    float(measurement.mval_mean_rtt_ms))
-
     template_args = {
-        'map_code': self.ShowMap(markers),
+        'map_code': self.ShowMap(measurements),
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
@@ -56,21 +43,39 @@ class GoogleMapView(webapp.RequestHandler):
     red_icon = pymaps.Icon('red_icon')
     green_icon = pymaps.Icon('green_icon')
     tmap.zoom = 15
+    lat_sum = 0
+    lon_sum = 0
 
-    # Convert the coordinates
-    center_lon = -122.351
-    center_lat = 47.652
-    tmap.center = (center_lat,center_lon)
-
+    random.seed()
+    measurement_cnt = 0
     # Add points to the map 
     for measurement in measurements:
-      values = {'mean round trip time' : measurement.mval_mean_rtt
-      if marker["rrt"] < 150:
-        point = (marker["lat"], marker["lon"], str(marker["rrt"]), green_icon.id)
+      measurement_cnt += 1
+      prop_entity = measurement.device_properties
+      logging.info("ts=%s, lat=%f, lon=%f, ping_mean_rtt=%f", measurement.timestamp, 
+                    prop_entity.location.lat, prop_entity.location.lon, 
+                    float(measurement.mval_mean_rtt_ms))
+      values = {'mean rtt' : measurement.mval_mean_rtt_ms, 
+                'max rtt' : measurement.mval_max_rtt_ms, 
+                'min rtt' : measurement.mval_min_rtt_ms, 
+                'rtt stddev' : measurement.mval_stddev_rtt_ms, 
+                'packet loss' : measurement.mval_packet_loss}
+      htmlstr = self.GetHtmlForPing(measurement.device_id, measurement.mparam_target, values) 
+      random_radius = 0.001
+      rand_lat = (random.random() - 0.5) * random_radius
+      rand_lon = (random.random() - 0.5) * random_radius
+      if float(measurement.mval_mean_rtt_ms) < 150:
+        point = (prop_entity.location.lat + rand_lat, prop_entity.location.lon + rand_lon, htmlstr, green_icon.id)
       else:
-        point = (marker["lat"], marker["lon"], str(marker["rrt"]), red_icon.id)
+        point = (prop_entity.location.lat + rand_lat, prop_entity.location.lon + rand_lon, htmlstr, red_icon.id)
+      lat_sum += prop_entity.location.lat
+      lon_sum += prop_entity.location.lon
       tmap.setpoint(point)
 
+    # Set the center of the view port
+    center_lat = lat_sum / measurement_cnt
+    center_lon = lon_sum / measurement_cnt
+    tmap.center = (center_lat,center_lon)
     # Put your own google key here
     my_key = "ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSaz2Wa7XNxJDFBqSTkzyC0aVYxYw"
     gmap = pymaps.PyMap(key=my_key, maplist=[tmap], iconlist=[])
@@ -81,11 +86,24 @@ class GoogleMapView(webapp.RequestHandler):
 
     return mapcode
 
-  def GetHtmlForPing(slef, measurement, prop, target, values):
+  def GetHtmlForPing(slef, device_id, target, values):
     # Returns the HTML string representing the Ping result
-    result = "<html><body><h4>Ping result for %s on device %s</h4><br/>" % (target, measurement.device_id)
-    result += "<table border=\"1\">"
-    result += "<tr><th>Name</th><th>Value</th></tr>"
-    for k, v in values:
-      result += "<tr><th>%s</th><th>%s</th></tr>" % (k, v)
+    result = "<html><body><h4>Ping result on device %s</h4><br/>" % device_id
+    result += """<style media="screen" type="text/css"></style>"""
+    result += """<table style="border:1px #000000 solid;">"""
+    result += "<tr>"\
+        "<td align=\"left\" "\
+        "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">target</td>"\
+        "<td align=\"left\" "\
+        "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%s</td>"\
+        "</tr>" % target
+    for k, v in values.iteritems():
+      result += "<tr>"\
+          "<td align=\"left\" "\
+          "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%s</td>"\
+          "<td align=\"left\" "\
+          "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%.3f</td>"\
+          "</tr>" % (k, float(v))
     result += "</table>"
+    logging.info("generated location pin html is %s", result)
+    return result
