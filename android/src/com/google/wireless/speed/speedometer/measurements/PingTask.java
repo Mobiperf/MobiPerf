@@ -125,6 +125,7 @@ public class PingTask extends MeasurementTask {
    * JAVA_ICMP_PING, and HTTP_PING. If all fails, then we declare the resource unreachable */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */

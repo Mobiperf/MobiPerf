@@ -78,7 +78,7 @@ public class DnsLookupTask extends MeasurementTask {
   }
 
   @Override
-  public MeasurementResult call() throws MeasurementError {
+  public MeasurementResult call() throws MeasurementError {   
     long t1, t2;
     long totalTime = 0;
     InetAddress resultInet = null;

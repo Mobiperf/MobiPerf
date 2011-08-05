@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.Service;
@@ -39,23 +40,18 @@ import java.util.concurrent.TimeUnit;
  * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
-
-  // The default checkin interval in seconds
-  private static final boolean DEFAULT_CHECKIN_ENABLED = false;
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
-  private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
-  //default minimum battery percentage to run measurements
-  private static final int DEFAULT_BATTERY_THRES_PRECENT = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
   private Handler receiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
-  private boolean isCheckinEnabled = DEFAULT_CHECKIN_ENABLED;
+  private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
   private ScheduledFuture<?> checkinFuture;
   private CheckinTask checkinTask;
+  
+  private BatteryCapPowerManager powerManager;
   // TODO(Wenjie): add capacity control to the two queues.
   /* Both taskQueue and pendingTasks are thread safe and operations on them are atomic. 
    * To guarantee reliable value propagation between threads, use volatile keyword.
@@ -68,7 +64,7 @@ public class MeasurementScheduler extends Service {
   private SchedulerThread schedulerThread = null;
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
-    
+      
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -108,6 +104,7 @@ public class MeasurementScheduler extends Service {
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
+    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
     updateFromPreference();
   }
   
@@ -123,6 +120,13 @@ public class MeasurementScheduler extends Service {
       this.setIsCheckinEnabled(true);
     }
     return START_STICKY;
+  }
+  
+  /**
+   * Returns the power manager used by the scheduler
+   * */
+  public BatteryCapPowerManager getPowerManager() {
+    return this.powerManager;
   }
       
   /** Check-in is by-default disabled. SpeedometerApp will enable it. 
@@ -143,7 +147,7 @@ public class MeasurementScheduler extends Service {
       this.checkinFuture.cancel(true);
       // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
       this.checkinFuture = checkinExecutor.scheduleAtFixedRate(this.checkinTask, 
-          PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
+          Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
       Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
     }
   }
@@ -229,11 +233,11 @@ public class MeasurementScheduler extends Service {
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
-        DEFAULT_CHECKIN_ENABLED);
+        Config.DEFAULT_CHECKIN_ENABLED);
     this.checkinIntervalSec = prefs.getInt(getString(R.string.checkinIntervalPrefKey), 
-      DEDAULT_CHECKIN_INTERVAL_SEC);
+        Config.DEFAULT_CHECKIN_INTERVAL_SEC);
     int minBatThres = prefs.getInt(getString(R.string.batteryMinThresPrefKey), 
-        DEFAULT_BATTERY_THRES_PRECENT);
+        Config.DEFAULT_BATTERY_THRESH_PRECENT);
     // TODO(Wenjie): Add code to deal with minBatThres, measureWhenPlugged, and startOnBoot.
   }
   
@@ -261,6 +265,9 @@ public class MeasurementScheduler extends Service {
     this.checkinExecutor.shutdownNow();
     this.cancelExecutor.shutdown();
     this.cancelExecutor.shutdownNow();
+    
+    this.powerManager.stop();
+    
     this.notifyAll();
     PhoneUtils.releaseGlobalContext();
     this.stopSelf();
@@ -408,8 +415,8 @@ public class MeasurementScheduler extends Service {
         while (!isStopRequested()) {
           Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
           
-          if (isPauseRequested()) {
-            synchronized (MeasurementScheduler.this) {
+          synchronized (MeasurementScheduler.this) {
+            while (isPauseRequested()) {
               try {
                 Log.i(SpeedometerApp.TAG, "User requested pause");
                 MeasurementScheduler.this.wait();
@@ -418,7 +425,7 @@ public class MeasurementScheduler extends Service {
               }
             }
           }
-          /* Schedule the new tasks and move them from taskQueu to pendingTasks
+          /* Schedule the new tasks and move them from taskQueue to pendingTasks
            * 
            * TODO(Wenjie): We may also need a separate rule (taskStack) for user
            * generated tasks because users may prefer to run the latest scheduled
@@ -430,10 +437,14 @@ public class MeasurementScheduler extends Service {
             while ((task = taskQueue.take()) != null) {
               Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size()
                   + " tasks in taskQueue");
+              
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {
-                future = measurementExecutor.schedule(task, task.timeFromExecution(), 
-                    TimeUnit.SECONDS);
+                /* 'Decorates' the task with a power-aware task. task will not be executed
+                 * if the power policy is not met*/
+                future = measurementExecutor.schedule(new PowerAwareTask(task, powerManager), 
+                    task.timeFromExecution(), TimeUnit.SECONDS);
+                
                 /*
                  * endTime should never be null as it is always initialized in
                  * MeasurementDesc. cancelExecutor are scheduled to remove stale

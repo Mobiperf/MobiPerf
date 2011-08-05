@@ -116,6 +116,7 @@ public class HttpTask extends MeasurementTask {
   /** Runs the HTTP measurement task. Will acquire power lock to ensure wifi is not turned off */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    
     int statusCode = HttpTask.DEFAULT_STATUS_CODE;
     long duration = 0;
     long originalHeadersLen = 0;
