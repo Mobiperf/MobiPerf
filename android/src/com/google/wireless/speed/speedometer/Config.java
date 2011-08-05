@@ -9,6 +9,7 @@ package com.google.wireless.speed.speedometer;
  *
  */
 public interface Config {  
+  /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   
@@ -23,6 +24,19 @@ public interface Config {
   public static final long SCHEDULE_POLLING_INTERVAL = 500;
   public static final String INVALID_IP = "";
   
+  /** Constants used in MeasurementScheduler.java */
+  // The default checkin interval in seconds
+  public static final int DEFAULT_CHECKIN_INTERVAL_SEC = 20;
+  public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
+  // default minimum battery percentage to run measurements
+  public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
+  public static final boolean DEFAULT_CHECKIN_ENABLED = true;
+  
+  /** Constants used in BatteryCapPowerManager.java */
+  /** The default battery level if we cannot read it from the system */
+  public static final int DEFAULT_BATTERY_LEVEL = 0;
+  /** The default maximum battery level if we cannot read it from the system */
+  public static final int DEFAULT_BATTERY_SCALE = 100;
   /** Tasks expire in one day. Expired tasks will be removed from the scheduler */
   public static final long TASK_EXPIRATION_MSEC = 24 * 3600 * 1000;
 }

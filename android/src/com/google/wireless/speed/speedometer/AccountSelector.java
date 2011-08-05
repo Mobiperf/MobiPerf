@@ -100,10 +100,11 @@ public class AccountSelector {
     long timeSinceLastAuth = System.currentTimeMillis() - authTimeLast;
     if (!this.shouldAuthImmediately() && authTimeLast != 0 &&
         (timeSinceLastAuth < AUTHENTICATE_PERIOD_MSEC)) {
-      Log.i(SpeedometerApp.TAG, "last authentication is " + timeSinceLastAuth / 1000 / 60 + 
-        " minutes ago. Need not to authenticate now.");
       return;
     }
+    
+    Log.i(SpeedometerApp.TAG, "Authenticating. Last authentication is " + 
+        timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
@@ -139,7 +140,7 @@ public class AccountSelector {
           try {
             getAuthToken(result);
           } catch (RuntimeException e) {
-            Log.e(SpeedometerApp.TAG, "Failed to get authToken");
+            Log.e(SpeedometerApp.TAG, "Failed to get authToken", e);
             /* TODO(Wenjie): May ask the user whether to quit the app nicely here if a number
              * of trials have been made and failed. Since Speedometer is basically useless 
              * without checkin
