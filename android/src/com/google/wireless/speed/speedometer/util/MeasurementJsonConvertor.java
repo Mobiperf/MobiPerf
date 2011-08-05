@@ -50,12 +50,6 @@ public class MeasurementJsonConvertor {
   public static Gson gson = new GsonBuilder().serializeNulls().
       registerTypeAdapter(Date.class, new DateTypeConverter()).
       setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-  private static final DateFormat dateFormat = 
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
-  static {
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-  }
   
   @SuppressWarnings("unchecked")
   public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, Context context) 
@@ -107,29 +101,20 @@ public class MeasurementJsonConvertor {
                                                         JsonDeserializer<Date> {
     @Override
     public JsonElement serialize(Date src, Type srcType, JsonSerializationContext context) {
-      return new JsonPrimitive(formatDate(src));
+      return new JsonPrimitive(src.getTime() * 1000);
     }
 
     @Override
     public Date deserialize(JsonElement json, Type type, JsonDeserializationContext context)
         throws JsonParseException {
       try {
-        return parseDate(json.getAsString());
+        return new Date(Long.parseLong(json.getAsString()) / 1000);
+      } catch (NumberFormatException e) {
+        throw new JsonParseException("Cannot convert time string: "  + json.toString());
       } catch (IllegalArgumentException e) {
-        Log.e(SpeedometerApp.TAG, "Cannot convert UTC time string:" + json.toString());
-        throw new JsonParseException("Cannot convert UTC time string: " + json.toString());
-      } catch (ParseException e) {
-        throw new JsonParseException("Cannot convert UTC time string: "  + json.toString());
+        Log.e(SpeedometerApp.TAG, "Cannot convert time string:" + json.toString());
+        throw new JsonParseException("Cannot convert time string: " + json.toString());
       }
     }
   }
-  
-  private static Date parseDate(String dateString) throws ParseException {
-    return dateFormat.parse(dateString);
-  }
-
-  private static String formatDate(Date date) {
-    return dateFormat.format(date);
-  }
-
 }

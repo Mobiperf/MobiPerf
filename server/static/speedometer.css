@@ -16,6 +16,12 @@ body {
 .header .logo{vertical-align:top;border:0;margin:1em;}
 .header .productLink{text-decoration:none;}
 
+#buildinfo {
+  display: inline;
+  font:normal 10px Arial;
+  color:#808080;
+}
+
 #main-content {
   padding: 10px 15px 30px;
   max-width: 1600px;
