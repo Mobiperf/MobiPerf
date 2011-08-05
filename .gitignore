@@ -1,0 +1,6 @@
+*.pyc
+server/google_appengine
+android/bin
+android/gen
+.metadata
+._*

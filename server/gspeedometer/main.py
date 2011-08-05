@@ -50,6 +50,10 @@ m.connect('/postmeasurement',
           controller='measurement:Measurement',
           action='PostMeasurement')
 
+m.connect('/measurements',
+          controller='measurement:Measurement',
+          action='ListMeasurements')
+
 m.connect('/measurement/view',
           controller='measurement:Measurement',
           action='MeasurementDetail')

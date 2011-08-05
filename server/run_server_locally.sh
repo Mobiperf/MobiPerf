@@ -3,8 +3,10 @@
 PYTHON=python
 APPSERVER=`which dev_appserver.py`
 
-CLEAR=""
-#CLEAR="-c"
+#CLEAN="-c"
+CLEAN=""
 
-$PYTHON $APPSERVER $CLEAR -d --auth_domain google.com --address 0.0.0.0 .
+./set_version.sh --notag
+
+$PYTHON $APPSERVER $CLEAN -d --auth_domain google.com --address 0.0.0.0 .
 
