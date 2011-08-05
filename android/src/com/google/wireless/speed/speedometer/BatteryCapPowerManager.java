@@ -9,8 +9,6 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.util.Log;
 
-import java.util.ArrayList;
-
 /**
  * A basic power manager implementation that decides whether a measurement can be scheduled
  * based on the current battery level: no measurements will be scheduled if the current battery
@@ -20,23 +18,21 @@ import java.util.ArrayList;
  *
  */
 public class BatteryCapPowerManager {
-    
+  
+  private static BatteryCapPowerManager singleton = null;  
   /** The application context needed to receive intent broadcasts */
   private Context context;
   /** The minimum threshold below which no measurements will be scheduled */
-  private int minBatThreshold;
+  private int minBatteryThreshold;
   /** Tells whether the phone is charging */
   private boolean isCharging;
   /** Current battery level in percentage */ 
-  private int curBatLevel;
-  /** Listeners registered by clients who will be notified upon battery changes */
-  private ArrayList<PowerManagerListener> listeners = 
-      new ArrayList<PowerManagerListener>();
+  private int curBatteryLevel;
   /** Receiver that handles batter change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
-  
-  public BatteryCapPowerManager(int batteryCap, Context context) {
-    this.minBatThreshold = batteryCap;
+    
+  private BatteryCapPowerManager(int batteryThresh, Context context) {
+    this.minBatteryThreshold = batteryThresh;
     this.context = context;
     this.broadcastReceiver = new PowerStateChangeReceiver();
     // Registers a receiver for battery change events.
@@ -46,40 +42,45 @@ public class BatteryCapPowerManager {
   }
   
   /** 
+   * Returns the BatteryCapPowerManager singleton with a battery threshold 
+   *  */
+  public static BatteryCapPowerManager createInstance(int batteryThresh, Context context) {
+    if (singleton == null) {
+      singleton = new BatteryCapPowerManager(batteryThresh, context);
+    }
+    return singleton;
+  }
+  
+  /**
+   * Returns the BatteryCapPowerManager singleton for query. Should be called after
+   * the singleton is initialized with createInstance(int batteryThresh, Context context)
+   * */
+  public static BatteryCapPowerManager getInstance() {
+    assert(singleton != null);
+    return singleton;
+  }
+  
+  /** 
    * Sets the minimum battery percentage below which measurements cannot be run.
    * 
    * @param batteryCap the batter percentage threshold between 0 and 100
    */
-  public synchronized void setBatteryCap(int batteryCap) throws IllegalArgumentException {
-    if (batteryCap < 0 || batteryCap > 100) {
+  public synchronized void setBatteryThresh(int batteryThresh) throws IllegalArgumentException {
+    if (batteryThresh < 0 || batteryThresh > 100) {
       throw new IllegalArgumentException("batteryCap must fall between 0 and 100, inclusive");
     }
-    this.minBatThreshold = batteryCap;
-    if (canScheduleExperiment()) {
-      this.notifyListeners();
-    }
+    this.minBatteryThreshold = batteryThresh;
   }
   
-  public synchronized int getBatteryCap() {
-    return this.minBatThreshold;
+  public synchronized int getBatteryThresh() {
+    return this.minBatteryThreshold;
   }
   
   /** 
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return (isCharging || curBatLevel > minBatThreshold);
-  }
-
-  /** 
-   * Sets the listener for power manager events. The listeners receive onPowerStateChange() 
-   * calls when measurements can be scheduled. 
-   */
-  public synchronized void setOnStateChangeListener(PowerManagerListener listener) {
-    if (listener != null && !listeners.contains(listener)) {
-      Log.i(SpeedometerApp.TAG, "listener added to monitor battery change event");
-      this.listeners.add(listener);
-    }
+    return (isCharging || curBatteryLevel > minBatteryThreshold);
   }
   
   /** 
@@ -90,25 +91,16 @@ public class BatteryCapPowerManager {
     context.unregisterReceiver(broadcastReceiver);
   }
   
-  private void notifyListeners() {
-    for (PowerManagerListener listener : listeners) {
-      listener.onPowerStateChange();
-    }
-  }
-  
   private synchronized void updateBatteryStat(Intent powerIntent) {
     int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, Config.DEFAULT_BATTERY_SCALE);
     int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, Config.DEFAULT_BATTERY_LEVEL);
     // change to the unit of percentage
-    this.curBatLevel = (int) ((double) level * 100 / scale);
+    this.curBatteryLevel = (int) ((double) level * 100 / scale);
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
         BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
     
     Log.i(SpeedometerApp.TAG, 
-        "Current power level is " + curBatLevel + " and isCharging = " + isCharging);
-    if (canScheduleExperiment()) {
-      this.notifyListeners();
-    }
+        "Current power level is " + curBatteryLevel + " and isCharging = " + isCharging);
   }
   
   private class PowerStateChangeReceiver extends BroadcastReceiver {
@@ -120,17 +112,5 @@ public class BatteryCapPowerManager {
     public void onReceive(Context context, Intent intent) {
       updateBatteryStat(intent);
     }
-  }
-  
-  /**
-   * Listener for power manager events.
-   * 
-   * @author wenjiezeng@google.com (Steve Zeng)
-   */
-  public static interface PowerManagerListener {
-    /**
-     * Callback whenever the power manager has resource to schedule new tasks.
-     */
-    public void onPowerStateChange();
   }
 }

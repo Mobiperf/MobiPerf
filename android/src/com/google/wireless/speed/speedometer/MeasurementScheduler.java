@@ -61,7 +61,7 @@ public class MeasurementScheduler extends Service {
   private SchedulerThread schedulerThread = null;
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
-    
+      
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -85,7 +85,7 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.isCheckinEnabled = false;
     this.checkin = new Checkin(this);
-    this.checkinIntervalSec = Config.DEDAULT_CHECKIN_INTERVAL_SEC;
+    this.checkinIntervalSec = Config.DEFAULT_CHECKIN_INTERVAL_SEC;
     this.checkinFuture = null;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
@@ -103,16 +103,8 @@ public class MeasurementScheduler extends Service {
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
-    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_CAP_PRECENT, this);
-    this.powerManager.setOnStateChangeListener(new BatteryCapPowerManager.PowerManagerListener() {
-      @Override
-      public void onPowerStateChange() {
-        synchronized (powerManager) {
-          Log.i(SpeedometerApp.TAG, "Power state has changed. Trying to resume task scheduling");
-          powerManager.notify();
-        }
-      }
-    });
+    this.powerManager = 
+        BatteryCapPowerManager.createInstance(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
   }
   
   @Override 
@@ -412,7 +404,7 @@ public class MeasurementScheduler extends Service {
           Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
           
           synchronized (MeasurementScheduler.this) {
-            if (isPauseRequested()) {
+            while (isPauseRequested()) {
               try {
                 Log.i(SpeedometerApp.TAG, "User requested pause");
                 MeasurementScheduler.this.wait();
@@ -435,19 +427,6 @@ public class MeasurementScheduler extends Service {
             while ((task = taskQueue.take()) != null) {
               Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size()
                   + " tasks in taskQueue");
-              
-              synchronized (MeasurementScheduler.this.powerManager) {
-                while (!powerManager.canScheduleExperiment()) {
-                  Log.i(SpeedometerApp.TAG, "Cannot schedule experiment due to power policy. " + 
-                      "Waiting for battery level to change.");       
-                  
-                  try {
-                    MeasurementScheduler.this.powerManager.wait();
-                  } catch (InterruptedException e) {
-                    Log.e(SpeedometerApp.TAG, "wait for power manager is interrupted");    
-                  }
-                }
-              }
               
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {

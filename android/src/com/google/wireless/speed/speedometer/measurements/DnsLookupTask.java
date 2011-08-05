@@ -1,6 +1,7 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -79,6 +80,10 @@ public class DnsLookupTask extends MeasurementTask {
 
   @Override
   public MeasurementResult call() throws MeasurementError {
+    if (!BatteryCapPowerManager.getInstance().canScheduleExperiment()) {
+      throw new MeasurementError("Not enough energy");
+    }
+    
     long t1, t2;
     long totalTime = 0;
     InetAddress resultInet = null;

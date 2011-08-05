@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -116,6 +117,10 @@ public class HttpTask extends MeasurementTask {
   /** Runs the HTTP measurement task. Will acquire power lock to ensure wifi is not turned off */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    if (!BatteryCapPowerManager.getInstance().canScheduleExperiment()) {
+      throw new MeasurementError("Not enough energy");
+    }
+    
     int statusCode = HttpTask.DEFAULT_STATUS_CODE;
     long duration = 0;
     long originalHeadersLen = 0;

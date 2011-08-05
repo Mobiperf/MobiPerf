@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -146,6 +147,10 @@ public class TracerouteTask extends MeasurementTask {
 
   @Override
   public MeasurementResult call() throws MeasurementError {
+    if (!BatteryCapPowerManager.getInstance().canScheduleExperiment()) {
+      throw new MeasurementError("Not enough energy");
+    }
+    
     TracerouteDesc task = (TracerouteDesc) this.measurementDesc;
     int maxPingCnt = task.maxHopCount;
     int ttl = 1;
