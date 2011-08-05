@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.Service;
@@ -103,8 +104,7 @@ public class MeasurementScheduler extends Service {
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
-    this.powerManager = 
-        BatteryCapPowerManager.createInstance(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
+    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
   }
   
   @Override 
@@ -430,7 +430,11 @@ public class MeasurementScheduler extends Service {
               
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {
-                future = measurementExecutor.schedule(task, task.timeFromExecution(), 
+                /* 'Decorates' the task with a power-aware task. task will not be executed
+                 * if the power policy is not met
+                 */
+                future = measurementExecutor.schedule(new PowerAwareTask(task, powerManager), 
+                    task.timeFromExecution(), 
                     TimeUnit.SECONDS);
                 if (task.measurementDesc.endTime != null) {
                   long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();

@@ -9,6 +9,8 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.util.Log;
 
+import java.util.concurrent.Callable;
+
 /**
  * A basic power manager implementation that decides whether a measurement can be scheduled
  * based on the current battery level: no measurements will be scheduled if the current battery
@@ -19,7 +21,6 @@ import android.util.Log;
  */
 public class BatteryCapPowerManager {
   
-  private static BatteryCapPowerManager singleton = null;  
   /** The application context needed to receive intent broadcasts */
   private Context context;
   /** The minimum threshold below which no measurements will be scheduled */
@@ -31,7 +32,7 @@ public class BatteryCapPowerManager {
   /** Receiver that handles batter change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
     
-  private BatteryCapPowerManager(int batteryThresh, Context context) {
+  public BatteryCapPowerManager(int batteryThresh, Context context) {
     this.minBatteryThreshold = batteryThresh;
     this.context = context;
     this.broadcastReceiver = new PowerStateChangeReceiver();
@@ -39,25 +40,6 @@ public class BatteryCapPowerManager {
     Intent powerIntent = context.registerReceiver(broadcastReceiver, 
         new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     updateBatteryStat(powerIntent);
-  }
-  
-  /** 
-   * Returns the BatteryCapPowerManager singleton with a battery threshold 
-   *  */
-  public static BatteryCapPowerManager createInstance(int batteryThresh, Context context) {
-    if (singleton == null) {
-      singleton = new BatteryCapPowerManager(batteryThresh, context);
-    }
-    return singleton;
-  }
-  
-  /**
-   * Returns the BatteryCapPowerManager singleton for query. Should be called after
-   * the singleton is initialized with createInstance(int batteryThresh, Context context)
-   * */
-  public static BatteryCapPowerManager getInstance() {
-    assert(singleton != null);
-    return singleton;
   }
   
   /** 
@@ -111,6 +93,31 @@ public class BatteryCapPowerManager {
     @Override
     public void onReceive(Context context, Intent intent) {
       updateBatteryStat(intent);
+    }
+  }
+  
+  /**
+   * A task wrapper that is power aware, the real logic is carried out by realTask
+   * 
+   * @author wenjiezeng@google.com (Steve Zeng)
+   *
+   */
+  public static class PowerAwareTask implements Callable<MeasurementResult> {
+    
+    private MeasurementTask realTask;
+    private BatteryCapPowerManager pManager;
+    
+    public PowerAwareTask(MeasurementTask task, BatteryCapPowerManager manager) {
+      realTask = task;
+      pManager = manager;
+    }
+    
+    @Override
+    public MeasurementResult call() throws MeasurementError {
+      if (!pManager.canScheduleExperiment()) {
+        throw new MeasurementError("Not enough power");
+      }
+      return realTask.call();
     }
   }
 }

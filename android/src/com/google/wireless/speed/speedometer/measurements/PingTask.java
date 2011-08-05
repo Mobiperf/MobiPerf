@@ -2,7 +2,6 @@
 
 package com.google.wireless.speed.speedometer.measurements;
 
-import com.google.wireless.speed.speedometer.BatteryCapPowerManager;
 import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
@@ -126,9 +125,6 @@ public class PingTask extends MeasurementTask {
    * JAVA_ICMP_PING, and HTTP_PING. If all fails, then we declare the resource unreachable */
   @Override
   public MeasurementResult call() throws MeasurementError {
-    if (!BatteryCapPowerManager.getInstance().canScheduleExperiment()) {
-      throw new MeasurementError("Not enough energy");
-    }
     
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
