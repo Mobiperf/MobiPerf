@@ -8,7 +8,7 @@
 
 echo "Password is: yeuqakmysyglasja"
 
-VERSION=`./set_version.sh --notag`
+VERSION=`./set_version.sh`
 
 appcfg.py -e $USER@google.com update .
 
