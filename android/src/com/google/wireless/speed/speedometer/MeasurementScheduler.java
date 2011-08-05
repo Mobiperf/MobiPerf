@@ -42,7 +42,7 @@ public class MeasurementScheduler extends Service {
 
   // The default checkin interval in seconds
   private static final boolean DEFAULT_CHECKIN_ENABLED = false;
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
+  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 5 * 60;
   private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   //default minimum battery percentage to run measurements
   private static final int DEFAULT_BATTERY_THRES_PRECENT = 60;
