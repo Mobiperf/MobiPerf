@@ -26,7 +26,7 @@ public interface Config {
   
   /** Constants used in MeasurementScheduler.java */
   // The default checkin interval in seconds
-  public static final int DEFAULT_CHECKIN_INTERVAL_SEC = 20;
+  public static final int DEFAULT_CHECKIN_INTERVAL_SEC = 3 * 60;
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
