@@ -145,7 +145,7 @@ public class Checkin {
     } catch (Exception e) {
       Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
       // Failure probably due to authToken expiration. Will authenticate upon next checkin.
-      this.accountSelector.authImmediately();
+      this.accountSelector.setAuthImmediately(true);
       this.authCookie = null;
       throw new IOException(e.getMessage());
     }
@@ -258,7 +258,7 @@ public class Checkin {
   }
   
   /**
-   * Initiate process to get the authorization cookie for the user account.
+   * Initiates the process to get the authentication cookie for the user account.
    * Returns immediately.
    */
   public synchronized void getCookie() {
@@ -272,7 +272,10 @@ public class Checkin {
     }
     
     try {
-      accountSelector.authenticate();
+      // Authenticates if there are no ongoing ones
+      if (accountSelector.getCheckinFuture() == null) {
+        accountSelector.authenticate();
+      }
     } catch (OperationCanceledException e) {
       Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
     } catch (AuthenticatorException e) {
@@ -280,6 +283,14 @@ public class Checkin {
     } catch (IOException e) {
       Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);
     }
+  }
+  
+  /**
+   * Resets the checkin variables in AccountSelector
+   * */
+  public void initializeAccountSelector() {
+    accountSelector.resetCheckinFuture();
+    accountSelector.setAuthImmediately(false);
   }
   
   private synchronized boolean checkGetCookie() {
@@ -296,7 +307,6 @@ public class Checkin {
       try {
         authCookie = getCookieFuture.get();
         Log.i(SpeedometerApp.TAG, "Got authCookie: " + authCookie);
-        accountSelector.resetCheckinFuture();
         return true;
       } catch (InterruptedException e) {
         Log.e(SpeedometerApp.TAG, "Unable to get auth cookie", e);

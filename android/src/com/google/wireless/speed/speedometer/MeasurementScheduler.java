@@ -51,6 +51,8 @@ public class MeasurementScheduler extends Service {
   private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
+  private long checkinRetryIntervalSec;
+  private int checkinRetryCnt;
   private ScheduledFuture<?> checkinFuture;
   private CheckinTask checkinTask;
   
@@ -91,6 +93,8 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.checkin = new Checkin(this);
     this.checkinFuture = null;
+    this.checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
+    this.checkinRetryCnt = 0;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
     
@@ -297,6 +301,13 @@ public class MeasurementScheduler extends Service {
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
   
+  private void resetCheckin() {
+    // reset counters for checkin
+    checkinRetryCnt = 0;
+    checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
+    checkin.initializeAccountSelector();
+  }
+  
   private void getTasksFromServer() {
     Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
     checkin.getCookie();
@@ -307,9 +318,23 @@ public class MeasurementScheduler extends Service {
         Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
         this.taskQueue.add(task);
       }
+      // Also reset checkin if we get a success
+      resetCheckin();
     } catch (IOException e) {
       Log.e(SpeedometerApp.TAG, "Something gets wrong when polling tasks from the" +
           " service:" + e.getMessage());
+      if (checkinRetryCnt++ > Config.MAX_CHECKIN_RETRY_COUNT) {
+        /* If we have retried more than MAX_CHECKIN_RETRY_COUNT times upon a checkin failure, 
+         * we will stop retrying and wait until the next checkin period*/
+        resetCheckin();
+      } else if (checkinRetryIntervalSec < checkinIntervalSec) {
+        Log.i(SpeedometerApp.TAG, "Retrying checkin in " + checkinRetryIntervalSec + " seconds");
+        checkinExecutor.schedule(checkinTask, checkinRetryIntervalSec, TimeUnit.SECONDS);
+        checkinRetryIntervalSec =
+            Math.min(Config.MAX_CHECKIN_RETRY_INTERVAL_SEC, checkinRetryIntervalSec * 2);
+      }
+      // Otherwise, we simply wait for the next checkin period since it's shorter than the
+      // retry interval
     }
   }
   
@@ -387,13 +412,10 @@ public class MeasurementScheduler extends Service {
         }
       } catch (Exception e) {
         /*
-         * Executor stops all subsequent execution of a periodic task if an
-         * execution is raised. We catch all undeclared exceptions here
+         * Executor stops all subsequent execution of a periodic task if a raised
+         * execution is uncaught. We catch all undeclared exceptions here
          */
-        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught");
-        if (e.getMessage() != null) {
-          Log.e(SpeedometerApp.TAG, e.getMessage());
-        }
+        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught", e);
       }
     }
   }

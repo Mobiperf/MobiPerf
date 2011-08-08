@@ -5,9 +5,9 @@ package com.google.wireless.speed.speedometer;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
-import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
@@ -66,6 +66,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
   protected void onDestroy() {
     super.onDestroy();
     // The scheduler has a receiver monitoring this intent to get the update
+    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings
     this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
   }
 }
