@@ -20,13 +20,11 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <TextView  
+        <ListView  
           android:layout_width="match_parent" 
           android:layout_height="wrap_content"
           android:id="@+viewId/systemConsole"
-          android:maxLines="500"
-          android:scrollbars="vertical"
-          android:text=""/>
+          android:scrollbars="vertical"/>
         <ProgressBar  
           style="@android:style/Widget.ProgressBar.Horizontal"
           android:layout_width="match_parent" 

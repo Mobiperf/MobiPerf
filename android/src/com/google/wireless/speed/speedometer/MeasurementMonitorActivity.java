@@ -7,9 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement
@@ -20,7 +20,8 @@ import android.widget.TextView;
 public class MeasurementMonitorActivity extends Activity {
   /** Called when the activity is first created. */
   
-  private TextView consoleView;
+  private ListView consoleView;
+  private ArrayAdapter<String> consoleContent;
   BroadcastReceiver receiver;
   
   public MeasurementMonitorActivity() {
@@ -29,7 +30,7 @@ public class MeasurementMonitorActivity extends Activity {
       @Override
       public void onReceive(Context context, Intent intent) {
         String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
-        consoleView.append(msg + "\n");
+        consoleContent.add(msg + "\n");
       }
     };
   }
@@ -62,8 +63,9 @@ public class MeasurementMonitorActivity extends Activity {
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.MSG_ACTION);
     this.registerReceiver(this.receiver, filter);
-    this.consoleView = (TextView) this.findViewById(R.viewId.systemConsole);
-    this.consoleView.setMovementMethod(new ScrollingMovementMethod());
+    consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
+    this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
+    this.consoleView.setAdapter(consoleContent);
   }
   
   @Override
