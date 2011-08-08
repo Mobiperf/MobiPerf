@@ -115,9 +115,11 @@ public class MeasurementJsonConvertor {
         throws JsonParseException {
       try {
         return parseDate(json.getAsString());
+      } catch (NumberFormatException e) {
+        throw new JsonParseException("Cannot convert time string: "  + json.toString());
       } catch (IllegalArgumentException e) {
-        Log.e(SpeedometerApp.TAG, "Cannot convert UTC time string:" + json.toString());
-        throw new JsonParseException("Cannot convert UTC time string: " + json.toString());
+        Log.e(SpeedometerApp.TAG, "Cannot convert time string:" + json.toString());
+        throw new JsonParseException("Cannot convert time string: " + json.toString());
       } catch (ParseException e) {
         throw new JsonParseException("Cannot convert UTC time string: "  + json.toString());
       }
@@ -131,5 +133,4 @@ public class MeasurementJsonConvertor {
   private static String formatDate(Date date) {
     return dateFormat.format(date);
   }
-
 }

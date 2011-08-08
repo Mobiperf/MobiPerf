@@ -2,8 +2,10 @@
 
 package com.google.wireless.speed.speedometer;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.util.Log;
@@ -21,7 +23,20 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     super.onCreate(savedInstanceState);
     addPreferencesFromResource(R.xml.preference);
     
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     Preference checkinEnabled = findPreference(getString(R.string.checkinEnabledPrefKey));
+    Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
+    
+    if (prefs.getBoolean(
+        getString(R.string.checkinEnabledPrefKey), Config.DEFAULT_CHECKIN_ENABLED)) {
+      Log.i(SpeedometerApp.TAG, "Checkin is enabled in the preference");
+      intervalPref.setEnabled(true);
+    } else {
+      intervalPref.setEnabled(false);
+    }
+    
+    /* TODO(Wenjie): Sanitize user inputs */ 
+    
     checkinEnabled.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
       /** 
        * Enables and disables some preference options as their parent option changes. 

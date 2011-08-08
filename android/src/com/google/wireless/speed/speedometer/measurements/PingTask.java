@@ -125,6 +125,7 @@ public class PingTask extends MeasurementTask {
    * JAVA_ICMP_PING, and HTTP_PING. If all fails, then we declare the resource unreachable */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
@@ -180,11 +181,11 @@ public class PingTask extends MeasurementTask {
         success, this.measurementDesc);
     
     result.addResult("mean_rtt_ms", avg);
-    result.addResult("min_rrt_ms", min);
-    result.addResult("max_rrt_ms", max);
-    result.addResult("stddev_rrt_ms", mdev);
+    result.addResult("min_rtt_ms", min);
+    result.addResult("max_rtt_ms", max);
+    result.addResult("stddev_rtt_ms", mdev);
     if (filteredAvg != avg) {
-      result.addResult("filtered_mean_rrt_ms", filteredAvg);
+      result.addResult("filtered_mean_rtt_ms", filteredAvg);
     }
     result.addResult("packet_loss", 1 - 
         ((double) rrtVals.size() / (double) this.measurementDesc.count));
@@ -198,7 +199,7 @@ public class PingTask extends MeasurementTask {
     }      
   }
   
-  /* Compute the average of the filtered rrts.
+  /* Compute the average of the filtered rtts.
    * The first several ping results are usually extremely large as the device needs to activate
    * the wireless interface and resolve domain names. Such distorted measurements are filter out
    * 
