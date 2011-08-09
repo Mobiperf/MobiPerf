@@ -345,7 +345,8 @@ public class PhoneUtils {
     wakeLock.acquire();
   }
 
-  /** Release the CPU wake lock */
+  /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
+   * about releasing someone else's wake lock */
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();

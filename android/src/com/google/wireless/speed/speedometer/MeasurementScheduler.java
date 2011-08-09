@@ -5,6 +5,8 @@ package com.google.wireless.speed.speedometer;
 import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -54,6 +56,8 @@ public class MeasurementScheduler extends Service {
   private ScheduledFuture<?> checkinFuture;
   private CheckinTask checkinTask;
   
+  private PendingIntent clockTickIntentSender;
+  private AlarmManager alarmManager;
   private BatteryCapPowerManager powerManager;
   // TODO(Wenjie): add capacity control to the two queues.
   /* Both taskQueue and pendingTasks are thread safe and operations on them are atomic. 
@@ -104,23 +108,28 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
     
+    this.alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
     this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);
     filter.addAction(UpdateIntent.MSG_ACTION);
-    /* Timers in executors will stop when the CPU sleeps. By listening to the ACTION_TIME_TICK
-     * system event, the executors get a chance to update their timers and run the scheduled
-     * tasks. ACTION_TIME_TICK fires every minute.
+    /* Executor threads will pause when the CPU sleeps. By using the system Alarm_Service to
+     * broadcast periodic wakeup events, the executor threads get a chance to run the 
+     * scheduled tasks. The alarm fires every Config.SYSTEM_ALARM_INTERVAL_MSEC milliseconds.
      */
-    filter.addAction(Intent.ACTION_TIME_TICK);
+    clockTickIntentSender = PendingIntent.getBroadcast(this, 0, 
+        new UpdateIntent("", UpdateIntent.WAKEUP_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
+    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 0, 
+        Config.SYSTEM_ALARM_INTERVAL_MSEC, clockTickIntentSender);
+    
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
       @Override
       public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().compareToIgnoreCase(UpdateIntent.PREFERENCE_ACTION) == 0) {
+        if (intent.getAction().equals(UpdateIntent.PREFERENCE_ACTION)) {
           updateFromPreference();
-        } else if (intent.getAction().compareToIgnoreCase(Intent.ACTION_TIME_TICK) == 0) {
+        } else if (intent.getAction().equals(UpdateIntent.WAKEUP_ACTION)) {
           try {
             PhoneUtils.getPhoneUtils().acquireWakeLock();
             // We wakes up the CPU for SHORT_WAKEUP_FOR_EXECUTORS_MSEC every minute 
@@ -402,6 +411,7 @@ public class MeasurementScheduler extends Service {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
       sendStringMsg("checkin at " + Calendar.getInstance().getTime().toGMTString());
       try {
+        PhoneUtils.getPhoneUtils().acquireWakeLock();
         if (getIsCheckinEnabled()) {
           uploadResults();
           getTasksFromServer();
@@ -415,6 +425,8 @@ public class MeasurementScheduler extends Service {
         if (e.getMessage() != null) {
           Log.e(SpeedometerApp.TAG, e.getMessage());
         }
+      } finally {
+        PhoneUtils.getPhoneUtils().releaseWakeLock();
       }
     }
   }
