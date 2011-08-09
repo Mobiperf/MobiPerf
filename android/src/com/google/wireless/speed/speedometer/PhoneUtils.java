@@ -335,21 +335,18 @@ public class PhoneUtils {
     return location;
   }
 
-  /** Prevents the phone from going to low-power mode where WiFi turns off. */
+  /** Wakes up the CPU of the phone if it is sleeping. */
   public synchronized void acquireWakeLock() {
-    String networkName = PhoneUtils.getPhoneUtils().getNetwork();
-    if (networkName != null && networkName.compareToIgnoreCase(NETWORK_WIFI) == 0) {
-      if (wakeLock == null) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
-      }
-      Log.i(SpeedometerApp.TAG, "PowerLock acquired");
-      wakeLock.acquire();
+    if (wakeLock == null) {
+      PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+      wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
     }
+    Log.i(SpeedometerApp.TAG, "PowerLock acquired");
+    wakeLock.acquire();
   }
 
-  /** Should be called on application shutdown. Releases global resources. */
-  public synchronized void shutDown() {
+  /** Release the CPU wake lock */
+  public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();
       Log.i(SpeedometerApp.TAG, "PowerLock released");

@@ -109,12 +109,27 @@ public class MeasurementScheduler extends Service {
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);
     filter.addAction(UpdateIntent.MSG_ACTION);
+    /* Timers in executors will stop when the CPU sleeps. By listening to the ACTION_TIME_TICK
+     * system event, the executors get a chance to update their timers and run the scheduled
+     * tasks. ACTION_TIME_TICK fires every minute.
+     */
+    filter.addAction(Intent.ACTION_TIME_TICK);
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
       @Override
       public void onReceive(Context context, Intent intent) {
         if (intent.getAction().compareToIgnoreCase(UpdateIntent.PREFERENCE_ACTION) == 0) {
           updateFromPreference();
+        } else if (intent.getAction().compareToIgnoreCase(Intent.ACTION_TIME_TICK) == 0) {
+          try {
+            PhoneUtils.getPhoneUtils().acquireWakeLock();
+            // We wakes up the CPU for SHORT_WAKEUP_FOR_EXECUTORS_MSEC every minute 
+            Thread.sleep(Config.SHORT_WAKEUP_FOR_EXECUTORS_MSEC);
+          } catch (InterruptedException e) {
+            Log.e(SpeedometerApp.TAG, "Thread sleep interrupted");
+          } finally {
+            PhoneUtils.getPhoneUtils().releaseWakeLock();
+          }
         }
       }
     };
@@ -248,7 +263,7 @@ public class MeasurementScheduler extends Service {
       // The user sets checkin interval in the unit of hours
       this.setCheckinInterval(Integer.parseInt(
           prefs.getString(getString(R.string.checkinIntervalPrefKey),
-          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
+          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 60);
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
@@ -385,6 +400,7 @@ public class MeasurementScheduler extends Service {
     @Override
     public void run() {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
+      sendStringMsg("checkin at " + Calendar.getInstance().getTime().toGMTString());
       try {
         if (getIsCheckinEnabled()) {
           uploadResults();

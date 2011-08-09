@@ -31,6 +31,7 @@ public interface Config {
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_CHECKIN_ENABLED = true;
+  public static final long SHORT_WAKEUP_FOR_EXECUTORS_MSEC = 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
   /** The default battery level if we cannot read it from the system */
