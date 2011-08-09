@@ -344,27 +344,36 @@ public class MeasurementScheduler extends Service {
       try {
         for (MeasurementTask task : this.pendingTasks.keySet()) {
           future = this.pendingTasks.get(task);
-          if (future != null && future.isDone()) {
-            try {
-              this.pendingTasks.remove(task);
-              if (!future.isCancelled()) {
-                result = future.get();
-                finishedTasks.add(result);
-              } else {
+          if (future != null) {
+            if (future.isDone()) {
+              try {
+                this.pendingTasks.remove(task);
+                if (!future.isCancelled()) {
+                  result = future.get();
+                  finishedTasks.add(result);
+                } else {
+                  finishedTasks.add(this.getFailureResult(task));
+                }
+              } catch (InterruptedException e) {
+                /*
+                 * Since the task is done, we should not need to wait anymore to get
+                 * result. So we simply assume something bad happens and we return a
+                 * failure result
+                 */
+                Log.e(SpeedometerApp.TAG, e.getMessage());
+              } catch (ExecutionException e) {
                 finishedTasks.add(this.getFailureResult(task));
+                Log.e(SpeedometerApp.TAG, e.getMessage());
+              } catch (CancellationException e) {
+                Log.e(SpeedometerApp.TAG, e.getMessage());
               }
-            } catch (InterruptedException e) {
-              /*
-               * Since the task is done, we should not need to wait anymore to get
-               * result. So we simply assume something bad happens and we return a
-               * failure result
+            } else if (task.isPassedDeadline()) {
+              /* If a task has reached its deadline but has not been run, 
+               * remove it and report failure 
                */
-              Log.e(SpeedometerApp.TAG, e.getMessage());
-            } catch (ExecutionException e) {
+              this.pendingTasks.remove(task);
+              future.cancel(true);
               finishedTasks.add(this.getFailureResult(task));
-              Log.e(SpeedometerApp.TAG, e.getMessage());
-            } catch (CancellationException e) {
-              Log.e(SpeedometerApp.TAG, e.getMessage());
             }
           }
             
@@ -409,7 +418,7 @@ public class MeasurementScheduler extends Service {
       } catch (Exception e) {
         /*
          * Executor stops all subsequent execution of a periodic task if a raised
-         * execution is uncaught. We catch all undeclared exceptions here
+         * exception is uncaught. We catch all undeclared exceptions here
          */
         Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught", e);
       }
@@ -466,7 +475,7 @@ public class MeasurementScheduler extends Service {
                 /* 'Decorates' the task with a power-aware task. task will not be executed
                  * if the power policy is not met*/
                 future = measurementExecutor.schedule(new PowerAwareTask(task, powerManager), 
-                    task.timeFromExecution(), TimeUnit.SECONDS);
+                    task.timeFromExecution(), TimeUnit.SECONDS);  
 
                 Log.i(SpeedometerApp.TAG,
                     "task " + task + " will start in " + task.timeFromExecution() / 1000
