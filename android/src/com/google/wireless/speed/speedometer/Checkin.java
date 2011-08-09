@@ -141,13 +141,14 @@ public class Checkin {
       Log.i(SpeedometerApp.TAG, "Checkin complete, got " + schedule.size() +
           " new tasks");
       return schedule;
-      
-    } catch (Exception e) {
+    } catch (JSONException e) {
       Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
+      throw new IOException("There is exception during checkin()");
+    } catch (IOException e) {
       // Failure probably due to authToken expiration. Will authenticate upon next checkin.
       this.accountSelector.setAuthImmediately(true);
       this.authCookie = null;
-      throw new IOException(e.getMessage());
+      throw new IOException(e);
     }
   }
   
