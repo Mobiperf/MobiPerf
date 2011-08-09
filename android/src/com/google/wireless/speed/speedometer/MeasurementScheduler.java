@@ -65,7 +65,6 @@ public class MeasurementScheduler extends Service {
   private volatile
       ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>> pendingTasks;
   private ScheduledExecutorService checkinExecutor;
-  private ScheduledExecutorService cancelExecutor;
   private SchedulerThread schedulerThread = null;
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
@@ -108,7 +107,6 @@ public class MeasurementScheduler extends Service {
             new TaskComparator());
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
-    this.cancelExecutor = Executors.newScheduledThreadPool(1);
     
     this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
     // Register activity specific BroadcastReceiver here    
@@ -289,8 +287,6 @@ public class MeasurementScheduler extends Service {
     this.checkin.shutDown();
     this.checkinExecutor.shutdown();
     this.checkinExecutor.shutdownNow();
-    this.cancelExecutor.shutdown();
-    this.cancelExecutor.shutdownNow();
     
     this.powerManager.stop();
     this.unregisterReceiver(broadcastReceiver);
@@ -420,24 +416,6 @@ public class MeasurementScheduler extends Service {
     }
   }
   
-  private class CancelTask implements Runnable {
-    ScheduledFuture<MeasurementResult> taskToCancel;
-    
-    public CancelTask(ScheduledFuture<MeasurementResult> taskToCancel) {
-      this.taskToCancel = taskToCancel;
-    }
-    
-    @Override
-    public void run() {
-      /* We enforce a strict deadline rule here: cancel the task even it is already running once
-       * deadline has come */
-      if (!this.taskToCancel.isDone()) {
-        this.taskToCancel.cancel(true);
-        Log.i(SpeedometerApp.TAG, "Canceling task as its deadline is reached");
-      }
-    }
-  }
-  
   private synchronized boolean isStopRequested() {
     return this.stopRequested;
   }
@@ -489,25 +467,6 @@ public class MeasurementScheduler extends Service {
                  * if the power policy is not met*/
                 future = measurementExecutor.schedule(new PowerAwareTask(task, powerManager), 
                     task.timeFromExecution(), TimeUnit.SECONDS);
-                
-                /*
-                 * endTime should never be null as it is always initialized in
-                 * MeasurementDesc. cancelExecutor are scheduled to remove stale
-                 * experiments that 1. has been scheduled but not run for longer
-                 * than Config.TASK_EXPIRATION_MSEC 2. has passed their endTime
-                 * 
-                 * TODO(Wenjie): Note that the cancelTask will remain in the
-                 * queue of canclExecutor even when the task it is supposed to
-                 * cancel has finished. In other words, each cancelTask has a
-                 * life cycle of Config.TASK_EXPIRATION_MSEC. Assuming there
-                 * will be limited amount of tasks scheduled within this period,
-                 * we keep the code simple and not remove the cancelTask explicitly
-                 * when a task finishes before its endTime. If the app runs into
-                 * memory problems, this should be optimized.
-                 */
-                assert (task.measurementDesc.endTime != null);  
-                long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
-                CancelTask cancelTask = new CancelTask(future);
 
                 Log.i(SpeedometerApp.TAG,
                     "task " + task + " will start in " + task.timeFromExecution() / 1000
