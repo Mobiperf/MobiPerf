@@ -156,6 +156,8 @@ public class RuntimeUtil {
 
     return new DeviceProperty(getDeviceInfo().deviceId, activity.getString(R.string.version),
         Calendar.getInstance().getTime(), getVersionStr(), activeIp, location.getLongitude(),
-        location.getLatitude(), location.getProvider(), networkType, carrierName);
+        location.getLatitude(), location.getProvider(), networkType, carrierName, 
+        PhoneUtils.getPhoneUtils().getCurrentBatteryLevel(),
+        PhoneUtils.getPhoneUtils().isCharging());
   }
 }
