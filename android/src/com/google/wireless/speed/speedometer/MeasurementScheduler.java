@@ -207,7 +207,7 @@ public class MeasurementScheduler extends Service {
    * before the new thread actually gets a chance to run and acquire the wake lock. So,
    * we sleep for a brief period for the newly spawn thread to run
    */
-  private void holdPowerLockForAWhile() {
+  private synchronized void holdPowerLockForAWhile() {
     try {
       this.wait(Config.DELAYED_SLEEP_FOR_THREAD_SPAWNING_MSEC);
     } catch (InterruptedException e) {
