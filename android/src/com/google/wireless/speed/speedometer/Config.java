@@ -12,6 +12,8 @@ public interface Config {
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
+  public static final int DEFAULT_PING_COUNT_PER_MEASUREMENT = 10;
+  public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 10;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;

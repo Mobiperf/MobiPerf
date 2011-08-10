@@ -1,6 +1,7 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -94,7 +95,7 @@ public class DnsLookupTask extends MeasurementTask {
     long totalTime = 0;
     InetAddress resultInet = null;
     int successCnt = 0;
-    for (int i = 0; i < this.measurementDesc.count; i++) {
+    for (int i = 0; i < Config.DEFAULT_DNS_COUNT_PER_MEASUREMENT; i++) {
       try {
         DnsLookupDesc taskDesc = (DnsLookupDesc) this.measurementDesc;
         Log.i(SpeedometerApp.TAG, "Running DNS Lookup for target " + taskDesc.target);
