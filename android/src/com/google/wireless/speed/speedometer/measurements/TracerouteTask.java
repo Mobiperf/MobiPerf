@@ -6,9 +6,9 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
@@ -142,6 +142,17 @@ public class TracerouteTask extends MeasurementTask {
   public TracerouteTask(MeasurementDesc desc, Context parent) {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+  }
+  
+  /**
+   * Returns a copy of the TracerouteTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    TracerouteDesc newDesc = new TracerouteDesc(desc.key, desc.startTime, desc.endTime, 
+      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new TracerouteTask(newDesc, parent);
   }
 
   @Override

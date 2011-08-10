@@ -9,6 +9,7 @@ import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
@@ -119,6 +120,17 @@ public class PingTask extends MeasurementTask {
   public PingTask(MeasurementDesc desc, Context parent) {
     super(new PingDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+  }
+  
+  /**
+   * Returns a copy of the PingTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    PingDesc newDesc = new PingDesc(desc.key, desc.startTime, desc.endTime, 
+      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new PingTask(newDesc, parent);
   }
   
   /* We will use three methods to ping the requested resource in the order of PING_COMMAND, 

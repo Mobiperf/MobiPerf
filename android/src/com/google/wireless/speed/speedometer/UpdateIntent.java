@@ -20,7 +20,8 @@ public class UpdateIntent extends Intent {
   private static final String PACKAGE_PREFIX = UpdateIntent.class.getPackage().getName();
   public static final String MSG_ACTION = PACKAGE_PREFIX + ".MSG_ACTION";
   public static final String PREFERENCE_ACTION = PACKAGE_PREFIX + ".PREFERENCE_ACTION";
-  public static final String WAKEUP_ACTION = PACKAGE_PREFIX + ".WAKEUP_ACTION";
+  public static final String MEASUREMENT_ACTION = PACKAGE_PREFIX + ".MEASUREMENT_ACTION";
+  public static final String CHECKIN_ACTION = PACKAGE_PREFIX + ".CHECKIN_ACTION";
   
   /**
    * Creates an intent of the specified action with an optional message

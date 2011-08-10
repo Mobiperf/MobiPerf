@@ -66,6 +66,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
   protected void onDestroy() {
     super.onDestroy();
     // The scheduler has a receiver monitoring this intent to get the update
+    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings
     this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
   }
 }

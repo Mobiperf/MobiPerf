@@ -7,6 +7,7 @@ import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;
@@ -113,6 +114,18 @@ public class HttpTask extends MeasurementTask {
     }
     
   }
+  
+  /**
+   * Returns a copy of the HttpTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    HttpDesc newDesc = new HttpDesc(desc.key, desc.startTime, desc.endTime, 
+        desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new HttpTask(newDesc, parent);
+  }
+  
   /** Runs the HTTP measurement task. Will acquire power lock to ensure wifi is not turned off */
   @Override
   public MeasurementResult call() throws MeasurementError {
