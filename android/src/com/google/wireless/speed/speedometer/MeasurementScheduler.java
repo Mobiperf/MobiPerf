@@ -203,6 +203,7 @@ public class MeasurementScheduler extends Service {
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
     Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
+    this.resume();
     return START_STICKY;
   }
   
@@ -227,8 +228,7 @@ public class MeasurementScheduler extends Service {
   /** Set the interval for checkin in seconds */
   public synchronized void setCheckinInterval(long interval) {
     this.checkinIntervalSec = interval;
-    // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC
-    // seconds
+    // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
     alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
         System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, 
         checkinIntervalSec * 1000, checkinIntentSender);
@@ -463,6 +463,7 @@ public class MeasurementScheduler extends Service {
           // Also reset checkin if we get a success
           resetCheckin();
         }
+        // Schedule the new expeirments
         handleMeasurement();
       } catch (Exception e) {
         /*
