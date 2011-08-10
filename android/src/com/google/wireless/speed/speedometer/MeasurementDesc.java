@@ -60,8 +60,11 @@ public abstract class MeasurementDesc {
     } else {
       this.endTime = endTime;
     }
-    
-    this.intervalSec = intervalSec;
+    if (intervalSec <= 0) {
+      this.intervalSec = Config.DEFAULT_MEASUREMENT_INTERVAL_SEC;
+    } else {
+      this.intervalSec = intervalSec;
+    }
     this.count = count;
     this.priority = priority;
     this.parameters = params;

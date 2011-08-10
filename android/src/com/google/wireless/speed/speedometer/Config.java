@@ -13,6 +13,8 @@ public interface Config {
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   
+  public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
+  
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;
   // Default # of pings per hop for traceroute
