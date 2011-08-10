@@ -14,6 +14,7 @@ public interface Config {
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   public static final int DEFAULT_PING_COUNT_PER_MEASUREMENT = 10;
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 10;
+  public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;
@@ -32,7 +33,7 @@ public interface Config {
   public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 10L;
   public static final long MAX_CHECKIN_RETRY_INTERVAL_SEC = 60L;
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;
-  public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
+  public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_CHECKIN_ENABLED = true;

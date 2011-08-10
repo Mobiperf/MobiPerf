@@ -22,6 +22,7 @@ public class UpdateIntent extends Intent {
   public static final String PREFERENCE_ACTION = PACKAGE_PREFIX + ".PREFERENCE_ACTION";
   public static final String MEASUREMENT_ACTION = PACKAGE_PREFIX + ".MEASUREMENT_ACTION";
   public static final String CHECKIN_ACTION = PACKAGE_PREFIX + ".CHECKIN_ACTION";
+  public static final String CHECKIN_RETRY_ACTION = PACKAGE_PREFIX + ".CHECKIN_RETRY_ACTION";
   
   /**
    * Creates an intent of the specified action with an optional message

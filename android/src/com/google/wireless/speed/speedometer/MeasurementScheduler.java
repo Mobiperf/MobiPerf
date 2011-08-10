@@ -115,15 +115,16 @@ public class MeasurementScheduler extends Service {
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);
     filter.addAction(UpdateIntent.MSG_ACTION);
     filter.addAction(UpdateIntent.CHECKIN_ACTION);
+    filter.addAction(UpdateIntent.CHECKIN_RETRY_ACTION);
     filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
     /* Intent senders are used by the AlarmManager to broadcast intents of the
      * specified type at specified times. */
     checkinIntentSender = PendingIntent.getBroadcast(this, 0, 
         new UpdateIntent("", UpdateIntent.CHECKIN_ACTION), PendingIntent.FLAG_CANCEL_CURRENT); 
     checkinRetryIntentSender = PendingIntent.getBroadcast(this, 0, 
-      new UpdateIntent("", UpdateIntent.CHECKIN_ACTION), PendingIntent.FLAG_CANCEL_CURRENT); 
+      new UpdateIntent("", UpdateIntent.CHECKIN_RETRY_ACTION), PendingIntent.FLAG_CANCEL_CURRENT); 
     measurementIntentSender = PendingIntent.getBroadcast(this, 0, 
-        new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION), PendingIntent.FLAG_UPDATE_CURRENT);
+        new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
     
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
@@ -131,7 +132,8 @@ public class MeasurementScheduler extends Service {
       public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(UpdateIntent.PREFERENCE_ACTION)) {
           updateFromPreference();
-        } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION)) {
+        } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
+            intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
           Log.d(SpeedometerApp.TAG, "Checkin intent received");
           sendStringMsg("wakeup for checkin at " + 
               Calendar.getInstance().getTime().toGMTString());
@@ -230,9 +232,9 @@ public class MeasurementScheduler extends Service {
     this.checkinIntervalSec = interval;
     // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
     alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
-        System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, 
+        System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC, 
         checkinIntervalSec * 1000, checkinIntentSender);
-
+    
     Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
   }
   
