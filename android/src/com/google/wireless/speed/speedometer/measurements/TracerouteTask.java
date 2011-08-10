@@ -8,7 +8,6 @@ import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 import com.google.wireless.speed.speedometer.util.Util;

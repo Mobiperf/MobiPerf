@@ -13,7 +13,7 @@ public interface Config {
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   public static final int DEFAULT_PING_COUNT_PER_MEASUREMENT = 10;
-  public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 10;
+  public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
   public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
@@ -37,7 +37,7 @@ public interface Config {
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_CHECKIN_ENABLED = true;
-  public static final long MIN_TIME_BETWEEN_MEASUREMENTS_MSEC = 500L;
+  public static final long MIN_TIME_BETWEEN_MEASUREMENTS_MSEC = 60 * 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
   /** The default battery level if we cannot read it from the system */
