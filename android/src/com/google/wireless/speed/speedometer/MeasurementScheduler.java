@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
@@ -156,9 +157,8 @@ public class MeasurementScheduler extends Service {
       return;
     }
     
-    PhoneUtils.getPhoneUtils().acquireWakeLock();
     new Thread(checkinTask).start();
-    PhoneUtils.getPhoneUtils().releaseWakeLock();
+    holdPowerLockForAWhile();
   }
   
   private void handleMeasurement() {    
@@ -166,7 +166,6 @@ public class MeasurementScheduler extends Service {
       return;
     }
     
-    PhoneUtils.getPhoneUtils().acquireWakeLock();
     MeasurementTask task = taskQueue.peek();
     /* Process the head of the queue. If the count of the head task is greater than 0, 
      * we make a clone of it with the next start time and add the clone to taskQueue.
@@ -174,7 +173,8 @@ public class MeasurementScheduler extends Service {
     if (task != null && task.timeFromExecution() <= 0) {
       taskQueue.poll();
       // Run the head task using the executor
-      Future<MeasurementResult> future = measurementExecutor.submit(task);
+      Future<MeasurementResult> future = measurementExecutor.submit(
+          new PowerAwareTask(task, powerManager));
       synchronized (pendingTasks) {
         pendingTasks.put(task, future);
       }
@@ -192,13 +192,27 @@ public class MeasurementScheduler extends Service {
     // Schedule for the next experiment in taskQueue
     task = taskQueue.peek();
     if (task != null) {
-      long timeFromExecution = Math.min(task.timeFromExecution(), 
+      long timeFromExecution = Math.max(task.timeFromExecution(), 
           Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
       alarmManager.set(AlarmManager.RTC_WAKEUP, 
           System.currentTimeMillis() + timeFromExecution, 
           measurementIntentSender);
     }
-    PhoneUtils.getPhoneUtils().releaseWakeLock();
+    holdPowerLockForAWhile();
+  }
+  
+  /**
+   * The power lock for the CPU is held by the alarm manager during onReceive(). However,
+   * since the real task is done by spawning a new thread, the CPU can go back to sleep
+   * before the new thread actually gets a chance to run and acquire the wake lock. So,
+   * we sleep for a brief period for the newly spawn thread to run
+   */
+  private void holdPowerLockForAWhile() {
+    try {
+      this.wait(Config.DELAYED_SLEEP_FOR_THREAD_SPAWNING_MSEC);
+    } catch (InterruptedException e) {
+      Log.e(SpeedometerApp.TAG, "DELAYED_SLEEP_FOR_THREAD_SPAWNING_MSEC interrpted");
+    }
   }
   
   @Override 

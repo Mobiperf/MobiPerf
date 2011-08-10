@@ -341,7 +341,7 @@ public class PhoneUtils {
       PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
       wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
     }
-    Log.i(SpeedometerApp.TAG, "PowerLock acquired");
+    Log.d(SpeedometerApp.TAG, "PowerLock acquired");
     wakeLock.acquire();
   }
 
@@ -350,7 +350,7 @@ public class PhoneUtils {
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();
-      Log.i(SpeedometerApp.TAG, "PowerLock released");
+      Log.d(SpeedometerApp.TAG, "PowerLock released");
     }
   }
 
