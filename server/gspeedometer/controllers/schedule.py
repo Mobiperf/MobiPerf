@@ -24,6 +24,7 @@ class AddToScheduleForm(forms.Form):
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
   count = forms.CharField(required=False)
+  interval = forms.FloatField(required=False, label='Interval (sec)')
   tag = forms.CharField(required=False)
   filter = forms.CharField(required=False)
 
@@ -46,6 +47,7 @@ class Schedule(webapp.RequestHandler):
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count']
+        interval = add_to_schedule_form.cleaned_data['interval']
 
         logging.info('Got TYPE: ' + thetype)
 
@@ -56,6 +58,7 @@ class Schedule(webapp.RequestHandler):
         task.tag = tag
         task.filter = thefilter
         task.count = int(count)
+        task.interval_sec = interval 
 
         # Set up correct type-specific measurement parameters
         if task.type == 'ping':
