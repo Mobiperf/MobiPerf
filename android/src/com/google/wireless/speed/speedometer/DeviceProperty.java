@@ -22,10 +22,12 @@ public class DeviceProperty {
   public String locationType;
   public String networkType;
   public String carrier;
+  public int batteryLevel;
+  public boolean isCharing;
 
   public DeviceProperty(String deviceId, String appVersion, Date timeStamp, String osVersion,
       String ipAddress, double longtitude, double latitude, String locationType, 
-      String networkType, String carrier) {
+      String networkType, String carrier, int batteryLevel, boolean isCharging) {
     super();
     this.deviceId = deviceId;
     this.appVersion = appVersion;
@@ -36,6 +38,8 @@ public class DeviceProperty {
     this.locationType = locationType;
     this.networkType = networkType;
     this.carrier = carrier;
+    this.batteryLevel = batteryLevel;
+    this.isCharing = isCharging;
   }
   
   private class GeoLocation {

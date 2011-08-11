@@ -16,7 +16,10 @@
 
 package com.google.wireless.speed.speedometer;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -30,6 +33,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
@@ -93,10 +97,22 @@ public class PhoneUtils {
 
   /** Call initNetworkManager() before using this var. */
   private TelephonyManager telephonyManager = null;
+  
+  /** Tells whether the phone is charging */
+  private boolean isCharging;
+  /** Current battery level in percentage */ 
+  private int curBatteryLevel;
+  /** Receiver that handles batter change broadcast intents */
+  private BroadcastReceiver broadcastReceiver;
 
 
   protected PhoneUtils(Context context) {
     this.context = context;
+    broadcastReceiver = new PowerStateChangeReceiver();
+    // Registers a receiver for battery change events.
+    Intent powerIntent = globalContext.registerReceiver(broadcastReceiver, 
+        new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    updateBatteryStat(powerIntent);
   }
 
   /**
@@ -350,8 +366,16 @@ public class PhoneUtils {
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();
-      Log.d(SpeedometerApp.TAG, "PowerLock released");
+      Log.i(SpeedometerApp.TAG, "PowerLock released");
     }
+  }
+  
+  /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
+   * about releasing someone else's wake lock */
+  public synchronized void shutDown() {
+    releaseGlobalContext();
+    releaseWakeLock();
+    context.unregisterReceiver(broadcastReceiver);
   }
 
   /**
@@ -549,4 +573,42 @@ public class PhoneUtils {
     return pids;
   }
 
+  /**
+   * Returns the current battery level
+   * */
+  public synchronized int getCurrentBatteryLevel() {
+    return curBatteryLevel;
+  }
+  
+  /**
+   * Returns if the batter is charing
+   */
+  public synchronized boolean isCharging() {
+    return isCharging;
+  }
+  
+  private synchronized void updateBatteryStat(Intent powerIntent) {
+    int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 
+        com.google.wireless.speed.speedometer.Config.DEFAULT_BATTERY_SCALE);
+    int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, 
+        com.google.wireless.speed.speedometer.Config.DEFAULT_BATTERY_LEVEL);
+    // change to the unit of percentage
+    this.curBatteryLevel = (int) ((double) level * 100 / scale);
+    this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
+        BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
+    
+    Log.i(SpeedometerApp.TAG, 
+        "Current power level is " + curBatteryLevel + " and isCharging = " + isCharging);
+  }
+  
+  private class PowerStateChangeReceiver extends BroadcastReceiver {
+    /** 
+     * @see android.content.BroadcastReceiver#onReceive(android.content.Context, 
+     * android.content.Intent)
+     */
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      updateBatteryStat(intent);
+    }
+  }
 }
