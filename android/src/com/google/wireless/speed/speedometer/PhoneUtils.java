@@ -374,7 +374,10 @@ public class PhoneUtils {
 
   /** Should be called on application shutdown. Releases global resources. */
   public synchronized void shutDown() {
-    releaseWakeLock();
+    if (this.wakeLock != null) {
+      this.wakeLock.setReferenceCounted(false);
+      wakeLock.release();
+    }
     context.unregisterReceiver(broadcastReceiver);
     releaseGlobalContext();
   }
