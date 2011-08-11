@@ -153,7 +153,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void handleCheckin() {     
-    if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
+    if (isPauseRequested()) {
       return;
     }
     
