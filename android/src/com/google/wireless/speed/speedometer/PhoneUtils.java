@@ -363,14 +363,20 @@ public class PhoneUtils {
       wakeLock.acquire();
     }
   }
+  
+  /** Should be called on application shutdown. Releases global resources. */
+  public synchronized void releaseWakeLock() {
+    if (wakeLock != null) {
+      wakeLock.release();
+      Log.i(SpeedometerApp.TAG, "PowerLock released");
+    }
+  }
 
   /** Should be called on application shutdown. Releases global resources. */
   public synchronized void shutDown() {
-    if (wakeLock != null) {
-      wakeLock.release();
-      context.unregisterReceiver(broadcastReceiver);
-      Log.i(SpeedometerApp.TAG, "PowerLock released");
-    }
+    releaseWakeLock();
+    context.unregisterReceiver(broadcastReceiver);
+    releaseGlobalContext();
   }
 
   /**

@@ -64,6 +64,10 @@ class DeviceProperties(db.Model):
   network_type = db.StringProperty()
   # Carrier
   carrier = db.StringProperty()
+  # Battery level 
+  battery_level= db.IntegerProperty()
+  # Battery charging status 
+  is_battery_charging = db.BooleanProperty()
 
   def JSON_DECODE_location(self, inputval):
     lat = float(inputval['latitude'])

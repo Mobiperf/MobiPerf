@@ -249,7 +249,7 @@ public class TracerouteTask extends MeasurementTask {
         ttl++;
       }
     } finally {
-      PhoneUtils.getPhoneUtils().shutDown();
+      PhoneUtils.getPhoneUtils().releaseWakeLock();
     }
     throw new MeasurementError("cannot perform traceroute to " + task.target);
   }
