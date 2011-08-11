@@ -123,7 +123,8 @@ public class MeasurementScheduler extends Service {
     checkinIntentSender = PendingIntent.getBroadcast(this, 0, 
         new UpdateIntent("", UpdateIntent.CHECKIN_ACTION), PendingIntent.FLAG_CANCEL_CURRENT); 
     checkinRetryIntentSender = PendingIntent.getBroadcast(this, 0, 
-      new UpdateIntent("", UpdateIntent.CHECKIN_RETRY_ACTION), PendingIntent.FLAG_CANCEL_CURRENT); 
+        new UpdateIntent("", UpdateIntent.CHECKIN_RETRY_ACTION), 
+        PendingIntent.FLAG_CANCEL_CURRENT); 
     measurementIntentSender = PendingIntent.getBroadcast(this, 0, 
         new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
     
@@ -134,7 +135,7 @@ public class MeasurementScheduler extends Service {
         if (intent.getAction().equals(UpdateIntent.PREFERENCE_ACTION)) {
           updateFromPreference();
         } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
-            intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
+              intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
           Log.d(SpeedometerApp.TAG, "Checkin intent received");
           sendStringMsg("wakeup for checkin at " + 
               Calendar.getInstance().getTime().toGMTString());
