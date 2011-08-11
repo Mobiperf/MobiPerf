@@ -77,7 +77,7 @@ class DeviceProperties(db.Model):
   def JSON_DECODE_timestamp(self, inputval):
     # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
     # and update the Android app to use that format
-    self.timestamp = util.StringToTime(inputval['timestamp'])
+    self.timestamp = util.StringToTime(inputval)
 
   def __str__(self):
     return 'DeviceProperties <device %s>' % self.device_info
@@ -156,7 +156,7 @@ class Measurement(db.Expando):
   def JSON_DECODE_timestamp(self, inputval):
     # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
     # and update the Android app to use that format
-    self.timestamp = util.StringToTime(inputval['timestamp'])
+    self.timestamp = util.StringToTime(inputval)
 
   def JSON_DECODE_parameters(self, input_dict):
     for k, v in input_dict.items():
