@@ -102,7 +102,7 @@ public class PhoneUtils {
   private boolean isCharging;
   /** Current battery level in percentage */ 
   private int curBatteryLevel;
-  /** Receiver that handles batter change broadcast intents */
+  /** Receiver that handles battery change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
 
 
@@ -373,11 +373,13 @@ public class PhoneUtils {
   /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
    * about releasing someone else's wake lock */
   public synchronized void shutDown() {
-    /* wake locks are ref counted by default. A count greater than 0 will not get released.
-     * In case of shut down, we set ref counted to false and make sure the wake lock is 
-     * released*/
-    wakeLock.setReferenceCounted(false);
-    wakeLock.release();
+    if (this.wakeLock != null) {
+      /* Wakelock are ref counted by default. We disable this feature here to ensure that
+       * the power lock is released upon shutdown.
+       */ 
+      wakeLock.setReferenceCounted(false);
+      wakeLock.release();
+    }
     context.unregisterReceiver(broadcastReceiver);
     releaseGlobalContext();
   }
@@ -597,7 +599,7 @@ public class PhoneUtils {
     int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, 
         com.google.wireless.speed.speedometer.Config.DEFAULT_BATTERY_LEVEL);
     // change to the unit of percentage
-    this.curBatteryLevel = (int) ((double) level * 100 / scale);
+    this.curBatteryLevel = level * 100 / scale;
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
         BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
     
