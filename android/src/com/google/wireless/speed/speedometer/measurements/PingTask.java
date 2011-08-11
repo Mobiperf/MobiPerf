@@ -125,6 +125,7 @@ public class PingTask extends MeasurementTask {
    * JAVA_ICMP_PING, and HTTP_PING. If all fails, then we declare the resource unreachable */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
@@ -229,8 +230,8 @@ public class PingTask extends MeasurementTask {
     pingTask.pingExe = parent.getString(R.string.ping_executable);
     try {
       String command = Util.constructCommand(pingTask.pingExe, "-i", pingTask.intervalSec,
-          "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", pingTask.count, 
-          pingTask.target);
+          "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
+          Config.DEFAULT_PING_COUNT_PER_MEASUREMENT, pingTask.target);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -299,7 +300,7 @@ public class PingTask extends MeasurementTask {
       int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
       int successfulPingCnt = 0;
       long totalPingDelay = 0;
-      for (int i = 0; i < pingTask.count; i++) {
+      for (int i = 0; i < Config.DEFAULT_PING_COUNT_PER_MEASUREMENT; i++) {
         pingStartTime = System.currentTimeMillis();
         boolean status = InetAddress.getByName(pingTask.target).isReachable(timeOut);
         pingEndTime = System.currentTimeMillis();
@@ -348,7 +349,7 @@ public class PingTask extends MeasurementTask {
       int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
       HttpConnectionParams.setConnectionTimeout(headMethod.getParams(), timeOut);
                       
-      for (int i = 0; i < pingTask.count; i++) {
+      for (int i = 0; i < Config.DEFAULT_PING_COUNT_PER_MEASUREMENT; i++) {
         pingStartTime = System.currentTimeMillis();
         HttpResponse response = client.execute(headMethod);  
         pingEndTime = System.currentTimeMillis();

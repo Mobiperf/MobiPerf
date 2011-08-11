@@ -146,6 +146,7 @@ public class TracerouteTask extends MeasurementTask {
 
   @Override
   public MeasurementResult call() throws MeasurementError {
+    
     TracerouteDesc task = (TracerouteDesc) this.measurementDesc;
     int maxPingCnt = task.maxHopCount;
     int ttl = 1;

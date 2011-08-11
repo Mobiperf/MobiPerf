@@ -71,8 +71,8 @@ public class AccountSelector {
   
   /** Allows clients of AccountSelector to request an authentication upon the next call
    * to authenticate() */
-  public synchronized void authImmediately() {
-    this.authImmediately = true;
+  public synchronized void setAuthImmediately(boolean val) {
+    this.authImmediately = val;
   }
   
   private synchronized boolean shouldAuthImmediately() {
@@ -97,15 +97,20 @@ public class AccountSelector {
      * authenticate() upon the next checkin
      */
     long authTimeLast = this.getLastAuthTime();
+    long timeSinceLastAuth = System.currentTimeMillis() - authTimeLast;
     if (!this.shouldAuthImmediately() && authTimeLast != 0 &&
-        (System.currentTimeMillis() - authTimeLast < AUTHENTICATE_PERIOD_MSEC)) {
+        (timeSinceLastAuth < AUTHENTICATE_PERIOD_MSEC)) {
       return;
     }
+    
+    Log.i(SpeedometerApp.TAG, "Authenticating. Last authentication is " + 
+        timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
     if (this.authToken != null) {
       // There will be no effect on the token if it is still valid
+      Log.i(SpeedometerApp.TAG, "Invalidating token");
       accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
     }
     
@@ -132,7 +137,15 @@ public class AccountSelector {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
           Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
-          getAuthToken(result);
+          try {
+            getAuthToken(result);
+          } catch (RuntimeException e) {
+            Log.e(SpeedometerApp.TAG, "Failed to get authToken", e);
+            /* TODO(Wenjie): May ask the user whether to quit the app nicely here if a number
+             * of trials have been made and failed. Since Speedometer is basically useless 
+             * without checkin
+             */
+          }
         }},
         null);
       Log.i(SpeedometerApp.TAG, "AccountManager.getAuthToken returned " + future);
@@ -208,10 +221,6 @@ public class AccountSelector {
               || cookie.getName().equals("ACSID")) {
             Log.i(SpeedometerApp.TAG, "Got cookie " + cookie);
             setLastAuthTime(System.currentTimeMillis());
-            // We've successfully authenticated. Need not authenticate immediately again.
-            synchronized (AccountSelector.this) {
-              authImmediately = false;
-            }
             return cookie;
           }
         }

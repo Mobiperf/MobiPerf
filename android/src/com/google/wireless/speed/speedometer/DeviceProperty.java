@@ -15,7 +15,7 @@ public class DeviceProperty {
 
   public String deviceId;
   public String appVersion;
-  public Date timeStamp;
+  public Date timestamp;
   public String osVersion;
   public String ipAddress;
   public GeoLocation location;
@@ -29,7 +29,7 @@ public class DeviceProperty {
     super();
     this.deviceId = deviceId;
     this.appVersion = appVersion;
-    this.timeStamp = timeStamp;
+    this.timestamp = timeStamp;
     this.osVersion = osVersion;
     this.ipAddress = ipAddress;    
     this.location = new GeoLocation(longtitude, latitude);

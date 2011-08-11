@@ -2,10 +2,14 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
@@ -39,23 +43,20 @@ import java.util.concurrent.TimeUnit;
  * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
-
-  // The default checkin interval in seconds
-  private static final boolean DEFAULT_CHECKIN_ENABLED = false;
-  private static final int DEDAULT_CHECKIN_INTERVAL_SEC = 2 * 60;
-  private static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
-  //default minimum battery percentage to run measurements
-  private static final int DEFAULT_BATTERY_THRES_PRECENT = 60;
   
   private ScheduledThreadPoolExecutor measurementExecutor;
-  private Handler receiver;
+  private BroadcastReceiver broadcastReceiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
-  private boolean isCheckinEnabled = DEFAULT_CHECKIN_ENABLED;
+  private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
+  private long checkinRetryIntervalSec;
+  private int checkinRetryCnt;
   private ScheduledFuture<?> checkinFuture;
   private CheckinTask checkinTask;
+  
+  private BatteryCapPowerManager powerManager;
   // TODO(Wenjie): add capacity control to the two queues.
   /* Both taskQueue and pendingTasks are thread safe and operations on them are atomic. 
    * To guarantee reliable value propagation between threads, use volatile keyword.
@@ -64,11 +65,10 @@ public class MeasurementScheduler extends Service {
   private volatile
       ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>> pendingTasks;
   private ScheduledExecutorService checkinExecutor;
-  private ScheduledExecutorService cancelExecutor;
   private SchedulerThread schedulerThread = null;
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
-    
+      
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -92,13 +92,14 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.checkin = new Checkin(this);
     this.checkinFuture = null;
+    this.checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
+    this.checkinRetryCnt = 0;
     this.checkinTask = new CheckinTask();
     this.checkinExecutor = Executors.newScheduledThreadPool(1);
     
     this.pauseRequested = true;
     this.stopRequested = false;
     
-    this.receiver = new UpdateHandler();
     this.measurementExecutor = new ScheduledThreadPoolExecutor(Config.THREAD_POOL_SIZE);
     this.measurementExecutor.setMaximumPoolSize(Config.THREAD_POOL_SIZE);
     this.taskQueue =
@@ -106,7 +107,22 @@ public class MeasurementScheduler extends Service {
             new TaskComparator());
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, ScheduledFuture<MeasurementResult>>();
-    this.cancelExecutor = Executors.newScheduledThreadPool(1);
+    
+    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
+    // Register activity specific BroadcastReceiver here    
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.PREFERENCE_ACTION);
+    filter.addAction(UpdateIntent.MSG_ACTION);
+    broadcastReceiver = new BroadcastReceiver() {
+      // If preferences are changed by the user, the scheduler will receive the update 
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        if (intent.getAction().compareToIgnoreCase(UpdateIntent.PREFERENCE_ACTION) == 0) {
+          updateFromPreference();
+        }
+      }
+    };
+    this.registerReceiver(broadcastReceiver, filter);
     
     updateFromPreference();
   }
@@ -123,6 +139,13 @@ public class MeasurementScheduler extends Service {
       this.setIsCheckinEnabled(true);
     }
     return START_STICKY;
+  }
+  
+  /**
+   * Returns the power manager used by the scheduler
+   * */
+  public BatteryCapPowerManager getPowerManager() {
+    return this.powerManager;
   }
       
   /** Check-in is by-default disabled. SpeedometerApp will enable it. 
@@ -143,7 +166,7 @@ public class MeasurementScheduler extends Service {
       this.checkinFuture.cancel(true);
       // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
       this.checkinFuture = checkinExecutor.scheduleAtFixedRate(this.checkinTask, 
-          PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
+          Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
       Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
     }
   }
@@ -221,19 +244,24 @@ public class MeasurementScheduler extends Service {
     }
   }
   
-  /** Returns the handler for inter-thread communication */
-  public Handler getHandler() {
-    return receiver;
-  }
-  
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    this.isCheckinEnabled = prefs.getBoolean(getString(R.string.checkinEnabledPrefKey), 
-        DEFAULT_CHECKIN_ENABLED);
-    this.checkinIntervalSec = prefs.getInt(getString(R.string.checkinIntervalPrefKey), 
-      DEDAULT_CHECKIN_INTERVAL_SEC);
-    int minBatThres = prefs.getInt(getString(R.string.batteryMinThresPrefKey), 
-        DEFAULT_BATTERY_THRES_PRECENT);
+    try {
+      this.setIsCheckinEnabled(prefs.getBoolean(
+          getString(R.string.checkinEnabledPrefKey), Config.DEFAULT_CHECKIN_ENABLED));
+      // The user sets checkin interval in the unit of hours
+      this.setCheckinInterval(Integer.parseInt(
+          prefs.getString(getString(R.string.checkinIntervalPrefKey),
+          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
+      powerManager.setBatteryThresh(Integer.parseInt(
+          prefs.getString(getString(R.string.batteryMinThresPrefKey),
+          String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
+      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: isCheckinEnabled=" + 
+          isCheckinEnabled + ", checkinInterval=" + checkinIntervalSec + 
+          ", minBatThres= " + powerManager.getBatteryThresh());
+    } catch (ClassCastException e) {
+      Log.e(SpeedometerApp.TAG, "exception when casting preference values", e);
+    }
     // TODO(Wenjie): Add code to deal with minBatThres, measureWhenPlugged, and startOnBoot.
   }
   
@@ -246,7 +274,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void sendStringMsg(String str) {
-    UpdateIntent intent = new UpdateIntent(str);
+    UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
     this.sendBroadcast(intent);    
   }
   
@@ -259,27 +287,31 @@ public class MeasurementScheduler extends Service {
     this.checkin.shutDown();
     this.checkinExecutor.shutdown();
     this.checkinExecutor.shutdownNow();
-    this.cancelExecutor.shutdown();
-    this.cancelExecutor.shutdownNow();
+    
+    this.powerManager.stop();
+    this.unregisterReceiver(broadcastReceiver);
+    
     this.notifyAll();
     PhoneUtils.releaseGlobalContext();
     this.stopSelf();
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
   
-  private void getTasksFromServer() {
+  private void resetCheckin() {
+    // reset counters for checkin
+    checkinRetryCnt = 0;
+    checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
+    checkin.initializeAccountSelector();
+  }
+  
+  private void getTasksFromServer() throws IOException {
     Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
     checkin.getCookie();
-    try {
-      List<MeasurementTask> tasksFromServer = checkin.checkin();
-      
-      for (MeasurementTask task : tasksFromServer) {
-        Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
-        this.taskQueue.add(task);
-      }
-    } catch (IOException e) {
-      Log.e(SpeedometerApp.TAG, "Something gets wrong when polling tasks from the" +
-          " service:" + e.getMessage());
+    List<MeasurementTask> tasksFromServer = checkin.checkin();
+
+    for (MeasurementTask task : tasksFromServer) {
+      Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
+      this.taskQueue.add(task);
     }
   }
   
@@ -293,27 +325,36 @@ public class MeasurementScheduler extends Service {
       try {
         for (MeasurementTask task : this.pendingTasks.keySet()) {
           future = this.pendingTasks.get(task);
-          if (future != null && future.isDone()) {
-            try {
-              this.pendingTasks.remove(task);
-              if (!future.isCancelled()) {
-                result = future.get();
-                finishedTasks.add(result);
-              } else {
+          if (future != null) {
+            if (future.isDone()) {
+              try {
+                this.pendingTasks.remove(task);
+                if (!future.isCancelled()) {
+                  result = future.get();
+                  finishedTasks.add(result);
+                } else {
+                  finishedTasks.add(this.getFailureResult(task));
+                }
+              } catch (InterruptedException e) {
+                /*
+                 * Since the task is done, we should not need to wait anymore to get
+                 * result. So we simply assume something bad happens and we return a
+                 * failure result
+                 */
+                Log.e(SpeedometerApp.TAG, e.getMessage());
+              } catch (ExecutionException e) {
                 finishedTasks.add(this.getFailureResult(task));
+                Log.e(SpeedometerApp.TAG, e.getMessage());
+              } catch (CancellationException e) {
+                Log.e(SpeedometerApp.TAG, e.getMessage());
               }
-            } catch (InterruptedException e) {
-              /*
-               * Since the task is done, we should not need to wait anymore to get
-               * result. So we simply assume something bad happens and we return a
-               * failure result
+            } else if (task.isPassedDeadline()) {
+              /* If a task has reached its deadline but has not been run, 
+               * remove it and report failure 
                */
-              Log.e(SpeedometerApp.TAG, e.getMessage());
-            } catch (ExecutionException e) {
+              this.pendingTasks.remove(task);
+              future.cancel(true);
               finishedTasks.add(this.getFailureResult(task));
-              Log.e(SpeedometerApp.TAG, e.getMessage());
-            } catch (CancellationException e) {
-              Log.e(SpeedometerApp.TAG, e.getMessage());
             }
           }
             
@@ -354,34 +395,28 @@ public class MeasurementScheduler extends Service {
         if (getIsCheckinEnabled()) {
           uploadResults();
           getTasksFromServer();
+          // Also reset checkin if we get a success
+          resetCheckin();
         }
       } catch (Exception e) {
         /*
-         * Executor stops all subsequent execution of a periodic task if an
-         * execution is raised. We catch all undeclared exceptions here
+         * Executor stops all subsequent execution of a periodic task if a raised
+         * exception is uncaught. We catch all undeclared exceptions here
          */
-        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught");
-        if (e.getMessage() != null) {
-          Log.e(SpeedometerApp.TAG, e.getMessage());
+        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught", e);
+        if (checkinRetryCnt > Config.MAX_CHECKIN_RETRY_COUNT) {
+          /* If we have retried more than MAX_CHECKIN_RETRY_COUNT times upon a checkin failure, 
+           * we will stop retrying and wait until the next checkin period*/
+          resetCheckin();
+        } else if (checkinRetryIntervalSec < checkinIntervalSec) {
+          Log.i(SpeedometerApp.TAG, "Retrying checkin in " + checkinRetryIntervalSec + " seconds");
+          checkinExecutor.schedule(checkinTask, checkinRetryIntervalSec, TimeUnit.SECONDS);
+          checkinRetryCnt++;
+          checkinRetryIntervalSec =
+              Math.min(Config.MAX_CHECKIN_RETRY_INTERVAL_SEC, checkinRetryIntervalSec * 2);
         }
-      }
-    }
-  }
-  
-  private class CancelTask implements Runnable {
-    ScheduledFuture<MeasurementResult> taskToCancel;
-    
-    public CancelTask(ScheduledFuture<MeasurementResult> taskToCancel) {
-      this.taskToCancel = taskToCancel;
-    }
-    
-    @Override
-    public void run() {
-      /* We enforce a strict deadline rule here: cancel the task even it is already running once
-       * deadline has come */
-      if (!this.taskToCancel.isDone()) {
-        this.taskToCancel.cancel(true);
-        Log.i(SpeedometerApp.TAG, "Canceling task as its deadline is reached");
+        // Otherwise, we simply wait for the next checkin period since it's shorter than the
+        // retry interval
       }
     }
   }
@@ -408,8 +443,8 @@ public class MeasurementScheduler extends Service {
         while (!isStopRequested()) {
           Log.i(SpeedometerApp.TAG, "Checking queue for new tasks");
           
-          if (isPauseRequested()) {
-            synchronized (MeasurementScheduler.this) {
+          synchronized (MeasurementScheduler.this) {
+            while (isPauseRequested()) {
               try {
                 Log.i(SpeedometerApp.TAG, "User requested pause");
                 MeasurementScheduler.this.wait();
@@ -418,7 +453,7 @@ public class MeasurementScheduler extends Service {
               }
             }
           }
-          /* Schedule the new tasks and move them from taskQueu to pendingTasks
+          /* Schedule the new tasks and move them from taskQueue to pendingTasks
            * 
            * TODO(Wenjie): We may also need a separate rule (taskStack) for user
            * generated tasks because users may prefer to run the latest scheduled
@@ -430,28 +465,13 @@ public class MeasurementScheduler extends Service {
             while ((task = taskQueue.take()) != null) {
               Log.i(SpeedometerApp.TAG, "New task arrived. There are " + taskQueue.size()
                   + " tasks in taskQueue");
+              
               ScheduledFuture<MeasurementResult> future = null;
               if (!task.isPassedDeadline()) {
-                future = measurementExecutor.schedule(task, task.timeFromExecution(), 
-                    TimeUnit.SECONDS);
-                /*
-                 * endTime should never be null as it is always initialized in
-                 * MeasurementDesc. cancelExecutor are scheduled to remove stale
-                 * experiments that 1. has been scheduled but not run for longer
-                 * than Config.TASK_EXPIRATION_MSEC 2. has passed their endTime
-                 * 
-                 * TODO(Wenjie): Note that the cancelTask will remain in the
-                 * queue of canclExecutor even when the task it is supposed to
-                 * cancel has finished. In other words, each cancelTask has a
-                 * life cycle of Config.TASK_EXPIRATION_MSEC. Assuming there
-                 * will be limited amount of tasks scheduled within this period,
-                 * we keep the code simple and not remove the cancelTask explicitly
-                 * when a task finishes before its endTime. If the app runs into
-                 * memory problems, this should be optimized.
-                 */
-                assert (task.measurementDesc.endTime != null);  
-                long delay = task.measurementDesc.endTime.getTime() - System.currentTimeMillis();
-                CancelTask cancelTask = new CancelTask(future);
+                /* 'Decorates' the task with a power-aware task. task will not be executed
+                 * if the power policy is not met*/
+                future = measurementExecutor.schedule(new PowerAwareTask(task, powerManager), 
+                    task.timeFromExecution(), TimeUnit.SECONDS);  
 
                 Log.i(SpeedometerApp.TAG,
                     "task " + task + " will start in " + task.timeFromExecution() / 1000
