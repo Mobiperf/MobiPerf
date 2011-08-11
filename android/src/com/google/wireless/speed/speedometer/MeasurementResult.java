@@ -15,7 +15,7 @@ public class MeasurementResult {
 
   private String deviceId;
   private DeviceProperty properties;
-  private Date timeStamp;
+  private Date timestamp;
   private boolean success;
   private String taskKey;
   private String type;
@@ -25,7 +25,7 @@ public class MeasurementResult {
   /**
    * @param deviceProperty
    * @param type
-   * @param timeStamp
+   * @param timestamp
    * @param success
    * @param measurementDesc
    */
@@ -36,7 +36,7 @@ public class MeasurementResult {
     this.deviceId = id;
     this.type = type;
     this.properties = deviceProperty;
-    this.timeStamp = timeStamp;
+    this.timestamp = timeStamp;
     this.success = success;
     this.parameters = measurementDesc;
     this.parameters.parameters = null;
