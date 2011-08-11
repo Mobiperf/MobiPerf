@@ -148,7 +148,7 @@ public class Checkin {
       // Failure probably due to authToken expiration. Will authenticate upon next checkin.
       this.accountSelector.setAuthImmediately(true);
       this.authCookie = null;
-      throw new IOException(e);
+      throw new IOException(e.getMessage());
     }
   }
   

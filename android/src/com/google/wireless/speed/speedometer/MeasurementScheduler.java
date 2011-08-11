@@ -153,7 +153,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void handleCheckin() {     
-    if (isPauseRequested()) {
+    if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
       return;
     }
     
@@ -314,7 +314,6 @@ public class MeasurementScheduler extends Service {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
-      //Automatically notifies the scheduler waiting on taskQueue.take()
       return this.taskQueue.add(task);
     } catch (NullPointerException e) {
       Log.e(SpeedometerApp.TAG, "The task to be added is null");
