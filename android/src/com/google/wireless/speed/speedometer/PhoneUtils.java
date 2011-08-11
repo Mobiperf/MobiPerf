@@ -373,9 +373,9 @@ public class PhoneUtils {
   /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
    * about releasing someone else's wake lock */
   public synchronized void shutDown() {
-    releaseGlobalContext();
     releaseWakeLock();
     context.unregisterReceiver(broadcastReceiver);
+    releaseGlobalContext();
   }
 
   /**
