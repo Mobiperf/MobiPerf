@@ -2,7 +2,7 @@
 #
 # Copyright 2011 Google Inc. All Rights Reserved.
 
-"""Service to that queries user data and renders on google map."""
+"""Service that queries user data and renders on google map."""
 
 __author__ = 'wenjiezeng@google.com (Wenjie Zeng)'
 
@@ -36,18 +36,15 @@ class GoogleMapView(webapp.RequestHandler):
 
   def ShowPingMap(self, measurements):
     """Constructs the java script code to show ping results on google map."""
-    tmap = googlemaphelper.Map(pointlist=[])
-    red_icon = googlemaphelper.Icon(id='red_icon',
+    tmap = googlemaphelper.Map()
+    red_icon = googlemaphelper.Icon(icon_id='red_icon',
                                     image='/static/red_location_pin.png')
-    green_icon = googlemaphelper.Icon(id='green_icon',
+    green_icon = googlemaphelper.Icon(icon_id='green_icon',
                                       image='/static/green_location_pin.png')
 
     # Add resource into the google map
-    my_key = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
-              'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
-    gmap = googlemaphelper.GoogleMapWrapper(key=my_key,
-                                            maplist=[tmap],
-                                            iconlist=[])
+    my_key = config.GOOGLEMAP_KEY
+    gmap = googlemaphelper.GoogleMapWrapper(key=my_key, themap=tmap)
     gmap.AddIcon(green_icon)
     gmap.AddIcon(red_icon)
 
@@ -83,19 +80,22 @@ class GoogleMapView(webapp.RequestHandler):
       if float(measurement.mval_mean_rtt_ms) < 150:
         point = (prop_entity.location.lat + rand_lat,
                  prop_entity.location.lon + rand_lon,
-                 htmlstr, green_icon.id)
+                 htmlstr, green_icon.icon_id)
       else:
         point = (prop_entity.location.lat + rand_lat,
                  prop_entity.location.lon + rand_lon,
-                 htmlstr, red_icon.id)
+                 htmlstr, red_icon.icon_id)
       lat_sum += prop_entity.location.lat
       lon_sum += prop_entity.location.lon
       tmap.AddPoint(point)
 
     # Set the center of the view port
-    center_lat = lat_sum / measurement_cnt
-    center_lon = lon_sum / measurement_cnt
-    tmap.center = (center_lat, center_lon)
+    if measurement_cnt:
+      center_lat = lat_sum / measurement_cnt
+      center_lon = lon_sum / measurement_cnt
+      tmap.center = (center_lat, center_lon)
+    else:
+      tmap.center = config.DEFAULT_MAP_CENTER
 
     mapcode = gmap.GetGoogleMapScript()
 
