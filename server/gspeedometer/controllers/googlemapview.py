@@ -19,7 +19,7 @@ from gspeedometer.helpers import googlemaphelper
 
 
 class GoogleMapView(webapp.RequestHandler):
-  """Controller for the home page."""
+  """Controller for the Speedometer google map page."""
 
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
@@ -29,12 +29,12 @@ class GoogleMapView(webapp.RequestHandler):
                                'LIMIT 30',
                                'ping')
     template_args = {
-        'map_code': self.ShowPingMap(measurements),
+        'map_code': self._GetJavascriptCodeForPingMap(measurements)
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
 
-  def ShowPingMap(self, measurements):
+  def _GetJavascriptCodeForPingMap(self, measurements):
     """Constructs the java script code to show ping results on google map."""
     tmap = googlemaphelper.Map()
     red_icon = googlemaphelper.Icon(icon_id='red_icon',
@@ -60,10 +60,6 @@ class GoogleMapView(webapp.RequestHandler):
     for measurement in measurements:
       measurement_cnt += 1
       prop_entity = measurement.device_properties
-      logging.info('ts=%s, lat=%f, lon=%f, ping_mean_rtt=%f',
-                   measurement.timestamp,
-                   prop_entity.location.lat, prop_entity.location.lon,
-                   float(measurement.mval_mean_rtt_ms))
       values = {'mean rtt': measurement.mval_mean_rtt_ms,
                 'max rtt': measurement.mval_max_rtt_ms,
                 'min rtt': measurement.mval_min_rtt_ms,
