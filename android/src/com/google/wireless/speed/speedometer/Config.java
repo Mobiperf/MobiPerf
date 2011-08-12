@@ -12,6 +12,10 @@ public interface Config {
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
+  public static final int DEFAULT_PING_COUNT_PER_MEASUREMENT = 10;
+  public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
+  
+  public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;
@@ -26,7 +30,10 @@ public interface Config {
   
   /** Constants used in MeasurementScheduler.java */
   // The default checkin interval in seconds
-  public static final int DEFAULT_CHECKIN_INTERVAL_SEC = 3 * 60;
+  public static final long DEFAULT_CHECKIN_INTERVAL_SEC = 3 * 60L;
+  public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 10L;
+  public static final long MAX_CHECKIN_RETRY_INTERVAL_SEC = 60L;
+  public static final int MAX_CHECKIN_RETRY_COUNT = 3;
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;

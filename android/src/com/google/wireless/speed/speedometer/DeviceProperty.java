@@ -15,27 +15,31 @@ public class DeviceProperty {
 
   public String deviceId;
   public String appVersion;
-  public Date timeStamp;
+  public Date timestamp;
   public String osVersion;
   public String ipAddress;
   public GeoLocation location;
   public String locationType;
   public String networkType;
   public String carrier;
+  public int batteryLevel;
+  public boolean isBatteryCharging;
 
   public DeviceProperty(String deviceId, String appVersion, Date timeStamp, String osVersion,
       String ipAddress, double longtitude, double latitude, String locationType, 
-      String networkType, String carrier) {
+      String networkType, String carrier, int batteryLevel, boolean isCharging) {
     super();
     this.deviceId = deviceId;
     this.appVersion = appVersion;
-    this.timeStamp = timeStamp;
+    this.timestamp = timeStamp;
     this.osVersion = osVersion;
     this.ipAddress = ipAddress;    
     this.location = new GeoLocation(longtitude, latitude);
     this.locationType = locationType;
     this.networkType = networkType;
     this.carrier = carrier;
+    this.batteryLevel = batteryLevel;
+    this.isBatteryCharging = isCharging;
   }
   
   private class GeoLocation {

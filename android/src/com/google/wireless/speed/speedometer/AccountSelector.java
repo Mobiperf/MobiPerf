@@ -71,8 +71,8 @@ public class AccountSelector {
   
   /** Allows clients of AccountSelector to request an authentication upon the next call
    * to authenticate() */
-  public synchronized void authImmediately() {
-    this.authImmediately = true;
+  public synchronized void setAuthImmediately(boolean val) {
+    this.authImmediately = val;
   }
   
   private synchronized boolean shouldAuthImmediately() {
@@ -221,10 +221,6 @@ public class AccountSelector {
               || cookie.getName().equals("ACSID")) {
             Log.i(SpeedometerApp.TAG, "Got cookie " + cookie);
             setLastAuthTime(System.currentTimeMillis());
-            // We've successfully authenticated. Need not authenticate immediately again.
-            synchronized (AccountSelector.this) {
-              authImmediately = false;
-            }
             return cookie;
           }
         }
