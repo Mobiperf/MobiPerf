@@ -25,10 +25,10 @@ class Icon:
     elif self.id == "red_icon":
       self.image = """/static/red_location_pin.png"""
     self.shadow = ""
-    self.icon_size = (15, 16)
-    self.shadow_size = (18, 20)
-    self.icon_anchor = (7, 16)
-    self.info_window_anchor = (5, 1)
+    self.iconSize = (15, 16)
+    self.shadowSize = (18, 20)
+    self.iconAnchor = (7, 16)
+    self.infoWindowAnchor = (5, 1)
 
         
 class Map:
@@ -46,11 +46,11 @@ class Map:
     return self.id
         
     
-  def setpoint(self, point):
+  def AddPoint(self, point):
     """ Add a point (lat,long) """
     self.points.append(point)
 
-class PyMap:
+class GoogleMapWrapper:
   """ Python wrapper class for Google Maps API. """
   def __str__(self):
     return "Pymap"
@@ -61,7 +61,7 @@ class PyMap:
     self.maps     = maplist
     self.icons    = iconlist
   
-  def addicon(self,icon):
+  def AddIcon(self,icon):
     self.icons.append(icon)
       
   def _navcontroljs(self, map):
@@ -129,7 +129,7 @@ class PyMap:
       js = js + self._mapjs(i)
     return js
 
-  def pymapjs(self):
+  def GetGoogleMapScript(self):
     """ Returns complete javacript for rendering map """
     
     self.js = """\n<script src=\"http://maps.google.com/maps?file=api&amp;v=2&amp;key=%s\" type="text/javascript"></script>
@@ -143,8 +143,7 @@ class PyMap:
                   this.html = html;
                 }               
                     
-                  
-                function Map(id,points,lat,long,zoom) {
+                function Map(id, points, lat, long, zoom) {
                   this.id = id;
                   this.points = points;
                   this.gmap = new GMap2(document.getElementById(this.id));

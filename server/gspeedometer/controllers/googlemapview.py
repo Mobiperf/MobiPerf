@@ -18,7 +18,12 @@ from google.appengine.ext.db import ReferencePropertyResolveError
 
 from gspeedometer import config
 from gspeedometer import model
-from gspeedometer.helpers import pymaps 
+#from gspeedometer.helpers.googlemaphelper import Icon
+#from gspeedometer.helpers.googlemaphelper import Map 
+#from gspeedometer.helpers.googlemaphelper import GoogleMapWrapper
+from gspeedometer.helpers.pymaps import Icon
+from gspeedometer.helpers.pymaps import Map 
+from gspeedometer.helpers.pymaps import GoogleMapWrapper
 
 
 class GoogleMapView(webapp.RequestHandler):
@@ -39,9 +44,16 @@ class GoogleMapView(webapp.RequestHandler):
 
   def ShowMap(self, measurements):
     # Create a map - pymaps allows multiple maps in an object
-    tmap = pymaps.Map(pointlist=[])
-    red_icon = pymaps.Icon('red_icon')
-    green_icon = pymaps.Icon('green_icon')
+    tmap = Map()
+    red_icon = Icon('red_icon')
+    green_icon = Icon('green_icon')
+    
+    # Add resource into the google map
+    my_key = "ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSaz2Wa7XNxJDFBqSTkzyC0aVYxYw"
+    gmap = GoogleMapWrapper(key=my_key, maplist=[tmap], iconlist=[])
+    gmap.AddIcon(green_icon)
+    gmap.AddIcon(red_icon)
+
     tmap.zoom = 15
     lat_sum = 0
     lon_sum = 0
@@ -70,40 +82,40 @@ class GoogleMapView(webapp.RequestHandler):
         point = (prop_entity.location.lat + rand_lat, prop_entity.location.lon + rand_lon, htmlstr, red_icon.id)
       lat_sum += prop_entity.location.lat
       lon_sum += prop_entity.location.lon
-      tmap.setpoint(point)
+      tmap.AddPoint(point)
 
     # Set the center of the view port
     center_lat = lat_sum / measurement_cnt
     center_lon = lon_sum / measurement_cnt
     tmap.center = (center_lat,center_lon)
-    # Put your own google key here
-    my_key = "ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSaz2Wa7XNxJDFBqSTkzyC0aVYxYw"
-    gmap = pymaps.PyMap(key=my_key, maplist=[tmap], iconlist=[])
-    gmap.addicon(green_icon)
-    gmap.addicon(red_icon)
 
-    mapcode = gmap.pymapjs()
+    mapcode = gmap.GetGoogleMapScript()
 
     return mapcode
 
   def GetHtmlForPing(slef, device_id, target, values):
     # Returns the HTML string representing the Ping result
-    result = "<html><body><h4>Ping result on device %s</h4><br/>" % device_id
-    result += """<style media="screen" type="text/css"></style>"""
-    result += """<table style="border:1px #000000 solid;">"""
-    result += "<tr>"\
-        "<td align=\"left\" "\
-        "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">target</td>"\
-        "<td align=\"left\" "\
-        "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%s</td>"\
-        "</tr>" % target
+    result = ["<html><body><h4>Ping result on device %s</h4><br/>" % device_id]
+    result.append("""<style media="screen" type="text/css"></style>""")
+    result.append("""<table style="border:1px #000000 solid;">""")
+    result.append(("<tr>"
+                  "<td align=\"left\" "
+                  "style=\"padding-right:10px;border-bottom:"
+                  "1px #000000 dotted;\">target</td>"
+                  "<td align=\"left\" "
+                  "style=\"padding-right:10px;border-bottom:"
+                  "1px #000000 dotted;\">%s</td>"
+                  "</tr>" % target))
     for k, v in values.iteritems():
-      result += "<tr>"\
-          "<td align=\"left\" "\
-          "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%s</td>"\
-          "<td align=\"left\" "\
-          "style=\"padding-right:10px;border-bottom:1px #000000 dotted;\">%.3f</td>"\
-          "</tr>" % (k, float(v))
-    result += "</table>"
-    logging.info("generated location pin html is %s", result)
+      result.append((
+          "<tr>"
+          "<td align=\"left\" "
+          "style=\"padding-right:10px;border-bottom:"
+          "1px #000000 dotted;\">%s</td>"
+          "<td align=\"left\" "
+          "style=\"padding-right:10px;border-bottom:"
+          "1px #000000 dotted;\">%.3f</td>"
+          "</tr>" % (k, float(v))))
+    result.append("</table>")
+    logging.info("generated location pin html is %s", ''.join(result))
     return result
