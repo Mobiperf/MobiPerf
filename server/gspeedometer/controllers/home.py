@@ -6,13 +6,9 @@
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
-import logging
-
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from google.appengine.ext.db import ReferencePropertyResolveError
-
 from gspeedometer import config
 from gspeedometer import model
 
@@ -28,12 +24,6 @@ class Home(webapp.RequestHandler):
     measurements = model.Measurement.all()
     measurements.order('-timestamp')
     measurements = measurements.fetch(config.NUM_MEASUREMENTS_IN_LIST)
-    for measurement in measurements:
-      try:
-        task = measurement.task
-      except ReferencePropertyResolveError:
-        logging.info("one or more referenced tasks have been deleted");
-        measurement.task = None
     schedule = model.Task.all()
     schedule.order('-created')
 
@@ -47,4 +37,3 @@ class Home(webapp.RequestHandler):
     }
     self.response.out.write(template.render(
         'templates/home.html', template_args))
-      

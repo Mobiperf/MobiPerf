@@ -58,7 +58,7 @@ class Schedule(webapp.RequestHandler):
         task.tag = tag
         task.filter = thefilter
         task.count = int(count)
-        task.interval_sec = interval 
+        task.interval_sec = interval
 
         # Set up correct type-specific measurement parameters
         if task.type == 'ping':
@@ -67,7 +67,7 @@ class Schedule(webapp.RequestHandler):
           task.mparam_packet_size_byte = param3
         elif task.type == 'traceroute':
           task.mparam_target = param1
-          task.mparam_pings_per_hop= param2
+          task.mparam_pings_per_hop = param2
           task.mparam_max_hop_count = param3
         elif task.type == 'http':
           task.mparam_url = param1
@@ -76,7 +76,7 @@ class Schedule(webapp.RequestHandler):
         elif task.type == 'dns_lookup':
           task.mparam_target = param1
           task.mparam_server = param2
-        ## TODO(Wenjie):FINISH THIS...
+        # TODO(wenjiezeng): FINISH THIS...
 
         task.put()
 
