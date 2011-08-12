@@ -113,7 +113,7 @@ class Measurement(webapp.RequestHandler):
       mdict['values'] = measurement.Values()
 
       if 'task' in mdict and mdict['task'] is not None:
-        mdict['task']['id'] = measurement.GetTaskID()
+        mdict['task']['id'] = str(measurement.GetTaskID())
         mdict['task']['parameters'] = measurement.task.Params()
 
       output.append(mdict)
