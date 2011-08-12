@@ -174,6 +174,10 @@ public class MeasurementScheduler extends Service {
     if (task != null && task.timeFromExecution() <= 0) {
       taskQueue.poll();
       // Run the head task using the executor
+      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+        sendStringMsg("***** USER_TASK *****");
+      }
+      sendStringMsg("Running " + task.toString());
       Future<MeasurementResult> future = measurementExecutor.submit(
           new PowerAwareTask(task, powerManager));
       synchronized (pendingTasks) {
@@ -315,7 +319,11 @@ public class MeasurementScheduler extends Service {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
-      return this.taskQueue.add(task);
+      boolean result = this.taskQueue.add(task);
+      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+        handleMeasurement();
+      }
+      return result;
     } catch (NullPointerException e) {
       Log.e(SpeedometerApp.TAG, "The task to be added is null");
       return false;
