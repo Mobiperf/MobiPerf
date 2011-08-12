@@ -30,9 +30,9 @@ class DeviceInfo(db.Model):
     try:
       return query.fetch(1)[0]
     except IndexError:
-      logging.exception("There are no device properties associated with the given device");
+      logging.exception('There are no device properties associated with '
+                        'the given device')
       return None
-
 
   def num_updates(self):
     query = self.deviceproperties_set
@@ -64,9 +64,9 @@ class DeviceProperties(db.Model):
   network_type = db.StringProperty()
   # Carrier
   carrier = db.StringProperty()
-  # Battery level 
-  battery_level= db.IntegerProperty()
-  # Battery charging status 
+  # Battery level
+  battery_level = db.IntegerProperty()
+  # Battery charging status
   is_battery_charging = db.BooleanProperty()
 
   def JSON_DECODE_location(self, inputval):
@@ -135,6 +135,19 @@ class Measurement(db.Expando):
   # Optional corresponding task
   task = db.ReferenceProperty(Task)
 
+  def GetTaskID(self):
+    try:
+      if not self.task:
+        return None
+      taskid = self.task.key().id()
+      return taskid
+    except db.ReferencePropertyResolveError:
+      logging.exception('Cannot resolve task for measurement %s',
+                        self.key().id())
+      self.task = None
+      self.put()
+      return None
+
   def GetParam(self, key):
     """Return the measurement parameter indexed by the given key."""
     return self._dynamic_properties.get('mparam_' + key, None)
@@ -165,7 +178,7 @@ class Measurement(db.Expando):
   def JSON_DECODE_values(self, input_dict):
     for k, v in input_dict.items():
       # body and headers can be fairly long. Use the Text data type instead
-      if (k == "body" or k == "headers"):
+      if k == 'body' or k == 'headers':
         setattr(self, 'mval_' + k, db.Text(v))
       else:
         setattr(self, 'mval_' + k, v)

@@ -10,9 +10,9 @@ import logging
 
 from django.utils import simplejson as json
 from google.appengine.api import users
+from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-
 from gspeedometer import model
 from gspeedometer.controllers import device
 from gspeedometer.helpers import error
@@ -47,7 +47,7 @@ class Measurement(webapp.RequestHandler):
         device_properties = model.DeviceProperties()
         device_properties.device_info = device_info
         properties_dict = measurement_dict['properties']
-        ## TODO(Wenjie): Sanitize input that contains bad fields
+        # TODO(wenjiezeng): Sanitize input that contains bad fields
         util.ConvertFromDict(device_properties, properties_dict)
         # Don't want the embedded properties in the Measurement object
         del measurement_dict['properties']
@@ -96,6 +96,15 @@ class Measurement(webapp.RequestHandler):
 
     output = []
     for measurement in results:
+      # Need to catch case where task has been deleted
+      try:
+        unused_task = measurement.task
+      except db.ReferencePropertyResolveError:
+        logging.exception('Cannot resolve task for measurement %s',
+                          measurement.key().id())
+        measurement.task = None
+        measurement.put()
+
       mdict = util.ConvertToDict(measurement, timestamps_in_microseconds=True)
 
       # Fill in additional fields
@@ -103,13 +112,12 @@ class Measurement(webapp.RequestHandler):
       mdict['parameters'] = measurement.Params()
       mdict['values'] = measurement.Values()
 
-      if 'task' in mdict:
-        mdict['task']['id'] = str(measurement.task.key().id())
+      if 'task' in mdict and mdict['task'] is not None:
+        mdict['task']['id'] = measurement.GetTaskID()
         mdict['task']['parameters'] = measurement.task.Params()
 
       output.append(mdict)
     self.response.out.write(json.dumps(output))
-
 
   def MeasurementDetail(self, **unused_args):
     """Handler to display measurement detail."""
