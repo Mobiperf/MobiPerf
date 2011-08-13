@@ -1,6 +1,5 @@
 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key={{googlemap_key}}" type="text/javascript"></script>
 <script type="text/javascript">
-//<![CDATA[
 function load() {
   if (GBrowserIsCompatible()) {
     function point(lat, lon, html, icon) {
@@ -72,6 +71,5 @@ function load() {
     {% endif %}
   }
 }
-//]]>
 </script>
 
