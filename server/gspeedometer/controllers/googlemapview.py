@@ -125,6 +125,8 @@ class GoogleMapView(webapp.RequestHandler):
           '1px #000000 dotted;\">%.3f</td>'
           '</tr>' % (k, float(v))))
     result.append('</table>')
+    if (len(values) == 0):
+      result.append("<br/>This measurement has failed.");
     resultstr = ''.join(result)
     logging.info('generated location pin html is %s', resultstr)
     return resultstr
