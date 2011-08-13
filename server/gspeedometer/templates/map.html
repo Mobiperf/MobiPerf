@@ -1,0 +1,14 @@
+{# Map page template. #}
+
+{% extends "base.html" %}
+
+{% block extra_meta_link %}
+  <meta http-equiv="refresh" content="60">
+{% endblock %}
+
+{% block body %}
+{% if devices %}
+{% include "devicelist.html" %}
+{% endif %}
+{% include "mapview.html" %}
+{% endblock %}
