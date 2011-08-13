@@ -60,11 +60,14 @@ class GoogleMapView(webapp.RequestHandler):
     for measurement in measurements:
       measurement_cnt += 1
       prop_entity = measurement.device_properties
-      values = {'mean rtt': measurement.mval_mean_rtt_ms,
-                'max rtt': measurement.mval_max_rtt_ms,
-                'min rtt': measurement.mval_min_rtt_ms,
-                'rtt stddev': measurement.mval_stddev_rtt_ms,
-                'packet loss': measurement.mval_packet_loss}
+      values = {}
+      # these attributes can be non-existant if the experiment fails
+      if hasattr(measurement, 'mval_mean_rtts_ms'):
+        values = {'mean rtt': measurement.mval_mean_rtt_ms,
+                  'max rtt': measurement.mval_max_rtt_ms,
+                  'min rtt': measurement.mval_min_rtt_ms,
+                  'rtt stddev': measurement.mval_stddev_rtt_ms,
+                  'packet loss': measurement.mval_packet_loss}
 
       htmlstr = self.GetHtmlForPing(measurement.device_id,
                                     measurement.mparam_target,
@@ -73,7 +76,7 @@ class GoogleMapView(webapp.RequestHandler):
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
       rand_lon = (random.random() - 0.5) * random_radius
-      if float(measurement.mval_mean_rtt_ms) < 150:
+      if hasattr(measurement, 'mval_mean_rtts_ms') and float(measurement.mval_mean_rtt_ms) < 150:
         point = (prop_entity.location.lat + rand_lat,
                  prop_entity.location.lon + rand_lon,
                  htmlstr, green_icon.icon_id)
@@ -110,6 +113,7 @@ class GoogleMapView(webapp.RequestHandler):
                    'style=\"padding-right:10px;border-bottom:'
                    '1px #000000 dotted;\">%s</td>'
                    '</tr>' % target))
+
     for k, v in values.iteritems():
       result.append((
           '<tr>'
