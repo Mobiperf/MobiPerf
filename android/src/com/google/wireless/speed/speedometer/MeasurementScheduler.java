@@ -6,6 +6,7 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -49,8 +50,7 @@ import java.util.concurrent.PriorityBlockingQueue;
  * 
  * @author wenjiezeng@google.com (Steve Zeng)
  */
-public class MeasurementScheduler extends Service {
-  
+public class MeasurementScheduler extends Service {  
   private ExecutorService measurementExecutor;
   private BroadcastReceiver broadcastReceiver;
   private Boolean pauseRequested = true;
@@ -252,8 +252,9 @@ public class MeasurementScheduler extends Service {
   @Override 
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
-    Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
+    Log.i(SpeedometerApp.TAG, "starting scheduler");
     this.resume();
+    handleCheckin();
     return START_STICKY;
   }
   
@@ -581,7 +582,7 @@ public class MeasurementScheduler extends Service {
       if (logWriter != null) {
         try {
           Log.d(SpeedometerApp.TAG, "************* Writing to logfile *************");
-          logWriter.write("========= " + Calendar.getInstance().getTime().toGMTString());
+          logWriter.write("========= " + Calendar.getInstance().getTime().toGMTString() + "\n");
           logWriter.write(logString);
           logWriter.flush();
         } catch (IOException e) {

@@ -381,7 +381,6 @@ public class PhoneUtils {
       wakeLock.release();
     }
     context.unregisterReceiver(broadcastReceiver);
-    releaseGlobalContext();
   }
 
   /**

@@ -5,6 +5,8 @@ package com.google.wireless.speed.speedometer;
 import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -30,6 +32,7 @@ import java.security.Security;
 public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
+  private static final int NOTIFICATION_ID = 1234;
   
   private MeasurementScheduler scheduler;
   private boolean isBounded = false;  
@@ -41,6 +44,21 @@ public class SpeedometerApp extends TabActivity {
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
       scheduler = binder.getService();
+      //The intent to launch when the user clicks the expanded notification
+      Intent intent = new Intent(SpeedometerApp.this, MeasurementScheduler.class);
+      PendingIntent pendIntent = PendingIntent.getService(SpeedometerApp.this, 0, intent, 
+          PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+
+      //This constructor is deprecated. Use Notification.Builder instead
+      Notification notice = new Notification(R.drawable.icon, 
+          getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+
+      //This method is deprecated. Use Notification.Builder instead.
+      notice.setLatestEventInfo(SpeedometerApp.this, "Speedometer", 
+          getString(R.string.notificatioContent), pendIntent);
+
+      notice.flags |= Notification.FLAG_NO_CLEAR;
+      scheduler.startForeground(NOTIFICATION_ID, notice);
       isBounded = true;
     }
 
@@ -152,17 +170,17 @@ public class SpeedometerApp extends TabActivity {
     
     RuntimeUtil.setActivity(this);
     
-    // We only need one instance of scheduler thread
+ // We only need one instance of scheduler thread
     Intent schedulerIntent = new Intent(this, MeasurementScheduler.class);
     this.startService(schedulerIntent);
+    // Bind to LocalService
+    Intent bindIntent = new Intent(this, MeasurementScheduler.class);
+    bindService(bindIntent, serviceConn, Context.BIND_AUTO_CREATE);
   }
   
   @Override
   protected void onStart() {
     super.onStart();
-    // Bind to LocalService
-    Intent intent = new Intent(this, MeasurementScheduler.class);
-    bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
   }
   
   @Override
