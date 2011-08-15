@@ -26,5 +26,6 @@
     <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
-    <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>      
+    <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
+    <string name="notificationSchedulerStarted">Speedometer has started</string>
 </resources>

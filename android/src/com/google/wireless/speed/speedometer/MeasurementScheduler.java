@@ -6,6 +6,7 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -223,8 +224,11 @@ public class MeasurementScheduler extends Service {
   @Override 
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
-    Log.i(SpeedometerApp.TAG, "starting a new scheduler thread");
+    Log.i(SpeedometerApp.TAG, "starting scheduler");
     this.resume();
+    this.startForeground(0, new Notification(R.drawable.icon,
+        getString(R.string.notificationSchedulerStarted), 
+        System.currentTimeMillis()));
     return START_STICKY;
   }
   
