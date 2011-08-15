@@ -254,7 +254,6 @@ public class MeasurementScheduler extends Service {
     // Start up the thread running the service. Using one single thread for all requests
     Log.i(SpeedometerApp.TAG, "starting scheduler");
     this.resume();
-    handleCheckin();
     return START_STICKY;
   }
   
