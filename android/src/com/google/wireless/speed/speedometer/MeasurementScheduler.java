@@ -22,6 +22,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -168,43 +169,48 @@ public class MeasurementScheduler extends Service {
       return;
     }
     
-    MeasurementTask task = taskQueue.peek();
-    /* Process the head of the queue. If the count of the head task is greater than 0, 
-     * we make a clone of it with the next start time and add the clone to taskQueue.
-     */
-    if (task != null && task.timeFromExecution() <= 0) {
-      taskQueue.poll();
-      // Run the head task using the executor
-      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-        sendStringMsg("***** USER_TASK *****");
+    try {
+      MeasurementTask task = taskQueue.peek();
+      /* Process the head of the queue. If the count of the head task is greater than 0, 
+       * we make a clone of it with the next start time and add the clone to taskQueue.
+       */
+      if (task != null && task.timeFromExecution() <= 0) {
+        taskQueue.poll();
+        // Run the head task using the executor
+        if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+          sendStringMsg("***** USER_TASK *****");
+        }
+        sendStringMsg("Running " + task.toString());
+        Future<MeasurementResult> future = measurementExecutor.submit(
+            new PowerAwareTask(task, powerManager));
+        synchronized (pendingTasks) {
+          pendingTasks.put(task, future);
+        }
+        
+        MeasurementDesc desc = task.getDescription();
+        desc.count--;
+        long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
+        // Add a clone with the new start time into taskQueue if
+        if (desc.count > 0 && newStartTime < desc.endTime.getTime()) {
+          MeasurementTask newTask = task.clone();
+          newTask.getDescription().startTime.setTime(newStartTime);
+          taskQueue.add(newTask);
+        }
       }
-      sendStringMsg("Running " + task.toString());
-      Future<MeasurementResult> future = measurementExecutor.submit(
-          new PowerAwareTask(task, powerManager));
-      synchronized (pendingTasks) {
-        pendingTasks.put(task, future);
+      // Schedule for the next experiment in taskQueue
+      task = taskQueue.peek();
+      if (task != null) {
+        long timeFromExecution = Math.max(task.timeFromExecution(), 
+            Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, 
+            System.currentTimeMillis() + timeFromExecution, 
+            measurementIntentSender);
       }
-      
-      MeasurementDesc desc = task.getDescription();
-      desc.count--;
-      long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
-      // Add a clone with the new start time into taskQueue if
-      if (desc.count > 0 && newStartTime < desc.endTime.getTime()) {
-        MeasurementTask newTask = task.clone();
-        newTask.getDescription().startTime.setTime(newStartTime);
-        taskQueue.add(newTask);
-      }
+      holdPowerLockForAWhile();
+    } catch (IllegalArgumentException e) {
+      // Task creation in clone can create this exception
+      Log.e(SpeedometerApp.TAG, "Exception when clonig objects");
     }
-    // Schedule for the next experiment in taskQueue
-    task = taskQueue.peek();
-    if (task != null) {
-      long timeFromExecution = Math.max(task.timeFromExecution(), 
-          Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
-      alarmManager.set(AlarmManager.RTC_WAKEUP, 
-          System.currentTimeMillis() + timeFromExecution, 
-          measurementIntentSender);
-    }
-    holdPowerLockForAWhile();
   }
   
   /**
