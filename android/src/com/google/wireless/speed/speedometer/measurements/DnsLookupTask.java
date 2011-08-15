@@ -41,7 +41,7 @@ public class DnsLookupTask extends MeasurementTask {
    * The description of DNS lookup measurement 
    */
   public static class DnsLookupDesc extends MeasurementDesc {
-    private String target = DEFAULT_TARGET;
+    private String target;
     private String server;
     
     public DnsLookupDesc(String key, Date startTime, Date endTime,
@@ -50,9 +50,9 @@ public class DnsLookupTask extends MeasurementTask {
           priority, params);
       initalizeParams(params);
       if (this.target == null) {
-        throw new InvalidParameterException("DnsLookupTask cannot be created due "
-            + " to null target string");
-      }  
+        throw new InvalidParameterException("LookupDnsTask cannot be created due " +
+            " to null target string");
+      }
     }
 
     /* 
