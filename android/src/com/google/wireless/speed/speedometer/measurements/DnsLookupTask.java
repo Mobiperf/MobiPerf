@@ -16,6 +16,7 @@ import android.util.Log;
 import java.io.InvalidClassException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -48,6 +49,10 @@ public class DnsLookupTask extends MeasurementTask {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);
       initalizeParams(params);
+      if (this.target == null) {
+        throw new InvalidParameterException("LookupDnsTask cannot be created due " +
+            " to null target string");
+      }
     }
 
     /* 
@@ -60,6 +65,10 @@ public class DnsLookupTask extends MeasurementTask {
 
     @Override
     protected void initalizeParams(Map<String, String> params) {
+      if (params == null) {
+        return;
+      }
+      
       if (this.count == 0) {
         this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
