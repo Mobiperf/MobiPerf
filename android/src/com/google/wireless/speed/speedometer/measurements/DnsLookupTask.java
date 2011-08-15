@@ -16,6 +16,7 @@ import android.util.Log;
 import java.io.InvalidClassException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -40,7 +41,7 @@ public class DnsLookupTask extends MeasurementTask {
    * The description of DNS lookup measurement 
    */
   public static class DnsLookupDesc extends MeasurementDesc {
-    private String target;
+    private String target = DEFAULT_TARGET;
     private String server;
     
     public DnsLookupDesc(String key, Date startTime, Date endTime,
@@ -48,6 +49,10 @@ public class DnsLookupTask extends MeasurementTask {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);
       initalizeParams(params);
+      if (this.target == null) {
+        throw new InvalidParameterException("DnsLookupTask cannot be created due "
+            + " to null target string");
+      }  
     }
 
     /* 
@@ -60,17 +65,18 @@ public class DnsLookupTask extends MeasurementTask {
 
     @Override
     protected void initalizeParams(Map<String, String> params) {
+      if (params == null) {
+        return;
+      }
+      
       if (this.count == 0) {
         this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
       
-      if ((this.target = params.get("target")) == null) {
-        this.target = DEFAULT_TARGET;
-      }
-      
-      this.server = params.get("server");
+      this.target = params.get("target");      
+      //TODO(wenjiezeng): See how to use server for DNS lookup
     }
-    
+
   }
   
   public DnsLookupTask(MeasurementDesc desc, Context parent) {

@@ -83,6 +83,9 @@ public class PingTask extends MeasurementTask {
     
     @Override
     protected void initalizeParams(Map<String, String> params) {
+      if (params == null) {
+        return;
+      }
       if (this.count == 0) {
         this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
       }
@@ -94,10 +97,10 @@ public class PingTask extends MeasurementTask {
       
       try {        
         String val = null;
-        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
+        if (params != null && (val = params.get("packet_size_byte")) != null && val.length() > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         }
-        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
+        if (params != null && (val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         }
       } catch (NumberFormatException e) {
@@ -272,7 +275,7 @@ public class PingTask extends MeasurementTask {
           }
         }
         this.progress = 100 * ++lineCnt / (int) pingTask.count;
-        Log.i(SpeedometerApp.TAG, line);
+        Log.d(SpeedometerApp.TAG, line);
       }     
       measurementResult = constructResult(rrts);
       Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(measurementResult));

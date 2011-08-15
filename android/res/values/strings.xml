@@ -5,7 +5,7 @@
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="SpeedometerServerURL">http://20110811-203514-wenjiezeng-f901f74.speedometer.googleplex.com/</string>
+    <string name="SpeedometerServerURL">http://speedometer.googleplex.com/</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="menuResume">Resume</string>

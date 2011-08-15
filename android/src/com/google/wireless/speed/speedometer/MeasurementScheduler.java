@@ -14,13 +14,20 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -61,6 +68,7 @@ public class MeasurementScheduler extends Service {
    * previously configured periodic checkin schedule. Thus we need a separate intent sender */
   private PendingIntent checkinRetryIntentSender;
   private PendingIntent measurementIntentSender;
+  private PendingIntent writeLogIntentSender;
   private AlarmManager alarmManager;
   private BatteryCapPowerManager powerManager;
   // TODO(Wenjie): add capacity control to the two queues.
@@ -72,6 +80,8 @@ public class MeasurementScheduler extends Service {
       ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>> pendingTasks;
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
+  
+  BufferedWriter logWriter = null;
       
   /**
    * The Binder class that returns an instance of running scheduler 
@@ -118,6 +128,7 @@ public class MeasurementScheduler extends Service {
     filter.addAction(UpdateIntent.CHECKIN_ACTION);
     filter.addAction(UpdateIntent.CHECKIN_RETRY_ACTION);
     filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
+    filter.addAction(UpdateIntent.WRITE_LOG_ACTION);
     /* Intent senders are used by the AlarmManager to broadcast intents of the
      * specified type at specified times. */
     checkinIntentSender = PendingIntent.getBroadcast(this, 0, 
@@ -127,6 +138,12 @@ public class MeasurementScheduler extends Service {
         PendingIntent.FLAG_CANCEL_CURRENT); 
     measurementIntentSender = PendingIntent.getBroadcast(this, 0, 
         new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
+    writeLogIntentSender = PendingIntent.getBroadcast(this, 0, 
+        new UpdateIntent("", UpdateIntent.WRITE_LOG_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
+    
+    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
+        System.currentTimeMillis() + Config.LOG_ALARM_START_DELAY, 
+        Config.LOG_ALARM_INTERVAL_MSEC, writeLogIntentSender);
     
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
@@ -136,16 +153,20 @@ public class MeasurementScheduler extends Service {
           updateFromPreference();
         } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
               intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
-          Log.d(SpeedometerApp.TAG, "Checkin intent received");
+          Log.i(SpeedometerApp.TAG, "Checkin intent received");
           sendStringMsg("wakeup for checkin at " + 
               Calendar.getInstance().getTime().toGMTString());
           handleCheckin();
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
-          Log.d(SpeedometerApp.TAG, "MeasurementIntent intent received");
+          Log.i(SpeedometerApp.TAG, "MeasurementIntent intent received");
           sendStringMsg("wakeup for measurement at " + 
               Calendar.getInstance().getTime().toGMTString());
           handleMeasurement();
-        }
+        } else if (intent.getAction().equals(UpdateIntent.WRITE_LOG_ACTION)) {
+          Log.i(SpeedometerApp.TAG, "************Write log intent received************");
+          new Thread(new LogcatRedirector()).start();
+          holdPowerLockForAWhile();
+        } 
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
@@ -167,43 +188,51 @@ public class MeasurementScheduler extends Service {
       return;
     }
     
-    MeasurementTask task = taskQueue.peek();
-    /* Process the head of the queue. If the count of the head task is greater than 0, 
-     * we make a clone of it with the next start time and add the clone to taskQueue.
-     */
-    if (task != null && task.timeFromExecution() <= 0) {
-      taskQueue.poll();
-      // Run the head task using the executor
-      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-        sendStringMsg("***** USER_TASK *****");
+    try {
+      MeasurementTask task = taskQueue.peek();
+      /* Process the head of the queue. If the count of the head task is greater than 0, 
+       * we make a clone of it with the next start time and add the clone to taskQueue.
+       */
+      if (task != null && task.timeFromExecution() <= 0) {
+        taskQueue.poll();
+        // Run the head task using the executor
+        if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+          sendStringMsg("***** USER_TASK *****");
+        }
+        sendStringMsg("Running " + task.toString());
+        Future<MeasurementResult> future = measurementExecutor.submit(
+            new PowerAwareTask(task, powerManager));
+        synchronized (pendingTasks) {
+          pendingTasks.put(task, future);
+        }
+        
+        MeasurementDesc desc = task.getDescription();
+        desc.count--;
+        long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
+        // Add a clone with the new start time into taskQueue if
+        if (desc.count > 0 && newStartTime < desc.endTime.getTime()) {
+          MeasurementTask newTask = task.clone();
+          newTask.getDescription().startTime.setTime(newStartTime);
+          taskQueue.add(newTask);
+        }
       }
-      sendStringMsg("Running " + task.toString());
-      Future<MeasurementResult> future = measurementExecutor.submit(
-          new PowerAwareTask(task, powerManager));
-      synchronized (pendingTasks) {
-        pendingTasks.put(task, future);
+      // Schedule for the next experiment in taskQueue
+      task = taskQueue.peek();
+      if (task != null) {
+        long timeFromExecution = Math.max(task.timeFromExecution(), 
+            Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, 
+            System.currentTimeMillis() + timeFromExecution, 
+            measurementIntentSender);
       }
-      
-      MeasurementDesc desc = task.getDescription();
-      desc.count--;
-      long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
-      // Add a clone with the new start time into taskQueue if
-      if (desc.count > 0 && newStartTime < desc.endTime.getTime()) {
-        MeasurementTask newTask = task.clone();
-        newTask.getDescription().startTime.setTime(newStartTime);
-        taskQueue.add(newTask);
-      }
+      holdPowerLockForAWhile();
+    } catch (NullPointerException e) {
+      Log.e(SpeedometerApp.TAG, "An error has occured while handling measurements", e);
+    } catch (IllegalArgumentException e) {
+      Log.e(SpeedometerApp.TAG, "An error has occured while handling measurements", e);
+    } catch (Throwable t) {
+      Log.e(SpeedometerApp.TAG, "An error has occured while handling measurements", t);
     }
-    // Schedule for the next experiment in taskQueue
-    task = taskQueue.peek();
-    if (task != null) {
-      long timeFromExecution = Math.max(task.timeFromExecution(), 
-          Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
-      alarmManager.set(AlarmManager.RTC_WAKEUP, 
-          System.currentTimeMillis() + timeFromExecution, 
-          measurementIntentSender);
-    }
-    holdPowerLockForAWhile();
   }
   
   /**
@@ -368,6 +397,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private synchronized void cleanUp() {
+    closeLogFile();
     this.taskQueue.clear();
     // remove all future tasks
     this.measurementExecutor.shutdown();
@@ -488,7 +518,7 @@ public class MeasurementScheduler extends Service {
         }
         // Schedule the new expeirments
         handleMeasurement();
-      } catch (Exception e) {
+      } catch (Throwable e) {
         /*
          * Executor stops all subsequent execution of a periodic task if a raised
          * exception is uncaught. We catch all undeclared exceptions here
@@ -518,6 +548,82 @@ public class MeasurementScheduler extends Service {
     }
   }
   
+  private class LogcatRedirector implements Runnable {
+    @Override
+    public void run() {
+      try {
+        Log.d(SpeedometerApp.TAG, "************* Starting to run logcat *************");
+        PhoneUtils.getPhoneUtils().acquireWakeLock();
+        Process process = Runtime.getRuntime().exec("logcat -v time Speedometer:I " + 
+            "AndroidRuntime:I *:S");
+        BufferedReader bufferedReader = new BufferedReader(
+            new InputStreamReader(process.getInputStream()));
+
+        StringBuilder log = new StringBuilder();
+        String line;
+        int maxLines = 100;
+        while (maxLines > 0 && (line = bufferedReader.readLine()) != null) {
+          log.append(line + "\n");
+          maxLines--;
+        }
+        writeLogToMedia(log.toString());
+      } catch (IOException e) {
+        Log.e(SpeedometerApp.TAG, "**************Cannot read from logcat ************");
+      } finally {
+        PhoneUtils.getPhoneUtils().releaseWakeLock();
+        Log.i(SpeedometerApp.TAG, "*************** Leaving LogcatRedirector *************");
+      }
+    }
+    
+    private void writeLogToMedia(String logString) {
+      initializeLogFile();
+      
+      if (logWriter != null) {
+        try {
+          Log.d(SpeedometerApp.TAG, "************* Writing to logfile *************");
+          logWriter.write("========= " + Calendar.getInstance().getTime().toGMTString());
+          logWriter.write(logString);
+          logWriter.flush();
+        } catch (IOException e) {
+          closeLogFile();
+          Log.e(SpeedometerApp.TAG, "********Cannot create log file ***********");
+        }
+      }
+    }
+  }
+  
+  private void initializeLogFile() {
+    if (logWriter == null) {
+      String state = Environment.getExternalStorageState();
+      SimpleDateFormat dateFormat = 
+        new SimpleDateFormat("MM-dd-HH");
+      String dateStr = dateFormat.format(Calendar.getInstance()).toString();
+      String fileName = "speedometer-" + dateStr + ".log";
+      
+      if (Environment.MEDIA_MOUNTED.equals(state)) {
+        File file = new File(getExternalFilesDir(null), fileName);
+        try {
+          logWriter = new BufferedWriter(new FileWriter(file, false));
+        } catch (IOException e) {
+          Log.e(SpeedometerApp.TAG, "********Cannot create log file ***********");
+        }
+      } else {
+        Log.e(SpeedometerApp.TAG, "********Cannot write to media file ***********");
+      }
+    }
+  }
+  
+  private void closeLogFile() {
+    try {
+      if (logWriter != null) {
+        logWriter.close();
+      }
+    } catch (IOException e) {
+      Log.e(SpeedometerApp.TAG, "Error when closing log file", e);
+    }
+    logWriter = null;
+  }
+  
   private synchronized boolean isStopRequested() {
     return this.stopRequested;
   }
@@ -526,5 +632,11 @@ public class MeasurementScheduler extends Service {
     return new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
       RuntimeUtil.getDeviceProperty(), task.getType(), Calendar.getInstance().getTime(), 
       false, task.measurementDesc);
-  } 
+  }
+  
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    cleanUp();
+  }
 }

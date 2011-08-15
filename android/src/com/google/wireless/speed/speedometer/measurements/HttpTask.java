@@ -86,7 +86,6 @@ public class HttpTask extends MeasurementTask {
     
     @Override
     protected void initalizeParams(Map<String, String> params) {
-      
       if (params == null) {
         return;
       }
