@@ -27,6 +27,6 @@
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
-    <string name="notificationSchedulerStarted">Click to enable persistent Speedometer service</string>
+    <string name="notificationSchedulerStarted">Click to start Speedometer service</string>
     <string name="notificatioContent">Speedometer service is running</string>
 </resources>
