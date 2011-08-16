@@ -140,9 +140,9 @@ public class MeasurementScheduler extends Service {
     writeLogIntentSender = PendingIntent.getBroadcast(this, 0, 
         new UpdateIntent("", UpdateIntent.WRITE_LOG_ACTION), PendingIntent.FLAG_CANCEL_CURRENT);
     
-    alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
+    /*alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
         System.currentTimeMillis() + Config.LOG_ALARM_START_DELAY, 
-        Config.LOG_ALARM_INTERVAL_MSEC, writeLogIntentSender);
+        Config.LOG_ALARM_INTERVAL_MSEC, writeLogIntentSender);*/
     
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
@@ -550,12 +550,14 @@ public class MeasurementScheduler extends Service {
   private class LogcatRedirector implements Runnable {
     @Override
     public void run() {
+      BufferedReader bufferedReader = null;
+      Process process = null;
       try {
         Log.d(SpeedometerApp.TAG, "************* Starting to run logcat *************");
         PhoneUtils.getPhoneUtils().acquireWakeLock();
-        Process process = Runtime.getRuntime().exec("logcat -v time Speedometer:I " + 
+        process = Runtime.getRuntime().exec("logcat -v time Speedometer:I " + 
             "AndroidRuntime:I *:S");
-        BufferedReader bufferedReader = new BufferedReader(
+        bufferedReader = new BufferedReader(
             new InputStreamReader(process.getInputStream()));
 
         StringBuilder log = new StringBuilder();
@@ -570,6 +572,14 @@ public class MeasurementScheduler extends Service {
         Log.e(SpeedometerApp.TAG, "**************Cannot read from logcat ************");
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
+        if (bufferedReader != null) {
+          try {
+            bufferedReader.close();
+          } catch (IOException e) {
+            Log.e(SpeedometerApp.TAG, "Error when closing the stream to logcat");
+          }
+          process.destroy();
+        }
         Log.i(SpeedometerApp.TAG, "*************** Leaving LogcatRedirector *************");
       }
     }
