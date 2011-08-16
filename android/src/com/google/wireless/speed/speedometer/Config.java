@@ -30,7 +30,7 @@ public interface Config {
   
   /** Constants used in MeasurementScheduler.java */
   // The default checkin interval in seconds
-  public static final long DEFAULT_CHECKIN_INTERVAL_SEC = 3 * 60L;
+  public static final long DEFAULT_CHECKIN_INTERVAL_SEC = 60 * 60L;
   public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 10L;
   public static final long MAX_CHECKIN_RETRY_INTERVAL_SEC = 60L;
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;

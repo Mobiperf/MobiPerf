@@ -210,8 +210,8 @@ public class MeasurementCreationActivity extends Activity {
       }
       if (newTask != null) {
         if (parent.getScheduler().submitTask(newTask)) {
-          Toast.makeText(MeasurementCreationActivity.this, 
-              R.string.userMeasurementSuccessToast, Toast.LENGTH_LONG).show();
+          Toast.makeText(MeasurementCreationActivity.this,
+              R.string.userMeasurementToast, Toast.LENGTH_LONG).show();
         }
       }
     }
