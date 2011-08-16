@@ -31,6 +31,7 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -160,6 +161,7 @@ public class MeasurementCreationActivity extends Activity {
     @Override
     public void onClick(View v) {
       TextView countText = (TextView) findViewById(R.id.countText);
+      MeasurementTask newTask = null;
       if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
         try {
           EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
@@ -168,8 +170,7 @@ public class MeasurementCreationActivity extends Activity {
           params.put("target", pingTargetText.getText().toString());
           PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
               PingTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
-          PingTask newTask = new PingTask(desc, MeasurementCreationActivity.this);
-          parent.getScheduler().submitTask(newTask);
+          newTask = new PingTask(desc, MeasurementCreationActivity.this);
         } catch (NumberFormatException e) {
           // This should never happen because we control the text
           Log.wtf(SpeedometerApp.TAG, "Number format exception.");
@@ -188,8 +189,7 @@ public class MeasurementCreationActivity extends Activity {
           }
           HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
               0, count, MeasurementTask.USER_PRIORITY, params);
-          HttpTask newTask = new HttpTask(desc, MeasurementCreationActivity.this);
-          parent.getScheduler().submitTask(newTask);
+          newTask = new HttpTask(desc, MeasurementCreationActivity.this);
         } catch (NumberFormatException e) {
           // This should never happen because we control the text
           Log.wtf(SpeedometerApp.TAG, "Number format exception.");
@@ -202,11 +202,16 @@ public class MeasurementCreationActivity extends Activity {
           params.put("target", targetText.getText().toString());
           TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
               TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
-          TracerouteTask newTask = new TracerouteTask(desc, MeasurementCreationActivity.this);
-          parent.getScheduler().submitTask(newTask);
+          newTask = new TracerouteTask(desc, MeasurementCreationActivity.this);
         } catch (NumberFormatException e) {
           // This should never happen because we control the text
           Log.wtf(SpeedometerApp.TAG, "Number format exception.");
+        }
+      }
+      if (newTask != null) {
+        if (parent.getScheduler().submitTask(newTask)) {
+          Toast.makeText(MeasurementCreationActivity.this,
+              R.string.userMeasurementToast, Toast.LENGTH_LONG).show();
         }
       }
     }
