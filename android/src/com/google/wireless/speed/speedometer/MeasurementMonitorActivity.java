@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -53,12 +54,6 @@ public class MeasurementMonitorActivity extends Activity {
       }
   }
   
-  /* Catch the back button event and let the parent activity to decide what to do */
-  @Override
-  public void onBackPressed() {
-    this.getParent().onBackPressed();   
-  }
-  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -68,10 +63,12 @@ public class MeasurementMonitorActivity extends Activity {
     filter.addAction(UpdateIntent.MSG_ACTION);
     this.registerReceiver(this.receiver, filter);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
-    ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
-    if (savedContent != null) {
-      for (String item : savedContent) {
-        consoleContent.add(item);
+    if (savedInstanceState != null) {
+      ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
+      if (savedContent != null) {
+        for (String item : savedContent) {
+          consoleContent.add(item);
+        }
       }
     }
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
@@ -79,13 +76,14 @@ public class MeasurementMonitorActivity extends Activity {
   }
   
   @Override
-  protected void onSaveInstanceState(Bundle bundle) {
+  public void onSaveInstanceState(Bundle bundle) {
     int length = consoleContent.getCount();
     ArrayList<String> items = new ArrayList<String>();
     for (int i = 0; i < length; i++) {
       items.add(consoleContent.getItem(i));
     }
     bundle.putStringArrayList(KEY_CONSOLE_CONTENT, items);
+    super.onSaveInstanceState(bundle);
   }
   
   @Override
