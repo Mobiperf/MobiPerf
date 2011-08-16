@@ -46,4 +46,8 @@ public interface Config {
   public static final int DEFAULT_BATTERY_SCALE = 100;
   /** Tasks expire in one day. Expired tasks will be removed from the scheduler */
   public static final long TASK_EXPIRATION_MSEC = 24 * 3600 * 1000;
+  
+  /** Constants used in MeasurementMonitorActivity.java */
+  public static final int MAX_LIST_ITEMS = 512;
+  public static final int ITEMS_TO_KEEP_UPON_REFRESH = 64;
 }
