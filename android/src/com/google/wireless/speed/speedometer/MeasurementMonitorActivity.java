@@ -68,16 +68,26 @@ public class MeasurementMonitorActivity extends Activity {
     filter.addAction(UpdateIntent.MSG_ACTION);
     this.registerReceiver(this.receiver, filter);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
-    ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
-    if (savedContent != null) {
-      for (String item : savedContent) {
-        consoleContent.add(item);
+    // Restore saved content if it exists
+    if (savedInstanceState != null) {
+      ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
+      if (savedContent != null) {
+        for (String item : savedContent) {
+          consoleContent.add(item);
+        }
       }
     }
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
     this.consoleView.setAdapter(consoleContent);
   }
   
+  /**
+   * Save the console content before onDestroy()
+   * 
+   * TODO(wenjiezeng): The default behavior of Android does not call onSaveInstanceState
+   * when the user presses the 'back' button. To preserve console content between launches,
+   * we need to write the content to persistent storage.
+   */
   @Override
   protected void onSaveInstanceState(Bundle bundle) {
     int length = consoleContent.getCount();
