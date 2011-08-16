@@ -293,5 +293,4 @@ public class MeasurementCreationActivity extends Activity {
     }
   }
   
-  
 }
