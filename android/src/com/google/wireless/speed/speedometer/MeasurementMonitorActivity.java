@@ -34,6 +34,9 @@ public class MeasurementMonitorActivity extends Activity {
       @Override
       public void onReceive(Context context, Intent intent) {
         String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
+        /* TODO(wenjiezeng): Add a button for users to clear the console in case
+         * the content becomes very long
+         */
         consoleContent.add(msg + "\n");
       }
     };
@@ -51,12 +54,6 @@ public class MeasurementMonitorActivity extends Activity {
           pb.setProgress(pb.getMax() * progress / max);
         }
       }
-  }
-  
-  /* Catch the back button event and let the parent activity to decide what to do */
-  @Override
-  public void onBackPressed() {
-    this.getParent().onBackPressed();   
   }
   
   @Override
@@ -80,13 +77,13 @@ public class MeasurementMonitorActivity extends Activity {
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
     this.consoleView.setAdapter(consoleContent);
   }
-  
+
   /**
    * Save the console content before onDestroy()
    * 
-   * TODO(wenjiezeng): The default behavior of Android does not call onSaveInstanceState
-   * when the user presses the 'back' button. To preserve console content between launches,
-   * we need to write the content to persistent storage.
+   * TODO(wenjiezeng): Android does not call onSaveInstanceState when the user
+   * presses the 'back' button. To preserve console content between launches, we
+   * need to write the content to persistent storage and restore it upon onCreate().
    */
   @Override
   protected void onSaveInstanceState(Bundle bundle) {
