@@ -26,7 +26,7 @@ class GoogleMapView(webapp.RequestHandler):
     measurements = db.GqlQuery('SELECT * FROM Measurement '
                                'WHERE type=:1 '
                                'ORDER BY timestamp DESC '
-                               'LIMIT 30',
+                               'LIMIT 40',
                                'ping')
     template_args = {
         'map_code': self._GetJavascriptCodeForPingMap(measurements)
@@ -62,7 +62,7 @@ class GoogleMapView(webapp.RequestHandler):
       prop_entity = measurement.device_properties
       values = {}
       # these attributes can be non-existant if the experiment fails
-      if hasattr(measurement, 'mval_mean_rtts_ms'):
+      if hasattr(measurement, 'mval_mean_rtt_ms'):
         values = {'mean rtt': measurement.mval_mean_rtt_ms,
                   'max rtt': measurement.mval_max_rtt_ms,
                   'min rtt': measurement.mval_min_rtt_ms,
@@ -76,7 +76,7 @@ class GoogleMapView(webapp.RequestHandler):
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
       rand_lon = (random.random() - 0.5) * random_radius
-      if hasattr(measurement, 'mval_mean_rtts_ms') and float(measurement.mval_mean_rtt_ms) < 150:
+      if hasattr(measurement, 'mval_mean_rtt_ms') and float(measurement.mval_mean_rtt_ms) < 150:
         point = (prop_entity.location.lat + rand_lat,
                  prop_entity.location.lon + rand_lon,
                  htmlstr, green_icon.icon_id)
