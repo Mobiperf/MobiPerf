@@ -6,7 +6,6 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -561,7 +560,7 @@ public class MeasurementScheduler extends Service {
 
         StringBuilder log = new StringBuilder();
         String line;
-        int maxLines = 100;
+        int maxLines = 30;
         while (maxLines > 0 && (line = bufferedReader.readLine()) != null) {
           log.append(line + "\n");
           maxLines--;
@@ -597,7 +596,7 @@ public class MeasurementScheduler extends Service {
       String state = Environment.getExternalStorageState();
       SimpleDateFormat dateFormat = 
         new SimpleDateFormat("MM-dd-HH");
-      String dateStr = dateFormat.format(Calendar.getInstance()).toString();
+      String dateStr = dateFormat.format(Calendar.getInstance().getTime()).toString();
       String fileName = "speedometer-" + dateStr + ".log";
       
       if (Environment.MEDIA_MOUNTED.equals(state)) {
