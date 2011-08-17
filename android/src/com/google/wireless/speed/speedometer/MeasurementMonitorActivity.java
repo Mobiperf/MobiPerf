@@ -35,9 +35,33 @@ public class MeasurementMonitorActivity extends Activity {
       @Override
       public void onReceive(Context context, Intent intent) {
         String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
-        consoleContent.add(msg + "\n");
+        synchronized (consoleContent) {
+          consoleContent.add(msg + "\n");
+          if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
+            refreshConsole();
+          }
+        }
       }
     };
+  }
+  
+  /**
+   * Keep only the last ITEMS_TO_KEEP_UPON_REFRESH items in the console and remove the rest. 
+   */
+  private void refreshConsole() {
+    ArrayList<String> latestItems = new ArrayList<String>();
+    synchronized (consoleContent) {
+      int length = consoleContent.getCount();
+      int copyStart = length - Config.ITEMS_TO_KEEP_UPON_REFRESH;
+      for (int i = copyStart; i < length; i++) {
+        latestItems.add(consoleContent.getItem(i)); 
+      }
+      length = latestItems.size();
+      consoleContent.clear();
+      for (int i = 0; i < length; i++) {
+        consoleContent.add(latestItems.get(i));
+      }
+    }
   }
    
   /* Upgrades the progress bar in the UI*/
@@ -63,6 +87,7 @@ public class MeasurementMonitorActivity extends Activity {
     filter.addAction(UpdateIntent.MSG_ACTION);
     this.registerReceiver(this.receiver, filter);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
+    // Restore saved content if it exists
     if (savedInstanceState != null) {
       ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
       if (savedContent != null) {
@@ -74,9 +99,16 @@ public class MeasurementMonitorActivity extends Activity {
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
     this.consoleView.setAdapter(consoleContent);
   }
-  
+
+  /**
+   * Save the console content before onDestroy()
+   * 
+   * TODO(wenjiezeng): Android does not call onSaveInstanceState when the user
+   * presses the 'back' button. To preserve console content between launches, we
+   * need to write the content to persistent storage and restore it upon onCreate().
+   */
   @Override
-  public void onSaveInstanceState(Bundle bundle) {
+  protected void onSaveInstanceState(Bundle bundle) {
     int length = consoleContent.getCount();
     ArrayList<String> items = new ArrayList<String>();
     for (int i = 0; i < length; i++) {

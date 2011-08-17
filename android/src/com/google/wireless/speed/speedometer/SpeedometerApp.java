@@ -22,7 +22,6 @@ import android.view.MenuItem;
 import android.widget.TabHost;
 
 import java.security.Security;
-import java.util.ArrayList;
 
 /**
  * The main UI thread that manages different tabs
@@ -139,7 +138,7 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    
+
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
      * on these properties but may enforce them in future versions.
