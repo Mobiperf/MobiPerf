@@ -22,7 +22,6 @@ import android.view.MenuItem;
 import android.widget.TabHost;
 
 import java.security.Security;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The main UI thread that manages different tabs
@@ -37,8 +36,8 @@ public class SpeedometerApp extends TabActivity {
   private static final int NOTIFICATION_ID = 1234;
   
   private MeasurementScheduler scheduler;
-  private boolean isBounded = false;
-  private AtomicBoolean isBindingToService = new AtomicBoolean(false);  
+  private boolean isBound = false;
+  private boolean isBindingToService = false;  
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
@@ -62,19 +61,19 @@ public class SpeedometerApp extends TabActivity {
 
       //Put scheduler service into foreground. Makes the process less likely of being killed
       scheduler.startForeground(NOTIFICATION_ID, notice);
-      isBounded = true;
-      isBindingToService.set(false);
+      isBound = true;
+      isBindingToService = false;
     }
 
     @Override
     public void onServiceDisconnected(ComponentName arg0) {
-      isBounded = false;
+      isBound = false;
     }
   };
   
-  /** Returns the scheduler singleton instance */
+  /** Returns the scheduler singleton instance. Should only be called from the UI thread. */
   public MeasurementScheduler getScheduler() {
-    if (isBounded) {
+    if (isBound) {
       return this.scheduler;
     } else {
       bindToService();
@@ -183,13 +182,11 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private void bindToService() {
-    synchronized (isBindingToService) {
-      if (!isBindingToService.get() && !isBounded) {
-        // Bind to the scheduler service if it is not bounded
-        Intent intent = new Intent(this, MeasurementScheduler.class);
-        bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
-        isBindingToService.set(true);
-      }
+    if (!isBindingToService && !isBound) {
+      // Bind to the scheduler service if it is not bounded
+      Intent intent = new Intent(this, MeasurementScheduler.class);
+      bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+      isBindingToService = true;
     }
   }
   
@@ -201,9 +198,9 @@ public class SpeedometerApp extends TabActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    if (isBounded) {
+    if (isBound) {
       unbindService(serviceConn);
-      isBounded = false;
+      isBound = false;
     }
   }
   

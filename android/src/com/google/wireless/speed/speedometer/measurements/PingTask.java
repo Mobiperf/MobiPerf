@@ -86,6 +86,7 @@ public class PingTask extends MeasurementTask {
       if (params == null) {
         return;
       }
+      
       if (this.count == 0) {
         this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
       }
@@ -97,10 +98,10 @@ public class PingTask extends MeasurementTask {
       
       try {        
         String val = null;
-        if (params != null && (val = params.get("packet_size_byte")) != null && val.length() > 0) {
+        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         }
-        if (params != null && (val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
+        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         }
       } catch (NumberFormatException e) {

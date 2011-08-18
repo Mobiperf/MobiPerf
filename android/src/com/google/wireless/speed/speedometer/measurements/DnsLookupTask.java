@@ -74,7 +74,7 @@ public class DnsLookupTask extends MeasurementTask {
       }
       
       this.target = params.get("target");      
-      //TODO(wenjiezeng): See how to use server for DNS lookup
+      this.server = params.get("server");
     }
 
   }

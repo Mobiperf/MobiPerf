@@ -355,7 +355,7 @@ public class PhoneUtils {
   public synchronized void acquireWakeLock() {
     if (wakeLock == null) {
       PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-      wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
+      wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "tag");
     }
     Log.d(SpeedometerApp.TAG, "PowerLock acquired");
     wakeLock.acquire();
@@ -370,8 +370,7 @@ public class PhoneUtils {
     }
   }
   
-  /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
-   * about releasing someone else's wake lock */
+  /** Release all resource upon app shutdown */
   public synchronized void shutDown() {
     if (this.wakeLock != null) {
       /* Wakelock are ref counted by default. We disable this feature here to ensure that
@@ -381,6 +380,7 @@ public class PhoneUtils {
       wakeLock.release();
     }
     context.unregisterReceiver(broadcastReceiver);
+    releaseGlobalContext();
   }
 
   /**
