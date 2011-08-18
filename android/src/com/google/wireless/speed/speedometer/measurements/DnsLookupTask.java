@@ -73,10 +73,7 @@ public class DnsLookupTask extends MeasurementTask {
         this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
       
-      if ((this.target = params.get("target")) == null) {
-        this.target = DEFAULT_TARGET;
-      }
-      
+      this.target = params.get("target");      
       this.server = params.get("server");
     }
     
@@ -84,7 +81,18 @@ public class DnsLookupTask extends MeasurementTask {
   
   public DnsLookupTask(MeasurementDesc desc, Context parent) {
     super(new DnsLookupDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
-      desc.count, desc.priority, desc.parameters), parent);;
+      desc.count, desc.priority, desc.parameters), parent);
+  }
+  
+  /**
+   * Returns a copy of the DnsLookupTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    DnsLookupDesc newDesc = new DnsLookupDesc(desc.key, desc.startTime, desc.endTime, 
+      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new DnsLookupTask(newDesc, parent);
   }
 
   @Override

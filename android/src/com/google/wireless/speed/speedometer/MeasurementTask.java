@@ -133,4 +133,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   public String toString() {
     return this.measurementDesc.toString();
   }
+  
+  @Override
+  public abstract MeasurementTask clone();
 }
