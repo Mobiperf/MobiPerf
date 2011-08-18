@@ -83,6 +83,10 @@ public class PingTask extends MeasurementTask {
     
     @Override
     protected void initalizeParams(Map<String, String> params) {
+      if (params == null) {
+        return;
+      }
+      
       if (this.count == 0) {
         this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
       }

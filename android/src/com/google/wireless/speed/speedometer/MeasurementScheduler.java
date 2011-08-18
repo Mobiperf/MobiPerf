@@ -6,7 +6,6 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -22,7 +21,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.IOException;
-import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -210,6 +208,9 @@ public class MeasurementScheduler extends Service {
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
       Log.e(SpeedometerApp.TAG, "Exception when clonig objects");
+    } catch (Exception e) {
+      // We don't want any unexpected exception to crash the process
+      Log.e(SpeedometerApp.TAG, "Exception when handling measurements", e);
     }
   }
   
@@ -232,10 +233,13 @@ public class MeasurementScheduler extends Service {
     // Start up the thread running the service. Using one single thread for all requests
     Log.i(SpeedometerApp.TAG, "starting scheduler");
     this.resume();
-    this.startForeground(0, new Notification(R.drawable.icon,
-        getString(R.string.notificationSchedulerStarted), 
-        System.currentTimeMillis()));
     return START_STICKY;
+  }
+  
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    cleanUp();
   }
   
   /**

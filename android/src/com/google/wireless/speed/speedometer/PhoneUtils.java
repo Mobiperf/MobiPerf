@@ -370,8 +370,7 @@ public class PhoneUtils {
     }
   }
   
-  /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
-   * about releasing someone else's wake lock */
+  /** Release all resource upon app shutdown */
   public synchronized void shutDown() {
     if (this.wakeLock != null) {
       /* Wakelock are ref counted by default. We disable this feature here to ensure that

@@ -9,10 +9,8 @@ import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.util.Log;
 
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
@@ -182,37 +180,6 @@ public class Checkin {
       throw new IOException(e.getMessage());
     }
     Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() complete");
-  }
-  
-  @SuppressWarnings("unused")
-  private String speedometerServiceRequest(String url)
-      throws ClientProtocolException, IOException {
-    
-    synchronized (this) {
-      if (authCookie == null) {
-        if (!checkGetCookie()) {
-          throw new IOException("No authCookie yet");
-        }
-      }
-    }
-    
-    DefaultHttpClient client = new DefaultHttpClient();
-    // TODO(mdw): For some reason this is not sending the cookie to the
-    // test server, probably because the cookie itself is not properly
-    // initialized. Below I manually set the Cookie header instead.
-    CookieStore store = new BasicCookieStore();
-    store.addCookie(authCookie);
-    client.setCookieStore(store);
-    Log.d(SpeedometerApp.TAG, "authCookie is: " + authCookie);
-    
-    String fullurl = serverUrl + "/" + url;
-    HttpGet getMethod = new HttpGet(fullurl);
-    // TODO(mdw): This should not be needed
-    getMethod.addHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
-    
-    ResponseHandler<String> responseHandler = new BasicResponseHandler();
-    String result = client.execute(getMethod, responseHandler);
-    return result;
   }
   
   private String speedometerServiceRequest(String url, String jsonString) 

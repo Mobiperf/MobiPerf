@@ -73,10 +73,7 @@ public class DnsLookupTask extends MeasurementTask {
         this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
       
-      if ((this.target = params.get("target")) == null) {
-        this.target = DEFAULT_TARGET;
-      }
-      
+      this.target = params.get("target");      
       this.server = params.get("server");
     }
     
