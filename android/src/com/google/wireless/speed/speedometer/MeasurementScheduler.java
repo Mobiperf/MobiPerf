@@ -263,7 +263,7 @@ public class MeasurementScheduler extends Service {
   /** Set the interval for checkin in seconds */
   public synchronized void setCheckinInterval(long interval) {
     this.checkinIntervalSec = interval;
-    // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
+    // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC seconds
     alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
         System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC, 
         checkinIntervalSec * 1000, checkinIntentSender);
@@ -355,7 +355,7 @@ public class MeasurementScheduler extends Service {
       // The user sets checkin interval in the unit of hours
       this.setCheckinInterval(Integer.parseInt(
           prefs.getString(getString(R.string.checkinIntervalPrefKey),
-          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 60);
+          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
