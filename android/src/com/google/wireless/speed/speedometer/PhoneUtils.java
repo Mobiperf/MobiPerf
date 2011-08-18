@@ -351,28 +351,26 @@ public class PhoneUtils {
     return location;
   }
 
-  /** Prevents the phone from going to low-power mode where WiFi turns off. */
+  /** Wakes up the CPU of the phone if it is sleeping. */
   public synchronized void acquireWakeLock() {
-    String networkName = PhoneUtils.getPhoneUtils().getNetwork();
-    if (networkName != null && networkName.compareToIgnoreCase(NETWORK_WIFI) == 0) {
-      if (wakeLock == null) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
-      }
-      Log.i(SpeedometerApp.TAG, "PowerLock acquired");
-      wakeLock.acquire();
+    if (wakeLock == null) {
+      PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+      wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
     }
+    Log.d(SpeedometerApp.TAG, "PowerLock acquired");
+    wakeLock.acquire();
   }
-  
-  /** Should be called on application shutdown. Releases global resources. */
+
+  /** Release the CPU wake lock. WakeLock is reference counted by default: no need to worry
+   * about releasing someone else's wake lock */
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();
       Log.i(SpeedometerApp.TAG, "PowerLock released");
     }
   }
-
-  /** Should be called on application shutdown. Releases global resources. */
+  
+  /** Release all resource upon app shutdown */
   public synchronized void shutDown() {
     if (this.wakeLock != null) {
       /* Wakelock are ref counted by default. We disable this feature here to ensure that
