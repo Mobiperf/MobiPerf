@@ -244,7 +244,7 @@ public class TracerouteTask extends MeasurementTask {
         }
         // Remove the trailing separators
         progressStr.delete(progressStr.length() - 3, progressStr.length());
-        Log.d(SpeedometerApp.TAG, progressStr.toString());
+        Log.i(SpeedometerApp.TAG, progressStr.toString());
 
       } catch (SecurityException e) {
         Log.e(SpeedometerApp.TAG, "Does not have the permission to run ping on this device");
