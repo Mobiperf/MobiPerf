@@ -6,7 +6,6 @@ import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
@@ -143,6 +142,17 @@ public class TracerouteTask extends MeasurementTask {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
   }
+  
+  /**
+   * Returns a copy of the TracerouteTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    TracerouteDesc newDesc = new TracerouteDesc(desc.key, desc.startTime, desc.endTime, 
+      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new TracerouteTask(newDesc, parent);
+  }
 
   @Override
   public MeasurementResult call() throws MeasurementError {
@@ -169,88 +179,84 @@ public class TracerouteTask extends MeasurementTask {
     }
     MeasurementResult result = null;
     
-    try {
-      PhoneUtils.getPhoneUtils().acquireWakeLock();
-      while (maxPingCnt-- >= 0) {
-        /* Current traceroute implementation sends out three ICMP probes per TTL.
-         * One ping every 0.2s is the lower bound before some platforms requires
-         * root to run ping. We ping once every time to get a rough rtt as we cannot
-         * get the exact rtt from the output of the ping command with ttl being set
-         * */        
-        String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
-            "-s", task.packetSizeByte, "-c 1 ", target);
-        try {
-          double rtt = 0;
-          long t1;
-          HashSet<String> hostsAtThisDistance = new HashSet<String>();
-          for (int i = 0; i < task.pingsPerHop; i++) {
-            t1 = System.currentTimeMillis();
-            pingProc = Runtime.getRuntime().exec(command);
-            rtt += System.currentTimeMillis() - t1;
-            // Grab the output of the process that runs the ping command
-            InputStream is = pingProc.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            
-            /* Process each line of the ping output and extracts the intermediate hops into 
-             * hostAtThisDistance */ 
-            processPingOutput(br, hostsAtThisDistance, hostIp);
-            cleanUp(pingProc);
-            try {
-              Thread.sleep((long) (task.pingIntervalSec * 1000));
-            } catch (InterruptedException e) {
-              Log.i(SpeedometerApp.TAG, "Sleep interrupted between ping intervals");
-            }
-          }
-          rtt = rtt / task.pingsPerHop;
-  
-          hopHosts.add(new HopInfo(hostsAtThisDistance, rtt));
-          
-          // Process the extracted IPs of intermediate hops
-          StringBuffer progressStr = new StringBuffer(ttl + ": ");
-          for (String ip : hostsAtThisDistance) {
-            // If we have reached the final destination hostIp, print it out and clean up
-            if (ip.compareTo(hostIp) == 0) {
-              Log.i(SpeedometerApp.TAG, ttl + ": " + hostIp);
-              Log.i(SpeedometerApp.TAG, " Finished! " + target + " reached in " + ttl + " hops");
-              
-              success = true;
-              cleanUp(pingProc);
-              result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-                  RuntimeUtil.getDeviceProperty(), TracerouteTask.TYPE, 
-                  Calendar.getInstance().getTime(), success, this.measurementDesc);
-              result.addResult("num_hops", ttl);
-              for (int i = 0; i < hopHosts.size(); i++) {
-                HopInfo hopInfo = hopHosts.get(i);
-                int hostIdx = 1;
-                for (String host : hopInfo.hosts) {
-                  result.addResult("hop_" + i + "_addr_" + hostIdx++, host);
-                }
-                result.addResult("hop_" + i + "_rrt_ms", String.format("%.3f", hopInfo.rtt));
-              }
-              Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
-              return result;
-            } else {
-              // Otherwise, we aggregate various hosts at a given hop distance for printout
-              progressStr.append(ip + " | ");
-            }
-          }
-          // Remove the trailing separators
-          progressStr.delete(progressStr.length() - 3, progressStr.length());
-          Log.i(SpeedometerApp.TAG, progressStr.toString());
-                  
-        } catch (SecurityException e) {
-          Log.e(SpeedometerApp.TAG, "Does not have the permission to run ping on this device");
-        } catch (IOException e) {
-          Log.e(SpeedometerApp.TAG, "The ping program cannot be executed");
-          Log.e(SpeedometerApp.TAG, e.getMessage());
-        } finally {
+    while (maxPingCnt-- >= 0) {
+      /* Current traceroute implementation sends out three ICMP probes per TTL.
+       * One ping every 0.2s is the lower bound before some platforms requires
+       * root to run ping. We ping once every time to get a rough rtt as we cannot
+       * get the exact rtt from the output of the ping command with ttl being set
+       * */        
+      String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
+        "-s", task.packetSizeByte, "-c 1 ", target);
+      try {
+        double rtt = 0;
+        long t1;
+        HashSet<String> hostsAtThisDistance = new HashSet<String>();
+        for (int i = 0; i < task.pingsPerHop; i++) {
+          t1 = System.currentTimeMillis();
+          pingProc = Runtime.getRuntime().exec(command);
+          rtt += System.currentTimeMillis() - t1;
+          // Grab the output of the process that runs the ping command
+          InputStream is = pingProc.getInputStream();
+          BufferedReader br = new BufferedReader(new InputStreamReader(is));
+
+          /* Process each line of the ping output and extracts the intermediate hops into 
+           * hostAtThisDistance */ 
+          processPingOutput(br, hostsAtThisDistance, hostIp);
           cleanUp(pingProc);
+          try {
+            Thread.sleep((long) (task.pingIntervalSec * 1000));
+          } catch (InterruptedException e) {
+            Log.i(SpeedometerApp.TAG, "Sleep interrupted between ping intervals");
+          }
         }
-        ttl++;
+        rtt = rtt / task.pingsPerHop;
+
+        hopHosts.add(new HopInfo(hostsAtThisDistance, rtt));
+
+        // Process the extracted IPs of intermediate hops
+        StringBuffer progressStr = new StringBuffer(ttl + ": ");
+        for (String ip : hostsAtThisDistance) {
+          // If we have reached the final destination hostIp, print it out and clean up
+          if (ip.compareTo(hostIp) == 0) {
+            Log.i(SpeedometerApp.TAG, ttl + ": " + hostIp);
+            Log.i(SpeedometerApp.TAG, " Finished! " + target + " reached in " + ttl + " hops");
+
+            success = true;
+            cleanUp(pingProc);
+            result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
+              RuntimeUtil.getDeviceProperty(), TracerouteTask.TYPE, 
+              Calendar.getInstance().getTime(), success, this.measurementDesc);
+            result.addResult("num_hops", ttl);
+            for (int i = 0; i < hopHosts.size(); i++) {
+              HopInfo hopInfo = hopHosts.get(i);
+              int hostIdx = 1;
+              for (String host : hopInfo.hosts) {
+                result.addResult("hop_" + i + "_addr_" + hostIdx++, host);
+              }
+              result.addResult("hop_" + i + "_rrt_ms", String.format("%.3f", hopInfo.rtt));
+            }
+            Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
+            return result;
+          } else {
+            // Otherwise, we aggregate various hosts at a given hop distance for printout
+            progressStr.append(ip + " | ");
+          }
+        }
+        // Remove the trailing separators
+        progressStr.delete(progressStr.length() - 3, progressStr.length());
+        Log.i(SpeedometerApp.TAG, progressStr.toString());
+
+      } catch (SecurityException e) {
+        Log.e(SpeedometerApp.TAG, "Does not have the permission to run ping on this device");
+      } catch (IOException e) {
+        Log.e(SpeedometerApp.TAG, "The ping program cannot be executed");
+        Log.e(SpeedometerApp.TAG, e.getMessage());
+      } finally {
+        cleanUp(pingProc);
       }
-    } finally {
-      PhoneUtils.getPhoneUtils().releaseWakeLock();
+      ttl++;
     }
+
     throw new MeasurementError("cannot perform traceroute to " + task.target);
   }
 

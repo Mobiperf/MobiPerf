@@ -83,6 +83,10 @@ public class PingTask extends MeasurementTask {
     
     @Override
     protected void initalizeParams(Map<String, String> params) {
+      if (params == null) {
+        return;
+      }
+      
       if (this.count == 0) {
         this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
       }
@@ -119,6 +123,17 @@ public class PingTask extends MeasurementTask {
   public PingTask(MeasurementDesc desc, Context parent) {
     super(new PingDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+  }
+  
+  /**
+   * Returns a copy of the PingTask
+   */
+  @Override
+  public MeasurementTask clone() {
+    MeasurementDesc desc = this.measurementDesc;
+    PingDesc newDesc = new PingDesc(desc.key, desc.startTime, desc.endTime, 
+      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+    return new PingTask(newDesc, parent);
   }
   
   /* We will use three methods to ping the requested resource in the order of PING_COMMAND, 
