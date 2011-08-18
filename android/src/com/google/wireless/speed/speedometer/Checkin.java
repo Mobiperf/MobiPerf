@@ -100,6 +100,7 @@ public class Checkin {
   
   public List<MeasurementTask> checkin() throws IOException {
     Log.i(SpeedometerApp.TAG, "Checkin.checkin() called");
+    boolean checkinSuccess = false;
     try {
       JSONObject status = new JSONObject();
       DeviceInfo info = RuntimeUtil.getDeviceInfo();
@@ -140,15 +141,20 @@ public class Checkin {
       this.lastCheckin = new Date();
       Log.i(SpeedometerApp.TAG, "Checkin complete, got " + schedule.size() +
           " new tasks");
+      checkinSuccess = true;
       return schedule;
     } catch (JSONException e) {
       Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
       throw new IOException("There is exception during checkin()");
     } catch (IOException e) {
-      // Failure probably due to authToken expiration. Will authenticate upon next checkin.
-      this.accountSelector.setAuthImmediately(true);
-      this.authCookie = null;
+      Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
       throw new IOException(e.getMessage());
+    } finally {
+      if (!checkinSuccess) {
+        // Failure probably due to authToken expiration. Will authenticate upon next checkin.
+        this.accountSelector.setAuthImmediately(true);
+        this.authCookie = null;
+      }
     }
   }
   
