@@ -5,7 +5,7 @@
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="SpeedometerServerURL">http://speedometer.googleplex.com/</string>
+    <string name="SpeedometerServerURL">http://speedometer.googleplex.com</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="menuResume">Resume</string>
@@ -29,4 +29,6 @@
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="notificationSchedulerStarted">Click to start Speedometer service</string>
     <string name="notificatioContent">Speedometer service is running</string>
+    <string name="userMeasurementSuccessToast">Measurement is running. See results in \'Monitor\' tab.</string>
+    <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
 </resources>

@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.widget.TabHost;
 
 import java.security.Security;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The main UI thread that manages different tabs
@@ -32,10 +33,12 @@ import java.security.Security;
 public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
+  // This arbitrary id is private to Speedometer
   private static final int NOTIFICATION_ID = 1234;
   
   private MeasurementScheduler scheduler;
-  private boolean isBounded = false;  
+  private boolean isBounded = false;
+  private AtomicBoolean isBindingToService = new AtomicBoolean(false);  
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
@@ -49,17 +52,18 @@ public class SpeedometerApp extends TabActivity {
       PendingIntent pendIntent = PendingIntent.getService(SpeedometerApp.this, 0, intent, 
           PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_ONE_SHOT);
 
-      //This constructor is deprecated. Use Notification.Builder instead
+      //This constructor is deprecated in 3.x. But most phones still run 2.x systems
       Notification notice = new Notification(R.drawable.icon, 
           getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
-      //This method is deprecated. Use Notification.Builder instead.
+      //This is deprecated in 3.x. But most phones still run 2.x systems
       notice.setLatestEventInfo(SpeedometerApp.this, "Speedometer", 
           getString(R.string.notificatioContent), pendIntent);
 
-      notice.flags |= Notification.FLAG_NO_CLEAR;
+      //Put scheduler service into foreground. Makes the process less likely of being killed
       scheduler.startForeground(NOTIFICATION_ID, notice);
       isBounded = true;
+      isBindingToService.set(false);
     }
 
     @Override
@@ -73,6 +77,7 @@ public class SpeedometerApp extends TabActivity {
     if (isBounded) {
       return this.scheduler;
     } else {
+      bindToService();
       return null;
     }
   }
@@ -137,7 +142,7 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    
+
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
      * on these properties but may enforce them in future versions.
@@ -170,12 +175,22 @@ public class SpeedometerApp extends TabActivity {
     
     RuntimeUtil.setActivity(this);
     
- // We only need one instance of scheduler thread
-    Intent schedulerIntent = new Intent(this, MeasurementScheduler.class);
-    this.startService(schedulerIntent);
-    // Bind to LocalService
-    Intent bindIntent = new Intent(this, MeasurementScheduler.class);
-    bindService(bindIntent, serviceConn, Context.BIND_AUTO_CREATE);
+    // We only need one instance of scheduler thread
+    intent = new Intent(this, MeasurementScheduler.class);
+    this.startService(intent);
+    // Bind to the scheduler service for only once during the lifetime of the activity
+    bindToService();
+  }
+  
+  private void bindToService() {
+    synchronized (isBindingToService) {
+      if (!isBindingToService.get() && !isBounded) {
+        // Bind to the scheduler service if it is not bounded
+        Intent intent = new Intent(this, MeasurementScheduler.class);
+        bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+        isBindingToService.set(true);
+      }
+    }
   }
   
   @Override
