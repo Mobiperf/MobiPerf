@@ -184,7 +184,7 @@ public class SpeedometerApp extends TabActivity {
   
   private void bindToService() {
     synchronized (isBindingToService) {
-      if (!isBindingToService.get()) {
+      if (!isBindingToService.get() && !isBounded) {
         // Bind to the scheduler service if it is not bounded
         Intent intent = new Intent(this, MeasurementScheduler.class);
         bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
