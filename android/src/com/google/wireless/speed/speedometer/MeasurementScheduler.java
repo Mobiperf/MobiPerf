@@ -333,6 +333,10 @@ public class MeasurementScheduler extends Service {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
+      if (taskQueue.size() >= Config.MAX_TASK_QUEUE_SIZE ||
+          pendingTasks.size() >= Config.MAX_TASK_QUEUE_SIZE) {
+        return false;
+      }
       boolean result = this.taskQueue.add(task);
       if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
         handleMeasurement();
@@ -411,7 +415,7 @@ public class MeasurementScheduler extends Service {
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
-      this.taskQueue.add(task);
+      this.submitTask(task);
     }
   }
   
