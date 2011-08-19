@@ -166,7 +166,7 @@ public class MeasurementScheduler extends Service {
       this.checkinFuture.cancel(true);
       // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
       this.checkinFuture = checkinExecutor.scheduleAtFixedRate(this.checkinTask, 
-          Config.PAUSE_BETWEEN_CHECKIN_CHANGE_SEC, this.checkinIntervalSec, TimeUnit.SECONDS);
+          Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC, this.checkinIntervalSec, TimeUnit.SECONDS);
       Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
     }
   }
