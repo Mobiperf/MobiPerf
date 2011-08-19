@@ -65,7 +65,6 @@ public class BatteryCapPowerManager {
     @Override
     public MeasurementResult call() throws MeasurementError {
       try {
-        PhoneUtils.getPhoneUtils().acquireWakeLock();
         if (!pManager.canScheduleExperiment()) {
           throw new MeasurementError("Not enough power");
         }
