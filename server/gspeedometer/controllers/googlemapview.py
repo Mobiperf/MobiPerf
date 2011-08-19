@@ -39,13 +39,12 @@ class GoogleMapView(webapp.RequestHandler):
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
 
-    if not self.request.POST:
-      filter_measurement_form = FilterMeasurementForm()
-      thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
-      start_date = _start_date
-      end_date = _end_date
-    else:
-      filter_measurement_form = FilterMeasurementForm()
+    thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+    start_date = _start_date
+    end_date = _end_date
+    filter_measurement_form = FilterMeasurementForm()
+
+    if self.request.POST:
       filter_measurement_form.full_clean()
       if filter_measurement_form.is_valid():
         thetype = filter_measurement_form.cleaned_data['type']
@@ -69,12 +68,12 @@ class GoogleMapView(webapp.RequestHandler):
 
     template_args = {
         'filter_form': filter_measurement_form,
-        'map_code': self._GetJavascriptCodeForPingMap(measurements)
+        'map_code': self._GetJavascriptCodeForMap(measurements)
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
 
-  def _GetJavascriptCodeForPingMap(self, measurements):
+  def _GetJavascriptCodeForMap(self, measurements):
     """Constructs the java script code to show ping results on google map."""
     tmap = googlemaphelper.Map()
     red_icon = googlemaphelper.Icon(icon_id='red_icon',
@@ -102,16 +101,31 @@ class GoogleMapView(webapp.RequestHandler):
       prop_entity = measurement.device_properties
       values = {}
       # these attributes can be non-existant if the experiment fails
-      if hasattr(measurement, 'mval_mean_rtt_ms'):
-        values = {'mean rtt': measurement.mval_mean_rtt_ms,
-                  'max rtt': measurement.mval_max_rtt_ms,
-                  'min rtt': measurement.mval_min_rtt_ms,
-                  'rtt stddev': measurement.mval_stddev_rtt_ms,
-                  'packet loss': measurement.mval_packet_loss}
+      if measurement.success == True:
+        # type strings from controller/measurement.py
+        if measurement.type == 'ping':
+          values = {'mean rtt': measurement.mval_mean_rtt_ms,
+                    'max rtt': measurement.mval_max_rtt_ms,
+                    'min rtt': measurement.mval_min_rtt_ms,
+                    'rtt stddev': measurement.mval_stddev_rtt_ms,
+                    'packet loss': measurement.mval_packet_loss}
+        elif measurement.type == 'http':
+          values = {'code': measurement.mval_code,
+                    'time (msec)': measurement.mval_time_ms,
+                    'header length (bytes)': measurement.mval_headers_len,
+                    'body length (bytes)': measurement.mval_body_len}
+        elif measurement.type == 'dns_lookup':
+          values = {'IP address': measurement.mval_address,
+                    'real hostname': measurement.mval_real_hostname,
+                    'time (msec)': measurement.mval_time_ms}
+        elif measurement.type == 'traceroute':
+          values = {'# of hops': measurement.mval_num_hops}
 
-      htmlstr = self.GetHtmlForPing(measurement.device_id,
-                                    measurement.mparam_target,
-                                    values)
+
+      htmlstr = self._GetHtmlForMeasurement(measurement.device_id,
+                                            measurement.type,
+                                            measurement.mparam_target,
+                                            values)
       random_radius = 0.001
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
@@ -141,9 +155,10 @@ class GoogleMapView(webapp.RequestHandler):
 
     return mapcode
 
-  def GetHtmlForPing(self, device_id, target, values):
+  def _GetHtmlForMeasurement(self, meas_type, device_id, target, values):
     """Returns the HTML string representing the Ping result."""
-    result = ['<html><body><h4>Ping result on device %s</h4><br/>' % device_id]
+    result = ['<html><body><h4>Ping result on device %s</h4><br/>' % 
+              (meas_type, device_id)]
     result.append("""<style media="screen" type="text/css"></style>""")
     result.append("""<table style="border:1px #000000 solid;">""")
     result.append(('<tr>'

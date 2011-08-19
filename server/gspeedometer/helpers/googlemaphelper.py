@@ -92,6 +92,9 @@ class GoogleMapWrapper(object):
         'templates/googlemaphelper.js', template_args)
 
   def _GetPointsScript(self, themap):
+    if len(themap.points) == 0:
+      return '[]'
+
     script_list = ['[']
 
     # Constructs the points for the map 

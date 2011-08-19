@@ -1,19 +1,21 @@
 {# Actual googlemap view in the div section. #}
 
-{% if filter_form %}
 <form method="post" action="/maps">
 <table>
 <tr>
-<td align=left>
+<td align=center width=40%>
 <table> {{ filter_form.as_table }} </table>
 </td>
 </tr>
 <tr>
-<td align=left>
+<td align=center width=40%>
+<p><input type="submit" /></p>
+</td>
+</tr>
+</table></form>
+<br/>
 <div id="map" style="width: 760px; height: 460px">
 {{ map_code|safe }}
 </div>
 </td>
 </tr>
-</table>
-<input type="submit" /></form>
