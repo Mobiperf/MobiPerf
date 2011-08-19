@@ -38,16 +38,16 @@ class GoogleMapView(webapp.RequestHandler):
 
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
-
-    thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
-    start_date = _start_date
-    end_date = _end_date
-    filter_measurement_form = FilterMeasurementForm()
-
-    if self.request.POST:
+    if not self.request.POST:
+      filter_measurement_form = FilterMeasurementForm()
+      thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+      start_date = _start_date
+      end_date = _end_date
+    else:
+      filter_measurement_form = FilterMeasurementForm(self.request.POST)
       filter_measurement_form.full_clean()
       if filter_measurement_form.is_valid():
-        thetype = filter_measurement_form.cleaned_data['type']
+        thetype = filter_measurement_form.cleaned_data['thetype']
         start_date = filter_measurement_form.cleaned_data['start_date']
         end_date = filter_measurement_form.cleaned_data['end_date']
 
@@ -157,7 +157,7 @@ class GoogleMapView(webapp.RequestHandler):
 
   def _GetHtmlForMeasurement(self, meas_type, device_id, target, values):
     """Returns the HTML string representing the Ping result."""
-    result = ['<html><body><h4>Ping result on device %s</h4><br/>' % 
+    result = ['<html><body><h4>%s result on device %s</h4><br/>' % 
               (meas_type, device_id)]
     result.append("""<style media="screen" type="text/css"></style>""")
     result.append("""<table style="border:1px #000000 solid;">""")
@@ -178,8 +178,8 @@ class GoogleMapView(webapp.RequestHandler):
           '1px #000000 dotted;\">%s</td>'
           '<td align=\"left\" '
           'style=\"padding-right:10px;border-bottom:'
-          '1px #000000 dotted;\">%.3f</td>'
-          '</tr>' % (k, float(v))))
+          '1px #000000 dotted;\">%s</td>'
+          '</tr>' % (k, v)))
     result.append('</table>')
     if len(values) == 0:
       result.append('<br/>This measurement has failed.')
