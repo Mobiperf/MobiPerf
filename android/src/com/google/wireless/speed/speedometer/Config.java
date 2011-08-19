@@ -54,4 +54,6 @@ public interface Config {
   /** Constants used in MeasurementMonitorActivity.java */
   public static final int MAX_LIST_ITEMS = 512;
   public static final int ITEMS_TO_KEEP_UPON_REFRESH = 64;
+  
+  public static final long MIN_CHECKIN_INTERVAL_SEC = 3600;
 }
