@@ -2,8 +2,12 @@
 <script type="text/javascript">
 function load() {
   if (GBrowserIsCompatible()) {
+
+    var markerBounds = new GLatLngBounds();
+
     function point(lat, lon, html, icon) {
       this.gpoint = new GMarker(new GLatLng(lat, lon), icon);
+      markerBounds.extend(new GLatLng(lat, lon));
       this.html = html;
     }
 
@@ -11,7 +15,6 @@ function load() {
       this.id = id;
       this.points = points;
       this.gmap = new GMap2(document.getElementById(this.id));
-      this.gmap.setCenter(new GLatLng(lat, lon), zoom);
       this.addMarker = addMarker;
       this.addMarkers = addMarkers;
       this.makePointsFromArray = makePointsFromArray;
@@ -44,6 +47,17 @@ function load() {
 
       this.points = makePointsFromArray(this.points);
       this.addMarkers(this.points);
+      if (this.points.length > 0) {
+        // Use the google map utility to get the correct
+        // center and zoom level
+        this.gmap.setCenter(markerBounds.getCenter(), 
+            this.gmap.getBoundsZoomLevel(markerBounds));
+      } else {
+        // If there are no points to show, use the default center
+        // and zoom
+        this.gmap.setCenter(new GLatLng(lat, lon), zoom);
+      }
+      this.gmap.setUIToDefault();
     }
 
     {% for icon in icons %}
@@ -61,14 +75,6 @@ function load() {
 
     var {{map.map_id}} = new map('{{map.map_id}}', map_points,
         {{center_lat}}, {{center_lon}}, {{map.zoom}});
-
-    {% if map.show_navcontrols %}
-    {{map.map_id}}.gmap.addControl(new GSmallMapControl());
-    {% endif %}
-
-    {% if map.show_mapcontrols %}
-    {{map.map_id}}.gmap.addControl(new GMapTypeControl());
-    {% endif %}
   }
 }
 </script>
