@@ -6,16 +6,31 @@
 
 __author__ = 'wenjiezeng@google.com (Wenjie Zeng)'
 
+import datetime
 import logging
-
 import random
 
+from django import forms
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
+from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
+
+_now = datetime.datetime.utcnow()
+_end_date = datetime.date(_now.year, _now.month, _now.day)
+_start_date = _end_date - datetime.timedelta(days=1)
+
+
+class FilterMeasurementForm(forms.Form):
+  thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
+                              label='Measurement type')
+  start_date = forms.DateField(initial=_start_date,
+                               label='Start date (GMT)')
+  end_date = forms.DateField(initial=_end_date,
+                             label='End date (GMT)')
 
 
 class GoogleMapView(webapp.RequestHandler):
@@ -23,12 +38,37 @@ class GoogleMapView(webapp.RequestHandler):
 
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
+
+    if not self.request.POST:
+      filter_measurement_form = FilterMeasurementForm()
+      thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+      start_date = _start_date
+      end_date = _end_date
+    else:
+      filter_measurement_form = FilterMeasurementForm()
+      filter_measurement_form.full_clean()
+      if filter_measurement_form.is_valid():
+        thetype = filter_measurement_form.cleaned_data['type']
+        start_date = filter_measurement_form.cleaned_data['start_date']
+        end_date = filter_measurement_form.cleaned_data['end_date']
+
+    # start_time and end_time are either initialized by the default value
+    # or the POST value
+
     measurements = db.GqlQuery('SELECT * FROM Measurement '
-                               'WHERE type=:1 '
+                               'WHERE type=:1 AND '
+                               'timestamp>=:2 AND '
+                               'timestamp<=:3 '
                                'ORDER BY timestamp DESC '
                                'LIMIT 40',
-                               'ping')
+                               thetype,
+                               start_date,
+                               end_date)
+
+    logging.debug('start_date=%s, end_date=%s' % (start_date, end_date))
+
     template_args = {
+        'filter_form': filter_measurement_form,
         'map_code': self._GetJavascriptCodeForPingMap(measurements)
     }
     self.response.out.write(template.render(
@@ -76,7 +116,8 @@ class GoogleMapView(webapp.RequestHandler):
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
       rand_lon = (random.random() - 0.5) * random_radius
-      if hasattr(measurement, 'mval_mean_rtt_ms') and float(measurement.mval_mean_rtt_ms) < 150:
+      if (hasattr(measurement, 'mval_mean_rtt_ms') and
+          float(measurement.mval_mean_rtt_ms) < 150):
         point = (prop_entity.location.lat + rand_lat,
                  prop_entity.location.lon + rand_lon,
                  htmlstr, green_icon.icon_id)
@@ -125,8 +166,8 @@ class GoogleMapView(webapp.RequestHandler):
           '1px #000000 dotted;\">%.3f</td>'
           '</tr>' % (k, float(v))))
     result.append('</table>')
-    if (len(values) == 0):
-      result.append("<br/>This measurement has failed.");
+    if len(values) == 0:
+      result.append('<br/>This measurement has failed.')
     resultstr = ''.join(result)
     logging.info('generated location pin html is %s', resultstr)
     return resultstr

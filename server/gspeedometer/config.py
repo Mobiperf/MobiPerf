@@ -14,3 +14,4 @@ GOOGLEMAP_KEY = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
                  'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
 # Sets default view port of the map to be Google's PKV office building in Seattle
 DEFAULT_MAP_CENTER = (47.6508, -122.3515)
+DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
