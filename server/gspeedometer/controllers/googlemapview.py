@@ -19,18 +19,12 @@ from gspeedometer import config
 from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
 
-_now = datetime.datetime.utcnow()
-_end_date = datetime.date(_now.year, _now.month, _now.day)
-_start_date = _end_date - datetime.timedelta(days=1)
-
 
 class FilterMeasurementForm(forms.Form):
   thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
                               label='Measurement type')
-  start_date = forms.DateField(initial=_start_date,
-                               label='Start date (GMT)')
-  end_date = forms.DateField(initial=_end_date,
-                             label='End date (GMT)')
+  start_date = forms.DateField(label='Start date (GMT)')
+  end_date = forms.DateField(label='End date (GMT)')
 
 
 class GoogleMapView(webapp.RequestHandler):
@@ -38,13 +32,17 @@ class GoogleMapView(webapp.RequestHandler):
 
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
+    thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+    now = datetime.datetime.utcnow()
+    end_date = datetime.date(now.year, now.month, now.day)
+    start_date = end_date - datetime.timedelta(days=1)
+    form_initial = {'start_date': start_date,
+                    'end_date': end_date}
     if not self.request.POST:
-      filter_measurement_form = FilterMeasurementForm()
-      thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
-      start_date = _start_date
-      end_date = _end_date
+      filter_measurement_form = FilterMeasurementForm(initial=form_initial)
     else:
-      filter_measurement_form = FilterMeasurementForm(self.request.POST)
+      filter_measurement_form = FilterMeasurementForm(self.request.POST,
+                                                      initial=form_initial)
       filter_measurement_form.full_clean()
       if filter_measurement_form.is_valid():
         thetype = filter_measurement_form.cleaned_data['thetype']
@@ -111,7 +109,7 @@ class GoogleMapView(webapp.RequestHandler):
                     'min rtt': measurement.mval_min_rtt_ms,
                     'rtt stddev': measurement.mval_stddev_rtt_ms,
                     'packet loss': measurement.mval_packet_loss}
-          if float(measurement.mval_mean_rtt_ms) < config.SLOW_PING_THRESHOLD:
+          if float(measurement.mval_mean_rtt_ms) < config.SLOW_PING_THRESHOLD_MS:
             icon_to_use = green_icon
         elif measurement.type == 'http':
           values = {'url': measurement.mparam_url,
@@ -126,7 +124,7 @@ class GoogleMapView(webapp.RequestHandler):
                     'IP address': measurement.mval_address,
                     'real hostname': measurement.mval_real_hostname,
                     'time (msec)': measurement.mval_time_ms}
-          if float(measurement.mval_time_ms) < config.SLOW_DNS_THRESHOLD:
+          if float(measurement.mval_time_ms) < config.SLOW_DNS_THRESHOLD_MS:
             icon_to_use = green_icon
         elif measurement.type == 'traceroute':
           values = {'target': measurement.mparam_target,

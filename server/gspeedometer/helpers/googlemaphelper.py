@@ -92,7 +92,7 @@ class GoogleMapWrapper(object):
         'templates/googlemaphelper.js', template_args)
 
   def _GetPointsScript(self, themap):
-    if len(themap.points) == 0:
+    if not themap.points:
       return '[]'
 
     script_list = ['[']
