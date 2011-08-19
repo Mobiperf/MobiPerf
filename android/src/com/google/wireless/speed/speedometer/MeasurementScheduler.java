@@ -161,7 +161,7 @@ public class MeasurementScheduler extends Service {
   
   /** Set the interval for checkin in seconds */
   public synchronized void setCheckinInterval(long interval) {
-    this.checkinIntervalSec = interval;
+    this.checkinIntervalSec = Math.max(Config.MIN_CHECKIN_INTERVAL_SEC, interval);
     if (this.checkinFuture != null) {
       this.checkinFuture.cancel(true);
       // the new checkin schedule will start in PAUSE_BETWEEN_CHECKIN_CHANGE_SEC seconds
@@ -233,6 +233,10 @@ public class MeasurementScheduler extends Service {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
+      if (taskQueue.size() >= Config.MAX_TASK_QUEUE_SIZE ||
+          pendingTasks.size() >= Config.MAX_TASK_QUEUE_SIZE) {
+        return false;
+      }
       //Automatically notifies the scheduler waiting on taskQueue.take()
       return this.taskQueue.add(task);
     } catch (NullPointerException e) {
@@ -310,7 +314,7 @@ public class MeasurementScheduler extends Service {
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
-      this.taskQueue.add(task);
+      this.submitTask(task);
     }
   }
   
