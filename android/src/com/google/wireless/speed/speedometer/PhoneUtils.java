@@ -366,7 +366,7 @@ public class PhoneUtils {
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
       wakeLock.release();
-      Log.d(SpeedometerApp.TAG, "PowerLock released");
+      Log.i(SpeedometerApp.TAG, "PowerLock released");
     }
   }
   
@@ -602,7 +602,7 @@ public class PhoneUtils {
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
         BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
     
-    Log.d(SpeedometerApp.TAG, 
+    Log.i(SpeedometerApp.TAG, 
         "Current power level is " + curBatteryLevel + " and isCharging = " + isCharging);
   }
   

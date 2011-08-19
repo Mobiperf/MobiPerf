@@ -34,14 +34,10 @@ public interface Config {
   public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 10L;
   public static final long MAX_CHECKIN_RETRY_INTERVAL_SEC = 60L;
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;
-  public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
+  public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_SEC = 2L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_CHECKIN_ENABLED = true;
-  public static final long MIN_TIME_BETWEEN_MEASUREMENTS_MSEC = 11 * 1000L;
-  public static final long DELAYED_SLEEP_FOR_THREAD_SPAWNING_MSEC = 1000L;
-  public static final long LOG_ALARM_START_DELAY = 10 * 60 * 1000L;
-  public static final long LOG_ALARM_INTERVAL_MSEC = 10 * 60 * 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
   /** The default battery level if we cannot read it from the system */

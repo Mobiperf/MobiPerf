@@ -76,7 +76,7 @@ public class DnsLookupTask extends MeasurementTask {
       this.target = params.get("target");      
       this.server = params.get("server");
     }
-
+    
   }
   
   public DnsLookupTask(MeasurementDesc desc, Context parent) {

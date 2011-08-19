@@ -276,7 +276,7 @@ public class PingTask extends MeasurementTask {
           }
         }
         this.progress = 100 * ++lineCnt / (int) pingTask.count;
-        Log.d(SpeedometerApp.TAG, line);
+        Log.i(SpeedometerApp.TAG, line);
       }     
       measurementResult = constructResult(rrts);
       Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(measurementResult));

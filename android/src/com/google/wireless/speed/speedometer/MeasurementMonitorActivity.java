@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -115,7 +114,6 @@ public class MeasurementMonitorActivity extends Activity {
       items.add(consoleContent.getItem(i));
     }
     bundle.putStringArrayList(KEY_CONSOLE_CONTENT, items);
-    super.onSaveInstanceState(bundle);
   }
   
   @Override
