@@ -159,7 +159,7 @@ class GoogleMapView(webapp.RequestHandler):
 
     return mapcode
 
-  def _GetHtmlForMeasurement(self, meas_type, device_id, values):
+  def _GetHtmlForMeasurement(self, device_id, meas_type, values):
     """Returns the HTML string representing the Ping result."""
     result = ['<html><body><h4>%s result on device %s</h4><br/>' %
               (meas_type, device_id)]
