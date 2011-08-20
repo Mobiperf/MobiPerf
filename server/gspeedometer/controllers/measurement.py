@@ -44,7 +44,7 @@ class Measurement(webapp.RequestHandler):
 
       # Write new device properties, if present
       if 'properties' in measurement_dict:
-        device_properties = model.DeviceProperties()
+        device_properties = model.DeviceProperties(parent=device_info)
         device_properties.device_info = device_info
         properties_dict = measurement_dict['properties']
         # TODO(wenjiezeng): Sanitize input that contains bad fields
@@ -57,7 +57,7 @@ class Measurement(webapp.RequestHandler):
             device_info, create_new_if_none=True)
       device_properties.put()
 
-      measurement = model.Measurement()
+      measurement = model.Measurement(parent=device_info)
       util.ConvertFromDict(measurement, measurement_dict)
       measurement.device_properties = device_properties
       measurement.put()
