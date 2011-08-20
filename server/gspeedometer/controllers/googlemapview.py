@@ -11,16 +11,23 @@ import logging
 import random
 
 from django import forms
+from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
-from gspeedometer.controllers import measurement
+from gspeedometer import model
 from gspeedometer.helpers import googlemaphelper
+from gspeedometer.controllers import measurement
 
 
 class FilterMeasurementForm(forms.Form):
+  def __init__(self, *args, **kwargs):
+    devices = kwargs.pop('device', [])
+    super(FilterMeasurementForm, self).__init__(*args, **kwargs)
+    self.fields['device'] = forms.ChoiceField(devices, label='Device ID')
+
   thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
                               label='Measurement type')
   start_date = forms.DateField(label='Start date (GMT)')
@@ -33,34 +40,41 @@ class GoogleMapView(webapp.RequestHandler):
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
     thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+
     now = datetime.datetime.utcnow()
     end_date = datetime.date(now.year, now.month, now.day)
     start_date = end_date - datetime.timedelta(days=1)
+
     form_initial = {'start_date': start_date,
                     'end_date': end_date}
+    deviceinfo_list = self._GetDevicesForUser()
+    device_key = ''
+    if deviceinfo_list:
+      device_key = str(deviceinfo_list[0].key())
+    logging.info('device_key is %s' % device_key)
+
+    device_choices = [(str(device.key()), device.id)
+                      for device in deviceinfo_list]
+    logging.info(device_choices)
+
     if not self.request.POST:
-      filter_measurement_form = FilterMeasurementForm(initial=form_initial)
+      filter_measurement_form = FilterMeasurementForm(initial=form_initial,
+                                                      device=device_choices)
     else:
       filter_measurement_form = FilterMeasurementForm(self.request.POST,
-                                                      initial=form_initial)
+                                                      initial=form_initial,
+                                                      device=device_choices)
       filter_measurement_form.full_clean()
       if filter_measurement_form.is_valid():
         thetype = filter_measurement_form.cleaned_data['thetype']
         start_date = filter_measurement_form.cleaned_data['start_date']
         end_date = filter_measurement_form.cleaned_data['end_date']
+        device_key = filter_measurement_form.cleaned_data['device']
 
-    # start_date and end_date are either initialized by the default value
-    # or the POST value
-    query = db.GqlQuery('SELECT * FROM Measurement '
-                        'WHERE type=:1 AND '
-                        'timestamp>=:2 AND '
-                        'timestamp<=:3 '
-                        'ORDER BY timestamp DESC',
-                        thetype,
-                        start_date,
-                        end_date)
-
-    measurements = query.fetch(limit=config.GOOGLEMAP_MARKER_LIMIT)
+    measurements = self._GetMeasurementsForUser(thetype,
+                                                start_date,
+                                                end_date,
+                                                device_key)
 
     logging.debug('start_date=%s, end_date=%s' % (start_date, end_date))
 
@@ -70,6 +84,28 @@ class GoogleMapView(webapp.RequestHandler):
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
+
+  def _GetDevicesForUser(self):
+    user = users.get_current_user()
+    devices = model.DeviceInfo.all()
+    devices.filter('user =', user)
+    return devices.fetch(limit=config.DEVICE_LIMIT)
+
+  def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
+    # start_date and end_date are either initialized by the default value
+    # or the POST value
+    query = db.GqlQuery('SELECT * FROM Measurement '
+                        'WHERE type=:1 AND '
+                        'timestamp>=:2 AND '
+                        'timestamp<=:3 AND '
+                        'ANCESTOR IS :4 '
+                        'ORDER BY timestamp DESC',
+                        thetype,
+                        start_date,
+                        end_date,
+                        device_key)
+
+    return query.fetch(limit=config.GOOGLEMAP_MARKER_LIMIT)
 
   def _GetJavascriptCodeForMap(self, measurements):
     """Constructs the java script code to show ping results on google map."""
@@ -109,7 +145,8 @@ class GoogleMapView(webapp.RequestHandler):
                     'min rtt': measurement.mval_min_rtt_ms,
                     'rtt stddev': measurement.mval_stddev_rtt_ms,
                     'packet loss': measurement.mval_packet_loss}
-          if float(measurement.mval_mean_rtt_ms) < config.SLOW_PING_THRESHOLD_MS:
+          if (float(measurement.mval_mean_rtt_ms) <
+              config.SLOW_PING_THRESHOLD_MS):
             icon_to_use = green_icon
         elif measurement.type == 'http':
           values = {'url': measurement.mparam_url,
@@ -129,7 +166,7 @@ class GoogleMapView(webapp.RequestHandler):
         elif measurement.type == 'traceroute':
           values = {'target': measurement.mparam_target,
                     '# of hops': measurement.mval_num_hops}
-          if (float(measurement.mval_num_hops) < 
+          if (float(measurement.mval_num_hops) <
               config.LONG_TRACEROUTE_HOP_COUNT_THRESHOLD):
             icon_to_use = green_icon
 
@@ -177,7 +214,7 @@ class GoogleMapView(webapp.RequestHandler):
           '1px #000000 dotted;\">%s</td>'
           '</tr>' % (k, v)))
     result.append('</table>')
-    if len(values) == 0:
+    if not values:
       result.append('<br/>This measurement has failed.')
     resultstr = ''.join(result)
     logging.info('generated location pin html is %s', resultstr)
