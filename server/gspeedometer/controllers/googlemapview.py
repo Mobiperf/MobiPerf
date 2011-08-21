@@ -19,6 +19,7 @@ from google.appengine.ext.webapp import template
 from gspeedometer import config
 from gspeedometer import model
 from gspeedometer.helpers import googlemaphelper
+from gspeedometer.helpers import util
 from gspeedometer.controllers import measurement
 
 
@@ -80,10 +81,40 @@ class GoogleMapView(webapp.RequestHandler):
 
     template_args = {
         'filter_form': filter_measurement_form,
-        'map_code': self._GetJavascriptCodeForMap(measurements)
+        'map_code': self._GetJavascriptCodeForMap(measurements),
+        'batterychart_rows': self._GetBatteryInfoForLastWeek(device_key,
+                                                             deviceinfo_list)
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
+
+  def _GetBatteryInfoForLastWeek(self, device_key, deviceinfo_list):
+    batteryinfo_list = []
+    for device in deviceinfo_list:
+      if str(device.key()) == device_key:
+        logging.info("generating battery info for device %s" % device.id);
+        property_query = device.deviceproperties_set
+        now = datetime.datetime.utcnow()
+        end_time = datetime.datetime(now.year, now.month, now.day)
+        start_time = end_time - datetime.timedelta(days=7)
+        min_time_gap = datetime.timedelta(hours=1)
+        property_query.filter('timestamp >=', start_time)
+        property_query.filter('timestamp <=', end_time)
+        property_query.order('-timestamp')
+
+        last_timestamp = end_time
+        
+        # We only need hourly battery level information
+        for prop in property_query:
+          if last_timestamp - prop.timestamp > min_time_gap:
+            batteryinfo_list.append(
+                '[new Date(%d), %d]' % (
+                    util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
+                    prop.battery_level))
+            last_timestamp = prop.timestamp
+    logging.info('battery info is : %s' % str(batteryinfo_list))
+
+    return batteryinfo_list
 
   def _GetDevicesForUser(self):
     user = users.get_current_user()
