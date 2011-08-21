@@ -18,7 +18,7 @@ DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
 # The number of markers to show on google map
 GOOGLEMAP_MARKER_LIMIT = 40
 # The number of devices to retrieve per user
-DEVICE_LIMIT = 20
+NUM_DEVICES_PER_USER = 20
 # The minimum ping delay in ms that we consider 'slow'
 SLOW_PING_THRESHOLD_MS = 150
 # The minimum dns lookup delay in ms that we consider 'slow'

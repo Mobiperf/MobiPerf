@@ -120,7 +120,7 @@ class GoogleMapView(webapp.RequestHandler):
     user = users.get_current_user()
     devices = model.DeviceInfo.all()
     devices.filter('user =', user)
-    return devices.fetch(limit=config.DEVICE_LIMIT)
+    return devices.fetch(limit=config.NUM_DEVICES_PER_USER)
 
   def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
     # start_date and end_date are either initialized by the default value
