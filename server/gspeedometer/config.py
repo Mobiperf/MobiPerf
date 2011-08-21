@@ -14,3 +14,13 @@ GOOGLEMAP_KEY = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
                  'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
 # Sets default view port of the map to be Google's PKV office building in Seattle
 DEFAULT_MAP_CENTER = (47.6508, -122.3515)
+DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
+# The number of markers to show on google map
+GOOGLEMAP_MARKER_LIMIT = 40
+# The minimum ping delay in ms that we consider 'slow'
+SLOW_PING_THRESHOLD_MS = 150
+# The minimum dns lookup delay in ms that we consider 'slow'
+SLOW_DNS_THRESHOLD_MS = 150
+# The minimum number of hops reported by traceroute that we
+# consider a long route
+LONG_TRACEROUTE_HOP_COUNT_THRESHOLD = 14

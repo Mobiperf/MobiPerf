@@ -110,7 +110,7 @@ def GetLatestDeviceProperties(device_info, create_new_if_none=False):
   device_properties_list = query.fetch(1)
   if not device_properties_list:
     if create_new_if_none:
-      device_properties = model.DeviceProperties()
+      device_properties = model.DeviceProperties(parent=device_info)
       device_properties.device_info = device_info
       return device_properties
     else:

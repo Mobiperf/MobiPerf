@@ -38,7 +38,7 @@ class Checkin(webapp.RequestHandler):
     device_info.put()
 
     # Extract DeviceProperties
-    device_properties = model.DeviceProperties()
+    device_properties = model.DeviceProperties(parent=device_info)
     device_properties.device_info = device_info
     util.ConvertFromDict(device_properties, checkin['properties'])
     device_properties.put()

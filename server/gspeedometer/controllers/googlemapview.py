@@ -6,16 +6,25 @@
 
 __author__ = 'wenjiezeng@google.com (Wenjie Zeng)'
 
+import datetime
 import logging
-
 import random
 
+from django import forms
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
+from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
+
+
+class FilterMeasurementForm(forms.Form):
+  thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
+                              label='Measurement type')
+  start_date = forms.DateField(label='Start date (GMT)')
+  end_date = forms.DateField(label='End date (GMT)')
 
 
 class GoogleMapView(webapp.RequestHandler):
@@ -23,18 +32,46 @@ class GoogleMapView(webapp.RequestHandler):
 
   def MapView(self, **unused_args):
     """Main handler for the google map view."""
-    measurements = db.GqlQuery('SELECT * FROM Measurement '
-                               'WHERE type=:1 '
-                               'ORDER BY timestamp DESC '
-                               'LIMIT 30',
-                               'ping')
+    thetype = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
+    now = datetime.datetime.utcnow()
+    end_date = datetime.date(now.year, now.month, now.day)
+    start_date = end_date - datetime.timedelta(days=1)
+    form_initial = {'start_date': start_date,
+                    'end_date': end_date}
+    if not self.request.POST:
+      filter_measurement_form = FilterMeasurementForm(initial=form_initial)
+    else:
+      filter_measurement_form = FilterMeasurementForm(self.request.POST,
+                                                      initial=form_initial)
+      filter_measurement_form.full_clean()
+      if filter_measurement_form.is_valid():
+        thetype = filter_measurement_form.cleaned_data['thetype']
+        start_date = filter_measurement_form.cleaned_data['start_date']
+        end_date = filter_measurement_form.cleaned_data['end_date']
+
+    # start_date and end_date are either initialized by the default value
+    # or the POST value
+    query = db.GqlQuery('SELECT * FROM Measurement '
+                        'WHERE type=:1 AND '
+                        'timestamp>=:2 AND '
+                        'timestamp<=:3 '
+                        'ORDER BY timestamp DESC',
+                        thetype,
+                        start_date,
+                        end_date)
+
+    measurements = query.fetch(limit=config.GOOGLEMAP_MARKER_LIMIT)
+
+    logging.debug('start_date=%s, end_date=%s' % (start_date, end_date))
+
     template_args = {
-        'map_code': self._GetJavascriptCodeForPingMap(measurements)
+        'filter_form': filter_measurement_form,
+        'map_code': self._GetJavascriptCodeForMap(measurements)
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
 
-  def _GetJavascriptCodeForPingMap(self, measurements):
+  def _GetJavascriptCodeForMap(self, measurements):
     """Constructs the java script code to show ping results on google map."""
     tmap = googlemaphelper.Map()
     red_icon = googlemaphelper.Icon(icon_id='red_icon',
@@ -61,29 +98,51 @@ class GoogleMapView(webapp.RequestHandler):
       measurement_cnt += 1
       prop_entity = measurement.device_properties
       values = {}
+      icon_to_use = red_icon
       # these attributes can be non-existant if the experiment fails
-      if hasattr(measurement, 'mval_mean_rtts_ms'):
-        values = {'mean rtt': measurement.mval_mean_rtt_ms,
-                  'max rtt': measurement.mval_max_rtt_ms,
-                  'min rtt': measurement.mval_min_rtt_ms,
-                  'rtt stddev': measurement.mval_stddev_rtt_ms,
-                  'packet loss': measurement.mval_packet_loss}
+      if measurement.success == True:
+        # type strings from controller/measurement.py
+        if measurement.type == 'ping':
+          values = {'target': measurement.mparam_target,
+                    'mean rtt': measurement.mval_mean_rtt_ms,
+                    'max rtt': measurement.mval_max_rtt_ms,
+                    'min rtt': measurement.mval_min_rtt_ms,
+                    'rtt stddev': measurement.mval_stddev_rtt_ms,
+                    'packet loss': measurement.mval_packet_loss}
+          if float(measurement.mval_mean_rtt_ms) < config.SLOW_PING_THRESHOLD_MS:
+            icon_to_use = green_icon
+        elif measurement.type == 'http':
+          values = {'url': measurement.mparam_url,
+                    'code': measurement.mval_code,
+                    'time (msec)': measurement.mval_time_ms,
+                    'header length (bytes)': measurement.mval_headers_len,
+                    'body length (bytes)': measurement.mval_body_len}
+          if measurement.mval_code == '200':
+            icon_to_use = green_icon
+        elif measurement.type == 'dns_lookup':
+          values = {'target': measurement.mparam_target,
+                    'IP address': measurement.mval_address,
+                    'real hostname': measurement.mval_real_hostname,
+                    'time (msec)': measurement.mval_time_ms}
+          if float(measurement.mval_time_ms) < config.SLOW_DNS_THRESHOLD_MS:
+            icon_to_use = green_icon
+        elif measurement.type == 'traceroute':
+          values = {'target': measurement.mparam_target,
+                    '# of hops': measurement.mval_num_hops}
+          if (float(measurement.mval_num_hops) < 
+              config.LONG_TRACEROUTE_HOP_COUNT_THRESHOLD):
+            icon_to_use = green_icon
 
-      htmlstr = self.GetHtmlForPing(measurement.device_id,
-                                    measurement.mparam_target,
-                                    values)
+      htmlstr = self._GetHtmlForMeasurement(measurement.device_id,
+                                            measurement.type,
+                                            values)
       random_radius = 0.001
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
       rand_lon = (random.random() - 0.5) * random_radius
-      if hasattr(measurement, 'mval_mean_rtts_ms') and float(measurement.mval_mean_rtt_ms) < 150:
-        point = (prop_entity.location.lat + rand_lat,
-                 prop_entity.location.lon + rand_lon,
-                 htmlstr, green_icon.icon_id)
-      else:
-        point = (prop_entity.location.lat + rand_lat,
-                 prop_entity.location.lon + rand_lon,
-                 htmlstr, red_icon.icon_id)
+      point = (prop_entity.location.lat + rand_lat,
+               prop_entity.location.lon + rand_lon,
+               htmlstr, icon_to_use.icon_id)
       lat_sum += prop_entity.location.lat
       lon_sum += prop_entity.location.lon
       tmap.AddPoint(point)
@@ -100,19 +159,12 @@ class GoogleMapView(webapp.RequestHandler):
 
     return mapcode
 
-  def GetHtmlForPing(self, device_id, target, values):
+  def _GetHtmlForMeasurement(self, device_id, meas_type, values):
     """Returns the HTML string representing the Ping result."""
-    result = ['<html><body><h4>Ping result on device %s</h4><br/>' % device_id]
+    result = ['<html><body><h4>%s result on device %s</h4><br/>' %
+              (meas_type, device_id)]
     result.append("""<style media="screen" type="text/css"></style>""")
     result.append("""<table style="border:1px #000000 solid;">""")
-    result.append(('<tr>'
-                   '<td align=\"left\" '
-                   'style=\"padding-right:10px;border-bottom:'
-                   '1px #000000 dotted;\">target</td>'
-                   '<td align=\"left\" '
-                   'style=\"padding-right:10px;border-bottom:'
-                   '1px #000000 dotted;\">%s</td>'
-                   '</tr>' % target))
 
     for k, v in values.iteritems():
       result.append((
@@ -122,11 +174,11 @@ class GoogleMapView(webapp.RequestHandler):
           '1px #000000 dotted;\">%s</td>'
           '<td align=\"left\" '
           'style=\"padding-right:10px;border-bottom:'
-          '1px #000000 dotted;\">%.3f</td>'
-          '</tr>' % (k, float(v))))
+          '1px #000000 dotted;\">%s</td>'
+          '</tr>' % (k, v)))
     result.append('</table>')
-    if (len(values) == 0):
-      result.append("<br/>This measurement has failed.");
+    if len(values) == 0:
+      result.append('<br/>This measurement has failed.')
     resultstr = ''.join(result)
     logging.info('generated location pin html is %s', resultstr)
     return resultstr

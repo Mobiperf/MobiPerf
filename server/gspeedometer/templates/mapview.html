@@ -1,5 +1,20 @@
 {# Actual googlemap view in the div section. #}
 
-<div id="map" style="width: 760px; height: 460px">
+<form method="post" action="/maps">
+  <table>
+    <tr>
+      <td align=center width=40%>
+        <table> {{ filter_form.as_table }} </table>
+      </td>
+    </tr>
+    <tr>
+      <td align=center width=40%>
+        <p><input type="submit" /></p>
+      </td>
+    </tr>
+  </table>
+</form>
+<br/>
+<div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">
 {{ map_code|safe }}
 </div>
