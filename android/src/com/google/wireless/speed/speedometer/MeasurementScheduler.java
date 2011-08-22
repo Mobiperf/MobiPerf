@@ -147,11 +147,11 @@ public class MeasurementScheduler extends Service {
       return;
     }
     
+    PhoneUtils.getPhoneUtils().acquireWakeLock();
     new Thread(checkinTask).start();
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
      * the wake lock for the new thread here and release the lock when the thread finishes
      */
-    PhoneUtils.getPhoneUtils().acquireWakeLock();
   }
   
   private void handleMeasurement() {    
@@ -202,7 +202,6 @@ public class MeasurementScheduler extends Service {
       /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
        * the wake lock for measurementExecutor and release the lock when it finishes
        */
-      PhoneUtils.getPhoneUtils().acquireWakeLock();
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
       Log.e(SpeedometerApp.TAG, "Exception when clonig objects");
