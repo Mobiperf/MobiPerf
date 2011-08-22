@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version">1.0</string>
+    <string name="version">1.1</string>
     <string name="app_name">Speedometer</string>
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
