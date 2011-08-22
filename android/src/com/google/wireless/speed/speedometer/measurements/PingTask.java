@@ -98,10 +98,12 @@ public class PingTask extends MeasurementTask {
       
       try {        
         String val = null;
-        if ((val = params.get("packet_size_byte")) != null && val.length() > 0) {
+        if ((val = params.get("packet_size_byte")) != null && val.length() > 0 &&
+            Integer.parseInt(val) > 0) {
           this.packetSizeByte = Integer.parseInt(val);  
         }
-        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0) {
+        if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0 &&
+            Integer.parseInt(val) > 0) {
           this.pingTimeoutSec = Integer.parseInt(val);  
         }
       } catch (NumberFormatException e) {
@@ -203,7 +205,7 @@ public class PingTask extends MeasurementTask {
       result.addResult("filtered_mean_rtt_ms", filteredAvg);
     }
     result.addResult("packet_loss", 1 - 
-        ((double) rrtVals.size() / (double) this.measurementDesc.count));
+        ((double) rrtVals.size() / (double) Config.DEFAULT_PING_COUNT_PER_MEASUREMENT));
     
     return result;
   }
@@ -275,7 +277,7 @@ public class PingTask extends MeasurementTask {
             }
           }
         }
-        this.progress = 100 * ++lineCnt / (int) pingTask.count;
+        this.progress = 100 * ++lineCnt / Config.DEFAULT_PING_COUNT_PER_MEASUREMENT;
         Log.i(SpeedometerApp.TAG, line);
       }     
       measurementResult = constructResult(rrts);
@@ -312,7 +314,8 @@ public class PingTask extends MeasurementTask {
     String errorMsg = "";
 
     try {       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
+      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+            Config.DEFAULT_PING_COUNT_PER_MEASUREMENT);
       int successfulPingCnt = 0;
       long totalPingDelay = 0;
       for (int i = 0; i < Config.DEFAULT_PING_COUNT_PER_MEASUREMENT; i++) {
@@ -324,7 +327,7 @@ public class PingTask extends MeasurementTask {
           totalPingDelay += rrtVal;
           rrts.add((double) rrtVal);
         }
-        this.progress = 100 * i / (int) pingTask.count;
+        this.progress = 100 * i / Config.DEFAULT_PING_COUNT_PER_MEASUREMENT;
       }
       Log.i(SpeedometerApp.TAG, "java ping succeeds");
       return constructResult(rrts);        
@@ -361,7 +364,8 @@ public class PingTask extends MeasurementTask {
       headMethod.setParams(new BasicHttpParams().setParameter(
           CoreConnectionPNames.CONNECTION_TIMEOUT, 1000));
       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec / pingTask.count);
+      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+          Config.DEFAULT_PING_COUNT_PER_MEASUREMENT);
       HttpConnectionParams.setConnectionTimeout(headMethod.getParams(), timeOut);
                       
       for (int i = 0; i < Config.DEFAULT_PING_COUNT_PER_MEASUREMENT; i++) {
@@ -369,7 +373,7 @@ public class PingTask extends MeasurementTask {
         HttpResponse response = client.execute(headMethod);  
         pingEndTime = System.currentTimeMillis();
         rrts.add((double) (pingEndTime - pingStartTime));
-        this.progress = 100 * i / (int) pingTask.count;
+        this.progress = 100 * i / Config.DEFAULT_PING_COUNT_PER_MEASUREMENT;
       }
       Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
       return constructResult(rrts);
