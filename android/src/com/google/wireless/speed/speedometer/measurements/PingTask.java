@@ -218,7 +218,7 @@ public class PingTask extends MeasurementTask {
   
   /* Compute the average of the filtered rtts.
    * The first several ping results are usually extremely large as the device needs to activate
-   * the wireless interface and resolve domain names. Such distorted measurements are filter out
+   * the wireless interface and resolve domain names. Such distorted measurements are filtered out
    * 
    */
   private double filterPingResults(final ArrayList<Double> rrts, double avg) {
