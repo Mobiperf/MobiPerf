@@ -40,7 +40,7 @@ import java.util.concurrent.Future;
  * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Checkin {
-  private static int POST_TIMEOUT_MILLISEC = 10 * 1000;
+  private static int POST_TIMEOUT_MILLISEC = 20 * 1000;
   private Context context;
   private String serverUrl;
   private Date lastCheckin;
