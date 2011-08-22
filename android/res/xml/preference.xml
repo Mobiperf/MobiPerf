@@ -12,7 +12,7 @@
     android:summary="The interval (hours) speedometer fetches and pushes measurements"
     android:key="@string/checkinIntervalPrefKey" 
     android:inputType="number" 
-    android:title="Checkin Interval"/>    
+    android:title="Checkin Interval (hour)"/>    
   <EditTextPreference
     android:defaultValue="60"
     android:summary="The minimum battery percentage to pause all measurements"
