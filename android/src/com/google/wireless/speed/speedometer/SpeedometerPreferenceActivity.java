@@ -29,7 +29,9 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
     
+    /* This should never occur. */
     if (checkinEnabled == null || intervalPref == null || batteryPref == null) {
+      Log.w(SpeedometerApp.TAG, "Cannot find some of the preferences");
       Toast.makeText(SpeedometerPreferenceActivity.this, 
         getString(R.string.menuInitializationExceptionToast), Toast.LENGTH_LONG).show();
       return;
@@ -43,11 +45,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
           try {
             Boolean val = (Boolean) newValue;
             Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
-            if (!val.booleanValue()) {
-              intervalPref.setEnabled(false);
-            } else {
-              intervalPref.setEnabled(true);
-            }
+            intervalPref.setEnabled(val);
           } catch (ClassCastException e) {
             Log.e(SpeedometerApp.TAG, "Cannot cast checkin box preference value to Boolean");
           }
