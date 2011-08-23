@@ -172,8 +172,6 @@ public class SpeedometerApp extends TabActivity {
 
     tabHost.setCurrentTab(0);
     
-    RuntimeUtil.setActivity(this);
-    
     // We only need one instance of scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
     this.startService(intent);

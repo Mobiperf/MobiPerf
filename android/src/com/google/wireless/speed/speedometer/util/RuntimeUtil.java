@@ -8,7 +8,6 @@ import com.google.wireless.speed.speedometer.PhoneUtils;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
-import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -33,13 +32,13 @@ import java.util.Enumeration;
  */
 public class RuntimeUtil {
   
-  private static Activity activity;
+  private static Context context;
   private static DeviceInfo deviceInfo;   
   
   /* TODO(Wenjie): People can forget the acitivty initialization here. Use a singleton to 
    * avoid that. */
-  public static void setActivity(Activity act) {
-    activity = act;
+  public static void setContext(Context con) {
+    context = con;
   }
   
   private static String getVersionStr() {
@@ -51,7 +50,7 @@ public class RuntimeUtil {
     if (deviceInfo == null) {
       deviceInfo = new DeviceInfo();
       TelephonyManager tManager = 
-          (TelephonyManager) activity.getSystemService(Context.TELEPHONY_SERVICE);
+          (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
       deviceInfo.deviceId = tManager.getDeviceId();
       deviceInfo.manufacturer = Build.MANUFACTURER;
       deviceInfo.model = Build.MODEL;
@@ -68,7 +67,7 @@ public class RuntimeUtil {
   }
   
   private static ConnectivityManager getConnManager() {      
-    return (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+    return (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
   }
   
   private static String getCellularIp() {
@@ -115,7 +114,7 @@ public class RuntimeUtil {
   }
   
   private static String getWifiIp() {
-    WifiManager wifiManager = (WifiManager) activity.getSystemService(Context.WIFI_SERVICE);
+    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     WifiInfo wifiInfo = wifiManager.getConnectionInfo();
     if (wifiInfo != null) {
       int ipAddress = wifiInfo.getIpAddress();
@@ -143,7 +142,7 @@ public class RuntimeUtil {
   /** Returns the DeviceProperty needed to report the measurement result */
   public static DeviceProperty getDeviceProperty() {
     TelephonyManager manager =
-        (TelephonyManager) activity.getSystemService(Context.TELEPHONY_SERVICE);
+        (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
     String carrierName = manager.getNetworkOperatorName();
     Location location = getLocation();
     ConnectivityManager connMan = getConnManager();
@@ -153,8 +152,8 @@ public class RuntimeUtil {
     if (activeNetwork != null && activeIp.compareTo("") == 0) {
       networkType = activeNetwork.getTypeName();
     }
-
-    return new DeviceProperty(getDeviceInfo().deviceId, activity.getString(R.string.version),
+    
+    return new DeviceProperty(getDeviceInfo().deviceId, context.getString(R.string.version),
         Calendar.getInstance().getTime(), getVersionStr(), activeIp, location.getLongitude(),
         location.getLatitude(), location.getProvider(), networkType, carrierName, 
         PhoneUtils.getPhoneUtils().getCurrentBatteryLevel(),

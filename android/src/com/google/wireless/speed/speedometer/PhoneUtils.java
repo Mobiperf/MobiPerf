@@ -309,7 +309,7 @@ public class PhoneUtils {
        * so we don't need a super accurate location, cell/wifi is good enough.
        */
       criteriaCoarse.setAccuracy(Criteria.ACCURACY_COARSE);
-      criteriaCoarse.setPowerRequirement(Criteria.POWER_LOW);
+      criteriaCoarse.setPowerRequirement(Criteria.POWER_HIGH);
       String providerName =
           manager.getBestProvider(criteriaCoarse, /*enabledOnly=*/true);
       List<String> providers = manager.getAllProviders();
@@ -345,7 +345,7 @@ public class PhoneUtils {
     initLocation();
     Location location = locationManager.getLastKnownLocation(locationProviderName);
     if (location == null) {
-      Log.e(DEBUG_TAG,
+      Log.e(SpeedometerApp.TAG,
             "Cannot obtain location from provider " + locationProviderName);
     }
     return location;

@@ -81,6 +81,12 @@ public class TestMeasurementTaskBase extends
       }
       
     }
+    
+    @Override
+    public MeasurementTask clone() {
+      return new DummyTask(this.measurementDesc, parent);
+    }
+    
     protected DummyTask(MeasurementDesc measurementDesc, Context parent) {
       super(measurementDesc, parent);
     }
