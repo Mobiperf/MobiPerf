@@ -37,17 +37,10 @@ public class MeasurementMonitorActivity extends Activity {
         // All onXyz() callbacks are single threaded
         consoleContent.insert(msg + "\n", 0);
         if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
-          refreshConsole();
+          consoleContent.remove(consoleContent.getItem(consoleContent.getCount() - 1));
         }
       }
     };
-  }
-  
-  /**
-   * Keep only the last ITEMS_TO_KEEP_UPON_REFRESH items in the console and remove the rest. 
-   */
-  private void refreshConsole() {
-    consoleContent.remove(consoleContent.getItem(consoleContent.getCount() - 1));
   }
    
   /* Upgrades the progress bar in the UI*/
