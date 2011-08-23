@@ -48,6 +48,7 @@ public class MeasurementScheduler extends Service {
   private BroadcastReceiver broadcastReceiver;
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
+  private boolean isSchedulerStarted = false;
   private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
@@ -128,13 +129,9 @@ public class MeasurementScheduler extends Service {
         } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
               intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
           Log.d(SpeedometerApp.TAG, "Checkin intent received");
-          sendStringMsg("wakeup for checkin at " + 
-              Calendar.getInstance().getTime().toGMTString());
           handleCheckin();
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
           Log.d(SpeedometerApp.TAG, "MeasurementIntent intent received");
-          sendStringMsg("wakeup for measurement at " + 
-              Calendar.getInstance().getTime().toGMTString());
           handleMeasurement();
         }
       }
@@ -142,16 +139,12 @@ public class MeasurementScheduler extends Service {
     this.registerReceiver(broadcastReceiver, filter);
   }
   
-  private void handleCheckin() {     
-    if (isPauseRequested()) {
-      return;
-    }
-    
-    PhoneUtils.getPhoneUtils().acquireWakeLock();
-    new Thread(checkinTask).start();
+  private void handleCheckin() {    
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
      * the wake lock for the new thread here and release the lock when the thread finishes
      */
+    PhoneUtils.getPhoneUtils().acquireWakeLock();
+    new Thread(checkinTask).start();
   }
   
   private void handleMeasurement() {    
@@ -168,9 +161,10 @@ public class MeasurementScheduler extends Service {
         taskQueue.poll();
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+          //TODO(wenjiezeng): Need more handling fore user measurements: show progress and results
           sendStringMsg("***** USER_TASK *****");
         }
-        sendStringMsg("Running " + task.toString());
+        sendStringMsg("Scheduling " + task.toString());
         Future<MeasurementResult> future = measurementExecutor.submit(
             new PowerAwareTask(task, powerManager));
         synchronized (pendingTasks) {
@@ -191,7 +185,7 @@ public class MeasurementScheduler extends Service {
       task = taskQueue.peek();
       if (task != null) {
         long timeFromExecution = Math.max(task.timeFromExecution(),
-            Config.MIN_TIME_BETWEEN_MEASUREMENTS_MSEC);
+            Config.MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC);
         measurementIntentSender = PendingIntent.getBroadcast(this, 0, 
             new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION), 
             PendingIntent.FLAG_CANCEL_CURRENT);
@@ -199,9 +193,6 @@ public class MeasurementScheduler extends Service {
             System.currentTimeMillis() + timeFromExecution, 
             measurementIntentSender);
       }
-      /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
-       * the wake lock for measurementExecutor and release the lock when it finishes
-       */
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
       Log.e(SpeedometerApp.TAG, "Exception when clonig objects");
@@ -215,8 +206,13 @@ public class MeasurementScheduler extends Service {
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
     Log.i(SpeedometerApp.TAG, "starting scheduler");
-    updateFromPreference();
-    this.resume();
+    if (!isSchedulerStarted) {
+      updateFromPreference();
+      this.resume();
+      /* There is no onStop() for services. The service is only stopped when the user exists the
+       * application. So don't worry about setting isSchedulerStarted to false.*/
+      isSchedulerStarted = true;
+    }
     return START_STICKY;
   }
   
@@ -319,15 +315,21 @@ public class MeasurementScheduler extends Service {
   /** Submit a MeasurementTask to the scheduler */
   public boolean submitTask(MeasurementTask task) {
     try {
+      // Immediately handles measurements created by user
+      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+        boolean result = this.taskQueue.add(task);
+        if (result) {
+          handleMeasurement();
+        }
+        return result;
+      }
+      
       if (taskQueue.size() >= Config.MAX_TASK_QUEUE_SIZE ||
           pendingTasks.size() >= Config.MAX_TASK_QUEUE_SIZE) {
         return false;
       }
-      boolean result = this.taskQueue.add(task);
-      if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-        handleMeasurement();
-      }
-      return result;
+      //Automatically notifies the scheduler waiting on taskQueue.take()
+      return this.taskQueue.add(task);
     } catch (NullPointerException e) {
       Log.e(SpeedometerApp.TAG, "The task to be added is null");
       return false;
@@ -481,7 +483,7 @@ public class MeasurementScheduler extends Service {
     @Override
     public void run() {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
-      sendStringMsg("checkin at " + Calendar.getInstance().getTime().toGMTString());
+      sendStringMsg("checkin at " + Calendar.getInstance().getTime());
       try {
         if (getIsCheckinEnabled()) {
           uploadResults();

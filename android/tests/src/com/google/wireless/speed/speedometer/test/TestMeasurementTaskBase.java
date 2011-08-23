@@ -74,11 +74,6 @@ public class TestMeasurementTaskBase extends
       public String getType() {
         return "DummyEverlastingMeasurement";
       }
-      
-      @Override 
-      public MeasurementTask clone() {
-        return null;
-      }
 
       @Override
       protected void initalizeParams(Map<String, String> params) {
