@@ -19,6 +19,7 @@
 __author__ = 'mdw@google.com (Matt Welsh)'
 
 from google.appengine.api import users
+from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
@@ -54,21 +55,12 @@ class Device(webapp.RequestHandler):
       cur_schedule = [device_task.task for device_task
                       in device.devicetask_set]
 
-      measurements = db.GqlQuery('SELECT * FROM Measurement '
-                                 'WHERE ANCESTOR IS :1 '
-                                 'ORDER BY timestamp DESC',
-                                 device.key())
-
-      # Get measurements - a little tricky as we have to scan all device
-      # properties and then all associated measurements
-      #measurements = []
-      #for prop in device.deviceproperties_set:
-      #  for meas in prop.measurement_set:
-      #    measurements.append(meas)
-      #    if len(measurements) == config.NUM_MEASUREMENTS_IN_LIST:
-      #      break
-      #  if len(measurements) == config.NUM_MEASUREMENTS_IN_LIST:
-      #    break
+      # Get measurements
+      query = db.GqlQuery('SELECT * FROM Measurement '
+                          'WHERE ANCESTOR IS :1 '
+                          'ORDER BY timestamp DESC',
+                          device.key())
+      measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
 
       template_args = {
           'error': errormsg,

@@ -17,7 +17,7 @@
   {% for m in measurements %}
     <tr>
       <td><a
-      href="/measurement/view?id={{m.key.id}}" target="_blank">{{m.key.id}}</a></td>
+          href="/measurement/view?deviceid={{m.device_properties.device_info.id}}&measid={{m.key.id}}" target="_blank">{{m.key.id}}</a></td>
       <td><a href="/device/view?device_id={{m.device_properties.device_info.id}}"
           target="_blank">{{m.device_properties.device_info.id}}</a></td>
       <td>{% if m.GetTaskID %}{{m.GetTaskID}}{% else %}Unknown{% endif %}</td>
