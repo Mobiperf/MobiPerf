@@ -48,8 +48,7 @@ public interface Config {
   public static final long TASK_EXPIRATION_MSEC = 24 * 3600 * 1000;
   
   /** Constants used in MeasurementMonitorActivity.java */
-  public static final int MAX_LIST_ITEMS = 512;
-  public static final int ITEMS_TO_KEEP_UPON_REFRESH = 64;
+  public static final int MAX_LIST_ITEMS = 128;
   
   public static final long MIN_CHECKIN_INTERVAL_SEC = 3600;
 }
