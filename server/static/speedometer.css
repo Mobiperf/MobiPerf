@@ -140,6 +140,7 @@ h2  {
 .task-param-table th {
   padding: 3px 3px;
   border: 0px;
+  width: 80%;
 }
 
 .measurement-list-url {
