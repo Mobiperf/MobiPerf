@@ -80,9 +80,10 @@ class Device(webapp.RequestHandler):
           'user': users.get_current_user().email(),
           'logout_link': users.create_logout_url('/')
       }
-    finally:
       self.response.out.write(template.render(
           'templates/devicedetail.html', template_args))
+    except:
+      raise
 
   def Delete(self, **unused_args):
     """Handler to delete a device."""
