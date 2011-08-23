@@ -21,8 +21,7 @@ class Home(webapp.RequestHandler):
     errormsg = None
 
     devices = model.DeviceInfo.all()
-    measurements = model.Measurement.all()
-    measurements.order('-timestamp')
+    measurements = model.Measurement.all().order('-timestamp')
     measurements = measurements.fetch(config.NUM_MEASUREMENTS_IN_LIST)
     schedule = model.Task.all()
     schedule.order('-created')
