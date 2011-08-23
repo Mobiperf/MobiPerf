@@ -47,9 +47,9 @@ public class SpeedometerApp extends TabActivity {
       SchedulerBinder binder = (SchedulerBinder) service;
       scheduler = binder.getService();
       //The intent to launch when the user clicks the expanded notification
-      Intent intent = new Intent(SpeedometerApp.this, MeasurementScheduler.class);
-      PendingIntent pendIntent = PendingIntent.getService(SpeedometerApp.this, 0, intent, 
-          PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_ONE_SHOT);
+      Intent intent = new Intent(SpeedometerApp.this, SpeedometerApp.class);
+      PendingIntent pendIntent = PendingIntent.getActivity(SpeedometerApp.this, 0, intent, 
+          PendingIntent.FLAG_CANCEL_CURRENT);
 
       //This constructor is deprecated in 3.x. But most phones still run 2.x systems
       Notification notice = new Notification(R.drawable.icon, 
