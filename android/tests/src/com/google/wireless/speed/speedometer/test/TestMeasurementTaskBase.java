@@ -105,5 +105,14 @@ public class TestMeasurementTaskBase extends
     public String getType() {
       return "DummyEverlastingMeasurement";
     }
+
+    /* (non-Javadoc)
+     * @see com.google.wireless.speed.speedometer.MeasurementTask#clone()
+     */
+    @Override
+    public MeasurementTask clone() {
+      // TODO(wenjiezeng): Auto-generated method stub
+      return null;
+    }
   }
 }

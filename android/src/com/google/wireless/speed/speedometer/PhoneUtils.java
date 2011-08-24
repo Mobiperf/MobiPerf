@@ -365,8 +365,12 @@ public class PhoneUtils {
    * about releasing someone else's wake lock */
   public synchronized void releaseWakeLock() {
     if (wakeLock != null) {
-      wakeLock.release();
-      Log.i(SpeedometerApp.TAG, "PowerLock released");
+      try {
+        wakeLock.release();
+        Log.i(SpeedometerApp.TAG, "PowerLock released");
+      } catch (RuntimeException e) {
+        Log.e(SpeedometerApp.TAG, "Exception when releasing wakeup lock", e);
+      }
     }
   }
   

@@ -34,33 +34,13 @@ public class MeasurementMonitorActivity extends Activity {
       @Override
       public void onReceive(Context context, Intent intent) {
         String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
-        synchronized (consoleContent) {
-          consoleContent.add(msg + "\n");
-          if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
-            refreshConsole();
-          }
+        // All onXyz() callbacks are single threaded
+        consoleContent.insert(msg + "\n", 0);
+        if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
+          consoleContent.remove(consoleContent.getItem(consoleContent.getCount() - 1));
         }
       }
     };
-  }
-  
-  /**
-   * Keep only the last ITEMS_TO_KEEP_UPON_REFRESH items in the console and remove the rest. 
-   */
-  private void refreshConsole() {
-    ArrayList<String> latestItems = new ArrayList<String>();
-    synchronized (consoleContent) {
-      int length = consoleContent.getCount();
-      int copyStart = length - Config.ITEMS_TO_KEEP_UPON_REFRESH;
-      for (int i = copyStart; i < length; i++) {
-        latestItems.add(consoleContent.getItem(i)); 
-      }
-      length = latestItems.size();
-      consoleContent.clear();
-      for (int i = 0; i < length; i++) {
-        consoleContent.add(latestItems.get(i));
-      }
-    }
   }
    
   /* Upgrades the progress bar in the UI*/

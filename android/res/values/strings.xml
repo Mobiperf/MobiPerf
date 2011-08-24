@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="version">1.0</string>
+    <string name="version">1.1.1</string>
     <string name="app_name">Speedometer</string>
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
@@ -27,8 +27,11 @@
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
-    <string name="notificationSchedulerStarted">Click to start Speedometer service</string>
+    <string name="notificationSchedulerStarted">Speedometer service has started</string>
     <string name="notificatioContent">Speedometer service is running</string>
     <string name="userMeasurementSuccessToast">Measurement is running. See results in \'Monitor\' tab.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
+    <string name="invalidCheckinIntervalToast">Invalid setting! Please choose an interval between 1 and 24 hours</string>
+    <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
+    <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
 </resources>
