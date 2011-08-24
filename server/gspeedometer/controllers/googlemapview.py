@@ -97,7 +97,7 @@ class GoogleMapView(webapp.RequestHandler):
         now = datetime.datetime.utcnow()
         end_time = datetime.datetime(now.year, now.month, now.day)
         start_time = end_time - datetime.timedelta(days=7)
-        min_time_gap = datetime.timedelta(hours=1)
+        min_time_gap = datetime.timedelta(hours=2)
         property_query.filter('timestamp >=', start_time)
         property_query.filter('timestamp <=', end_time)
         property_query.order('-timestamp')
@@ -119,7 +119,7 @@ class GoogleMapView(webapp.RequestHandler):
   def _GetDevicesForUser(self):
     user = users.get_current_user()
     devices = model.DeviceInfo.all()
-    devices.filter('user =', user)
+    #devices.filter('user =', user)
     return devices.fetch(limit=config.NUM_DEVICES_PER_USER)
 
   def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
@@ -248,5 +248,4 @@ class GoogleMapView(webapp.RequestHandler):
     if not values:
       result.append('<br/>This measurement has failed.')
     resultstr = ''.join(result)
-    logging.info('generated location pin html is %s', resultstr)
     return resultstr
