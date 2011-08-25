@@ -63,7 +63,7 @@
         <td>{{prop.os_version}}</td>
         <td>
           {% if prop.location %}
-          <a href="http://maps.google.com/maps?q=loc:{{prop.location.lat}},{{prop.location.long}}" target="_blank">{{prop.location.lat}},{{prop.location.long}}</a>
+          <a href="http://maps.google.com/maps?q=loc:{{prop.location.lat}},{{prop.location.lon}}" target="_blank">{{prop.location.lat}},{{prop.location.lon}}</a>
           {% else %}
           N/A
           {% endif %}
