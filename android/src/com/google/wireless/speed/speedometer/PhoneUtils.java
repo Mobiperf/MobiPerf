@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -580,6 +581,16 @@ public class PhoneUtils {
       }
     }
     return pids;
+  }
+  
+  public String getAppVersionName() {
+    try {
+      String packageName = context.getPackageName();
+      return context.getPackageManager().getPackageInfo(packageName, 0).versionName;
+    } catch (Exception e) {
+      Log.e(SpeedometerApp.TAG, "version name of the application cannot be found", e);
+    }
+    return "Unknown";
   }
 
   /**

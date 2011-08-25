@@ -4,7 +4,8 @@ package com.google.wireless.speed.speedometer;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.ListView;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.widget.TextView;
 
 /**
  * A page that shows information about the Speedoemter application
@@ -16,6 +17,8 @@ public class AboutActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.about_page);    
+    setContentView(R.layout.about_page);
+    TextView tv = (TextView) findViewById(R.id.aboutVersionText);
+    tv.setText(PhoneUtils.getPhoneUtils().getAppVersionName());
   }
 }
