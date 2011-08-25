@@ -2,13 +2,15 @@
 <resources>
     <string name="version">1.1.1</string>
     <string name="app_name">Speedometer</string>
-    <string name="app_author">Wenjie Zeng</string>
-    <string name="app_contact">goto/speedometer</string>
+    <string name="appAuthor">Wenjie Zeng</string>
+    <string name="appContact">goto/speedometer</string>
+    <string name="appCopyRight">Copyright 2011 Google Inc. All Rights Reserved.</string>
     <string name="aboutApplicationTitle">Application Name</string>
     <string name="aboutVersionTitle">Version</string>
     <string name="aboutCheckinServerTitle">Checkin Server</string>
     <string name="aboutContactTitle">Contact</string>
     <string name="aboutAuthorTitle">Author</string>
+    <string name="aboutCopyRight">Copyright</string>
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
