@@ -4,7 +4,6 @@ package com.google.wireless.speed.speedometer;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.widget.TextView;
 
 /**
