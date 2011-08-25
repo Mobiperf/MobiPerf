@@ -41,7 +41,7 @@ public class DnsLookupTask extends MeasurementTask {
    * The description of DNS lookup measurement 
    */
   public static class DnsLookupDesc extends MeasurementDesc {
-    private String target;
+    public String target;
     private String server;
     
     public DnsLookupDesc(String key, Date startTime, Date endTime,
@@ -49,7 +49,7 @@ public class DnsLookupTask extends MeasurementTask {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);
       initalizeParams(params);
-      if (this.target == null) {
+      if (this.target == null || this.target.isEmpty()) {
         throw new InvalidParameterException("LookupDnsTask cannot be created due " +
             " to null target string");
       }
@@ -114,6 +114,7 @@ public class DnsLookupTask extends MeasurementTask {
           resultInet = inet;
           successCnt++;
         }
+        this.progress = 100 * i / Config.DEFAULT_DNS_COUNT_PER_MEASUREMENT;
       } catch (UnknownHostException e) {
         throw new MeasurementError("Cannot resovle domain name");
       }
@@ -143,5 +144,9 @@ public class DnsLookupTask extends MeasurementTask {
   public String getType() {
     return DnsLookupTask.TYPE;
   }
-
+  
+  @Override
+  public String getDescriptor() {
+    return DESCRIPTOR;
+  }
 }

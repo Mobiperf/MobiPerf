@@ -29,9 +29,11 @@
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="notificationSchedulerStarted">Speedometer service has started</string>
     <string name="notificatioContent">Speedometer service is running</string>
-    <string name="userMeasurementSuccessToast">Measurement is running. See results in \'Monitor\' tab.</string>
+    <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
+    <string name="invalidUserMeasurementInputToast">Some parameters are not correct. Please make sure all measurement parameters are set properly.</string>
     <string name="invalidCheckinIntervalToast">Invalid setting! Please choose an interval between 1 and 24 hours</string>
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
+    <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
 </resources>

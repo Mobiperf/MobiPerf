@@ -162,61 +162,68 @@ public class MeasurementCreationActivity extends Activity {
     public void onClick(View v) {
       TextView countText = (TextView) findViewById(R.id.countText);
       MeasurementTask newTask = null;
-      if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
-        try {
-          EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
-          long count = Long.parseLong(countText.getText().toString());
-          Map<String, String> params = new HashMap<String, String>();
-          params.put("target", pingTargetText.getText().toString());
-          PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
-              PingTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
-          newTask = new PingTask(desc, MeasurementCreationActivity.this);
-        } catch (NumberFormatException e) {
-          // This should never happen because we control the text
-          Log.wtf(SpeedometerApp.TAG, "Number format exception.");
-        }
-      } else if (measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
-        try {
-          EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
-          long count = Long.parseLong(countText.getText().toString());
-          Map<String, String> params = new HashMap<String, String>();
-          params.put("url", httpUrlText.getText().toString());
-          RadioButton rb = (RadioButton) findViewById(R.id.http_get_radio);
-          if (rb.isChecked()) {
-            params.put("method", "get");
-          } else {
-            params.put("method", "head");
+      try {
+        if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
+          try {
+            EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
+            long count = Long.parseLong(countText.getText().toString());
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("target", pingTargetText.getText().toString());
+            PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
+                PingTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+            newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+          } catch (NumberFormatException e) {
+            // This should never happen because we control the text
+            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
           }
-          HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
-              0, count, MeasurementTask.USER_PRIORITY, params);
-          newTask = new HttpTask(desc, MeasurementCreationActivity.this);
-        } catch (NumberFormatException e) {
-          // This should never happen because we control the text
-          Log.wtf(SpeedometerApp.TAG, "Number format exception.");
-        }        
-      } else if (measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
-        try {
-          EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
-          long count = Long.parseLong(countText.getText().toString());
-          Map<String, String> params = new HashMap<String, String>();
-          params.put("target", targetText.getText().toString());
-          TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
-              TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
-          newTask = new TracerouteTask(desc, MeasurementCreationActivity.this);
-        } catch (NumberFormatException e) {
-          // This should never happen because we control the text
-          Log.wtf(SpeedometerApp.TAG, "Number format exception.");
+        } else if (measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
+          try {
+            EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
+            long count = Long.parseLong(countText.getText().toString());
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("url", httpUrlText.getText().toString());
+            RadioButton rb = (RadioButton) findViewById(R.id.http_get_radio);
+            if (rb.isChecked()) {
+              params.put("method", "get");
+            } else {
+              params.put("method", "head");
+            }
+            HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
+                HttpTask.DEFAULT_HTTP_INTERVAL_SEC, count, MeasurementTask.USER_PRIORITY, params);
+            newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+          } catch (NumberFormatException e) {
+            // This should never happen because we control the text
+            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
+          }        
+        } else if (measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
+          try {
+            EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
+            long count = Long.parseLong(countText.getText().toString());
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("target", targetText.getText().toString());
+            TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
+                TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+            newTask = new TracerouteTask(desc, 
+                MeasurementCreationActivity.this.getApplicationContext());
+          } catch (NumberFormatException e) {
+            // This should never happen because we control the text
+            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
+          }
         }
-      }
-      if (newTask != null) {
-        MeasurementScheduler scheduler = parent.getScheduler();
-        if (scheduler != null && scheduler.submitTask(newTask)) {
-          Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementSuccessToast,
-              Toast.LENGTH_LONG).show();
-        } else {
-          Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementFailureToast,
-              Toast.LENGTH_LONG).show();
+        if (newTask != null) {
+          MeasurementScheduler scheduler = parent.getScheduler();
+          if (scheduler != null && scheduler.submitTask(newTask)) {
+            Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementSuccessToast,
+                Toast.LENGTH_LONG).show();
+          } else {
+            Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementFailureToast,
+                Toast.LENGTH_LONG).show();
+          }
         }
+      } catch (Exception e) {
+        Log.e(SpeedometerApp.TAG, "Exception when creating user measurements", e);
+        Toast.makeText(MeasurementCreationActivity.this, R.string.invalidUserMeasurementInputToast,
+            Toast.LENGTH_LONG).show();
       }
     }
     

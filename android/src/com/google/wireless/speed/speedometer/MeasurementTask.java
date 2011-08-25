@@ -8,6 +8,7 @@ import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 
 import android.content.Context;
+import android.content.Intent;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.concurrent.Callable;
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
   // the priority queue we use put the smallest element in the head of the queue
   public static final int USER_PRIORITY = Integer.MIN_VALUE;
+  
   protected MeasurementDesc measurementDesc;
   protected Context parent;
   protected int progress;
@@ -118,6 +120,11 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     return this.measurementDesc;
   }
   
+  /**
+   * Returns a brief human-readable descriptor of the task.
+   */
+  public abstract String getDescriptor();
+  
   @Override
   public abstract MeasurementResult call() throws MeasurementError; 
   
@@ -136,4 +143,13 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   
   @Override
   public abstract MeasurementTask clone();
+  
+  public void broadcastProgressForUser(int progress) {
+    if (measurementDesc.priority == MeasurementTask.USER_PRIORITY) {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, progress);
+      parent.sendBroadcast(intent);
+    }
+  }
 }

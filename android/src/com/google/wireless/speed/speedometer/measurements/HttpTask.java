@@ -59,6 +59,7 @@ public class HttpTask extends MeasurementTask {
   public static final int DEFAULT_STATUS_CODE = 0;
   // The default number of times we run a HTTP measurement
   private static final long DEFAULT_CNT = 1;
+  public static final double DEFAULT_HTTP_INTERVAL_SEC = 2.0;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
@@ -69,7 +70,7 @@ public class HttpTask extends MeasurementTask {
    * The description of a HTTP measurement 
    */
   public static class HttpDesc extends MeasurementDesc {
-    private String url;
+    public String url;
     private String method;
     private String headers;
     private String body;
@@ -79,7 +80,7 @@ public class HttpTask extends MeasurementTask {
                       throws InvalidParameterException {
       super(HttpTask.TYPE, key, startTime, endTime, intervalSec, count, priority, params);
       initalizeParams(params);
-      if (this.url == null) {
+      if (this.url == null || this.url.isEmpty()) {
         throw new InvalidParameterException("URL for http task is null");
       }
     }
@@ -198,6 +199,11 @@ public class HttpTask extends MeasurementTask {
        */
       HttpEntity responseEntity = response.getEntity();      
       originalBodyLen = responseEntity.getContentLength();
+      long expectedResponseLen = HttpTask.MAX_HTTP_RESPONSE_SIZE;
+      // getContentLength() returns negative number if body length is unknown
+      if (originalBodyLen > 0) {
+        expectedResponseLen = originalBodyLen;
+      }
       
       if (responseEntity != null) {
         inputStream = responseEntity.getContent();
@@ -212,6 +218,8 @@ public class HttpTask extends MeasurementTask {
             int putLen = body.remaining() < readLen ? body.remaining() : readLen; 
             body.put(readBuffer, 0, putLen);
           }
+          this.progress = (int) (100 * totalBodyLen / expectedResponseLen);
+          broadcastProgressForUser(this.progress);
         }
         duration = System.currentTimeMillis() - startTime;
       }
@@ -243,7 +251,7 @@ public class HttpTask extends MeasurementTask {
       if (success) {
         result.addResult("time_ms", duration);
         result.addResult("headers_len", originalHeadersLen);
-        result.addResult("body_len", originalBodyLen);
+        result.addResult("body_len", totalBodyLen);
         result.addResult("headers", headers);
         result.addResult("body", Base64.encodeToString(body.array(), Base64.DEFAULT));
       }
@@ -278,5 +286,9 @@ public class HttpTask extends MeasurementTask {
   public String getType() {
     return HttpTask.TYPE;
   }
-
+  
+  @Override
+  public String getDescriptor() {
+    return DESCRIPTOR;
+  }
 }

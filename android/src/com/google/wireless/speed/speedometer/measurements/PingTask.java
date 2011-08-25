@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.io.InvalidClassException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -74,8 +75,8 @@ public class PingTask extends MeasurementTask {
                     Map<String, String> params) throws InvalidParameterException {
       super(PingTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);  
-      initalizeParams(params);            
-      if (this.target == null) {
+      initalizeParams(params);
+      if (this.target == null || this.target.isEmpty()) {
         throw new InvalidParameterException("PingTask cannot be created due "
             + " to null target string");
       }    
@@ -142,6 +143,12 @@ public class PingTask extends MeasurementTask {
    * JAVA_ICMP_PING, and HTTP_PING. If all fails, then we declare the resource unreachable */
   @Override
   public MeasurementResult call() throws MeasurementError {
+    PingDesc desc = (PingDesc) measurementDesc;
+    try {
+      InetAddress.getByName(desc.target);
+    } catch (UnknownHostException e) {
+      throw new MeasurementError("Unknown host " + desc.target);
+    }
     
     try {
       Log.i(SpeedometerApp.TAG, "running ping command");
@@ -164,8 +171,13 @@ public class PingTask extends MeasurementTask {
   }
   
   @Override
+  public String getDescriptor() {
+    return DESCRIPTOR;
+  }
+  
+  @Override
   public int getProgress() {
-    return 0;
+    return this.progress;
   }
   
   private MeasurementResult constructResult(ArrayList<Double> rrtVals) {
@@ -278,6 +290,7 @@ public class PingTask extends MeasurementTask {
           }
         }
         this.progress = 100 * ++lineCnt / Config.PING_COUNT_PER_MEASUREMENT;
+        broadcastProgressForUser(progress);
         Log.i(SpeedometerApp.TAG, line);
       }     
       measurementResult = constructResult(rrts);
@@ -328,6 +341,7 @@ public class PingTask extends MeasurementTask {
           rrts.add((double) rrtVal);
         }
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
+        broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "java ping succeeds");
       return constructResult(rrts);        
@@ -374,6 +388,7 @@ public class PingTask extends MeasurementTask {
         pingEndTime = System.currentTimeMillis();
         rrts.add((double) (pingEndTime - pingStartTime));
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
+        broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
       return constructResult(rrts);
