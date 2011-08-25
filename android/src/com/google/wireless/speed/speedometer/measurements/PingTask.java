@@ -76,7 +76,7 @@ public class PingTask extends MeasurementTask {
       super(PingTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);  
       initalizeParams(params);
-      if (this.target == null || this.target.isEmpty()) {
+      if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("PingTask cannot be created due "
             + " to null target string");
       }    

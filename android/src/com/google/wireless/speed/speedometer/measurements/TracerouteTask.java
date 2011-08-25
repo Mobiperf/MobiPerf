@@ -78,7 +78,7 @@ public class TracerouteTask extends MeasurementTask {
           priority, params);
       initalizeParams(params);
       
-      if (target == null || target.isEmpty()) {
+      if (target == null || target.length() == 0) {
         throw new InvalidParameterException("Target of traceroute cannot be null");
       }
     }

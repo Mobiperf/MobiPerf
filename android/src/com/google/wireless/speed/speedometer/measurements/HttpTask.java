@@ -80,7 +80,7 @@ public class HttpTask extends MeasurementTask {
                       throws InvalidParameterException {
       super(HttpTask.TYPE, key, startTime, endTime, intervalSec, count, priority, params);
       initalizeParams(params);
-      if (this.url == null || this.url.isEmpty()) {
+      if (this.url == null || this.url.length() == 0) {
         throw new InvalidParameterException("URL for http task is null");
       }
     }
