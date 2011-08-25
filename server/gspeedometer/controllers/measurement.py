@@ -121,19 +121,23 @@ class Measurement(webapp.RequestHandler):
 
   def MeasurementDetail(self, **unused_args):
     """Handler to display measurement detail."""
+    errormsg = ''
+    measurement = None
     try:
-      measid = self.request.get('id')
-      measurement = model.Measurement.get_by_id(int(measid))
+      deviceid = self.request.get('deviceid')
+      measid = self.request.get('measid')
+
+      # Need to construct complete key from ancestor path
+      key = db.Key.from_path('DeviceInfo', deviceid,
+                             'Measurement', int(measid))
+      measurement = db.get(key)
       if not measurement:
         errormsg = 'Cannot get measurement ' + measid
-        template_args = {
-            'error': errormsg,
-            'user': users.get_current_user().email(),
-            'logout_link': users.create_logout_url('/')
-        }
         return
+
     finally:
       template_args = {
+          'error': errormsg,
           'id': measid,
           'measurement': measurement,
           'user': users.get_current_user().email(),
