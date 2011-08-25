@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/gray"
+    android:text="@string/aboutApplicationTitle"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/aboutApplicationName"
+    android:padding="10dp"
+    android:text="@string/app_name"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/gray"
+    android:text="@string/aboutVersionTitle"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:text="@string/version"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/gray"
+    android:text="@string/aboutCheckinServerTitle"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:text="@string/speedometerServerUrl"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/gray"
+    android:text="@string/aboutContactTitle"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:text="@string/app_contact"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:background="@color/gray"
+    android:text="@string/aboutAuthorTitle"
+    android:textSize="14sp" >
+  </TextView>
+  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    android:text="@string/app_author"
+    android:textSize="14sp" >
+  </TextView>
+</LinearLayout>

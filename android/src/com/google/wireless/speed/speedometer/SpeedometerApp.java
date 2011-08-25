@@ -132,6 +132,11 @@ public class SpeedometerApp extends TabActivity {
             SpeedometerPreferenceActivity.class);
         startActivity(settingsActivity);
         return true;
+      case R.id.aboutPage:
+        Intent intent = new Intent(getBaseContext(),
+            AboutActivity.class);
+        startActivity(intent);
+        return true;  
       default:
         return super.onOptionsItemSelected(item);
     }
