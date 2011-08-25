@@ -12,3 +12,4 @@ VERSION=`./set_version.sh`
 
 appcfg.py -e $USER@google.com update .
 
+echo "Try going to http://$VERSION.speedometer.googleplex.com"
