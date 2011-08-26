@@ -51,5 +51,9 @@ public interface Config {
   /** Constants used in MeasurementMonitorActivity.java */
   public static final int MAX_LIST_ITEMS = 128;
   
+  public static final int INVALID_PROGRESS = -1;
+  public static final int MAX_PROGRESS_BAR_VALUE = 100;
+  public static final int DEFAULT_USER_MEASUREMENT_COUNT = 1;
+  
   public static final long MIN_CHECKIN_INTERVAL_SEC = 3600;
 }

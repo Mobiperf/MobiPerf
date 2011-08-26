@@ -81,9 +81,9 @@ public class MeasurementCreationActivity extends Activity {
     
     /* Initialize the repeat-count seek bar and text */
     this.countText = (TextView) this.findViewById(R.id.countText);
-    this.countText.setText(String.valueOf(PingTask.DEFAULT_PING_CNT_PER_TASK));
+    this.countText.setText(String.valueOf(Config.DEFAULT_USER_MEASUREMENT_COUNT));
     SeekBar countSeekBar = (SeekBar) this.findViewById(R.id.measurementCountSeekBar);
-    countSeekBar.setProgress(PingTask.DEFAULT_PING_CNT_PER_TASK);
+    countSeekBar.setProgress(Config.DEFAULT_USER_MEASUREMENT_COUNT);
     countSeekBar.setOnSeekBarChangeListener(new CountSeekBarChangeListener());
     
     /* Start time text initialization */
@@ -162,6 +162,7 @@ public class MeasurementCreationActivity extends Activity {
     public void onClick(View v) {
       TextView countText = (TextView) findViewById(R.id.countText);
       MeasurementTask newTask = null;
+      boolean showLengthWarning = false;
       try {
         if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
           try {
@@ -205,6 +206,7 @@ public class MeasurementCreationActivity extends Activity {
                 TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
             newTask = new TracerouteTask(desc, 
                 MeasurementCreationActivity.this.getApplicationContext());
+            showLengthWarning = true;
           } catch (NumberFormatException e) {
             // This should never happen because we control the text
             Log.wtf(SpeedometerApp.TAG, "Number format exception.");
@@ -212,8 +214,20 @@ public class MeasurementCreationActivity extends Activity {
         }
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
-          if (scheduler != null && scheduler.submitTask(newTask)) {
-            Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementSuccessToast,
+          if (scheduler != null && scheduler.getCurrentTask() == null &&
+              scheduler.submitTask(newTask)) {
+            /* Broadcast an intent with MEASUREMENT_ACTION so that the scheduler will immediately
+             * handles the user measurement 
+             * */
+            MeasurementCreationActivity.this.sendBroadcast(
+                new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION));
+
+            String toastStr = MeasurementCreationActivity.this.getString(
+                R.string.userMeasurementSuccessToast);
+            if (showLengthWarning) {
+              toastStr += newTask.getDescriptor() + " measurements can be long. Please be patient.";
+            }
+            Toast.makeText(MeasurementCreationActivity.this, toastStr,
                 Toast.LENGTH_LONG).show();
           } else {
             Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementFailureToast,

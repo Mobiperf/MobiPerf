@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -74,6 +75,7 @@ public class MeasurementScheduler extends Service {
   // Binder given to clients
   private final IBinder binder = new SchedulerBinder();
       
+  private MeasurementTask currentTask;
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -159,24 +161,27 @@ public class MeasurementScheduler extends Service {
        */
       if (task != null && task.timeFromExecution() <= 0) {
         taskQueue.poll();
+        Future<MeasurementResult> future;
+        Log.i(SpeedometerApp.TAG, "Processing task " + task.toString());
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-          //TODO(wenjiezeng): Need more handling fore user measurements: show progress and results
           sendStringMsg("***** USER_TASK *****");
+          // User task can override the power policy. So a different task wrapper is used.
+          future = measurementExecutor.submit(new UserMeasurementTask(task));
+        } else {
+          sendStringMsg("Scheduling " + task.toString());
+          future = measurementExecutor.submit(new PowerAwareTask(task, powerManager, this));
         }
-        sendStringMsg("Scheduling " + task.toString());
-        Future<MeasurementResult> future = measurementExecutor.submit(
-            new PowerAwareTask(task, powerManager));
         synchronized (pendingTasks) {
           pendingTasks.put(task, future);
         }
         
         MeasurementDesc desc = task.getDescription();
-        desc.count--;
         long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
         // Add a clone with the new start time into taskQueue if
-        if (desc.count > 0 && newStartTime < desc.endTime.getTime()) {
+        if (desc.count > 1 && newStartTime < desc.endTime.getTime()) {
           MeasurementTask newTask = task.clone();
+          newTask.getDescription().count--;
           newTask.getDescription().startTime.setTime(newStartTime);
           submitTask(newTask);
         }
@@ -200,6 +205,22 @@ public class MeasurementScheduler extends Service {
       // We don't want any unexpected exception to crash the process
       Log.e(SpeedometerApp.TAG, "Exception when handling measurements", e);
     }
+  }
+  
+  /** Sets the current task being run. In the current implementation, the
+   * synchronized keyword is not needed because only one thread runs
+   * measurements and calls this method. It is not thread safe.
+   */
+  public void setCurrentTask(MeasurementTask task) {
+    this.currentTask = task;
+  }
+  
+  /** Returns the current task being run. In the current implementation, the
+   * synchronized keyword is not needed because only one thread runs
+   * measurements and calls this method. It is not thread safe.
+   */
+  public MeasurementTask getCurrentTask() {
+    return this.currentTask;
   }
   
   @Override 
@@ -312,16 +333,13 @@ public class MeasurementScheduler extends Service {
     this.cleanUp();
   }
   
-  /** Submit a MeasurementTask to the scheduler */
+  /** Submit a MeasurementTask to the scheduler. Caller of this method can broadcast
+   * an intent with MEASUREMENT_ACTION to start the measurement immediately.*/
   public boolean submitTask(MeasurementTask task) {
     try {
       // Immediately handles measurements created by user
       if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-        boolean result = this.taskQueue.add(task);
-        if (result) {
-          handleMeasurement();
-        }
-        return result;
+        return this.taskQueue.add(task);
       }
       
       if (taskQueue.size() >= Config.MAX_TASK_QUEUE_SIZE ||
@@ -534,5 +552,65 @@ public class MeasurementScheduler extends Service {
     return new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
       RuntimeUtil.getDeviceProperty(), task.getType(), Calendar.getInstance().getTime(), 
       false, task.measurementDesc);
-  } 
+  }
+  
+  /**
+   * A wrapper Callable class that broadcasts intents when the measurement starts and finishes.
+   * Needed for activities to monitor the progress of user measurements.
+   */
+  private class UserMeasurementTask implements Callable<MeasurementResult> {
+    MeasurementTask realTask;
+    
+    public UserMeasurementTask(MeasurementTask task) {
+      realTask = task;
+    }
+    
+    private void broadcastMeasurementStart() {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
+          " is running. " + (realTask.getDescription().count - 1) + " more to run.");
+      MeasurementScheduler.this.sendBroadcast(intent);
+    }
+    
+    private void broadcastMeasurementEnd(MeasurementResult result) {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      // A progress value greater than max progress to indicate the termination of a measurement
+      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
+      // Update the status bar if this is the last of the list of measurements the user
+      // has scheduled
+      if (realTask.measurementDesc.count == 1) {
+        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
+            MeasurementScheduler.this.getString(R.string.idleTextForUserConsoleStatusBar));
+      }
+      
+      if (result != null) {
+        intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
+      } else {
+        String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
+        errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
+        intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+      }
+      MeasurementScheduler.this.sendBroadcast(intent);
+    }
+    
+    /**
+     * The call() method that broadcast intents before the measurement starts and after the
+     * measurement finishes.
+     */
+    @Override
+    public MeasurementResult call() throws MeasurementError{
+      MeasurementResult result = null;
+      try {
+        PhoneUtils.getPhoneUtils().acquireWakeLock();
+        broadcastMeasurementStart();
+        result = realTask.call();
+      } finally {
+        broadcastMeasurementEnd(result);
+        PhoneUtils.getPhoneUtils().releaseWakeLock();
+      }
+      return result;
+    }
+  }
 }
