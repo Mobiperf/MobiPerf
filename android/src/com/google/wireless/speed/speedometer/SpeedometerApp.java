@@ -206,10 +206,15 @@ public class SpeedometerApp extends TabActivity {
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
-    }
+    }    
   }
+
   
   private void quitApp() {
+    if (isBound) {
+      unbindService(serviceConn);
+      isBound = false;
+    }
     if (this.scheduler != null) {
       scheduler.requestStop();
     }
