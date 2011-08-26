@@ -29,6 +29,19 @@ class FilterMeasurementForm(forms.Form):
     super(FilterMeasurementForm, self).__init__(*args, **kwargs)
     self.fields['device'] = forms.ChoiceField(devices, label='Device ID')
 
+  def clean(self):
+    start_date = self.cleaned_data['start_date']
+    end_date = self.cleaned_data['end_date']
+    if (end_date - start_date >
+        datetime.timedelta(days=config.MAX_QUERY_INTERVAL_DAY)):
+      raise forms.ValidationError('Query error! Start date and '
+                                  'end date have to be within '
+                                  '%d days' % config.MAX_QUERY_INTERVAL_DAY)
+    if end_date <= start_date:
+      raise forms.ValidationError('Query error! Start date should '
+                                  'be before end date')
+    return self.cleaned_data
+
   thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
                               label='Measurement type')
   start_date = forms.DateField(label='Start date (GMT)')
@@ -82,30 +95,39 @@ class GoogleMapView(webapp.RequestHandler):
     template_args = {
         'filter_form': filter_measurement_form,
         'map_code': self._GetJavascriptCodeForMap(measurements),
-        'batterychart_rows': self._GetBatteryInfoForLastWeek(device_key,
-                                                             deviceinfo_list)
+        'batterychart_rows': self._GetBatteryInfo(device_key,
+                                                  deviceinfo_list,
+                                                  start_date,
+                                                  end_date)
     }
     self.response.out.write(template.render(
         'templates/map.html', template_args))
 
-  def _GetBatteryInfoForLastWeek(self, device_key, deviceinfo_list):
+  def _GetBatteryInfo(self, device_key,
+                      deviceinfo_list,
+                      start_date,
+                      end_date):
     batteryinfo_list = []
     for device in deviceinfo_list:
       if str(device.key()) == device_key:
-        logging.info("generating battery info for device %s" % device.id);
+        logging.info('generating battery info for device %s' % device.id)
         property_query = device.deviceproperties_set
-        now = datetime.datetime.utcnow()
-        end_time = datetime.datetime(now.year, now.month, now.day)
-        start_time = end_time - datetime.timedelta(days=7)
-        min_time_gap = datetime.timedelta(hours=2)
+        end_time = datetime.datetime(end_date.year,
+                                     end_date.month,
+                                     end_date.day)
+        start_time = datetime.datetime(start_date.year,
+                                       start_date.month,
+                                       start_date.day)
+        min_time_gap = datetime.timedelta(
+            hours=config.BATTERY_INFO_INTERVAL_HOUR)
         property_query.filter('timestamp >=', start_time)
         property_query.filter('timestamp <=', end_time)
         property_query.order('-timestamp')
 
         last_timestamp = end_time
-        
-        # We only need hourly battery level information
+
         for prop in property_query:
+          # Show battery info every min_time_gap hours
           if last_timestamp - prop.timestamp > min_time_gap:
             batteryinfo_list.append(
                 '[new Date(%d), %d]' % (
@@ -119,7 +141,9 @@ class GoogleMapView(webapp.RequestHandler):
   def _GetDevicesForUser(self):
     user = users.get_current_user()
     devices = model.DeviceInfo.all()
-    #devices.filter('user =', user)
+    # TODO(wenjiezeng): Uncomment the folliwng line to add filter for users 
+    # in the final version. We show all devices meke debugging easier for now
+    #devices.filter('user = ', user')
     return devices.fetch(limit=config.NUM_DEVICES_PER_USER)
 
   def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
