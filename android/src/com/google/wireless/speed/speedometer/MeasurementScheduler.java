@@ -400,9 +400,25 @@ public class MeasurementScheduler extends Service {
     this.checkin.shutDown();
     
     this.unregisterReceiver(broadcastReceiver);
+    Log.i(SpeedometerApp.TAG, "canceling pending intents");
+
+    if (checkinIntentSender != null) {
+      checkinIntentSender.cancel();
+      alarmManager.cancel(checkinIntentSender);
+    }
+    if (checkinRetryIntentSender != null) {
+      checkinRetryIntentSender.cancel();
+      alarmManager.cancel(checkinRetryIntentSender);
+    }
+    if (measurementIntentSender != null) {
+      measurementIntentSender.cancel();
+      alarmManager.cancel(measurementIntentSender);
+    }
+    
     
     this.notifyAll();
     PhoneUtils.getPhoneUtils().shutDown();
+    this.stopForeground(true);
     this.stopSelf();
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
