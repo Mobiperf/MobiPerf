@@ -128,7 +128,7 @@ class GoogleMapView(webapp.RequestHandler):
 
         for prop in property_query:
           # Show battery info every min_time_gap hours
-          if last_timestamp - prop.timestamp > min_time_gap:
+          if hasattr(prop, 'battery_level') and last_timestamp - prop.timestamp > min_time_gap:
             batteryinfo_list.append(
                 '[new Date(%d), %d]' % (
                     util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
