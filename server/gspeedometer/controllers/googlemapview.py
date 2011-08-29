@@ -141,7 +141,7 @@ class GoogleMapView(webapp.RequestHandler):
   def _GetDevicesForUser(self):
     user = users.get_current_user()
     devices = model.DeviceInfo.all()
-    # TODO(wenjiezeng): Uncomment the folliwng line to add filter for users 
+    # TODO(wenjiezeng): Uncomment the folliwng line to add filter for users
     # in the final version. We show all devices meke debugging easier for now
     #devices.filter('user = ', user')
     return devices.fetch(limit=config.NUM_DEVICES_PER_USER)

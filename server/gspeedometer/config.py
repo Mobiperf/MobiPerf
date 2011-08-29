@@ -26,7 +26,7 @@ SLOW_DNS_THRESHOLD_MS = 150
 # The minimum number of hops reported by traceroute that we
 # consider a long route
 LONG_TRACEROUTE_HOP_COUNT_THRESHOLD = 14
-# The interval in hours between any two adjacent battery records 
+# The interval in hours between any two adjacent battery records
 # to show on the graph
 BATTERY_INFO_INTERVAL_HOUR = 2
 # The maximum time span in days the query covers
