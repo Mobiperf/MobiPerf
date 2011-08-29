@@ -6,6 +6,7 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -44,6 +45,9 @@ import java.util.concurrent.PriorityBlockingQueue;
  * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
+  
+  // This arbitrary id is private to Speedometer
+  private static final int NOTIFICATION_ID = 1234;
   
   private ExecutorService measurementExecutor;
   private BroadcastReceiver broadcastReceiver;
@@ -96,6 +100,7 @@ public class MeasurementScheduler extends Service {
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
+    RuntimeUtil.setContext(this.getApplicationContext());
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     this.checkin = new Checkin(this);
     this.checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
@@ -139,6 +144,25 @@ public class MeasurementScheduler extends Service {
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
+    startSpeedomterInForeGround();
+  }
+  
+  private void startSpeedomterInForeGround() {
+    //The intent to launch when the user clicks the expanded notification
+    Intent intent = new Intent(this, SpeedometerApp.class);
+    PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
+        PendingIntent.FLAG_CANCEL_CURRENT);
+
+    //This constructor is deprecated in 3.x. But most phones still run 2.x systems
+    Notification notice = new Notification(R.drawable.icon, 
+        getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+
+    //This is deprecated in 3.x. But most phones still run 2.x systems
+    notice.setLatestEventInfo(this, "Speedometer", 
+        getString(R.string.notificatioContent), pendIntent);
+
+    //Put scheduler service into foreground. Makes the process less likely of being killed
+    startForeground(NOTIFICATION_ID, notice);
   }
   
   private void handleCheckin() {    
@@ -586,14 +610,16 @@ public class MeasurementScheduler extends Service {
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
           " is running. " + (realTask.getDescription().count - 1) + " more to run.");
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       MeasurementScheduler.this.sendBroadcast(intent);
     }
     
     private void broadcastMeasurementEnd(MeasurementResult result) {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       // A progress value greater than max progress to indicate the termination of a measurement
-      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
       // Update the status bar if this is the last of the list of measurements the user
       // has scheduled
       if (realTask.measurementDesc.count == 1) {

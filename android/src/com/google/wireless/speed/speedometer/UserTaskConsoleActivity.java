@@ -37,7 +37,7 @@ public class UserTaskConsoleActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.my_measurements);    
+    setContentView(R.layout.my_measurements);
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
@@ -62,10 +62,14 @@ public class UserTaskConsoleActivity extends Activity {
       @Override
       // All onXyz() callbacks are single threaded
       public void onReceive(Context context, Intent intent) {
-        updateStatusBar(intent);
-        insertStringToConsole(intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD));
-        upgradeProgress(intent.getIntExtra(UpdateIntent.INTEGER_PAYLOAD,
-            Config.INVALID_PROGRESS), Config.MAX_PROGRESS_BAR_VALUE);
+        int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
+            MeasurementTask.INVALID_PRIORITY);
+        if (priority == MeasurementTask.USER_PRIORITY) {
+          updateStatusBar(intent);
+          insertStringToConsole(intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD));
+          upgradeProgress(intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD,
+              Config.INVALID_PROGRESS), Config.MAX_PROGRESS_BAR_VALUE);
+        }
       }
     };
     this.registerReceiver(this.receiver, filter);

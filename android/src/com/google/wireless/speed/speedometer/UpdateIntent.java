@@ -16,8 +16,9 @@ public class UpdateIntent extends Intent {
   
   // Different types of payload this intent can carry
   public static final String STRING_PAYLOAD = "STRING_PAYLOAD";
-  public static final String INTEGER_PAYLOAD = "INTEGER_PAYLOAD";
+  public static final String PROGRESS_PAYLOAD = "PROGRESS_PAYLOAD";
   public static final String STATUS_MSG_PAYLOAD = "STATUS_MSG_PAYLOAD";
+  public static final String TASK_PRIORITY_PAYLOAD = "TASK_PRIORITY_PAYLOAD";
   // Different types of actions that this intent can represent
   private static final String PACKAGE_PREFIX = UpdateIntent.class.getPackage().getName();
   public static final String MSG_ACTION = PACKAGE_PREFIX + ".MSG_ACTION";

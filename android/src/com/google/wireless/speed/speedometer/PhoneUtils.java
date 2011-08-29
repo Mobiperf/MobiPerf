@@ -346,7 +346,7 @@ public class PhoneUtils {
     initLocation();
     Location location = locationManager.getLastKnownLocation(locationProviderName);
     if (location == null) {
-      Log.e(DEBUG_TAG,
+      Log.e(SpeedometerApp.TAG,
             "Cannot obtain location from provider " + locationProviderName);
     }
     return location;
