@@ -152,8 +152,9 @@ public class RuntimeUtil {
     if (activeNetwork != null && activeIp.compareTo("") == 0) {
       networkType = activeNetwork.getTypeName();
     }
-    
-    return new DeviceProperty(getDeviceInfo().deviceId, context.getString(R.string.version),
+    String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
+
+    return new DeviceProperty(getDeviceInfo().deviceId, versionName,
         Calendar.getInstance().getTime(), getVersionStr(), activeIp, location.getLongitude(),
         location.getLatitude(), location.getProvider(), networkType, carrierName, 
         PhoneUtils.getPhoneUtils().getCurrentBatteryLevel(),

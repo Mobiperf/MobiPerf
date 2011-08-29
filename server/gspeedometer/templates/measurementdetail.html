@@ -2,7 +2,7 @@
 
 {% block body %}
   <br>
-  <h2>Measurement details</h2>
+  <h2>Measurement details - measurement ID {{id}}</h2>
   <table class="section-box">
     <tr>
       <th style="font-size:1.3em; padding: 5px 10px; background:#EFF9FC;">Measurement Info</th>
@@ -24,7 +24,7 @@
           <td>{{measurement.GetTaskID}}</td>
         </tr>
         {% else %}
-        <tr><td class="measurement-detail-prop-name">Task ID</td><td>None (deleted task?)</td></tr>
+        <tr><td class="measurement-detail-prop-name">Task ID</td><td>Unknown</td></tr>
         {% endif %}
         {% for key,value in measurement.Params.items %}
         <tr>

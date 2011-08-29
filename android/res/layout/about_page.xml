@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutApplicationTitle"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/aboutApplicationName"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:text="@string/app_name"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutVersionTitle"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:id="@+id/aboutVersionText"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutCheckinServerTitle"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:text="@string/speedometerServerUrl"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutContactTitle"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:text="@string/appContact"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutCopyRight"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:text="@string/appCopyRight"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:background="@color/gray"
+    android:text="@string/aboutAuthorTitle"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/smallMarginBetweenRows"
+    android:text="@string/appAuthor"
+    android:textSize="@dimen/largeTextSize" >
+  </TextView>
+</LinearLayout>

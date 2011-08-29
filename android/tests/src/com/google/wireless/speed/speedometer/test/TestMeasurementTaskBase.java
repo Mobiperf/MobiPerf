@@ -81,12 +81,7 @@ public class TestMeasurementTaskBase extends
       }
       
     }
-    
-    @Override
-    public MeasurementTask clone() {
-      return new DummyTask(this.measurementDesc, parent);
-    }
-    
+
     protected DummyTask(MeasurementDesc measurementDesc, Context parent) {
       super(measurementDesc, parent);
     }
@@ -110,6 +105,20 @@ public class TestMeasurementTaskBase extends
     @Override
     public String getType() {
       return "DummyEverlastingMeasurement";
+    }
+
+    /* (non-Javadoc)
+     * @see com.google.wireless.speed.speedometer.MeasurementTask#clone()
+     */
+    @Override
+    public MeasurementTask clone() {
+      // TODO(wenjiezeng): Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public String getDescriptor() {
+      return "DummyTask";
     }
   }
 }
