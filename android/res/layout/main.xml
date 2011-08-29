@@ -20,6 +20,27 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:orientation="horizontal"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent">
+          <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/smallMarginBetweenRows"
+            android:background="@color/gray"
+            android:id="@+id/taskQueueLengthText"
+            android:textSize="@dimen/largeTextSize" >
+          </TextView>
+          <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/smallMarginBetweenRows"
+            android:background="@color/gray"
+            android:id="@+id/experimentsCompletedCountText"
+            android:textSize="@dimen/largeTextSize" >
+          </TextView>
+        </LinearLayout>    
         <ListView
           android:layout_width="match_parent" 
           android:layout_height="wrap_content"
