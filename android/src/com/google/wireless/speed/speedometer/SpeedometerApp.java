@@ -32,8 +32,6 @@ import java.security.Security;
 public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
-  // This arbitrary id is private to Speedometer
-  private static final int NOTIFICATION_ID = 1234;
   
   private MeasurementScheduler scheduler;
   private boolean isBound = false;
@@ -46,21 +44,6 @@ public class SpeedometerApp extends TabActivity {
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
       scheduler = binder.getService();
-      //The intent to launch when the user clicks the expanded notification
-      Intent intent = new Intent(SpeedometerApp.this, SpeedometerApp.class);
-      PendingIntent pendIntent = PendingIntent.getActivity(SpeedometerApp.this, 0, intent, 
-          PendingIntent.FLAG_CANCEL_CURRENT);
-
-      //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-      Notification notice = new Notification(R.drawable.icon, 
-          getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
-
-      //This is deprecated in 3.x. But most phones still run 2.x systems
-      notice.setLatestEventInfo(SpeedometerApp.this, "Speedometer", 
-          getString(R.string.notificatioContent), pendIntent);
-
-      //Put scheduler service into foreground. Makes the process less likely of being killed
-      scheduler.startForeground(NOTIFICATION_ID, notice);
       isBound = true;
       isBindingToService = false;
     }
@@ -176,8 +159,6 @@ public class SpeedometerApp extends TabActivity {
     tabHost.addTab(spec);
 
     tabHost.setCurrentTab(0);
-    
-    RuntimeUtil.setActivity(this);
     
     // We only need one instance of scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
