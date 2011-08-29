@@ -310,7 +310,7 @@ public class PhoneUtils {
        * so we don't need a super accurate location, cell/wifi is good enough.
        */
       criteriaCoarse.setAccuracy(Criteria.ACCURACY_COARSE);
-      criteriaCoarse.setPowerRequirement(Criteria.POWER_HIGH);
+      criteriaCoarse.setPowerRequirement(Criteria.POWER_LOW);
       String providerName =
           manager.getBestProvider(criteriaCoarse, /*enabledOnly=*/true);
       List<String> providers = manager.getAllProviders();
