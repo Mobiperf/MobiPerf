@@ -12,7 +12,7 @@
     {% endfor %}
 
     var chart = new google.visualization.AnnotatedTimeLine(
-        document.getElementById('battery_chart_div'));
+        document.getElementById('measurement_chart_div'));
     chart.draw(data, {});
   }
 </script>
