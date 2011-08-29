@@ -20,7 +20,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -40,6 +39,9 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.telephony.NeighboringCellInfo;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
@@ -105,7 +107,7 @@ public class PhoneUtils {
   private int curBatteryLevel;
   /** Receiver that handles battery change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
-
+  private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
 
   protected PhoneUtils(Context context) {
     this.context = context;
@@ -207,6 +209,8 @@ public class PhoneUtils {
       // so that either all get assigned, or none get assigned.
       connectivityManager = tryConnectivityManager;
       telephonyManager = tryTelephonyManager;
+      telephonyManager.listen(new SignalStrengthChangeListener(), 
+          PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 
       // Some interesting info to look at in the logs
       NetworkInfo[] infos = connectivityManager.getAllNetworkInfo();
@@ -290,6 +294,14 @@ public class PhoneUtils {
       return wifiInfo.getSSID();
     }
     return null;
+  }
+  
+  /**
+   * Returns the received signal strength or NeighboringCellInfo.UNKNOWN_RSSI if unknown 
+   */
+  public int getRssi() {
+    initNetwork();
+    return getCurrentRssi();
   }
 
   /**
@@ -607,6 +619,20 @@ public class PhoneUtils {
     return isCharging;
   }
   
+  /**
+   * Sets the current RSSI value
+   */
+  public synchronized void setCurrentRssi(int rssi) {
+    currentSignalStrength = rssi;
+  }
+  
+  /**
+   * Returns the last updated RSSI value
+   */
+  public synchronized int getCurrentRssi() {
+    return currentSignalStrength;
+  }
+  
   private synchronized void updateBatteryStat(Intent powerIntent) {
     int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 
         com.google.wireless.speed.speedometer.Config.DEFAULT_BATTERY_SCALE);
@@ -629,6 +655,25 @@ public class PhoneUtils {
     @Override
     public void onReceive(Context context, Intent intent) {
       updateBatteryStat(intent);
+    }
+  }
+  
+  private class SignalStrengthChangeListener extends PhoneStateListener {
+    @Override
+    public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+      Log.i(SpeedometerApp.TAG, "Rssi is updated");
+      if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_CDMA]) == 0) {
+        Log.i(SpeedometerApp.TAG, "Updating rssi with CDMA dbm");
+        setCurrentRssi(signalStrength.getCdmaDbm());
+      } else if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_0]) == 0 ||
+          getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_A]) == 0 ||
+          getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_B]) == 0) {
+        Log.i(SpeedometerApp.TAG, "Updating rssi with EVDO dbm");
+        setCurrentRssi(signalStrength.getEvdoDbm());
+      } else if (signalStrength.isGsm()) {
+        Log.i(SpeedometerApp.TAG, "Updating rssi with GSM dbm");
+        setCurrentRssi(signalStrength.getGsmSignalStrength());
+      }
     }
   }
 }
