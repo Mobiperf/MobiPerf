@@ -83,6 +83,7 @@ public class MeasurementCreationActivity extends Activity {
     this.countText = (TextView) this.findViewById(R.id.countText);
     this.countText.setText(String.valueOf(Config.DEFAULT_USER_MEASUREMENT_COUNT));
     SeekBar countSeekBar = (SeekBar) this.findViewById(R.id.measurementCountSeekBar);
+    countSeekBar.setMax(Config.MAX_USER_MEASUREMENT_COUNT);
     countSeekBar.setProgress(Config.DEFAULT_USER_MEASUREMENT_COUNT);
     countSeekBar.setOnSeekBarChangeListener(new CountSeekBarChangeListener());
     
@@ -261,8 +262,10 @@ public class MeasurementCreationActivity extends Activity {
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
       if (fromUser) {
-        count = progress;
+        int validProgress = Math.max(progress, 1);
+        count = validProgress;
         countText.setText(String.valueOf(count));
+        seekBar.setProgress(validProgress);
       }
     }
 
