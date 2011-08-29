@@ -132,6 +132,11 @@ public class SpeedometerApp extends TabActivity {
             SpeedometerPreferenceActivity.class);
         startActivity(settingsActivity);
         return true;
+      case R.id.aboutPage:
+        Intent intent = new Intent(getBaseContext(),
+            AboutActivity.class);
+        startActivity(intent);
+        return true;  
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -201,10 +206,15 @@ public class SpeedometerApp extends TabActivity {
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
-    }
+    }    
   }
+
   
   private void quitApp() {
+    if (isBound) {
+      unbindService(serviceConn);
+      isBound = false;
+    }
     if (this.scheduler != null) {
       scheduler.requestStop();
     }

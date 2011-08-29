@@ -114,5 +114,10 @@ public class TestMeasurementTaskBase extends
       // TODO(wenjiezeng): Auto-generated method stub
       return null;
     }
+
+    @Override
+    public String getDescriptor() {
+      return "DummyTask";
+    }
   }
 }

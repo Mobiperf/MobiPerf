@@ -56,7 +56,7 @@ public class Checkin {
   public Checkin(Context context) {
     this.context = context;
     this.serverUrl = context.getResources().getString(
-        R.string.SpeedometerServerURL);
+        R.string.speedometerServerUrl);
     sendStringMsg("Server: " + this.serverUrl);
   }
   

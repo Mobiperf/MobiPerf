@@ -47,6 +47,8 @@ public class TracerouteTask extends MeasurementTask {
   public static final double DEFAULT_PING_INTERVAL = 0.5;
   public static final int DEFAULT_PING_TIMEOUT = 10;
   public static final int DEFAULT_MAX_HOP_CNT = 30;
+  // Used to compute progress for user
+  public static final int EXPECTED_HOP_CNT = 20;
   public static final int DEFAULT_PINGS_PER_HOP = 3;
   private static final long DEFAULT_CNT = 1;
   
@@ -55,7 +57,7 @@ public class TracerouteTask extends MeasurementTask {
    */
   public static class TracerouteDesc extends MeasurementDesc {
     // the host name or IP address to use as the target of the traceroute.
-    private String target;
+    public String target;
     // the packet per ICMP ping in the unit of bytes
     private int packetSizeByte;
     // the number of seconds we wait for a ping response.
@@ -76,7 +78,7 @@ public class TracerouteTask extends MeasurementTask {
           priority, params);
       initalizeParams(params);
       
-      if (target == null) {
+      if (target == null || target.length() == 0) {
         throw new InvalidParameterException("Target of traceroute cannot be null");
       }
     }
@@ -163,7 +165,7 @@ public class TracerouteTask extends MeasurementTask {
   public MeasurementResult call() throws MeasurementError {
     
     TracerouteDesc task = (TracerouteDesc) this.measurementDesc;
-    int maxPingCnt = task.maxHopCount;
+    int maxHopCount = task.maxHopCount;
     int ttl = 1;
     String hostIp = null;
     Process pingProc = null;
@@ -184,7 +186,7 @@ public class TracerouteTask extends MeasurementTask {
     }
     MeasurementResult result = null;
     
-    while (maxPingCnt-- >= 0) {
+    while (maxHopCount-- >= 0) {
       /* Current traceroute implementation sends out three ICMP probes per TTL.
        * One ping every 0.2s is the lower bound before some platforms requires
        * root to run ping. We ping once every time to get a rough rtt as we cannot
@@ -238,7 +240,7 @@ public class TracerouteTask extends MeasurementTask {
               for (String host : hopInfo.hosts) {
                 result.addResult("hop_" + i + "_addr_" + hostIdx++, host);
               }
-              result.addResult("hop_" + i + "_rrt_ms", String.format("%.3f", hopInfo.rtt));
+              result.addResult("hop_" + i + "_rtt_ms", String.format("%.3f", hopInfo.rtt));
             }
             Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
             return result;
@@ -260,6 +262,8 @@ public class TracerouteTask extends MeasurementTask {
         cleanUp(pingProc);
       }
       ttl++;
+      this.progress = (int) (100 * ttl / (double) TracerouteTask.EXPECTED_HOP_CNT);
+      broadcastProgressForUser(progress);
     }
 
     throw new MeasurementError("cannot perform traceroute to " + task.target);
@@ -273,6 +277,11 @@ public class TracerouteTask extends MeasurementTask {
   @Override
   public String getType() {
     return TracerouteTask.TYPE;
+  }
+  
+  @Override
+  public String getDescriptor() {
+    return DESCRIPTOR;
   }
   
   private void cleanUp(Process proc) {

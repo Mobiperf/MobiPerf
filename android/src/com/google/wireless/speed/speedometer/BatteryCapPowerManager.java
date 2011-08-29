@@ -56,22 +56,27 @@ public class BatteryCapPowerManager {
     
     private MeasurementTask realTask;
     private BatteryCapPowerManager pManager;
+    private MeasurementScheduler scheduler;
     
-    public PowerAwareTask(MeasurementTask task, BatteryCapPowerManager manager) {
+    public PowerAwareTask(MeasurementTask task, BatteryCapPowerManager manager, 
+                          MeasurementScheduler scheduler) {
       realTask = task;
       pManager = manager;
+      this.scheduler = scheduler;
     }
     
     @Override
     public MeasurementResult call() throws MeasurementError {
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
+        scheduler.setCurrentTask(realTask);
         if (!pManager.canScheduleExperiment()) {
           throw new MeasurementError("Not enough power");
         }
         return realTask.call();
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
+        scheduler.setCurrentTask(null);
       }
     }
   }
