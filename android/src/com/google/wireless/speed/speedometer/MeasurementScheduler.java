@@ -6,6 +6,7 @@ import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTa
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -44,6 +45,9 @@ import java.util.concurrent.PriorityBlockingQueue;
  * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
+  
+  // This arbitrary id is private to Speedometer
+  private static final int NOTIFICATION_ID = 1234;
   
   private ExecutorService measurementExecutor;
   private BroadcastReceiver broadcastReceiver;
@@ -140,6 +144,25 @@ public class MeasurementScheduler extends Service {
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
+    startSpeedomterInForeGround();
+  }
+  
+  private void startSpeedomterInForeGround() {
+    //The intent to launch when the user clicks the expanded notification
+    Intent intent = new Intent(this, SpeedometerApp.class);
+    PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
+        PendingIntent.FLAG_CANCEL_CURRENT);
+
+    //This constructor is deprecated in 3.x. But most phones still run 2.x systems
+    Notification notice = new Notification(R.drawable.icon, 
+        getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+
+    //This is deprecated in 3.x. But most phones still run 2.x systems
+    notice.setLatestEventInfo(this, "Speedometer", 
+        getString(R.string.notificatioContent), pendIntent);
+
+    //Put scheduler service into foreground. Makes the process less likely of being killed
+    startForeground(NOTIFICATION_ID, notice);
   }
   
   private void handleCheckin() {    
