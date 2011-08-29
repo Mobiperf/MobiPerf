@@ -56,5 +56,7 @@ public interface Config {
   public static final int MAX_PROGRESS_BAR_VALUE = 100;
   public static final int DEFAULT_USER_MEASUREMENT_COUNT = 1;
   
+  public static final int MAX_USER_MEASUREMENT_COUNT = 10;
+  
   public static final long MIN_CHECKIN_INTERVAL_SEC = 3600;
 }
