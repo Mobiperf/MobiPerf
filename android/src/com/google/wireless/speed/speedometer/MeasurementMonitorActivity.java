@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
@@ -23,6 +22,7 @@ public class MeasurementMonitorActivity extends Activity {
   /** Called when the activity is first created. */
   
   public static final String KEY_CONSOLE_CONTENT = "KEY_CONSOLE_CONTENT";
+  public static final String TAB_TAG = "MEASUREMENT_MONITOR";
   
   private ListView consoleView;
   private ArrayAdapter<String> consoleContent;
@@ -41,20 +41,6 @@ public class MeasurementMonitorActivity extends Activity {
         }
       }
     };
-  }
-   
-  /* Upgrades the progress bar in the UI*/
-  private void upgradeProgress(int progress, int max) {
-      ProgressBar pb = (ProgressBar) this.findViewById(R.drawable.progress_bar);
-      // Set it to be visible when updating
-      pb.setVisibility(0);
-      if (progress == max) {
-        pb.setProgress(pb.getMax());
-      } else {
-        if (max > 0) {
-          pb.setProgress(pb.getMax() * progress / max);
-        }
-      }
   }
   
   @Override

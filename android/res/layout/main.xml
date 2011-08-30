@@ -46,15 +46,7 @@
           android:layout_height="wrap_content"
           android:id="@+viewId/systemConsole"
           android:scrollbars="vertical"/>
-        <ProgressBar  
-          style="@android:style/Widget.ProgressBar.Horizontal"
-          android:layout_width="match_parent" 
-          android:layout_height="wrap_content"
-          android:id="@drawable/progress_bar"
-          android:layout_alignParentBottom="true"
-          android:visibility="invisible"
-          android:max="100"/>
       </RelativeLayout>
-    </FrameLayout>>
+    </FrameLayout>
   </LinearLayout>
 </TabHost>

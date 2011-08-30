@@ -8,7 +8,8 @@ package com.google.wireless.speed.speedometer;
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
-public interface Config {  
+public interface Config {
+  public static final boolean DEFAULT_START_ON_BOOT = false;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
@@ -31,7 +32,7 @@ public interface Config {
   /** Constants used in MeasurementScheduler.java */
   // The default checkin interval in seconds
   public static final long DEFAULT_CHECKIN_INTERVAL_SEC = 60 * 60L;
-  public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 10L;
+  public static final long MIN_CHECKIN_RETRY_INTERVAL_SEC = 20L;
   public static final long MAX_CHECKIN_RETRY_INTERVAL_SEC = 60L;
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;

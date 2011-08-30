@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
   // the priority queue we use put the smallest element in the head of the queue
   public static final int USER_PRIORITY = Integer.MIN_VALUE;
+  public static final int INVALID_PRIORITY = Integer.MAX_VALUE;
   
   protected MeasurementDesc measurementDesc;
   protected Context parent;
@@ -148,7 +149,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     if (measurementDesc.priority == MeasurementTask.USER_PRIORITY) {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, progress);
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, progress);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       parent.sendBroadcast(intent);
     }
   }

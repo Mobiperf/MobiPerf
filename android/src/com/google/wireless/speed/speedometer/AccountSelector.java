@@ -191,6 +191,7 @@ public class AccountSelector {
     public Cookie call() {
       Log.i(SpeedometerApp.TAG, "GetCookieTask running: " + authToken);
       DefaultHttpClient httpClient = new DefaultHttpClient();
+      boolean success = false;
       try {
         String loginUrlPrefix = checkin.getServerUrl() +
           "/_ah/login?continue=" + checkin.getServerUrl() + 
@@ -221,6 +222,7 @@ public class AccountSelector {
               || cookie.getName().equals("ACSID")) {
             Log.i(SpeedometerApp.TAG, "Got cookie " + cookie);
             setLastAuthTime(System.currentTimeMillis());
+            success = true;
             return cookie;
           }
         }
@@ -236,6 +238,9 @@ public class AccountSelector {
       } finally {
         httpClient.getParams().setBooleanParameter(
             ClientPNames.HANDLE_REDIRECTS, true);
+        if (!success) {
+          resetCheckinFuture();
+        }
       }
     }
   }

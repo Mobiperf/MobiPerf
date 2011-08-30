@@ -81,6 +81,7 @@ public class TestMeasurementTaskBase extends
       }
       
     }
+
     protected DummyTask(MeasurementDesc measurementDesc, Context parent) {
       super(measurementDesc, parent);
     }
