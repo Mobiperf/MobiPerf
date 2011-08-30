@@ -39,7 +39,6 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
-import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -328,7 +327,7 @@ public class PhoneUtils {
       for (NeighboringCellInfo info : infos) {
         buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
       }
-      
+      // Removes the trailing semicolon
       buf.deleteCharAt(buf.length() - 1);
       return buf.toString();
     } else {
