@@ -54,6 +54,7 @@ public interface Config {
   
   public static final int INVALID_PROGRESS = -1;
   public static final int MAX_PROGRESS_BAR_VALUE = 100;
+  // A progress greater than MAX_PROGRESS_BAR_VALUE indicates the end of the measurement
   public static final int MEASUREMENT_END_PROGRESS = MAX_PROGRESS_BAR_VALUE + 1;
   public static final int DEFAULT_USER_MEASUREMENT_COUNT = 1;
   
