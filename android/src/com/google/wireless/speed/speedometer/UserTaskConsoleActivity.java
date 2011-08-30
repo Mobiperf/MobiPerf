@@ -23,7 +23,6 @@ import java.util.ArrayList;
  *
  */
 public class UserTaskConsoleActivity extends Activity {
-  /** Called when the activity is first created. */
   
   public static final String KEY_USER_CONSOLE_CONTENT = "KEY_USER_CONSOLE_CONTENT";
   public static final String TAB_TAG = "MY_MEASUREMENTS";
