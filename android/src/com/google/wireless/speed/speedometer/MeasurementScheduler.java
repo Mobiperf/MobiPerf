@@ -7,6 +7,7 @@ import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -15,7 +16,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -81,6 +81,9 @@ public class MeasurementScheduler extends Service {
   private final IBinder binder = new SchedulerBinder();
       
   private MeasurementTask currentTask;
+  
+  NotificationManager notificationManager;
+  private int completedMeasurementCnt = 0;
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -118,6 +121,7 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>>();
     
+    this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     this.alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
     this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
     // Register activity specific BroadcastReceiver here    
@@ -379,7 +383,28 @@ public class MeasurementScheduler extends Service {
     } catch (ClassCastException e) {
       Log.e(SpeedometerApp.TAG, "cannot compare this task against existing ones");
       return false;
+    } finally {
+      updateNotificationBar();
     }
+  }
+  
+  private void updateNotificationBar() {
+    //The intent to launch when the user clicks the expanded notification
+    Intent intent = new Intent(this, SpeedometerApp.class);
+    PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
+        PendingIntent.FLAG_CANCEL_CURRENT);
+
+    //This constructor is deprecated in 3.x. But most phones still run 2.x systems
+    Notification notice = new Notification(R.drawable.icon, 
+        getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+
+    String notificationContent = "Finished:" + completedMeasurementCnt;
+    notificationContent += " Pending:" + taskQueue.size();
+    //This is deprecated in 3.x. But most phones still run 2.x systems
+    notice.setLatestEventInfo(this, "Speedometer", 
+        notificationContent, pendIntent);
+
+    notificationManager.notify(NOTIFICATION_ID, notice);
   }
   
   private void updateFromPreference() {
@@ -483,6 +508,7 @@ public class MeasurementScheduler extends Service {
                 if (!future.isCancelled()) {
                   result = future.get();
                   finishedTasks.add(result);
+                  completedMeasurementCnt++;
                 } else {
                   finishedTasks.add(this.getFailureResult(task));
                 }
