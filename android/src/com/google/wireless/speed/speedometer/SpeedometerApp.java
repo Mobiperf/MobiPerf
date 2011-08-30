@@ -3,10 +3,7 @@
 package com.google.wireless.speed.speedometer;
 
 import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.TabActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -34,6 +31,7 @@ public class SpeedometerApp extends TabActivity {
   public static final String TAG = "Speedometer";
   
   private MeasurementScheduler scheduler;
+  private TabHost tabHost;
   private boolean isBound = false;
   private boolean isBindingToService = false;  
   /** Defines callbacks for service binding, passed to bindService() */
@@ -62,6 +60,11 @@ public class SpeedometerApp extends TabActivity {
       bindToService();
       return null;
     }
+  }
+  
+  /** Returns the tab host. Allows child tabs to request focus changes, etc... */
+  public TabHost getSpeedomterTabHost() {
+    return tabHost;
   }
   
   private void setPauseIconBasedOnSchedulerState(MenuItem item) {
@@ -140,7 +143,7 @@ public class SpeedometerApp extends TabActivity {
     Security.setProperty("networkaddress.cache.negative.ttl", "0"); 
 
     Resources res = getResources(); // Resource object to get Drawables
-    TabHost tabHost = getTabHost();  // The activity TabHost
+    tabHost = getTabHost();  // The activity TabHost
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
@@ -148,18 +151,22 @@ public class SpeedometerApp extends TabActivity {
     intent = new Intent().setClass(this, MeasurementMonitorActivity.class);
 
     // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec("measurement_monitor").setIndicator("Console",
+    spec = tabHost.newTabSpec(MeasurementMonitorActivity.TAB_TAG).setIndicator("Console",
         res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
-    spec = tabHost.newTabSpec("measurement_creation").setIndicator("Create Measurement",
+    spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
+        "Create Measurement", res.getDrawable(R.drawable.tablet)).setContent(intent);
+    tabHost.addTab(spec);
+    // Creates the user task console tab
+    intent = new Intent().setClass(this, UserTaskConsoleActivity.class);
+    spec = tabHost.newTabSpec(UserTaskConsoleActivity.TAB_TAG).setIndicator("My Measurements",
         res.getDrawable(R.drawable.tablet)).setContent(intent);
     tabHost.addTab(spec);
 
-    tabHost.setCurrentTab(0);
-    
+    tabHost.setCurrentTabByTag(MeasurementMonitorActivity.TAB_TAG);
     // We only need one instance of scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
     this.startService(intent);

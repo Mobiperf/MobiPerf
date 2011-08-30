@@ -611,14 +611,16 @@ public class MeasurementScheduler extends Service {
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
           " is running. " + (realTask.getDescription().count - 1) + " more to run.");
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       MeasurementScheduler.this.sendBroadcast(intent);
     }
     
     private void broadcastMeasurementEnd(MeasurementResult result) {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       // A progress value greater than max progress to indicate the termination of a measurement
-      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
       // Update the status bar if this is the last of the list of measurements the user
       // has scheduled
       if (realTask.measurementDesc.count == 1) {
