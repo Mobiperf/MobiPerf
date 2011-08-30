@@ -39,6 +39,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.telephony.CellLocation;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -209,9 +210,7 @@ public class PhoneUtils {
       // so that either all get assigned, or none get assigned.
       connectivityManager = tryConnectivityManager;
       telephonyManager = tryTelephonyManager;
-      telephonyManager.listen(new SignalStrengthChangeListener(), 
-          PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-
+      
       // Some interesting info to look at in the logs
       NetworkInfo[] infos = connectivityManager.getAllNetworkInfo();
       for (NetworkInfo networkInfo : infos) {
@@ -222,6 +221,16 @@ public class PhoneUtils {
     }
     assert connectivityManager != null;
     assert telephonyManager != null;
+  }
+  
+  /**
+   * This method must be called in the service thread, as the system will create a Looper in
+   * the calling thread which will handle the callbacks.
+   */
+  public void registerSignalStrengthListener() {
+    initNetwork();
+    telephonyManager.listen(new SignalStrengthChangeListener(), 
+        PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
   }
 
   /** Returns the network that the phone is on (e.g. Wifi, Edge, GPRS, etc). */
@@ -302,6 +311,29 @@ public class PhoneUtils {
   public int getRssi() {
     initNetwork();
     return getCurrentRssi();
+  }
+  
+  /**
+   * Returns the information about cell towers in range. Returns null if the information is 
+   * not available 
+   * 
+   * TODO(wenjiezeng): As folklore has it and Wenjie has confirmed, we cannot get cell info from
+   * Samsung phones.
+   */
+  public String getCellInfo() {
+    initNetwork();
+    List<NeighboringCellInfo> infos = telephonyManager.getNeighboringCellInfo();
+    StringBuffer buf = new StringBuffer();
+    if (infos.size() > 0) {
+      for (NeighboringCellInfo info : infos) {
+        buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
+      }
+      
+      buf.deleteCharAt(buf.length() - 1);
+      return buf.toString();
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -661,17 +693,13 @@ public class PhoneUtils {
   private class SignalStrengthChangeListener extends PhoneStateListener {
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-      Log.i(SpeedometerApp.TAG, "Rssi is updated");
       if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_CDMA]) == 0) {
-        Log.i(SpeedometerApp.TAG, "Updating rssi with CDMA dbm");
         setCurrentRssi(signalStrength.getCdmaDbm());
       } else if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_0]) == 0 ||
           getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_A]) == 0 ||
           getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_B]) == 0) {
-        Log.i(SpeedometerApp.TAG, "Updating rssi with EVDO dbm");
         setCurrentRssi(signalStrength.getEvdoDbm());
       } else if (signalStrength.isGsm()) {
-        Log.i(SpeedometerApp.TAG, "Updating rssi with GSM dbm");
         setCurrentRssi(signalStrength.getGsmSignalStrength());
       }
     }
