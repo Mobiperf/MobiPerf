@@ -106,6 +106,7 @@ public class MeasurementScheduler extends Service {
   public void onCreate() {
     RuntimeUtil.setContext(this.getApplicationContext());
     PhoneUtils.setGlobalContext(this.getApplicationContext());
+    PhoneUtils.getPhoneUtils().registerSignalStrengthListener();
     this.checkin = new Checkin(this);
     this.checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
     this.checkinRetryCnt = 0;

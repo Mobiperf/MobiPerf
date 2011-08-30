@@ -68,6 +68,13 @@ class DeviceProperties(db.Model):
   battery_level = db.IntegerProperty()
   # Battery charging status
   is_battery_charging = db.BooleanProperty()
+  # Cell information represented as a string in the form of
+  # 'LAC,CID,RSSI;LAC,CID,RSSI;...', where each semicolon separated
+  # triplet 'LAC,CID,RSSI' are the Location Area Code, cell ID, and RSSI for
+  # one of the cell towers in range
+  cell_info = db.StringProperty()
+  # Receive signal strength of the current cellular connection
+  rssi = db.IntegerProperty()
 
   def JSON_DECODE_location(self, inputval):
     lat = float(inputval['latitude'])
