@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -263,6 +264,7 @@ public class TracerouteTask extends MeasurementTask {
       }
       ttl++;
       this.progress = (int) (100 * ttl / (double) TracerouteTask.EXPECTED_HOP_CNT);
+      this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
       broadcastProgressForUser(progress);
     }
 

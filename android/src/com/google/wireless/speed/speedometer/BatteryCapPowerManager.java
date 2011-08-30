@@ -3,6 +3,7 @@
 package com.google.wireless.speed.speedometer;
 
 import android.content.Context;
+import android.content.Intent;
 
 import java.util.concurrent.Callable;
 
@@ -65,6 +66,16 @@ public class BatteryCapPowerManager {
       this.scheduler = scheduler;
     }
     
+    private void broadcastMeasurementEnd() {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, realTask.getDescription().priority);
+      // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
+      
+      scheduler.sendBroadcast(intent);
+    }
+    
     @Override
     public MeasurementResult call() throws MeasurementError {
       try {
@@ -77,6 +88,7 @@ public class BatteryCapPowerManager {
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         scheduler.setCurrentTask(null);
+        broadcastMeasurementEnd();
       }
     }
   }

@@ -290,6 +290,7 @@ public class PingTask extends MeasurementTask {
           }
         }
         this.progress = 100 * ++lineCnt / Config.PING_COUNT_PER_MEASUREMENT;
+        this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
         broadcastProgressForUser(progress);
         Log.i(SpeedometerApp.TAG, line);
       }     

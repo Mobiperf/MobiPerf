@@ -82,8 +82,9 @@ public class MeasurementScheduler extends Service {
       
   private MeasurementTask currentTask;
   
-  NotificationManager notificationManager;
+  private NotificationManager notificationManager;
   private int completedMeasurementCnt = 0;
+  
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -132,6 +133,7 @@ public class MeasurementScheduler extends Service {
     filter.addAction(UpdateIntent.CHECKIN_ACTION);
     filter.addAction(UpdateIntent.CHECKIN_RETRY_ACTION);
     filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
+    filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
     
     broadcastReceiver = new BroadcastReceiver() {
       // If preferences are changed by the user, the scheduler will receive the update 
@@ -146,6 +148,13 @@ public class MeasurementScheduler extends Service {
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
           Log.d(SpeedometerApp.TAG, "MeasurementIntent intent received");
           handleMeasurement();
+        } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
+          Log.d(SpeedometerApp.TAG, "MeasurementIntent update intent received");
+          if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == 
+              Config.MEASUREMENT_END_PROGRESS) {
+            completedMeasurementCnt++;
+            updateNotificationBar();
+          }
         }
       }
     };
@@ -509,7 +518,6 @@ public class MeasurementScheduler extends Service {
                 if (!future.isCancelled()) {
                   result = future.get();
                   finishedTasks.add(result);
-                  completedMeasurementCnt++;
                 } else {
                   finishedTasks.add(this.getFailureResult(task));
                 }
@@ -647,7 +655,7 @@ public class MeasurementScheduler extends Service {
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       // A progress value greater than max progress to indicate the termination of a measurement
-      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MAX_PROGRESS_BAR_VALUE + 1);
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
       // Update the status bar if this is the last of the list of measurements the user
       // has scheduled
       if (realTask.measurementDesc.count == 1) {

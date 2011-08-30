@@ -31,6 +31,10 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   
   protected MeasurementDesc measurementDesc;
   protected Context parent;
+  /* When updating the 'progress' field, ensure that it's within the range between 0 and
+   * Config.MAX_PROGRESS_BAR_VALUE, inclusive. Values outside this range have special meanings and
+   * can trigger unexpected results.
+   */
   protected int progress;
   private static HashMap<String, Class> measurementTypes;
   // Maps between the type of task and its readable name
