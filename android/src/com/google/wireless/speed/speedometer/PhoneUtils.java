@@ -305,14 +305,6 @@ public class PhoneUtils {
   }
   
   /**
-   * Returns the received signal strength or NeighboringCellInfo.UNKNOWN_RSSI if unknown 
-   */
-  public int getRssi() {
-    initNetwork();
-    return getCurrentRssi();
-  }
-  
-  /**
    * Returns the information about cell towers in range. Returns null if the information is 
    * not available 
    * 
@@ -661,6 +653,7 @@ public class PhoneUtils {
    * Returns the last updated RSSI value
    */
   public synchronized int getCurrentRssi() {
+    initNetwork();
     return currentSignalStrength;
   }
   
@@ -692,11 +685,12 @@ public class PhoneUtils {
   private class SignalStrengthChangeListener extends PhoneStateListener {
     @Override
     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-      if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_CDMA]) == 0) {
+      String network = getNetwork();
+      if (network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_CDMA])) {
         setCurrentRssi(signalStrength.getCdmaDbm());
-      } else if (getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_0]) == 0 ||
-          getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_A]) == 0 ||
-          getNetwork().compareTo(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_B]) == 0) {
+      } else if (network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_0]) ||
+          network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_A]) ||
+            network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_B])) {
         setCurrentRssi(signalStrength.getEvdoDbm());
       } else if (signalStrength.isGsm()) {
         setCurrentRssi(signalStrength.getGsmSignalStrength());
