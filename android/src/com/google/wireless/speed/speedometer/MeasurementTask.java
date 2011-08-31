@@ -143,6 +143,9 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     
   @Override
   public String toString() {
+    String result = "[Measurement " + getDescriptor() + " scheduled to run at " + 
+        getDescription().startTime + "]";
+    
     return this.measurementDesc.toString();
   }
   

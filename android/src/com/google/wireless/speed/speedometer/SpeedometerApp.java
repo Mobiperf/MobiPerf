@@ -22,6 +22,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import java.security.Security;
+import java.util.ArrayList;
 
 /**
  * The main UI thread that manages different tabs
@@ -173,6 +174,12 @@ public class SpeedometerApp extends TabActivity {
     spec = tabHost.newTabSpec(ResultsConsoleActivity.TAB_TAG).setIndicator(
         "Results").setContent(intent);
     tabHost.addTab(spec);
+    
+    // Creates the measurement schedule console tab
+    intent = new Intent().setClass(this, MeasurementScheduleConsoleActivity.class);
+    spec = tabHost.newTabSpec(MeasurementScheduleConsoleActivity.TAB_TAG).setIndicator(
+        "Schedule").setContent(intent);
+    tabHost.addTab(spec);
 
     tabHost.setCurrentTabByTag(SystemConsoleActivity.TAB_TAG);
     
@@ -181,8 +188,6 @@ public class SpeedometerApp extends TabActivity {
     // We only need one instance of scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
     this.startService(intent);
-    // Bind to the scheduler service for only once during the lifetime of the activity
-    bindToService();
     
     this.receiver = new BroadcastReceiver() {
       @Override
@@ -214,6 +219,8 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStart() {
+    // Bind to the scheduler service for only once during the lifetime of the activity
+    bindToService();
     super.onStart();
   }
   

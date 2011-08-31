@@ -293,4 +293,11 @@ public class HttpTask extends MeasurementTask {
   public String getDescriptor() {
     return DESCRIPTOR;
   }
+  
+  @Override
+  public String toString() {
+    HttpDesc desc = (HttpDesc) measurementDesc;
+    return "HTTP " + desc.method + " to " + desc.url + " with an interval of " + desc.intervalSec 
+        + " seconds. Next run will be at " + desc.startTime;
+  }
 }

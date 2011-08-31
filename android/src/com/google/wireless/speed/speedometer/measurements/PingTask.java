@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InvalidClassException;
+import java.lang.annotation.Target;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -403,5 +404,11 @@ public class PingTask extends MeasurementTask {
     Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
     throw new MeasurementError(errorMsg);
   }
+  
+  @Override
+  public String toString() {
+    PingDesc desc = (PingDesc) measurementDesc;
+    return "Ping " + desc.target + " with an interval of " + desc.intervalSec 
+        + " seconds. Next run will be at " + desc.startTime;
+  }
 }
-

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -260,6 +261,27 @@ public class MeasurementScheduler extends Service {
    */
   public MeasurementTask getCurrentTask() {
     return this.currentTask;
+  }
+  
+  /**
+   * Removes the first task in the taskQueue with the taskKey
+   */
+  public boolean removeTaskByKey(String taskKey) {
+    Iterator<MeasurementTask> it = taskQueue.iterator();
+    while (it.hasNext()) {
+      MeasurementTask task = it.next();
+      if (task.getDescription().key.equals(taskKey)) {
+        it.remove();
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Returns the current task queue in the scheduler.
+   */
+  public PriorityBlockingQueue<MeasurementTask> getTaskQueue() {
+    return taskQueue;
   }
   
   @Override 
