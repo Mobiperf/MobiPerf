@@ -27,14 +27,11 @@ import java.util.ArrayList;
  */
 public class SystemConsoleActivity extends Activity {
   /** Called when the activity is first created. */
-  
-  public static final String KEY_CONSOLE_CONTENT = "KEY_CONSOLE_CONTENT";
   public static final String TAB_TAG = "MEASUREMENT_MONITOR";
   
   private ListView consoleView;
   private ArrayAdapter<String> consoleContent;
   BroadcastReceiver receiver;
-  private boolean isInstanceSaved = false;
   
   public SystemConsoleActivity() {
     // This receiver only receives intent actions generated from UpdateIntent
@@ -72,12 +69,17 @@ public class SystemConsoleActivity extends Activity {
     }
   }
   
+  /**
+   * Persists the content of the console as a JSON string
+   */
   private void saveConsoleContent() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     SharedPreferences.Editor editor = prefs.edit();
 
     int length = consoleContent.getCount();
     ArrayList<String> items = new ArrayList<String>();
+    // Since we use insertToConsole later on to restore the content, we have to store them
+    // in the reverse order to maintain the same look
     for (int i = length - 1; i >= 0; i--) {
       items.add(consoleContent.getItem(i));
     }
@@ -85,9 +87,11 @@ public class SystemConsoleActivity extends Activity {
     editor.putString(Config.PREF_KEY_SYSTEM_CONSOLE, 
         MeasurementJsonConvertor.getGsonInstance().toJson(items, listType));
     editor.commit();
-    Log.i(SpeedometerApp.TAG, "onPause");
   }
   
+  /**
+   * Restores the console content from the saved JSON string
+   */
   private void restoreConsole() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     String savedConsole = prefs.getString(Config.PREF_KEY_SYSTEM_CONSOLE, 
@@ -109,6 +113,5 @@ public class SystemConsoleActivity extends Activity {
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
     saveConsoleContent();
-    Log.i(SpeedometerApp.TAG, "onDestroy");
   }
 }
