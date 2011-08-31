@@ -403,5 +403,11 @@ public class PingTask extends MeasurementTask {
     Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
     throw new MeasurementError(errorMsg);
   }
+  
+  @Override
+  public String toString() {
+    PingDesc desc = (PingDesc) measurementDesc;
+    return "[Ping]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
+        + "\n  Next run: " + desc.startTime;
+  }
 }
-

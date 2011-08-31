@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.google.wireless.speed.speedometer" android:versionCode="7"
-  android:versionName="1.2.4">
+  package="com.google.wireless.speed.speedometer" android:versionCode="8"
+  android:versionName="1.2.5">
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.GET_ACCOUNTS" />
   <uses-permission android:name="android.permission.USE_CREDENTIALS" />
@@ -50,6 +50,10 @@
     </activity>
     <activity 
       android:name=".SpeedometerPreferenceActivity" 
+      android:theme="@android:style/Theme.NoTitleBar">
+    </activity>
+    <activity 
+      android:name=".MeasurementScheduleConsoleActivity" 
       android:theme="@android:style/Theme.NoTitleBar">
     </activity>
     <service 

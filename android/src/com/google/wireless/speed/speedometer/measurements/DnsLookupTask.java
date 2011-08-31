@@ -149,4 +149,11 @@ public class DnsLookupTask extends MeasurementTask {
   public String getDescriptor() {
     return DESCRIPTOR;
   }
+  
+  @Override
+  public String toString() {
+    DnsLookupDesc desc = (DnsLookupDesc) measurementDesc;
+    return "[DNS Lookup]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
+        + "\n  Next run: " + desc.startTime;
+  }
 }

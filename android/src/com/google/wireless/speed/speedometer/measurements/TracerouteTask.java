@@ -366,4 +366,11 @@ public class TracerouteTask extends MeasurementTask {
       this.rtt = rtt;
     }
   }
+  
+  @Override
+  public String toString() {
+    TracerouteDesc desc = (TracerouteDesc) measurementDesc;
+    return "[Traceroute]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
+    + "\n  Next run: " + desc.startTime;
+  }
 }
