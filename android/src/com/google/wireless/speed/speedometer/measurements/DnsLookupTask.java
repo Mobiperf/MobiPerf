@@ -7,7 +7,6 @@ import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
@@ -154,7 +153,7 @@ public class DnsLookupTask extends MeasurementTask {
   @Override
   public String toString() {
     DnsLookupDesc desc = (DnsLookupDesc) measurementDesc;
-    return "DNS lookup " + desc.target + " with an interval of " + desc.intervalSec 
-        + " seconds. Next run will be at " + desc.startTime;
+    return "[DNS Lookup]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
+        + "\n  Next run: " + desc.startTime;
   }
 }

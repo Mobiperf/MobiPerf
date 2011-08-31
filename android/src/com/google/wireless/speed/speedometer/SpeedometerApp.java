@@ -22,7 +22,6 @@ import android.widget.TabHost;
 import android.widget.TextView;
 
 import java.security.Security;
-import java.util.ArrayList;
 
 /**
  * The main UI thread that manages different tabs

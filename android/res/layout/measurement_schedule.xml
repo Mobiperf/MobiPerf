@@ -3,15 +3,16 @@
   android:orientation="vertical"
   android:layout_width="match_parent"
   android:layout_height="match_parent">
-  <ListView
-    android:layout_width="match_parent" 
-    android:layout_height="wrap_content"
-    android:id="@+id/measurementScheduleConsole"
-    android:scrollbars="vertical"/>
   <Button android:id="@+id/refreshScheduleButton" 
     android:layout_width="90dip" 
     android:layout_height="wrap_content" 
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
     android:text="Refresh" />
+  <ListView
+    android:layout_width="match_parent" 
+    android:layout_height="wrap_content"
+    android:id="@+id/measurementScheduleConsole"
+    android:layout_above="@id/refreshScheduleButton"
+    android:scrollbars="vertical"/>
 </RelativeLayout>

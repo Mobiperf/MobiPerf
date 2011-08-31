@@ -27,13 +27,14 @@ import java.util.HashMap;
  *
  */
 public class MeasurementScheduleConsoleActivity extends Activity {
-  public final static String TAB_TAG = "MEASUREMENT_SCHEDULE";
+  public static final String TAB_TAG = "MEASUREMENT_SCHEDULE";
   
   private MeasurementScheduler scheduler;
+  private SpeedometerApp parent;
   private ListView consoleView;
   private ArrayAdapter<String> consoleContent;
-  private SpeedometerApp parent;
-  private HashMap<String, MeasurementTask> taskMap;
+  // Maps the toString() of a measurementTask to its key
+  private HashMap<String, String> taskMap;
   private int longClickedItemPosition = -1;
   
   @Override
@@ -41,13 +42,16 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     super.onCreate(savedInstanceState);
     this.setContentView(R.layout.measurement_schedule);
     
-    taskMap = new HashMap<String, MeasurementTask>();
+    taskMap = new HashMap<String, String>();
     parent = (SpeedometerApp) this.getParent();
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
     this.consoleView = (ListView) this.findViewById(R.id.measurementScheduleConsole);
     this.consoleView.setAdapter(consoleContent);
     Button refreshButton = (Button) this.findViewById(R.id.refreshScheduleButton);
     refreshButton.setOnClickListener(new OnClickListener() {
+      /**
+       * Updates the schedule in the console
+       */
       @Override
       public void onClick(View v) {
         updateConsole();
@@ -56,6 +60,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
 
     registerForContextMenu(consoleView);
     consoleView.setOnItemLongClickListener(new OnItemLongClickListener() {
+      /**
+       * Records which item in the list is selected
+       */
       @Override
       public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         longClickedItemPosition = position;
@@ -63,6 +70,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
       }});
   }
   
+  /**
+   * Handles context menu creation for the ListView in the console
+   */
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v,
                                   ContextMenuInfo menuInfo) {
@@ -77,6 +87,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     updateConsole();
   }
   
+  /**
+   * Handles the deletion of the measurement tasks when the user clicks the context menu
+   */
   @Override
   public boolean onContextItemSelected(MenuItem item) {
     AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
@@ -85,9 +98,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
         scheduler = parent.getScheduler();
         if (scheduler != null) {
           String selectedTaskString = consoleContent.getItem(longClickedItemPosition);
-          MeasurementTask task = taskMap.get(selectedTaskString);
-          if (task != null) {
-            scheduler.removeTaskByKey(task.getDescription().key);
+          String taskKey = taskMap.get(selectedTaskString);
+          if (taskKey != null) {
+            scheduler.removeTaskByKey(taskKey);
           }
         }
         updateConsole();
@@ -95,11 +108,6 @@ public class MeasurementScheduleConsoleActivity extends Activity {
       default:
     }
     return false;
-  }
-  
-  @Override
-  protected void onPause() {
-    super.onPause();
   }
   
   private void updateConsole() {
@@ -111,7 +119,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
       for (MeasurementTask task : tasks) {
         String taskStr = task.toString();
         consoleContent.add(taskStr);
-        taskMap.put(taskStr, task);
+        taskMap.put(taskStr, task.getDescription().key);
       }
     }
   }

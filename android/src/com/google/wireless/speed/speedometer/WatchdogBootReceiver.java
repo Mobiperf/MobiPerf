@@ -18,7 +18,7 @@ import android.util.Log;
 public class WatchdogBootReceiver extends BroadcastReceiver {
 
   @Override
-  final public void onReceive(Context context, Intent intent) {
+  public final void onReceive(Context context, Intent intent) {
     Log.i(SpeedometerApp.TAG, "Boot intent received.");
     Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
