@@ -93,7 +93,7 @@ public class BatteryCapPowerManager {
     
     private void broadcastPowerThreasholdReached() {
       Intent intent = new Intent();
-      intent.setAction(UpdateIntent.MSG_ACTION);
+      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, 
           scheduler.getString(R.string.powerThreasholdReachedMsg));
