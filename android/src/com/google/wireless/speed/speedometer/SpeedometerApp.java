@@ -156,10 +156,10 @@ public class SpeedometerApp extends TabActivity {
     Intent intent;  // Reusable Intent for each tab
 
     // Create an Intent to launch an Activity for the tab (to be reused)
-    intent = new Intent().setClass(this, MeasurementMonitorActivity.class);
+    intent = new Intent().setClass(this, SystemConsoleActivity.class);
 
     // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec(MeasurementMonitorActivity.TAB_TAG).setIndicator(
+    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
         "Console").setContent(intent);
     tabHost.addTab(spec);
 
@@ -169,12 +169,12 @@ public class SpeedometerApp extends TabActivity {
         "Measure").setContent(intent);
     tabHost.addTab(spec);
     // Creates the user task console tab
-    intent = new Intent().setClass(this, UserTaskConsoleActivity.class);
-    spec = tabHost.newTabSpec(UserTaskConsoleActivity.TAB_TAG).setIndicator(
+    intent = new Intent().setClass(this, ResultsConsoleActivity.class);
+    spec = tabHost.newTabSpec(ResultsConsoleActivity.TAB_TAG).setIndicator(
         "Results").setContent(intent);
     tabHost.addTab(spec);
 
-    tabHost.setCurrentTabByTag(MeasurementMonitorActivity.TAB_TAG);
+    tabHost.setCurrentTabByTag(SystemConsoleActivity.TAB_TAG);
     
     statusBar = (TextView) findViewById(R.id.systemStatusBar);
     

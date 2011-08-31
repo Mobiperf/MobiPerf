@@ -21,7 +21,7 @@ import java.util.ArrayList;
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
-public class UserTaskConsoleActivity extends Activity {
+public class ResultsConsoleActivity extends Activity {
   
   public static final String KEY_USER_CONSOLE_CONTENT = "KEY_USER_CONSOLE_CONTENT";
   public static final String TAB_TAG = "MY_MEASUREMENTS";
@@ -34,7 +34,7 @@ public class UserTaskConsoleActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.my_measurements);
+    setContentView(R.layout.results);
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);

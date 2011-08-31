@@ -37,11 +37,11 @@
       android:theme="@android:style/Theme.NoTitleBar">
     </activity>
     <activity 
-      android:name=".MeasurementMonitorActivity" 
+      android:name=".SystemConsoleActivity" 
       android:theme="@android:style/Theme.NoTitleBar">      
     </activity>
     <activity 
-      android:name=".UserTaskConsoleActivity"
+      android:name=".ResultsConsoleActivity"
       android:theme="@android:style/Theme.NoTitleBar">
     </activity>
     <activity 

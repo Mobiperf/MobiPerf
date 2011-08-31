@@ -18,7 +18,7 @@ import java.util.ArrayList;
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
-public class MeasurementMonitorActivity extends Activity {
+public class SystemConsoleActivity extends Activity {
   /** Called when the activity is first created. */
   
   public static final String KEY_CONSOLE_CONTENT = "KEY_CONSOLE_CONTENT";
@@ -28,7 +28,7 @@ public class MeasurementMonitorActivity extends Activity {
   private ArrayAdapter<String> consoleContent;
   BroadcastReceiver receiver;
   
-  public MeasurementMonitorActivity() {
+  public SystemConsoleActivity() {
     // This receiver only receives intent actions generated from UpdateIntent
     this.receiver = new BroadcastReceiver() {
       @Override

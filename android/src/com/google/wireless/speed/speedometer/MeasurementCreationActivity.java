@@ -226,7 +226,7 @@ public class MeasurementCreationActivity extends Activity {
                 new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION));
             SpeedometerApp parent = (SpeedometerApp) getParent();
             TabHost tabHost = parent.getTabHost();
-            tabHost.setCurrentTabByTag(UserTaskConsoleActivity.TAB_TAG);
+            tabHost.setCurrentTabByTag(ResultsConsoleActivity.TAB_TAG);
             String toastStr = MeasurementCreationActivity.this.getString(
                 R.string.userMeasurementSuccessToast);
             if (showLengthWarning) {
