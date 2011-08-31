@@ -644,9 +644,13 @@ public class MeasurementScheduler extends Service {
     private void broadcastMeasurementStart() {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
+      MeasurementScheduler.this.sendBroadcast(intent);
+      
+      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
           " is running. " + (realTask.getDescription().count - 1) + " more to run.");
-      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
+      
       MeasurementScheduler.this.sendBroadcast(intent);
     }
     
@@ -656,12 +660,6 @@ public class MeasurementScheduler extends Service {
       intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       // A progress value greater than max progress to indicate the termination of a measurement
       intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
-      // Update the status bar if this is the last of the list of measurements the user
-      // has scheduled
-      if (realTask.measurementDesc.count == 1) {
-        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
-            MeasurementScheduler.this.getString(R.string.idleTextForUserConsoleStatusBar));
-      }
       
       if (result != null) {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
@@ -671,6 +669,15 @@ public class MeasurementScheduler extends Service {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }
       MeasurementScheduler.this.sendBroadcast(intent);
+      
+      // Update the status bar if this is the last of the list of measurements the user
+      // has scheduled
+      if (realTask.measurementDesc.count == 1) {
+        intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
+            "User measurement " + realTask.getDescriptor() + " has finished. Speedometer is idle.");
+        MeasurementScheduler.this.sendBroadcast(intent);
+      }
     }
     
     /**

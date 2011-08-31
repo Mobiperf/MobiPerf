@@ -46,7 +46,7 @@ public class MeasurementMonitorActivity extends Activity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.main);
+    setContentView(R.layout.console);
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.MSG_ACTION);

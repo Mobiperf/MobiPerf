@@ -13,22 +13,12 @@
       android:layout_height="wrap_content"
       android:visibility="gone"
       android:id="@+id/progress_bar"/>
-    <TextView
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:id="@+id/userConsoleStatusBar"
-      android:gravity="center_horizontal"
-      android:background="@color/gray"
-      android:text="@string/idleTextForUserConsoleStatusBar"
-      android:textSize="@dimen/largeTextSize"
-      android:layout_marginTop="@dimen/smallMarginBetweenRows"
-      android:layout_below="@id/progress_bar"/>
     <ListView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:id="@+id/userConsole"
       android:scrollbars="vertical"
       android:layout_marginTop="@dimen/smallMarginBetweenRows"
-      android:layout_below="@id/userConsoleStatusBar"/>
+      android:layout_below="@id/progress_bar"/>
   </RelativeLayout>
 </FrameLayout>

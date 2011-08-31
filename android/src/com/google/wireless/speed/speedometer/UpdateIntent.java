@@ -28,6 +28,8 @@ public class UpdateIntent extends Intent {
   public static final String CHECKIN_RETRY_ACTION = PACKAGE_PREFIX + ".CHECKIN_RETRY_ACTION";
   public static final String MEASUREMENT_PROGRESS_UPDATE_ACTION = 
       PACKAGE_PREFIX + ".MEASUREMENT_PROGRESS_UPDATE_ACTION";
+  public static final String SYSTEM_STATUS_UPDATE_ACTION = 
+      PACKAGE_PREFIX + ".SYSTEM_STATUS_UPDATE_ACTION";
   
   /**
    * Creates an intent of the specified action with an optional message

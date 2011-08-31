@@ -16,7 +16,9 @@
     <string name="speedometerServerUrl">http://speedometer.googleplex.com</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
+    <string name="pauseMessage">Speedometer is paused.</string>
     <string name="menuResume">Resume</string>
+    <string name="resumeMessage">Speedometer is running.</string>
     <string name="menuSettings">Settings</string>
     <string name="menuAbout">About</string>
     <string name="measurementTypePrompt">Measurement Type</string>
@@ -46,4 +48,5 @@
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
+    <string name="powerThreasholdReachedMsg">Battery level below user threshold. All automated measurements stop.</string>
 </resources>

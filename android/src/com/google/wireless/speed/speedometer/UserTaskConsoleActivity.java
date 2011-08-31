@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -31,7 +30,6 @@ public class UserTaskConsoleActivity extends Activity {
   private ArrayAdapter<String> consoleContent;
   BroadcastReceiver receiver;
   ProgressBar progresBar;
-  TextView statusBar;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +53,6 @@ public class UserTaskConsoleActivity extends Activity {
     this.progresBar = (ProgressBar) this.findViewById(R.id.progress_bar);
     this.progresBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);
     this.progresBar.setProgress(Config.MAX_PROGRESS_BAR_VALUE);
-    this.statusBar = (TextView) this.findViewById(R.id.userConsoleStatusBar);
     
     this.receiver = new BroadcastReceiver() {
       @Override
@@ -64,7 +61,6 @@ public class UserTaskConsoleActivity extends Activity {
         int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
             MeasurementTask.INVALID_PRIORITY);
         if (priority == MeasurementTask.USER_PRIORITY) {
-          updateStatusBar(intent);
           insertStringToConsole(intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD));
           upgradeProgress(intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD,
               Config.INVALID_PROGRESS), Config.MAX_PROGRESS_BAR_VALUE);
@@ -89,13 +85,6 @@ public class UserTaskConsoleActivity extends Activity {
       items.add(consoleContent.getItem(i));
     }
     bundle.putStringArrayList(KEY_USER_CONSOLE_CONTENT, items);
-  }
-  
-  private void updateStatusBar(Intent intent) {
-    String statusMsg = intent.getStringExtra(UpdateIntent.STATUS_MSG_PAYLOAD);
-    if (statusMsg != null) {
-      statusBar.setText(statusMsg);
-    }
   }
   
   private void insertStringToConsole(String msg) {
