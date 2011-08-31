@@ -61,4 +61,7 @@ public interface Config {
   public static final int MAX_USER_MEASUREMENT_COUNT = 10;
   
   public static final long MIN_CHECKIN_INTERVAL_SEC = 3600;
+  
+  public static final String PREF_KEY_SYSTEM_CONSOLE = "PREF_KEY_SYSTEM_CONSOLE";
+  public static final String PREF_KEY_STATUS_BAR = "PREF_KEY_STATUS_BAR";
 }

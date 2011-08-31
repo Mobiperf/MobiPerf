@@ -1,15 +1,22 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
+import com.google.myjson.reflect.TypeToken;
+import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 /**
@@ -27,6 +34,7 @@ public class SystemConsoleActivity extends Activity {
   private ListView consoleView;
   private ArrayAdapter<String> consoleContent;
   BroadcastReceiver receiver;
+  private boolean isInstanceSaved = false;
   
   public SystemConsoleActivity() {
     // This receiver only receives intent actions generated from UpdateIntent
@@ -35,10 +43,7 @@ public class SystemConsoleActivity extends Activity {
       public void onReceive(Context context, Intent intent) {
         String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
         // All onXyz() callbacks are single threaded
-        consoleContent.insert(msg + "\n", 0);
-        if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
-          consoleContent.remove(consoleContent.getItem(consoleContent.getCount() - 1));
-        }
+        insertToConsole(msg);
       }
     };
   }
@@ -53,38 +58,57 @@ public class SystemConsoleActivity extends Activity {
     this.registerReceiver(this.receiver, filter);
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
     // Restore saved content if it exists
-    if (savedInstanceState != null) {
-      ArrayList<String> savedContent = savedInstanceState.getStringArrayList(KEY_CONSOLE_CONTENT);
-      if (savedContent != null) {
-        for (String item : savedContent) {
-          consoleContent.add(item);
-        }
-      }
-    }
+    restoreConsole();
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
     this.consoleView.setAdapter(consoleContent);
   }
+  
+  private void insertToConsole(String msg) {
+    if (msg != null) {
+      consoleContent.insert(msg, 0);
+      if (consoleContent.getCount() > Config.MAX_LIST_ITEMS) {
+        consoleContent.remove(consoleContent.getItem(consoleContent.getCount() - 1));
+      }
+    }
+  }
+  
+  private void saveConsoleContent() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor editor = prefs.edit();
 
-  /**
-   * Save the console content before onDestroy()
-   * 
-   * TODO(wenjiezeng): Android does not call onSaveInstanceState when the user
-   * presses the 'back' button. To preserve console content between launches, we
-   * need to write the content to persistent storage and restore it upon onCreate().
-   */
-  @Override
-  protected void onSaveInstanceState(Bundle bundle) {
     int length = consoleContent.getCount();
     ArrayList<String> items = new ArrayList<String>();
-    for (int i = 0; i < length; i++) {
+    for (int i = length - 1; i >= 0; i--) {
       items.add(consoleContent.getItem(i));
     }
-    bundle.putStringArrayList(KEY_CONSOLE_CONTENT, items);
+    Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+    editor.putString(Config.PREF_KEY_SYSTEM_CONSOLE, 
+        MeasurementJsonConvertor.getGsonInstance().toJson(items, listType));
+    editor.commit();
+    Log.i(SpeedometerApp.TAG, "onPause");
+  }
+  
+  private void restoreConsole() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    String savedConsole = prefs.getString(Config.PREF_KEY_SYSTEM_CONSOLE, 
+        null);
+    if (savedConsole != null) {
+      Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+      ArrayList<String> items = MeasurementJsonConvertor.getGsonInstance().fromJson(savedConsole, 
+          listType);
+      if (items != null) {
+        for (String item : items) {
+          insertToConsole(item);
+        }
+      }
+    }
   }
   
   @Override
   protected void onDestroy() {
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
+    saveConsoleContent();
+    Log.i(SpeedometerApp.TAG, "onDestroy");
   }
 }

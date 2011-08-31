@@ -102,6 +102,10 @@ public class MeasurementJsonConvertor {
   public static String toJsonString(Object obj) {
     return gson.toJson(obj);
   }
+  
+  public static Gson getGsonInstance() {
+    return gson;
+  }
 
   private static class DateTypeConverter implements JsonSerializer<Date>,
                                                         JsonDeserializer<Date> {
