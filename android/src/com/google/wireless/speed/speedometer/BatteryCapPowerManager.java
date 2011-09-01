@@ -70,7 +70,7 @@ public class BatteryCapPowerManager {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Automated measurement " + 
-          realTask.getDescriptor() + " has started.");
+          realTask.getDescriptor() + " is running.");
       
       scheduler.sendBroadcast(intent);
     }

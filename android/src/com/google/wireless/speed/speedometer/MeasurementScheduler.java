@@ -710,10 +710,12 @@ public class MeasurementScheduler extends Service {
       MeasurementResult result = null;
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
+        setCurrentTask(realTask);
         broadcastMeasurementStart();
         result = realTask.call();
       } finally {
         broadcastMeasurementEnd(result);
+        setCurrentTask(null);
         PhoneUtils.getPhoneUtils().releaseWakeLock();
       }
       return result;
