@@ -85,8 +85,7 @@ public class BatteryCapPowerManager {
       scheduler.sendBroadcast(intent);
       
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Automated measurement " + 
-          realTask.getDescriptor() + " has finished. Speedometer is idle.");
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
       
       scheduler.sendBroadcast(intent);
     }

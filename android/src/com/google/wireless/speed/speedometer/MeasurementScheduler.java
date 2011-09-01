@@ -696,8 +696,7 @@ public class MeasurementScheduler extends Service {
       // has scheduled
       if (realTask.measurementDesc.count == 1) {
         intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
-            "User measurement " + realTask.getDescriptor() + " has finished. Speedometer is idle.");
+        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
         MeasurementScheduler.this.sendBroadcast(intent);
       }
     }
