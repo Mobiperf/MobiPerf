@@ -199,7 +199,6 @@ public class SpeedometerApp extends TabActivity {
     };
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-    this.registerReceiver(this.receiver, filter);
   }
   
   private void initializeStatusBar() {
@@ -209,7 +208,7 @@ public class SpeedometerApp extends TabActivity {
         if (currentTask.getDescription().priority == MeasurementTask.USER_PRIORITY) {
           updateStatusBar("User task " + currentTask.getDescriptor() + " is running");
         } else {
-          updateStatusBar("Automated task " + currentTask.getDescriptor() + " is running");
+          updateStatusBar("System task " + currentTask.getDescriptor() + " is running");
         }
       } else {
         updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
@@ -247,7 +246,12 @@ public class SpeedometerApp extends TabActivity {
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
-    }    
+    }
+  }
+  
+  @Override
+  protected void onDestroy() {
+    this.unregisterReceiver(this.receiver);
   }
 
   

@@ -48,5 +48,5 @@
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
-    <string name="powerThreasholdReachedMsg">Battery level below user threshold. All automated measurements stop.</string>
+    <string name="powerThreasholdReachedMsg">Battery level below user threshold. All system measurements stop.</string>
 </resources>

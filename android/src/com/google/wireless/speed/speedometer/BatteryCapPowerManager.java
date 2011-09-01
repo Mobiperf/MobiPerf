@@ -5,6 +5,7 @@ package com.google.wireless.speed.speedometer;
 import android.content.Context;
 import android.content.Intent;
 
+import java.util.Calendar;
 import java.util.concurrent.Callable;
 
 /**
@@ -69,18 +70,25 @@ public class BatteryCapPowerManager {
     private void broadcastMeasurementStart() {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Automated measurement " + 
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "System measurement " + 
           realTask.getDescriptor() + " is running.");
       
       scheduler.sendBroadcast(intent);
     }
     
-    private void broadcastMeasurementEnd() {
+    private void broadcastMeasurementEnd(MeasurementResult result) {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, realTask.getDescription().priority);
       // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
       intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
+      if (result != null) {
+        intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
+      } else {
+        String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
+        errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
+        intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+      }
       
       scheduler.sendBroadcast(intent);
       
@@ -102,7 +110,7 @@ public class BatteryCapPowerManager {
     
     @Override
     public MeasurementResult call() throws MeasurementError {
-      boolean shouldBroadcastEnd = false;
+      MeasurementResult result = null;
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
         if (scheduler.isPauseRequested()) {
@@ -114,14 +122,12 @@ public class BatteryCapPowerManager {
         }
         scheduler.setCurrentTask(realTask);
         broadcastMeasurementStart();
-        shouldBroadcastEnd = true;
-        return realTask.call();
+        result = realTask.call(); 
+        return result;
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         scheduler.setCurrentTask(null);
-        if (shouldBroadcastEnd) {
-          broadcastMeasurementEnd();
-        }
+        broadcastMeasurementEnd(result);
       }
     }
   }
