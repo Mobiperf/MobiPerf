@@ -2,7 +2,9 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.myjson.reflect.TypeToken;
 import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
+import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
@@ -21,8 +23,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -85,6 +90,13 @@ public class MeasurementScheduler extends Service {
   
   private NotificationManager notificationManager;
   private int completedMeasurementCnt = 0;
+  
+  /** The ArrayAdapter that stores the results of user measurements. Persisted upon app exit. */
+  public ArrayAdapter<String> userResults;
+  /** The ArrayAdapter that stores the results of system measurements. Persisted upon app exit. */
+  public ArrayAdapter<String> systemResults;
+  /** The ArrayAdapter that stores the content of the system console. Persisted upon app exit. */
+  public ArrayAdapter<String> systemConsole;
   
   /**
    * The Binder class that returns an instance of running scheduler 
@@ -155,11 +167,17 @@ public class MeasurementScheduler extends Service {
               Config.MEASUREMENT_END_PROGRESS) {
             completedMeasurementCnt++;
             updateNotificationBar();
+            updateResultsConsole(intent);
           }
+        } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
+          String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
+          insertStringToConsole(systemConsole, msg);
         }
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
+    
+    initializeConsoles();
     startSpeedomterInForeGround();
   }
   
@@ -502,6 +520,11 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.getPhoneUtils().shutDown();
     this.stopForeground(true);
     this.stopSelf();
+    
+    saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
+    saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
   
@@ -719,6 +742,86 @@ public class MeasurementScheduler extends Service {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
       }
       return result;
+    }
+  }
+  
+  /**
+   * Persists the content of the console as a JSON string
+   */
+  private void saveConsoleContent(ArrayAdapter<String> consoleContent, String prefKey) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor editor = prefs.edit();
+
+    int length = consoleContent.getCount();
+    ArrayList<String> items = new ArrayList<String>();
+    // Since we use insertToConsole later on to restore the content, we have to store them
+    // in the reverse order to maintain the same look
+    for (int i = length - 1; i >= 0; i--) {
+      items.add(consoleContent.getItem(i));
+    }
+    Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+    editor.putString(prefKey, MeasurementJsonConvertor.getGsonInstance().toJson(items, listType));
+    editor.commit();
+  }
+  
+  /**
+   * Restores the console content from the saved JSON string
+   */
+  private void initializeConsoles() {
+    userResults = new ArrayAdapter<String>(this, R.layout.list_item);
+    systemResults = new ArrayAdapter<String>(this, R.layout.list_item);
+    systemConsole = new ArrayAdapter<String>(this, R.layout.list_item);
+    
+    restoreConsole(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    restoreConsole(userResults, Config.PREF_KEY_USER_RESULTS);
+    restoreConsole(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+  }
+  
+  /**
+   * Restores content for consoleContent with the key prefKey
+   */
+  private void restoreConsole(ArrayAdapter<String> consoleContent, String prefKey) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    String savedConsole = prefs.getString(prefKey, null);
+    if (savedConsole != null) {
+      Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+      ArrayList<String> items = MeasurementJsonConvertor.getGsonInstance().fromJson(savedConsole, 
+          listType);
+      if (items != null) {
+        for (String item : items) {
+          insertStringToConsole(consoleContent, item);
+        }
+      }
+    }
+  }
+
+  /**
+   * Inserts a string into the console with the latest message on top
+   */
+  private void insertStringToConsole(ArrayAdapter<String> adapter, String msg) {
+    if (msg != null) {
+      adapter.insert(msg, 0);
+      if (adapter.getCount() > Config.MAX_LIST_ITEMS) {
+        adapter.remove(adapter.getItem(adapter.getCount() - 1));
+      }
+    }
+  }
+  
+  /**
+   * Adds a string to the corresponding console depending on whether the result is a 
+   * user measurement or a system measurement
+   */
+  private void updateResultsConsole(Intent intent) {
+    intent.hasExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD);
+    int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
+        MeasurementTask.INVALID_PRIORITY);
+    String msg = intent.getStringExtra(UpdateIntent.STRING_PAYLOAD);
+    if (msg != null) {
+      if (priority == MeasurementTask.USER_PRIORITY) {
+        insertStringToConsole(userResults, msg);
+      } else if (priority != MeasurementTask.INVALID_PRIORITY) {
+        insertStringToConsole(systemResults, msg);
+      }
     }
   }
 }

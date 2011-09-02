@@ -11,19 +11,14 @@
       style="@@android:style/Widget.ProgressBar.Horizontal"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:visibility="gone"
+      android:visibility="invisible"
+      android:layout_alignParentTop="true"
       android:id="@+id/progress_bar"/>
-    <ListView
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:id="@+id/resultConsole"
-      android:scrollbars="vertical"
-      android:layout_marginTop="@dimen/smallMarginBetweenRows"
-      android:layout_below="@id/progress_bar"/>
     <RelativeLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_alignParentBottom="true">
+      android:id="@+id/resultFilter"
+      android:layout_below="@id/progress_bar">
         <ToggleButton android:id="@+id/showUserResults"
           android:layout_width="150dp"
           android:layout_height="wrap_content"
@@ -38,6 +33,12 @@
           android:textSize="@dimen/regularTextSize"
           android:textOn="System Measurements"
           android:textOff="System Measurements"/>
-    </RelativeLayout>
+    </RelativeLayout>      
+    <ListView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/resultConsole"
+      android:scrollbars="vertical"
+      android:layout_below="@id/resultFilter"/>
   </RelativeLayout>
 </FrameLayout>

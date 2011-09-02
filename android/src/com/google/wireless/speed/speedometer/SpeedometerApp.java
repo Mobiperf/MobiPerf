@@ -51,6 +51,8 @@ public class SpeedometerApp extends TabActivity {
       isBound = true;
       isBindingToService = false;
       initializeStatusBar();
+      SpeedometerApp.this.sendBroadcast(new UpdateIntent("", 
+          UpdateIntent.SCHEDULER_CONNECTED_ACTION));
     }
 
     @Override
@@ -156,14 +158,6 @@ public class SpeedometerApp extends TabActivity {
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
-    // Create an Intent to launch an Activity for the tab (to be reused)
-    intent = new Intent().setClass(this, SystemConsoleActivity.class);
-
-    // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
-        "Console").setContent(intent);
-    tabHost.addTab(spec);
-
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
@@ -178,10 +172,18 @@ public class SpeedometerApp extends TabActivity {
     // Creates the measurement schedule console tab
     intent = new Intent().setClass(this, MeasurementScheduleConsoleActivity.class);
     spec = tabHost.newTabSpec(MeasurementScheduleConsoleActivity.TAB_TAG).setIndicator(
-        "Schedule").setContent(intent);
+        "Task Queue").setContent(intent);
+    tabHost.addTab(spec);
+    
+    // Create an Intent to launch an Activity for the tab (to be reused)
+    intent = new Intent().setClass(this, SystemConsoleActivity.class);
+
+    // Initialize a TabSpec for each tab and add it to the TabHost
+    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
+        "Log").setContent(intent);
     tabHost.addTab(spec);
 
-    tabHost.setCurrentTabByTag(SystemConsoleActivity.TAB_TAG);
+    tabHost.setCurrentTabByTag(MeasurementCreationActivity.TAB_TAG);
     
     statusBar = (TextView) findViewById(R.id.systemStatusBar);
     
@@ -199,6 +201,7 @@ public class SpeedometerApp extends TabActivity {
     };
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    this.registerReceiver(this.receiver, filter);
   }
   
   private void initializeStatusBar() {
@@ -251,6 +254,7 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onDestroy() {
+    super.onDestroy();
     this.unregisterReceiver(this.receiver);
   }
 

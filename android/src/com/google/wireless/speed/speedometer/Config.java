@@ -64,4 +64,6 @@ public interface Config {
   
   public static final String PREF_KEY_SYSTEM_CONSOLE = "PREF_KEY_SYSTEM_CONSOLE";
   public static final String PREF_KEY_STATUS_BAR = "PREF_KEY_STATUS_BAR";
+  public static final String PREF_KEY_SYSTEM_RESULTS = "PREF_KEY_SYSTEM_RESULTS";
+  public static final String PREF_KEY_USER_RESULTS = "PREF_KEY_USER_RESULTS";
 }

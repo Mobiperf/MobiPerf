@@ -16,8 +16,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ToggleButton;
 
-import java.util.ArrayList;
-
 /**
  * The activity that provides a console and progress bar of the ongoing measurement
  * 
@@ -26,7 +24,6 @@ import java.util.ArrayList;
  */
 public class ResultsConsoleActivity extends Activity {
   
-  public static final String KEY_USER_CONSOLE_CONTENT = "KEY_USER_CONSOLE_CONTENT";
   public static final String TAB_TAG = "MY_MEASUREMENTS";
   
   private ListView consoleView;
@@ -37,27 +34,18 @@ public class ResultsConsoleActivity extends Activity {
   boolean showUserResults = true;
   ToggleButton showUserResultButton;
   ToggleButton showSystemResultButton;
+  MeasurementScheduler scheduler = null;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.results);
     IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.SCHEDULER_CONNECTED_ACTION);
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-    userResults = new ArrayAdapter<String>(this, R.layout.list_item);
-    systemResults = new ArrayAdapter<String>(this, R.layout.list_item);
-    // Restore saved content if it exists
-    if (savedInstanceState != null) {
-      ArrayList<String> savedContent = 
-            savedInstanceState.getStringArrayList(KEY_USER_CONSOLE_CONTENT);
-      if (savedContent != null) {
-        for (String item : savedContent) {
-          userResults.add(item);
-        }
-      }
-    }
+
     this.consoleView = (ListView) this.findViewById(R.id.resultConsole);
-    this.consoleView.setAdapter(userResults);
+    getConsoleContentFromScheduler();
     this.progresBar = (ProgressBar) this.findViewById(R.id.progress_bar);
     this.progresBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);
     this.progresBar.setProgress(Config.MAX_PROGRESS_BAR_VALUE);
@@ -67,70 +55,37 @@ public class ResultsConsoleActivity extends Activity {
     showSystemResultButton.setChecked(!showUserResults);
     
     // We enforce a either-or behavior between the two ToggleButtons
-    showUserResultButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+    OnCheckedChangeListener buttonClickListener = new OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        updateConsole(showUserResults, isChecked);
-        showUserResults = isChecked;
-        showSystemResultButton.setChecked(!isChecked);
-      }
-    });
-    showSystemResultButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-      @Override
-      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        updateConsole(showUserResults, !isChecked);
-        showUserResults = !isChecked;
-        showUserResultButton.setChecked(!isChecked);
-      }
-    });
+        if (buttonView == showUserResultButton) {
+          switchBewteenResults(showUserResults, isChecked);
+        } else {
+          switchBewteenResults(showUserResults, !isChecked);
+        }
+      }};
+    showUserResultButton.setOnCheckedChangeListener(buttonClickListener);
+    showSystemResultButton.setOnCheckedChangeListener(buttonClickListener);
     
     this.receiver = new BroadcastReceiver() {
       @Override
       // All onXyz() callbacks are single threaded
       public void onReceive(Context context, Intent intent) {
-        int progress = intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, 
-            Config.INVALID_PROGRESS);
-        if (progress == Config.MEASUREMENT_END_PROGRESS) {
+        if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
+          int progress = intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, 
+              Config.INVALID_PROGRESS);
           int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
-            MeasurementTask.INVALID_PRIORITY);
+              MeasurementTask.INVALID_PRIORITY);
+          // Show user results if we there is currently a user measurement running
           if (priority == MeasurementTask.USER_PRIORITY) {
-            insertStringToConsole(userResults, 
-                intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD));
-          } else {
-            insertStringToConsole(systemResults, 
-                intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD));
+            switchBewteenResults(showUserResults, true);
           }
+          upgradeProgress(progress, Config.MAX_PROGRESS_BAR_VALUE);
         }
-        upgradeProgress(progress, Config.MAX_PROGRESS_BAR_VALUE);
+        getConsoleContentFromScheduler();
       }
     };
     this.registerReceiver(this.receiver, filter);
-  }
-
-  /**
-   * Save the console content before onDestroy()
-   * 
-   * TODO(wenjiezeng): Android does not call onSaveInstanceState when the user
-   * presses the 'back' button. To preserve console content between launches, we
-   * need to write the content to persistent storage and restore it upon onCreate().
-   */
-  @Override
-  protected void onSaveInstanceState(Bundle bundle) {
-    int length = userResults.getCount();
-    ArrayList<String> items = new ArrayList<String>();
-    for (int i = 0; i < length; i++) {
-      items.add(userResults.getItem(i));
-    }
-    bundle.putStringArrayList(KEY_USER_CONSOLE_CONTENT, items);
-  }
-  
-  private void insertStringToConsole(ArrayAdapter<String> results, String msg) {
-    if (msg != null) {
-      results.insert(msg + "\n", 0);
-      if (results.getCount() > Config.MAX_LIST_ITEMS) {
-        results.remove(userResults.getItem(userResults.getCount() - 1));
-      }
-    }
   }
   
   /**
@@ -142,8 +97,12 @@ public class ResultsConsoleActivity extends Activity {
    * @param oldShowUserResults the old value of showUserResults
    * @param newShowUserResults the new value of showUserResults
    */
-  private void updateConsole(boolean oldShowUserResults, boolean newShowUserResults) {
+  private void switchBewteenResults(boolean oldShowUserResults, boolean newShowUserResults) {
     // No need to update if the old and new values are the same
+    getConsoleContentFromScheduler();
+    showUserResults = newShowUserResults;
+    showUserResultButton.setChecked(showUserResults);
+    showSystemResultButton.setChecked(!showUserResults);
     if (oldShowUserResults != newShowUserResults) {
       if (newShowUserResults) {
         this.consoleView.setAdapter(userResults);
@@ -165,7 +124,7 @@ public class ResultsConsoleActivity extends Activity {
       /* UserMeasurementTask broadcast a progress greater than max to indicate the
        * termination of the measurement
        */
-      this.progresBar.setVisibility(View.GONE);
+      this.progresBar.setVisibility(View.INVISIBLE);
     }
   }
   
@@ -173,5 +132,21 @@ public class ResultsConsoleActivity extends Activity {
   protected void onDestroy() {
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
+  }
+  
+  private void getConsoleContentFromScheduler() {
+    if (scheduler == null) {
+      SpeedometerApp parent = (SpeedometerApp) getParent();
+      scheduler = parent.getScheduler();
+      if (scheduler != null) {
+        userResults = scheduler.userResults;
+        systemResults = scheduler.systemResults;
+        if (showUserResults) {
+          consoleView.setAdapter(userResults);
+        } else {
+          consoleView.setAdapter(systemResults);
+        }
+      }
+    }
   }
 }
