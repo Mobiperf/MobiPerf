@@ -89,8 +89,8 @@ public class ResultsConsoleActivity extends Activity {
   }
   
   /**
-   * Change the underling adapter for the ListView depending on the old and new value 
-   * of showUserResults. userResults is the ArraytAdapter that stores user results and
+   * Change the underlying adapter for the ListView depending on the old and new value 
+   * of showUserResults. userResults is the ArraytAdapter that stores user measurement results and
    * systemResults is the ArrayAdapter that stores system results. Depending on which one
    * is the underlying ArrayAdapter of consoleView, we see either user or system results.
    * 
@@ -98,11 +98,11 @@ public class ResultsConsoleActivity extends Activity {
    * @param newShowUserResults the new value of showUserResults
    */
   private void switchBewteenResults(boolean oldShowUserResults, boolean newShowUserResults) {
-    // No need to update if the old and new values are the same
     getConsoleContentFromScheduler();
     showUserResults = newShowUserResults;
     showUserResultButton.setChecked(showUserResults);
     showSystemResultButton.setChecked(!showUserResults);
+    // No need to update if the old and new values are the same
     if (oldShowUserResults != newShowUserResults) {
       if (newShowUserResults) {
         this.consoleView.setAdapter(userResults);
