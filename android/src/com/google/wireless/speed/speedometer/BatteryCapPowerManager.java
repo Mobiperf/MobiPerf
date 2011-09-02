@@ -3,6 +3,7 @@
 package com.google.wireless.speed.speedometer;
 
 import android.content.Context;
+import android.content.Intent;
 
 import java.util.concurrent.Callable;
 
@@ -65,18 +66,62 @@ public class BatteryCapPowerManager {
       this.scheduler = scheduler;
     }
     
+    private void broadcastMeasurementStart() {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Automated measurement " + 
+          realTask.getDescriptor() + " is running.");
+      
+      scheduler.sendBroadcast(intent);
+    }
+    
+    private void broadcastMeasurementEnd() {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, realTask.getDescription().priority);
+      // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
+      
+      scheduler.sendBroadcast(intent);
+      
+      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
+      
+      scheduler.sendBroadcast(intent);
+    }
+    
+    private void broadcastPowerThreasholdReached() {
+      Intent intent = new Intent();
+      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+      // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, 
+          scheduler.getString(R.string.powerThreasholdReachedMsg));
+      
+      scheduler.sendBroadcast(intent);
+    }
+    
     @Override
     public MeasurementResult call() throws MeasurementError {
+      boolean shouldBroadcastEnd = false;
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
-        scheduler.setCurrentTask(realTask);
+        if (scheduler.isPauseRequested()) {
+          throw new MeasurementError("Scheduler is paused.");
+        }
         if (!pManager.canScheduleExperiment()) {
+          broadcastPowerThreasholdReached();
           throw new MeasurementError("Not enough power");
         }
+        scheduler.setCurrentTask(realTask);
+        broadcastMeasurementStart();
+        shouldBroadcastEnd = true;
         return realTask.call();
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         scheduler.setCurrentTask(null);
+        if (shouldBroadcastEnd) {
+          broadcastMeasurementEnd();
+        }
       }
     }
   }

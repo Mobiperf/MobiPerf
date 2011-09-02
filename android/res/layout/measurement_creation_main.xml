@@ -65,8 +65,7 @@
         <SeekBar android:id="@+id/measurementCountSeekBar"
           android:layout_height="wrap_content"
           android:layout_width="match_parent" 
-          android:layout_toRightOf="@id/countText"
-          android:max="20"/>
+          android:layout_toRightOf="@id/countText"/>
       </RelativeLayout>
     </TableRow>
     <TableRow
@@ -163,6 +162,7 @@
             android:layout_width="80dip"
             android:layout_height="wrap_content"
             android:textSize="@dimen/regularTextSize"
+            android:checked="true"
             android:text="@string/httpGetRadioText"/>
         <RadioButton android:id="@+id/http_head_radio"
             android:layout_width="wrap_content"

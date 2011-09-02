@@ -20,7 +20,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -40,6 +39,9 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.telephony.NeighboringCellInfo;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Display;
@@ -105,7 +107,7 @@ public class PhoneUtils {
   private int curBatteryLevel;
   /** Receiver that handles battery change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
-
+  private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
 
   protected PhoneUtils(Context context) {
     this.context = context;
@@ -207,7 +209,7 @@ public class PhoneUtils {
       // so that either all get assigned, or none get assigned.
       connectivityManager = tryConnectivityManager;
       telephonyManager = tryTelephonyManager;
-
+      
       // Some interesting info to look at in the logs
       NetworkInfo[] infos = connectivityManager.getAllNetworkInfo();
       for (NetworkInfo networkInfo : infos) {
@@ -218,6 +220,16 @@ public class PhoneUtils {
     }
     assert connectivityManager != null;
     assert telephonyManager != null;
+  }
+  
+  /**
+   * This method must be called in the service thread, as the system will create a Looper in
+   * the calling thread which will handle the callbacks.
+   */
+  public void registerSignalStrengthListener() {
+    initNetwork();
+    telephonyManager.listen(new SignalStrengthChangeListener(), 
+        PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
   }
 
   /** Returns the network that the phone is on (e.g. Wifi, Edge, GPRS, etc). */
@@ -291,6 +303,29 @@ public class PhoneUtils {
     }
     return null;
   }
+  
+  /**
+   * Returns the information about cell towers in range. Returns null if the information is 
+   * not available 
+   * 
+   * TODO(wenjiezeng): As folklore has it and Wenjie has confirmed, we cannot get cell info from
+   * Samsung phones.
+   */
+  public String getCellInfo() {
+    initNetwork();
+    List<NeighboringCellInfo> infos = telephonyManager.getNeighboringCellInfo();
+    StringBuffer buf = new StringBuffer();
+    if (infos.size() > 0) {
+      for (NeighboringCellInfo info : infos) {
+        buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
+      }
+      // Removes the trailing semicolon
+      buf.deleteCharAt(buf.length() - 1);
+      return buf.toString();
+    } else {
+      return null;
+    }
+  }
 
   /**
    * Lazily initializes the location manager.
@@ -346,7 +381,7 @@ public class PhoneUtils {
     initLocation();
     Location location = locationManager.getLastKnownLocation(locationProviderName);
     if (location == null) {
-      Log.e(DEBUG_TAG,
+      Log.e(SpeedometerApp.TAG,
             "Cannot obtain location from provider " + locationProviderName);
     }
     return location;
@@ -607,6 +642,21 @@ public class PhoneUtils {
     return isCharging;
   }
   
+  /**
+   * Sets the current RSSI value
+   */
+  public synchronized void setCurrentRssi(int rssi) {
+    currentSignalStrength = rssi;
+  }
+  
+  /**
+   * Returns the last updated RSSI value
+   */
+  public synchronized int getCurrentRssi() {
+    initNetwork();
+    return currentSignalStrength;
+  }
+  
   private synchronized void updateBatteryStat(Intent powerIntent) {
     int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 
         com.google.wireless.speed.speedometer.Config.DEFAULT_BATTERY_SCALE);
@@ -629,6 +679,22 @@ public class PhoneUtils {
     @Override
     public void onReceive(Context context, Intent intent) {
       updateBatteryStat(intent);
+    }
+  }
+  
+  private class SignalStrengthChangeListener extends PhoneStateListener {
+    @Override
+    public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+      String network = getNetwork();
+      if (network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_CDMA])) {
+        setCurrentRssi(signalStrength.getCdmaDbm());
+      } else if (network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_0]) ||
+          network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_A]) ||
+            network.equals(NETWORK_TYPES[TelephonyManager.NETWORK_TYPE_EVDO_B])) {
+        setCurrentRssi(signalStrength.getEvdoDbm());
+      } else if (signalStrength.isGsm()) {
+        setCurrentRssi(signalStrength.getGsmSignalStrength());
+      }
     }
   }
 }

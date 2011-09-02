@@ -3,14 +3,13 @@
 package com.google.wireless.speed.speedometer;
 
 import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.TabActivity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -20,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TabHost;
+import android.widget.TextView;
 
 import java.security.Security;
 
@@ -32,12 +32,14 @@ import java.security.Security;
 public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
-  // This arbitrary id is private to Speedometer
-  private static final int NOTIFICATION_ID = 1234;
   
   private MeasurementScheduler scheduler;
+  private TabHost tabHost;
   private boolean isBound = false;
-  private boolean isBindingToService = false;  
+  private boolean isBindingToService = false;
+  private BroadcastReceiver receiver;
+  TextView statusBar;
+  
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
@@ -46,23 +48,9 @@ public class SpeedometerApp extends TabActivity {
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
       scheduler = binder.getService();
-      //The intent to launch when the user clicks the expanded notification
-      Intent intent = new Intent(SpeedometerApp.this, SpeedometerApp.class);
-      PendingIntent pendIntent = PendingIntent.getActivity(SpeedometerApp.this, 0, intent, 
-          PendingIntent.FLAG_CANCEL_CURRENT);
-
-      //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-      Notification notice = new Notification(R.drawable.icon, 
-          getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
-
-      //This is deprecated in 3.x. But most phones still run 2.x systems
-      notice.setLatestEventInfo(SpeedometerApp.this, "Speedometer", 
-          getString(R.string.notificatioContent), pendIntent);
-
-      //Put scheduler service into foreground. Makes the process less likely of being killed
-      scheduler.startForeground(NOTIFICATION_ID, notice);
       isBound = true;
       isBindingToService = false;
+      initializeStatusBar();
     }
 
     @Override
@@ -79,6 +67,11 @@ public class SpeedometerApp extends TabActivity {
       bindToService();
       return null;
     }
+  }
+  
+  /** Returns the tab host. Allows child tabs to request focus changes, etc... */
+  public TabHost getSpeedomterTabHost() {
+    return tabHost;
   }
   
   private void setPauseIconBasedOnSchedulerState(MenuItem item) {
@@ -118,8 +111,10 @@ public class SpeedometerApp extends TabActivity {
         if (this.scheduler != null) {
           if (this.scheduler.isPauseRequested()) {
             this.scheduler.resume();
+            updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
           } else {
             this.scheduler.pause();
+            updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
           }
         }
         return true;
@@ -157,33 +152,77 @@ public class SpeedometerApp extends TabActivity {
     Security.setProperty("networkaddress.cache.negative.ttl", "0"); 
 
     Resources res = getResources(); // Resource object to get Drawables
-    TabHost tabHost = getTabHost();  // The activity TabHost
+    tabHost = getTabHost();  // The activity TabHost
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
     // Create an Intent to launch an Activity for the tab (to be reused)
-    intent = new Intent().setClass(this, MeasurementMonitorActivity.class);
+    intent = new Intent().setClass(this, SystemConsoleActivity.class);
 
     // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec("measurement_monitor").setIndicator("Console",
-        res.getDrawable(R.drawable.tablet)).setContent(intent);
+    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
+        "Console").setContent(intent);
     tabHost.addTab(spec);
 
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
-    spec = tabHost.newTabSpec("measurement_creation").setIndicator("Create Measurement",
-        res.getDrawable(R.drawable.tablet)).setContent(intent);
+    spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
+        "Measure").setContent(intent);
+    tabHost.addTab(spec);
+    // Creates the user task console tab
+    intent = new Intent().setClass(this, ResultsConsoleActivity.class);
+    spec = tabHost.newTabSpec(ResultsConsoleActivity.TAB_TAG).setIndicator(
+        "Results").setContent(intent);
+    tabHost.addTab(spec);
+    
+    // Creates the measurement schedule console tab
+    intent = new Intent().setClass(this, MeasurementScheduleConsoleActivity.class);
+    spec = tabHost.newTabSpec(MeasurementScheduleConsoleActivity.TAB_TAG).setIndicator(
+        "Schedule").setContent(intent);
     tabHost.addTab(spec);
 
-    tabHost.setCurrentTab(0);
+    tabHost.setCurrentTabByTag(SystemConsoleActivity.TAB_TAG);
     
-    RuntimeUtil.setActivity(this);
+    statusBar = (TextView) findViewById(R.id.systemStatusBar);
     
     // We only need one instance of scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
     this.startService(intent);
-    // Bind to the scheduler service for only once during the lifetime of the activity
-    bindToService();
+    
+    this.receiver = new BroadcastReceiver() {
+      @Override
+      // All onXyz() callbacks are single threaded
+      public void onReceive(Context context, Intent intent) {
+        String statusMsg = intent.getStringExtra(UpdateIntent.STATUS_MSG_PAYLOAD);
+        updateStatusBar(statusMsg);
+      }
+    };
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    this.registerReceiver(this.receiver, filter);
+  }
+  
+  private void initializeStatusBar() {
+    if (!this.scheduler.isPauseRequested()) {
+      MeasurementTask currentTask = scheduler.getCurrentTask();
+      if (currentTask != null) {
+        if (currentTask.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+          updateStatusBar("User task " + currentTask.getDescriptor() + " is running");
+        } else {
+          updateStatusBar("Automated task " + currentTask.getDescriptor() + " is running");
+        }
+      } else {
+        updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
+      }
+    } else {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
+    }
+  }
+  
+  private void updateStatusBar(String statusMsg) {
+    if (statusMsg != null) {
+      statusBar.setText(statusMsg);
+    }
   }
   
   private void bindToService() {
@@ -197,6 +236,8 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStart() {
+    // Bind to the scheduler service for only once during the lifetime of the activity
+    bindToService();
     super.onStart();
   }
   

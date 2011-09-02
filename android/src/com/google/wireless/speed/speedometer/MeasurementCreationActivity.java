@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -28,6 +29,7 @@ import android.widget.RadioButton;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
+import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -50,6 +52,7 @@ public class MeasurementCreationActivity extends Activity {
   private static final int START_TIME_DIALOG_ID = 0;
   private static final int NUMBER_OF_COMMON_VIEWS = 3;
   private static final DateFormat startTimeFormat = new SimpleDateFormat("HH:mm");
+  public static final String TAB_TAG = "MEASUREMENT_CREATION";
   
   private SpeedometerApp parent;
   private String measurementTypeUnderEdit;
@@ -83,6 +86,7 @@ public class MeasurementCreationActivity extends Activity {
     this.countText = (TextView) this.findViewById(R.id.countText);
     this.countText.setText(String.valueOf(Config.DEFAULT_USER_MEASUREMENT_COUNT));
     SeekBar countSeekBar = (SeekBar) this.findViewById(R.id.measurementCountSeekBar);
+    countSeekBar.setMax(Config.MAX_USER_MEASUREMENT_COUNT);
     countSeekBar.setProgress(Config.DEFAULT_USER_MEASUREMENT_COUNT);
     countSeekBar.setOnSeekBarChangeListener(new CountSeekBarChangeListener());
     
@@ -214,14 +218,15 @@ public class MeasurementCreationActivity extends Activity {
         }
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
-          if (scheduler != null && scheduler.getCurrentTask() == null &&
-              scheduler.submitTask(newTask)) {
+          if (scheduler != null && scheduler.submitTask(newTask)) {
             /* Broadcast an intent with MEASUREMENT_ACTION so that the scheduler will immediately
              * handles the user measurement 
              * */
             MeasurementCreationActivity.this.sendBroadcast(
                 new UpdateIntent("", UpdateIntent.MEASUREMENT_ACTION));
-
+            SpeedometerApp parent = (SpeedometerApp) getParent();
+            TabHost tabHost = parent.getTabHost();
+            tabHost.setCurrentTabByTag(ResultsConsoleActivity.TAB_TAG);
             String toastStr = MeasurementCreationActivity.this.getString(
                 R.string.userMeasurementSuccessToast);
             if (showLengthWarning) {
@@ -229,6 +234,10 @@ public class MeasurementCreationActivity extends Activity {
             }
             Toast.makeText(MeasurementCreationActivity.this, toastStr,
                 Toast.LENGTH_LONG).show();
+            
+            if (scheduler.getCurrentTask() != null) {
+              showBusySchedulerStatus();
+            }
           } else {
             Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementFailureToast,
                 Toast.LENGTH_LONG).show();
@@ -241,6 +250,14 @@ public class MeasurementCreationActivity extends Activity {
       }
     }
     
+  }
+  
+  private void showBusySchedulerStatus() {
+    Intent intent = new Intent();
+    intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+    intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, 
+        getString(R.string.userMeasurementBusySchedulerToast));
+    sendBroadcast(intent);
   }
   
   private class StartTimeOnTouchListener implements OnTouchListener {
@@ -261,8 +278,10 @@ public class MeasurementCreationActivity extends Activity {
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
       if (fromUser) {
-        count = progress;
+        int validProgress = Math.max(progress, 1);
+        count = validProgress;
         countText.setText(String.valueOf(count));
+        seekBar.setProgress(validProgress);
       }
     }
 

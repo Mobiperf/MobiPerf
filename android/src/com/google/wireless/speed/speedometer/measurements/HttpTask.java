@@ -2,6 +2,7 @@
 
 package com.google.wireless.speed.speedometer.measurements;
 
+import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -219,6 +220,7 @@ public class HttpTask extends MeasurementTask {
             body.put(readBuffer, 0, putLen);
           }
           this.progress = (int) (100 * totalBodyLen / expectedResponseLen);
+          this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
           broadcastProgressForUser(this.progress);
         }
         duration = System.currentTimeMillis() - startTime;
@@ -290,5 +292,12 @@ public class HttpTask extends MeasurementTask {
   @Override
   public String getDescriptor() {
     return DESCRIPTOR;
+  }
+  
+  @Override
+  public String toString() {
+    HttpDesc desc = (HttpDesc) measurementDesc;
+    return "[HTTP " + desc.method + "]\n  Target: " + desc.url + "\n  Interval (sec): " + 
+        desc.intervalSec + "\n  Next run: " + desc.startTime;
   }
 }

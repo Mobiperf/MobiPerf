@@ -27,9 +27,14 @@ import java.util.concurrent.Callable;
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {
   // the priority queue we use put the smallest element in the head of the queue
   public static final int USER_PRIORITY = Integer.MIN_VALUE;
+  public static final int INVALID_PRIORITY = Integer.MAX_VALUE;
   
   protected MeasurementDesc measurementDesc;
   protected Context parent;
+  /* When updating the 'progress' field, ensure that it's within the range between 0 and
+   * Config.MAX_PROGRESS_BAR_VALUE, inclusive. Values outside this range have special meanings and
+   * can trigger unexpected results.
+   */
   protected int progress;
   private static HashMap<String, Class> measurementTypes;
   // Maps between the type of task and its readable name
@@ -138,6 +143,9 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     
   @Override
   public String toString() {
+    String result = "[Measurement " + getDescriptor() + " scheduled to run at " + 
+        getDescription().startTime + "]";
+    
     return this.measurementDesc.toString();
   }
   
@@ -148,7 +156,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     if (measurementDesc.priority == MeasurementTask.USER_PRIORITY) {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.INTEGER_PAYLOAD, progress);
+      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, progress);
+      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, MeasurementTask.USER_PRIORITY);
       parent.sendBroadcast(intent);
     }
   }
