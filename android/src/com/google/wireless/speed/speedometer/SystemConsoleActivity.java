@@ -29,13 +29,7 @@ public class SystemConsoleActivity extends Activity {
       public void onReceive(Context context, Intent intent) {
         /* The content of the console is maintained by the scheduler. We simply hook up the 
          * view with the content here. */
-        if (scheduler == null) {
-          SpeedometerApp parent = (SpeedometerApp) getParent();
-          scheduler = parent.getScheduler();
-          if (scheduler != null) {
-            consoleView.setAdapter(scheduler.systemConsole);
-          }
-        }
+        updateConsole();
       }
     };
   }
@@ -53,8 +47,24 @@ public class SystemConsoleActivity extends Activity {
   }
   
   @Override
+  protected void onResume() {
+    super.onResume();
+    updateConsole();
+  }
+  
+  @Override
   protected void onDestroy() {
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
+  }
+  
+  private void updateConsole() {
+    if (scheduler == null) {
+      SpeedometerApp parent = (SpeedometerApp) getParent();
+      scheduler = parent.getScheduler();
+      if (scheduler != null) {
+        consoleView.setAdapter(scheduler.systemConsole);
+      }
+    }    
   }
 }
