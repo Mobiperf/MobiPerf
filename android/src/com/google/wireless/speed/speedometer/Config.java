@@ -66,4 +66,7 @@ public interface Config {
   public static final String PREF_KEY_STATUS_BAR = "PREF_KEY_STATUS_BAR";
   public static final String PREF_KEY_SYSTEM_RESULTS = "PREF_KEY_SYSTEM_RESULTS";
   public static final String PREF_KEY_USER_RESULTS = "PREF_KEY_USER_RESULTS";
+  
+  /** Constants for the splash screen */
+  public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;
 }
