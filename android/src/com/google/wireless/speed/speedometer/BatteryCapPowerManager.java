@@ -99,7 +99,7 @@ public class BatteryCapPowerManager {
         } else if (scheduler.isPauseRequested()) {
           errorString += "It failed because Speedometer is paused.";
         }
-        errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
+        errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }
       
