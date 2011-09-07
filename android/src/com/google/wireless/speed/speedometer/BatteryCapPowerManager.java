@@ -91,14 +91,18 @@ public class BatteryCapPowerManager {
       if (result != null) {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
       } else {
-        String errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+        String errorString;
         /* If the measurement fails because we are below battery threshold or because the
          * scheduler is paused, we print some extra information 
          * */
         if (!pManager.canScheduleExperiment()) {
-          errorString += "It failed because battery levle is below setting threashold.";
+          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
+              " battery level is below the setting threshold. ";
         } else if (scheduler.isPauseRequested()) {
-          errorString += "It failed because Speedometer is paused.";
+          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
+              " Speedomter is paused. ";
+        } else {
+          errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
         }
         errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);

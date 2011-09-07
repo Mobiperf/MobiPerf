@@ -33,7 +33,6 @@
     <string name="httpHeadRadioText">Head</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
-    <string name="checkinEnabledPrefKey">KEY_CHEKCEDIN_ENABLED</string>
     <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>

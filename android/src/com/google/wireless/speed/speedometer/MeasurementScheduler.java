@@ -61,7 +61,6 @@ public class MeasurementScheduler extends Service {
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
   private boolean isSchedulerStarted = false;
-  private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
   private long checkinRetryIntervalSec;
@@ -200,7 +199,10 @@ public class MeasurementScheduler extends Service {
     startForeground(NOTIFICATION_ID, notice);
   }
   
-  private void handleCheckin() {    
+  private void handleCheckin() {
+    if (isPauseRequested()) {
+      return;
+    }
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
      * the wake lock for the new thread here and release the lock when the thread finishes
      */
@@ -333,17 +335,6 @@ public class MeasurementScheduler extends Service {
   public BatteryCapPowerManager getPowerManager() {
     return this.powerManager;
   }
-      
-  /** Check-in is by-default disabled. SpeedometerApp will enable it. 
-   *  Users can request to stop check-in altogether */
-  public synchronized void setIsCheckinEnabled(boolean val) {
-    this.isCheckinEnabled = val;
-  }
-  
-  /** Returns whether auto checkin is enabled at the scheduler */
-  public synchronized boolean getIsCheckinEnabled() {
-    return isCheckinEnabled;
-  }
   
   /** Set the interval for checkin in seconds */
   public synchronized void setCheckinInterval(long interval) {
@@ -465,20 +456,14 @@ public class MeasurementScheduler extends Service {
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     try {
-      this.setIsCheckinEnabled(prefs.getBoolean(
-          getString(R.string.checkinEnabledPrefKey), Config.DEFAULT_CHECKIN_ENABLED));
-      // The user sets checkin interval in the unit of hours
       this.setCheckinInterval(Integer.parseInt(
           prefs.getString(getString(R.string.checkinIntervalPrefKey),
           String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
-      powerManager.setMeasureWhenCharging(
-          prefs.getBoolean(getString(R.string.measureWhenPluggedPrefKey), 
-          Config.DEFAULT_MEASURE_WHEN_CHARGE));
-      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: isCheckinEnabled=" + 
-          isCheckinEnabled + ", checkinInterval=" + checkinIntervalSec + 
+      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
+          "checkinInterval=" + checkinIntervalSec +
           ", minBatThres= " + powerManager.getBatteryThresh());
     } catch (ClassCastException e) {
       Log.e(SpeedometerApp.TAG, "exception when casting preference values", e);
@@ -634,12 +619,10 @@ public class MeasurementScheduler extends Service {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
       sendStringMsg("checkin at " + Calendar.getInstance().getTime());
       try {
-        if (getIsCheckinEnabled()) {
-          uploadResults();
-          getTasksFromServer();
-          // Also reset checkin if we get a success
-          resetCheckin();
-        }
+        uploadResults();
+        getTasksFromServer();
+        // Also reset checkin if we get a success
+        resetCheckin();
         // Schedule the new expeirments
         handleMeasurement();
       } catch (Exception e) {

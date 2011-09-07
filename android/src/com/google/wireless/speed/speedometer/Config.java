@@ -39,7 +39,6 @@ public interface Config {
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_MEASURE_WHEN_CHARGE = true;
-  public static final boolean DEFAULT_CHECKIN_ENABLED = true;
   public static final long MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC = 3 * 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
