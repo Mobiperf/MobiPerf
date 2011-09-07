@@ -4,10 +4,10 @@ package com.google.wireless.speed.speedometer;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceManager;
 import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -25,12 +25,11 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     addPreferencesFromResource(R.xml.preference);
     
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    Preference checkinEnabled = findPreference(getString(R.string.checkinEnabledPrefKey));
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
     
     /* This should never occur. */
-    if (checkinEnabled == null || intervalPref == null || batteryPref == null) {
+    if (intervalPref == null || batteryPref == null) {
       Log.w(SpeedometerApp.TAG, "Cannot find some of the preferences");
       Toast.makeText(SpeedometerPreferenceActivity.this, 
         getString(R.string.menuInitializationExceptionToast), Toast.LENGTH_LONG).show();
@@ -41,16 +40,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
       @Override
       public boolean onPreferenceChange(Preference preference, Object newValue) {
         String prefKey = preference.getKey();
-        if (prefKey.compareTo(getString(R.string.checkinEnabledPrefKey)) == 0) {
-          try {
-            Boolean val = (Boolean) newValue;
-            Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
-            intervalPref.setEnabled(val);
-          } catch (ClassCastException e) {
-            Log.e(SpeedometerApp.TAG, "Cannot cast checkin box preference value to Boolean");
-          }
-          return true;
-        } else if (prefKey.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
+        if (prefKey.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
           try {
             Integer val = Integer.parseInt((String) newValue);
             if (val <= 0 || val > 24) {
@@ -87,15 +77,6 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
       }
     };
     
-    if (prefs.getBoolean(getString(R.string.checkinEnabledPrefKey),
-        Config.DEFAULT_CHECKIN_ENABLED)) {
-      Log.i(SpeedometerApp.TAG, "Checkin is enabled in the preference");
-      intervalPref.setEnabled(true);
-    } else {
-      intervalPref.setEnabled(false);
-    }
-
-    checkinEnabled.setOnPreferenceChangeListener(prefChangeListener);
     intervalPref.setOnPreferenceChangeListener(prefChangeListener);
     batteryPref.setOnPreferenceChangeListener(prefChangeListener);
   }

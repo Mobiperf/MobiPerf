@@ -24,7 +24,7 @@
           android:layout_height="wrap_content"
           android:layout_alignParentLeft="true"
           android:textSize="@dimen/regularTextSize"
-          android:textOn="User Measuremenst"
+          android:textOn="User Measurements"
           android:textOff="User Measurements"/>
         <ToggleButton android:id="@+id/showSystemResults"
           android:layout_width="150dp"

@@ -9,7 +9,7 @@ package com.google.wireless.speed.speedometer;
  *
  */
 public interface Config {
-  public static final boolean DEFAULT_START_ON_BOOT = false;
+  public static final boolean DEFAULT_START_ON_BOOT = true;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";

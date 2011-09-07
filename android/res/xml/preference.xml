@@ -2,11 +2,6 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:title="Preferences">
-  <CheckBoxPreference
-    android:defaultValue="true"
-    android:summary="Automatically fetch and push experiments?"
-    android:key="@string/checkinEnabledPrefKey" 
-    android:title="Checkin"/>
   <EditTextPreference
     android:defaultValue="4"
     android:summary="The interval (hours) speedometer fetches and pushes measurements"

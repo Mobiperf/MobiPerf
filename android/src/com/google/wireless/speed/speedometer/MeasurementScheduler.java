@@ -138,7 +138,8 @@ public class MeasurementScheduler extends Service {
     
     this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     this.alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
+    this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT,
+        Config.DEFAULT_MEASURE_WHEN_CHARGE, this);
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);

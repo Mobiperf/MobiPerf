@@ -21,8 +21,9 @@ public class BatteryCapPowerManager {
   private int minBatteryThreshold;
   private boolean measureWhenCharging;
     
-  public BatteryCapPowerManager(int batteryThresh, Context context) {
+  public BatteryCapPowerManager(int batteryThresh, boolean measureWhenCharging, Context context) {
     this.minBatteryThreshold = batteryThresh;
+    this.measureWhenCharging = measureWhenCharging;
   }
   
   /** 
