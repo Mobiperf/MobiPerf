@@ -19,6 +19,7 @@ import java.util.concurrent.Callable;
 public class BatteryCapPowerManager {
   /** The minimum threshold below which no measurements will be scheduled */
   private int minBatteryThreshold;
+  private boolean measureWhenCharging;
     
   public BatteryCapPowerManager(int batteryThresh, Context context) {
     this.minBatteryThreshold = batteryThresh;
@@ -40,11 +41,15 @@ public class BatteryCapPowerManager {
     return this.minBatteryThreshold;
   }
   
+  public synchronized void setMeasureWhenCharging(boolean value) {
+    measureWhenCharging = value;
+  }
+  
   /** 
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return (PhoneUtils.getPhoneUtils().isCharging() || 
+    return ((measureWhenCharging && PhoneUtils.getPhoneUtils().isCharging()) || 
         PhoneUtils.getPhoneUtils().getCurrentBatteryLevel() > minBatteryThreshold);
   }
   
@@ -85,7 +90,15 @@ public class BatteryCapPowerManager {
       if (result != null) {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
       } else {
-        String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
+        String errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+        /* If the measurement fails because we are below battery threshold or because the
+         * scheduler is paused, we print some extra information 
+         * */
+        if (!pManager.canScheduleExperiment()) {
+          errorString += "It failed because battery levle is below setting threashold.";
+        } else if (scheduler.isPauseRequested()) {
+          errorString += "It failed because Speedometer is paused.";
+        }
         errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }

@@ -469,6 +469,9 @@ public class MeasurementScheduler extends Service {
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
+      powerManager.setMeasureWhenCharging(
+          prefs.getBoolean(getString(R.string.measureWhenPluggedPrefKey), 
+          Config.DEFAULT_MEASURE_WHEN_CHARGE));
       Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: isCheckinEnabled=" + 
           isCheckinEnabled + ", checkinInterval=" + checkinIntervalSec + 
           ", minBatThres= " + powerManager.getBatteryThresh());

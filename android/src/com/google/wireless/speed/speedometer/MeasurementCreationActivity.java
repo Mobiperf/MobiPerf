@@ -124,7 +124,6 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.pingView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
       this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
-      this.findViewById(R.id.httpMethodView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
     }
@@ -187,12 +186,7 @@ public class MeasurementCreationActivity extends Activity {
             long count = Long.parseLong(countText.getText().toString());
             Map<String, String> params = new HashMap<String, String>();
             params.put("url", httpUrlText.getText().toString());
-            RadioButton rb = (RadioButton) findViewById(R.id.http_get_radio);
-            if (rb.isChecked()) {
-              params.put("method", "get");
-            } else {
-              params.put("method", "head");
-            }
+            params.put("method", "get");
             HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
                 HttpTask.DEFAULT_HTTP_INTERVAL_SEC, count, MeasurementTask.USER_PRIORITY, params);
             newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
