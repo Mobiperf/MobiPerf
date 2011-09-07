@@ -28,6 +28,7 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   // the priority queue we use put the smallest element in the head of the queue
   public static final int USER_PRIORITY = Integer.MIN_VALUE;
   public static final int INVALID_PRIORITY = Integer.MAX_VALUE;
+  public static final int INFINITE_COUNT = -1;
   
   protected MeasurementDesc measurementDesc;
   protected Context parent;

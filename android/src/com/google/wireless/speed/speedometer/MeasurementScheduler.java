@@ -237,10 +237,14 @@ public class MeasurementScheduler extends Service {
         
         MeasurementDesc desc = task.getDescription();
         long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
-        // Add a clone with the new start time into taskQueue if
-        if (desc.count > 1 && newStartTime < desc.endTime.getTime()) {
+        // Add a clone with the new start time into taskQueue if count is INFINITE_COUNT or
+        // desc.count is greater than one and that the task has not expired.
+        if (desc.count == MeasurementTask.INFINITE_COUNT || 
+            (desc.count > 1 && newStartTime < desc.endTime.getTime())) {
           MeasurementTask newTask = task.clone();
-          newTask.getDescription().count--;
+          if (desc.count != MeasurementTask.INFINITE_COUNT) {
+            newTask.getDescription().count--;
+          }
           newTask.getDescription().startTime.setTime(newStartTime);
           submitTask(newTask);
         }
@@ -543,6 +547,8 @@ public class MeasurementScheduler extends Service {
     Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
+    // The new task schedule overrides the old one
+    removeAllUnscheduledTasks();
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
