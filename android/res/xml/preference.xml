@@ -3,7 +3,7 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:title="Preferences">
   <EditTextPreference
-    android:defaultValue="12"
+    android:defaultValue="4"
     android:summary="The interval (hours) speedometer fetches and pushes measurements"
     android:key="@string/checkinIntervalPrefKey" 
     android:inputType="number" 

@@ -19,9 +19,11 @@ import java.util.concurrent.Callable;
 public class BatteryCapPowerManager {
   /** The minimum threshold below which no measurements will be scheduled */
   private int minBatteryThreshold;
+  private boolean measureWhenCharging;
     
-  public BatteryCapPowerManager(int batteryThresh, Context context) {
+  public BatteryCapPowerManager(int batteryThresh, boolean measureWhenCharging, Context context) {
     this.minBatteryThreshold = batteryThresh;
+    this.measureWhenCharging = measureWhenCharging;
   }
   
   /** 
@@ -40,11 +42,15 @@ public class BatteryCapPowerManager {
     return this.minBatteryThreshold;
   }
   
+  public synchronized void setMeasureWhenCharging(boolean value) {
+    measureWhenCharging = value;
+  }
+  
   /** 
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return (PhoneUtils.getPhoneUtils().isCharging() || 
+    return ((measureWhenCharging && PhoneUtils.getPhoneUtils().isCharging()) || 
         PhoneUtils.getPhoneUtils().getCurrentBatteryLevel() > minBatteryThreshold);
   }
   
@@ -85,8 +91,20 @@ public class BatteryCapPowerManager {
       if (result != null) {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
       } else {
-        String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
-        errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
+        String errorString;
+        /* If the measurement fails because we are below battery threshold or because the
+         * scheduler is paused, we print some extra information 
+         * */
+        if (!pManager.canScheduleExperiment()) {
+          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
+              " battery level is below the setting threshold. ";
+        } else if (scheduler.isPauseRequested()) {
+          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
+              " Speedomter is paused. ";
+        } else {
+          errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+        }
+        errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }
       
