@@ -9,7 +9,7 @@ package com.google.wireless.speed.speedometer;
  *
  */
 public interface Config {
-  public static final boolean DEFAULT_START_ON_BOOT = false;
+  public static final boolean DEFAULT_START_ON_BOOT = true;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
@@ -38,7 +38,6 @@ public interface Config {
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
-  public static final boolean DEFAULT_CHECKIN_ENABLED = true;
   public static final long MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC = 3 * 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
