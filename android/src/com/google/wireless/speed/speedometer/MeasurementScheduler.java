@@ -359,16 +359,13 @@ public class MeasurementScheduler extends Service {
    * */
   public synchronized void pause() {
     this.pauseRequested = true;
-    refreshSystemStatusBar();
-    updateNotificationBar();
+    refreshNotificationAndStatusBar();
   }
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
     this.pauseRequested = false;
-    refreshSystemStatusBar();
-    updateNotificationBar();
-    this.notify(); 
+    refreshNotificationAndStatusBar(); 
   }
   
   /** Return whether new tasks can be scheduled */
@@ -448,10 +445,10 @@ public class MeasurementScheduler extends Service {
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
     String notificationContent;
-    if (!powerManager.canScheduleExperiment()) {
-      notificationContent = "Battery is below threshold";
-    } else if (isPauseRequested()) {
+    if (isPauseRequested()) {
       notificationContent = "Speedometer is paused";
+    } else if (!powerManager.canScheduleExperiment()) {
+      notificationContent = "Battery is below threshold";
     } else {
       notificationContent = "Finished:" + completedMeasurementCnt;
       notificationContent += " Pending:" + taskQueue.size();
@@ -464,11 +461,12 @@ public class MeasurementScheduler extends Service {
   }
 
   /**
-   * Always call this method to ensure the system status bar is consistent with
-   * the system state. It is best to rely only on a single entity, the scheduler, to decide what 
-   * should be printed. Here we update both the system status bar and the notification bar.
+   * Always call this method to ensure the notification bar and the system
+   * status bar are consistent with the system state. It is best to rely only on
+   * a single entity, the scheduler, to decide what should be printed. Here we
+   * update both the system status bar and the notification bar.
    */
-  public void refreshSystemStatusBar() {
+  public void refreshNotificationAndStatusBar() {
     Intent intent = new Intent();
     intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
     sendBroadcast(intent);
@@ -489,7 +487,7 @@ public class MeasurementScheduler extends Service {
           prefs.getString(getString(R.string.checkinIntervalPrefKey),
           String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       
-      refreshSystemStatusBar();
+      refreshNotificationAndStatusBar();
       
       Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
           "checkinInterval=" + checkinIntervalSec +
@@ -741,7 +739,7 @@ public class MeasurementScheduler extends Service {
       // Update the status bar if this is the last of the list of measurements the user
       // has scheduled
       if (realTask.measurementDesc.count == 1) {
-        refreshSystemStatusBar();
+        refreshNotificationAndStatusBar();
       }
     }
     

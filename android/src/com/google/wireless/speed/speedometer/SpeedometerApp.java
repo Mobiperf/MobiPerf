@@ -206,9 +206,12 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private void initializeStatusBar() {
-    if (!scheduler.hasBatteryToScheduleExperiment()) {
+    if (this.scheduler.isPauseRequested()) {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
+    }
+    else if (!scheduler.hasBatteryToScheduleExperiment()) {
       updateStatusBar(SpeedometerApp.this.getString(R.string.powerThreasholdReachedMsg));
-    } else if (!this.scheduler.isPauseRequested()) {
+    } else {
       MeasurementTask currentTask = scheduler.getCurrentTask();
       if (currentTask != null) {
         if (currentTask.getDescription().priority == MeasurementTask.USER_PRIORITY) {
@@ -219,8 +222,6 @@ public class SpeedometerApp extends TabActivity {
       } else {
         updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
       }
-    } else {
-      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
     }
   }
   
