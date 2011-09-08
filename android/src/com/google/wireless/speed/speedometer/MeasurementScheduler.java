@@ -181,6 +181,10 @@ public class MeasurementScheduler extends Service {
     startSpeedomterInForeGround();
   }
   
+  public boolean hasBatteryToScheduleExperiment() {
+    return powerManager.canScheduleExperiment();
+  }
+  
   private void startSpeedomterInForeGround() {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -200,7 +204,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void handleCheckin() {
-    if (isPauseRequested()) {
+    if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
       return;
     }
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
@@ -210,11 +214,7 @@ public class MeasurementScheduler extends Service {
     new Thread(checkinTask).start();
   }
   
-  private void handleMeasurement() {    
-    if (isPauseRequested()) {
-      return;
-    }
-    
+  private void handleMeasurement() {
     try {
       MeasurementTask task = taskQueue.peek();
       /* Process the head of the queue. If the count of the head task is greater than 0, 
@@ -230,7 +230,6 @@ public class MeasurementScheduler extends Service {
           // User task can override the power policy. So a different task wrapper is used.
           future = measurementExecutor.submit(new UserMeasurementTask(task));
         } else {
-          sendStringMsg("Scheduling " + task.toString());
           future = measurementExecutor.submit(new PowerAwareTask(task, powerManager, this));
         }
         synchronized (pendingTasks) {
@@ -359,12 +358,16 @@ public class MeasurementScheduler extends Service {
    * is being run. Remove all scheduled but not yet started tasks from the executor.
    * */
   public synchronized void pause() {
-    this.pauseRequested = true;    
+    this.pauseRequested = true;
+    refreshSystemStatusBar();
+    updateNotificationBar();
   }
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
     this.pauseRequested = false;
+    refreshSystemStatusBar();
+    updateNotificationBar();
     this.notify(); 
   }
   
@@ -444,24 +447,50 @@ public class MeasurementScheduler extends Service {
     Notification notice = new Notification(R.drawable.icon, 
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
-    String notificationContent = "Finished:" + completedMeasurementCnt;
-    notificationContent += " Pending:" + taskQueue.size();
+    String notificationContent;
+    if (!powerManager.canScheduleExperiment()) {
+      notificationContent = "Battery is below threshold";
+    } else if (isPauseRequested()) {
+      notificationContent = "Speedometer is paused";
+    } else {
+      notificationContent = "Finished:" + completedMeasurementCnt;
+      notificationContent += " Pending:" + taskQueue.size();
+    }
     //This is deprecated in 3.x. But most phones still run 2.x systems
     notice.setLatestEventInfo(this, "Speedometer", 
         notificationContent, pendIntent);
 
     notificationManager.notify(NOTIFICATION_ID, notice);
   }
+
+  /**
+   * Always call this method to ensure the system status bar is consistent with
+   * the system state. It is best to rely only on a single entity, the scheduler, to decide what 
+   * should be printed. Here we update both the system status bar and the notification bar.
+   */
+  public void refreshSystemStatusBar() {
+    Intent intent = new Intent();
+    intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    sendBroadcast(intent);
+    updateNotificationBar();
+  }
   
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     try {
-      this.setCheckinInterval(Integer.parseInt(
-          prefs.getString(getString(R.string.checkinIntervalPrefKey),
-          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
+      powerManager.setMeasureWhenCharging(
+          prefs.getBoolean(getString(R.string.measureWhenPluggedPrefKey), 
+          Config.DEFAULT_MEASURE_WHEN_CHARGE));
+      
+      this.setCheckinInterval(Integer.parseInt(
+          prefs.getString(getString(R.string.checkinIntervalPrefKey),
+          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
+      
+      refreshSystemStatusBar();
+      
       Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
           "checkinInterval=" + checkinIntervalSec +
           ", minBatThres= " + powerManager.getBatteryThresh());
@@ -537,6 +566,7 @@ public class MeasurementScheduler extends Service {
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
+      sendStringMsg("Adding to task queue " + task.toString());
       this.submitTask(task);
     }
   }
@@ -711,9 +741,7 @@ public class MeasurementScheduler extends Service {
       // Update the status bar if this is the last of the list of measurements the user
       // has scheduled
       if (realTask.measurementDesc.count == 1) {
-        intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
-        MeasurementScheduler.this.sendBroadcast(intent);
+        refreshSystemStatusBar();
       }
     }
     
@@ -730,8 +758,8 @@ public class MeasurementScheduler extends Service {
         broadcastMeasurementStart();
         result = realTask.call();
       } finally {
-        broadcastMeasurementEnd(result);
         setCurrentTask(null);
+        broadcastMeasurementEnd(result);
         PhoneUtils.getPhoneUtils().releaseWakeLock();
       }
       return result;

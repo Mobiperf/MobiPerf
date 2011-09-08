@@ -83,47 +83,29 @@ public class BatteryCapPowerManager {
     }
     
     private void broadcastMeasurementEnd(MeasurementResult result) {
-      Intent intent = new Intent();
-      intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, (int) realTask.getDescription().priority);
-      // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
-      intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
-      if (result != null) {
-        intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
-      } else {
-        String errorString;
-        /* If the measurement fails because we are below battery threshold or because the
-         * scheduler is paused, we print some extra information 
-         * */
-        if (!pManager.canScheduleExperiment()) {
-          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
-              " battery level is below the setting threshold. ";
-        } else if (scheduler.isPauseRequested()) {
-          errorString = "Measurement " + realTask.getDescriptor() + " has been skipped because" +
-              " Speedomter is paused. ";
+      /* Only broadcast information about measurements if we are above battery threshold and
+       * that the scheduler is not paused. Otherwise, the measurement is simply skipped and we
+       * should not print anything about it.
+       **/
+      if (pManager.canScheduleExperiment() && !scheduler.isPauseRequested()) {
+        Intent intent = new Intent();
+        intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+        intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
+            (int) realTask.getDescription().priority);
+        // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
+        intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
+        if (result != null) {
+          intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
         } else {
-          errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+          String errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+          errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
+          intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
         }
-        errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
-        intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+        
+        scheduler.sendBroadcast(intent);
       }
       
-      scheduler.sendBroadcast(intent);
-      
-      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
-      
-      scheduler.sendBroadcast(intent);
-    }
-    
-    private void broadcastPowerThreasholdReached() {
-      Intent intent = new Intent();
-      intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-      // A progress value MEASUREMENT_END_PROGRESS indicates the end of an measurement
-      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, 
-          scheduler.getString(R.string.powerThreasholdReachedMsg));
-      
-      scheduler.sendBroadcast(intent);
+      scheduler.refreshSystemStatusBar();
     }
     
     @Override
@@ -135,7 +117,7 @@ public class BatteryCapPowerManager {
           throw new MeasurementError("Scheduler is paused.");
         }
         if (!pManager.canScheduleExperiment()) {
-          broadcastPowerThreasholdReached();
+          scheduler.refreshSystemStatusBar();
           throw new MeasurementError("Not enough power");
         }
         scheduler.setCurrentTask(realTask);
