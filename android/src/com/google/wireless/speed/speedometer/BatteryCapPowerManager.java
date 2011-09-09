@@ -19,11 +19,9 @@ import java.util.concurrent.Callable;
 public class BatteryCapPowerManager {
   /** The minimum threshold below which no measurements will be scheduled */
   private int minBatteryThreshold;
-  private boolean measureWhenCharging;
     
-  public BatteryCapPowerManager(int batteryThresh, boolean measureWhenCharging, Context context) {
+  public BatteryCapPowerManager(int batteryThresh, Context context) {
     this.minBatteryThreshold = batteryThresh;
-    this.measureWhenCharging = measureWhenCharging;
   }
   
   /** 
@@ -42,15 +40,11 @@ public class BatteryCapPowerManager {
     return this.minBatteryThreshold;
   }
   
-  public synchronized void setMeasureWhenCharging(boolean value) {
-    measureWhenCharging = value;
-  }
-  
   /** 
    * Returns whether a measurement can be run.
    */
   public synchronized boolean canScheduleExperiment() {
-    return ((measureWhenCharging && PhoneUtils.getPhoneUtils().isCharging()) || 
+    return (PhoneUtils.getPhoneUtils().isCharging() || 
         PhoneUtils.getPhoneUtils().getCurrentBatteryLevel() > minBatteryThreshold);
   }
   

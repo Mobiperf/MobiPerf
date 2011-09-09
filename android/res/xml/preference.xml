@@ -12,13 +12,8 @@
     android:defaultValue="60"
     android:summary="The minimum battery percentage to pause all measurements"
     android:key="@string/batteryMinThresPrefKey" 
-    android:title="Battery Percentage Threshold" 
+    android:title="Battery Threshold"
     android:inputType="number"/>
-  <CheckBoxPreference
-    android:title="Measure When Plugged"
-    android:defaultValue="true"
-    android:key="@string/measureWhenPluggedPrefKey" 
-    android:summary="Automatically download and upload experiments when the phone is charging?"/>    
   <CheckBoxPreference
     android:title="Start on Boot"
     android:defaultValue="true"
