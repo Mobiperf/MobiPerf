@@ -173,7 +173,8 @@ public class MeasurementCreationActivity extends Activity {
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", pingTargetText.getText().toString());
             PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
-                PingTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, count, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
           } catch (NumberFormatException e) {
             // This should never happen because we control the text
@@ -187,7 +188,8 @@ public class MeasurementCreationActivity extends Activity {
             params.put("url", httpUrlText.getText().toString());
             params.put("method", "get");
             HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
-                HttpTask.DEFAULT_HTTP_INTERVAL_SEC, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, count, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
           } catch (NumberFormatException e) {
             // This should never happen because we control the text
@@ -200,7 +202,8 @@ public class MeasurementCreationActivity extends Activity {
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", targetText.getText().toString());
             TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
-                TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, count, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new TracerouteTask(desc, 
                 MeasurementCreationActivity.this.getApplicationContext());
             showLengthWarning = true;

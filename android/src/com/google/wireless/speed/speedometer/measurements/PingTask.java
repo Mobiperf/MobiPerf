@@ -52,9 +52,6 @@ public class PingTask extends MeasurementTask {
   /* Default payload size of the ICMP packet, plus the 8-byte ICMP header resulting in a total of 
    * 64-byte ICMP packet */
   public static final int DEFAULT_PING_PACKET_SIZE = 56;
-  // Default # of pings per ping task
-  public static final int DEFAULT_PING_CNT_PER_TASK = 10;
-  public static final double DEFAULT_PING_INTERVAL = 0.5;
   public static final int DEFAULT_PING_TIMEOUT = 10;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
@@ -86,13 +83,6 @@ public class PingTask extends MeasurementTask {
     protected void initalizeParams(Map<String, String> params) {
       if (params == null) {
         return;
-      }
-      
-      if (this.count == 0) {
-        this.count = PingTask.DEFAULT_PING_CNT_PER_TASK;
-      }
-      if (this.intervalSec == 0) {
-        this.intervalSec = PingTask.DEFAULT_PING_INTERVAL;
       }
       
       this.target = params.get("target");
@@ -258,7 +248,8 @@ public class PingTask extends MeasurementTask {
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
     pingTask.pingExe = parent.getString(R.string.ping_executable);
     try {
-      String command = Util.constructCommand(pingTask.pingExe, "-i", pingTask.intervalSec,
+      String command = Util.constructCommand(pingTask.pingExe, "-i", 
+          Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,
           "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
           Config.PING_COUNT_PER_MEASUREMENT, pingTask.target);
       pingProc = Runtime.getRuntime().exec(command);

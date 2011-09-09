@@ -16,7 +16,12 @@ public interface Config {
   public static final int PING_COUNT_PER_MEASUREMENT = 10;
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
   
-  public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
+  // Default interval in seconds between system measurements of a given measurement type
+  public static final double DEFAULT_SYSTEM_MEASUREMENT_INTERVAL_SEC = 15 * 60;
+  // Default interval in seconds between user measurements of a given measurement type
+  public static final double DEFAULT_USER_MEASUREMENT_INTERVAL_SEC = 5;
+  // Default value for the '-i' option in the ping command
+  public static final double DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC = 0.5;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;
