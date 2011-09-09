@@ -58,9 +58,6 @@ public class HttpTask extends MeasurementTask {
   public static final int MAX_BODY_SIZE = 1024;
   // Not used by the HTTP protocol. Just in case we do not receive a status line from the response
   public static final int DEFAULT_STATUS_CODE = 0;
-  // The default number of times we run a HTTP measurement
-  private static final long DEFAULT_CNT = 1;
-  public static final double DEFAULT_HTTP_INTERVAL_SEC = 2.0;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
@@ -91,10 +88,6 @@ public class HttpTask extends MeasurementTask {
       
       if (params == null) {
         return;
-      }
-      
-      if (this.count == 0) {
-        this.count = HttpTask.DEFAULT_CNT;
       }
       
       this.url = params.get("url");

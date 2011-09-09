@@ -94,64 +94,95 @@ public class MeasurementResult {
   
   private void getPingResult(StringBuilderPrinter printer, HashMap<String, String> values) {
     PingDesc desc = (PingDesc) parameters;
-    printer.println("Ping results for target " + desc.target);
-    printer.println("\nTimestamp: " + properties.timestamp);
+    printer.println("[Ping]");
+    printer.println("Target: " + desc.target);
+    printer.println("Timestamp: " + properties.timestamp);
+    float packetLoss = Float.parseFloat(values.get("packet_loss"));
+    int count = Config.PING_COUNT_PER_MEASUREMENT;
+    printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
+        " received, " + (packetLoss * 100) + "% packet loss");
     
     float value = Float.parseFloat(values.get("mean_rtt_ms"));
-    printer.println("Mean round trip time (ms): " + String.format("%.1f", value));
+    printer.println("Mean RTT: " + String.format("%.1f", value) + " ms");
     
     value = Float.parseFloat(values.get("min_rtt_ms"));
-    printer.println("Min round trip time (ms): " + String.format("%.1f", value));
+    printer.println("Min RTT: " + String.format("%.1f", value) + " ms");
     
     value = Float.parseFloat(values.get("max_rtt_ms"));
-    printer.println("Max round trip time (ms): " + String.format("%.1f", value));
+    printer.println("Max RTT: " + String.format("%.1f", value) + " ms");
     
     value = Float.parseFloat(values.get("stddev_rtt_ms"));
-    printer.println("Standard deviation: " + String.format("%.1f", value));
+    printer.println("Std dev: " + String.format("%.1f", value) + " ms");
   }
   
   private void getHttpResult(StringBuilderPrinter printer, HashMap<String, String> values) {
     HttpDesc desc = (HttpDesc) parameters;
-    printer.println("HTTP results for URL " + desc.url);
-    printer.println("\nTimestamp: " + properties.timestamp);
+    printer.println("[HTTP]");
+    printer.println("URL: " + desc.url);
+    printer.println("Timestamp: " + properties.timestamp);
     
     int headerLen = Integer.parseInt(values.get("headers_len"));
     int bodyLen = Integer.parseInt(values.get("body_len"));
     int time = Integer.parseInt(values.get("time_ms"));
     
-    printer.println("Downloaded bytes: " + (headerLen + bodyLen));
-    printer.println("Time spent (ms): " + time);
-    printer.println("Bandwidth (Kbps): " + (headerLen + bodyLen) * 8 / time);
+    printer.println("\nDownloaded " + (headerLen + bodyLen) + " bytes in " + time + " ms");
+    printer.println("Bandwidth: " + (headerLen + bodyLen) * 8 / time + " Kbps");
   }
   
   private void getDnsResult(StringBuilderPrinter printer, HashMap<String, String> values) {
     DnsLookupDesc desc = (DnsLookupDesc) parameters;
-    printer.println("DNS lookup results for target " + desc.target);
-    printer.println("\nTimestamp: " + properties.timestamp);
+    printer.println("[DNS Lookup]");
+    printer.println("Target: " + desc.target);
+    printer.println("Timestamp: " + properties.timestamp);
     
+    String ipAddress = removeQuotes(values.get("address"));
+    if (ipAddress == null) {
+      ipAddress = "Unknown";
+    }
+    printer.println("\nAddress: " + ipAddress);
     int time = Integer.parseInt(values.get("time_ms"));
-    printer.println("Lookup time (ms): " + time);
+    printer.println("Lookup time: " + time + " ms");
   }
   
   private void getTracerouteResult(StringBuilderPrinter printer, HashMap<String, String> values) {
     TracerouteDesc desc = (TracerouteDesc) parameters;
-    printer.println("Traceroute results for target " + desc.target);
-    printer.println("\nTimestamp: " + properties.timestamp);
+    printer.println("[Traceroute]");
+    printer.println("Target: " + desc.target);
+    printer.println("Timestamp: " + properties.timestamp);
+    // Manually inject a new line
+    printer.println(" ");
     
     int hops = Integer.parseInt(values.get("num_hops"));
     for (int i = 0; i < hops; i++) {
       int host_cnt = 1;
       String key = "hop_" + i + "_addr_1";
-      printer.println("Hop " + (i + 1) + ": " + values.get(key));
+      String ipAddress = removeQuotes(values.get(key));
+      if (ipAddress == null) {
+        ipAddress = "Unknown";
+      }
+      String hopInfo = (i + 1) + " " + ipAddress;
       
       key = "hop_" + i + "_rtt_ms";
-      StringBuffer timeStrBuf = new StringBuffer(values.get(key));
       // The first and last character of this string are double quotes.
-      timeStrBuf.deleteCharAt(timeStrBuf.length() - 1);
-      timeStrBuf.deleteCharAt(0);
+      String timeStr= removeQuotes(values.get(key));
+      if (timeStr == null) {
+        timeStr = "Unknown";
+      }
       
-      float time = Float.parseFloat(timeStrBuf.toString());
-      printer.println("Delay for hop " + (i + 1) + " (ms): " + String.format("%.1f", time));
+      float time = Float.parseFloat(timeStr);
+      printer.println(hopInfo + "\t\t" + String.format("%.1f", time) + " ms");
+    }
+  }
+  
+  /**
+   * Removes the quotes surrounding the string. If the string is less than 2 in length,
+   * we returns null
+   */
+  private String removeQuotes(String str) {
+    if (str != null && str.length() > 2) {
+      return str.substring(1, str.length() - 2);
+    } else {
+      return null;
     }
   }
 }

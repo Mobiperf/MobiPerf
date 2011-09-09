@@ -3,6 +3,10 @@
 package com.google.wireless.speed.speedometer;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -36,6 +40,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   // Maps the toString() of a measurementTask to its key
   private HashMap<String, String> taskMap;
   private int longClickedItemPosition = -1;
+  private BroadcastReceiver receiver;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +72,20 @@ public class MeasurementScheduleConsoleActivity extends Activity {
       public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         longClickedItemPosition = position;
         return false;
-      }});
+      }
+    });
+    // Register activity specific BroadcastReceiver here    
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.SCHEDULER_CONNECTED_ACTION);
+    this.receiver = new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        /* The content of the console is maintained by the scheduler. We simply hook up the 
+         * view with the content here. */
+        updateConsole();
+      }
+    };
+    registerReceiver(receiver, filter);
   }
   
   /**
@@ -85,6 +103,12 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   protected void onResume() {
     super.onResume();
     updateConsole();
+  }
+  
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    unregisterReceiver(receiver);
   }
   
   /**

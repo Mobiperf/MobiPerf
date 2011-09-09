@@ -9,36 +9,23 @@ import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
 
 import android.app.Activity;
-import android.app.Dialog;
-import android.app.TimePickerDialog;
-import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
-import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.SeekBar;
-import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TableLayout;
-import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,18 +36,11 @@ import java.util.Map;
  */
 public class MeasurementCreationActivity extends Activity {
   
-  private static final int START_TIME_DIALOG_ID = 0;
-  private static final int NUMBER_OF_COMMON_VIEWS = 3;
-  private static final DateFormat startTimeFormat = new SimpleDateFormat("HH:mm");
+  private static final int NUMBER_OF_COMMON_VIEWS = 1;
   public static final String TAB_TAG = "MEASUREMENT_CREATION";
   
   private SpeedometerApp parent;
   private String measurementTypeUnderEdit;
-  private Date startTime = null;
-  private StartTimeSetListener startTimeSetListener;
-  private EditText startTimeView;
-  private TextView countText;
-  private int count;
   private ArrayAdapter<String> spinnerValues;
   
   @Override
@@ -81,21 +61,6 @@ public class MeasurementCreationActivity extends Activity {
     spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     spinner.setAdapter(spinnerValues);
     spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
-    
-    /* Initialize the repeat-count seek bar and text */
-    this.countText = (TextView) this.findViewById(R.id.countText);
-    this.countText.setText(String.valueOf(Config.DEFAULT_USER_MEASUREMENT_COUNT));
-    SeekBar countSeekBar = (SeekBar) this.findViewById(R.id.measurementCountSeekBar);
-    countSeekBar.setMax(Config.MAX_USER_MEASUREMENT_COUNT);
-    countSeekBar.setProgress(Config.DEFAULT_USER_MEASUREMENT_COUNT);
-    countSeekBar.setOnSeekBarChangeListener(new CountSeekBarChangeListener());
-    
-    /* Start time text initialization */
-    this.startTimeView = (EditText) this.findViewById(R.id.start_time_text);
-    this.startTime = Calendar.getInstance().getTime();
-    this.startTimeView.setText(startTimeFormat.format(startTime));
-    this.startTimeSetListener = new StartTimeSetListener();
-    this.startTimeView.setOnTouchListener(new StartTimeOnTouchListener());    
     
     /* Setup the 'run' button */
     Button runButton = (Button) this.findViewById(R.id.runTaskButton);
@@ -124,58 +89,25 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.pingView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
       this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
-      this.findViewById(R.id.httpMethodView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
     }
   }
   
-  @Override
-  protected Dialog onCreateDialog(int id) {
-    switch (id) {
-      case START_TIME_DIALOG_ID:
-        Calendar nowCal = Calendar.getInstance();
-        int minute = nowCal.get(Calendar.MINUTE);
-        int hour = nowCal.get(Calendar.HOUR);
-        // If user has previously set a start time, use that instead
-        if (this.startTime != null) {
-          minute = startTime.getMinutes();
-          hour = startTime.getHours();
-        }
-        return new TimePickerDialog(this, startTimeSetListener, hour, minute, false);
-    }
-    return null;
-  }
-  
-  private class StartTimeSetListener implements OnTimeSetListener {
-    /** 
-     * Sets the start time according to user input
-     */
-    @Override
-    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-      // The startTime belongs to the Activity class
-      startTime.setHours(hourOfDay);
-      startTime.setMinutes(minute);
-      startTimeView.setText(startTimeFormat.format(startTime));
-    }
-    
-  }
-  
   private class ButtonOnClickListener implements OnClickListener {
     @Override
     public void onClick(View v) {
-      TextView countText = (TextView) findViewById(R.id.countText);
       MeasurementTask newTask = null;
       boolean showLengthWarning = false;
       try {
         if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
           try {
             EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
-            long count = Long.parseLong(countText.getText().toString());
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", pingTargetText.getText().toString());
             PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
-                PingTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
           } catch (NumberFormatException e) {
             // This should never happen because we control the text
@@ -184,17 +116,12 @@ public class MeasurementCreationActivity extends Activity {
         } else if (measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
           try {
             EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
-            long count = Long.parseLong(countText.getText().toString());
             Map<String, String> params = new HashMap<String, String>();
             params.put("url", httpUrlText.getText().toString());
-            RadioButton rb = (RadioButton) findViewById(R.id.http_get_radio);
-            if (rb.isChecked()) {
-              params.put("method", "get");
-            } else {
-              params.put("method", "head");
-            }
+            params.put("method", "get");
             HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
-                HttpTask.DEFAULT_HTTP_INTERVAL_SEC, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
           } catch (NumberFormatException e) {
             // This should never happen because we control the text
@@ -203,11 +130,11 @@ public class MeasurementCreationActivity extends Activity {
         } else if (measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
           try {
             EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
-            long count = Long.parseLong(countText.getText().toString());
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", targetText.getText().toString());
             TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
-                TracerouteTask.DEFAULT_PING_INTERVAL, count, MeasurementTask.USER_PRIORITY, params);
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
+                MeasurementTask.USER_PRIORITY, params);
             newTask = new TracerouteTask(desc, 
                 MeasurementCreationActivity.this.getApplicationContext());
             showLengthWarning = true;
@@ -258,44 +185,6 @@ public class MeasurementCreationActivity extends Activity {
     intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, 
         getString(R.string.userMeasurementBusySchedulerToast));
     sendBroadcast(intent);
-  }
-  
-  private class StartTimeOnTouchListener implements OnTouchListener {
-    /**
-     * Handles the touch event of the start time EditText
-     */
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-      showDialog(START_TIME_DIALOG_ID);
-      return true;
-    }
-  }
-  
-  private class CountSeekBarChangeListener implements OnSeekBarChangeListener {
-    /** 
-     * Change the countText to tell the user the current count value
-     */
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-      if (fromUser) {
-        int validProgress = Math.max(progress, 1);
-        count = validProgress;
-        countText.setText(String.valueOf(count));
-        seekBar.setProgress(validProgress);
-      }
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-      /* TODO(wenjiezeng): Currently does not need to use this event. Simply a place holder for
-       * compilation */
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-      /* TODO(wenjiezeng): Currently does not need to use this event. Simply a place holder for
-       * compilation */
-    }    
   }
   
   private class EditBoxFocusChangeListener implements OnFocusChangeListener {

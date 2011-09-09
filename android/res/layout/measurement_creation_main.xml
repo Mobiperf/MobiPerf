@@ -42,56 +42,6 @@
       </LinearLayout>        
     </TableRow>  
     <TableRow
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:paddingTop="@dimen/marginBetweenRows">  
-      <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|center_vertical"
-        android:textSize="@dimen/regularTextSize"
-        android:text="@string/countLabel"/>
-      <RelativeLayout 
-        android:paddingLeft="@dimen/marginBetweenColumns">
-        <TextView
-          android:id="@+id/countText"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_alignParentLeft="true"
-          android:layout_centerVertical="true"
-          android:paddingRight="8dip"
-          android:textSize="@dimen/regularTextSize"/>
-        <!-- android:max below sets the maximum number of times a user can repeat a measurement -->
-        <SeekBar android:id="@+id/measurementCountSeekBar"
-          android:layout_height="wrap_content"
-          android:layout_width="match_parent" 
-          android:layout_toRightOf="@id/countText"/>
-      </RelativeLayout>
-    </TableRow>
-    <TableRow
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:paddingTop="@dimen/marginBetweenRows">
-      <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|center_vertical"
-        android:textSize="@dimen/regularTextSize"
-        android:text="@string/startTimeText"/>
-      <LinearLayout
-        android:paddingLeft="@dimen/marginBetweenColumns"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:gravity="center_vertical" 
-        android:layout_height="wrap_content">
-        <EditText android:id="@+id/start_time_text"
-          android:layout_width="match_parent"
-          android:layout_height="@dimen/editTextBoxHeight"
-          android:gravity="center"
-          android:textSize="@dimen/regularTextSize"/>        
-      </LinearLayout>      
-    </TableRow>
-    <TableRow
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/pingView"
@@ -140,36 +90,6 @@
           android:lines="1"
           android:textSize="@dimen/regularTextSize"/>
       </LinearLayout>    
-    </TableRow>
-    <TableRow
-      android:id="@+id/httpMethodView" 
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:paddingTop="@dimen/marginBetweenRows">
-      <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|center_vertical"
-        android:textSize="@dimen/regularTextSize"
-        android:text="@string/httpMethodLabel"/>
-      <RadioGroup
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingLeft="@dimen/marginBetweenColumns"
-        android:orientation="horizontal">
-        <RadioButton android:id="@+id/http_get_radio"
-            android:layout_width="80dip"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/regularTextSize"
-            android:checked="true"
-            android:text="@string/httpGetRadioText"/>
-        <RadioButton android:id="@+id/http_head_radio"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/regularTextSize"
-            android:text="@string/httpHeadRadioText"/>          
-      </RadioGroup>
     </TableRow>
     <TableRow
       android:layout_width="match_parent" 

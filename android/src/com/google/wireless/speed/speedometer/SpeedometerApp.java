@@ -25,7 +25,6 @@ import java.security.Security;
 
 /**
  * The main UI thread that manages different tabs
- * TODO(Wenjie): Implement button handler to stop all threads and the Speedometer app
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
@@ -51,6 +50,8 @@ public class SpeedometerApp extends TabActivity {
       isBound = true;
       isBindingToService = false;
       initializeStatusBar();
+      SpeedometerApp.this.sendBroadcast(new UpdateIntent("", 
+          UpdateIntent.SCHEDULER_CONNECTED_ACTION));
     }
 
     @Override
@@ -111,10 +112,8 @@ public class SpeedometerApp extends TabActivity {
         if (this.scheduler != null) {
           if (this.scheduler.isPauseRequested()) {
             this.scheduler.resume();
-            updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
           } else {
             this.scheduler.pause();
-            updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
           }
         }
         return true;
@@ -131,7 +130,11 @@ public class SpeedometerApp extends TabActivity {
         Intent intent = new Intent(getBaseContext(),
             AboutActivity.class);
         startActivity(intent);
-        return true;  
+        return true;
+      case R.id.menuLog:
+        intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
+        startActivity(intent);
+        return true;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -156,32 +159,25 @@ public class SpeedometerApp extends TabActivity {
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
-    // Create an Intent to launch an Activity for the tab (to be reused)
-    intent = new Intent().setClass(this, SystemConsoleActivity.class);
-
-    // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
-        "Console").setContent(intent);
-    tabHost.addTab(spec);
-
+    
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
-        "Measure").setContent(intent);
+        "Measure", res.getDrawable(R.drawable.ic_tab_user_measurement)).setContent(intent);
     tabHost.addTab(spec);
     // Creates the user task console tab
     intent = new Intent().setClass(this, ResultsConsoleActivity.class);
     spec = tabHost.newTabSpec(ResultsConsoleActivity.TAB_TAG).setIndicator(
-        "Results").setContent(intent);
+        "Results", res.getDrawable(R.drawable.ic_tab_results_icon)).setContent(intent);
     tabHost.addTab(spec);
     
     // Creates the measurement schedule console tab
     intent = new Intent().setClass(this, MeasurementScheduleConsoleActivity.class);
     spec = tabHost.newTabSpec(MeasurementScheduleConsoleActivity.TAB_TAG).setIndicator(
-        "Schedule").setContent(intent);
+        "Task Queue", res.getDrawable(R.drawable.ic_tab_schedules)).setContent(intent);
     tabHost.addTab(spec);
 
-    tabHost.setCurrentTabByTag(SystemConsoleActivity.TAB_TAG);
+    tabHost.setCurrentTabByTag(MeasurementCreationActivity.TAB_TAG);
     
     statusBar = (TextView) findViewById(R.id.systemStatusBar);
     
@@ -194,7 +190,11 @@ public class SpeedometerApp extends TabActivity {
       // All onXyz() callbacks are single threaded
       public void onReceive(Context context, Intent intent) {
         String statusMsg = intent.getStringExtra(UpdateIntent.STATUS_MSG_PAYLOAD);
-        updateStatusBar(statusMsg);
+        if (statusMsg != null) {
+          updateStatusBar(statusMsg);
+        } else if (scheduler != null) {
+          initializeStatusBar();
+        }
       }
     };
     IntentFilter filter = new IntentFilter();
@@ -203,19 +203,21 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private void initializeStatusBar() {
-    if (!this.scheduler.isPauseRequested()) {
+    if (this.scheduler.isPauseRequested()) {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
+    } else if (!scheduler.hasBatteryToScheduleExperiment()) {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.powerThreasholdReachedMsg));
+    } else {
       MeasurementTask currentTask = scheduler.getCurrentTask();
       if (currentTask != null) {
         if (currentTask.getDescription().priority == MeasurementTask.USER_PRIORITY) {
           updateStatusBar("User task " + currentTask.getDescriptor() + " is running");
         } else {
-          updateStatusBar("Automated task " + currentTask.getDescriptor() + " is running");
+          updateStatusBar("System task " + currentTask.getDescriptor() + " is running");
         }
       } else {
         updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
       }
-    } else {
-      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
     }
   }
   
@@ -247,7 +249,13 @@ public class SpeedometerApp extends TabActivity {
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
-    }    
+    }
+  }
+  
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    this.unregisterReceiver(this.receiver);
   }
 
   

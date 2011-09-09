@@ -21,6 +21,7 @@
     <string name="resumeMessage">Speedometer is running.</string>
     <string name="menuSettings">Settings</string>
     <string name="menuAbout">About</string>
+    <string name="menuLog">System Log</string>
     <string name="measurementTypePrompt">Measurement Type</string>
     <string name="countLabel">Repetitions</string>
     <string name="startTimeText">Start Time</string>
@@ -33,7 +34,6 @@
     <string name="httpHeadRadioText">Head</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
-    <string name="checkinEnabledPrefKey">KEY_CHEKCEDIN_ENABLED</string>
     <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
@@ -48,5 +48,5 @@
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
-    <string name="powerThreasholdReachedMsg">Battery level below user threshold. All automated measurements stop.</string>
+    <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
 </resources>

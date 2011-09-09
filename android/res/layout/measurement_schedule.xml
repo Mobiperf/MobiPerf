@@ -14,5 +14,6 @@
     android:layout_height="wrap_content"
     android:id="@+id/measurementScheduleConsole"
     android:layout_above="@id/refreshScheduleButton"
+    android:layout_alignParentTop="true"
     android:scrollbars="vertical"/>
 </RelativeLayout>

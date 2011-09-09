@@ -43,15 +43,11 @@ public class TracerouteTask extends MeasurementTask {
   /* Default payload size of the ICMP packet, plus the 8-byte ICMP header resulting in a total of 
    * 64-byte ICMP packet */
   public static final int DEFAULT_PING_PACKET_SIZE = 56;
-  // Default # of pings per ping task
-  public static final int DEFAULT_PING_CNT_PER_TASK = 10;
-  public static final double DEFAULT_PING_INTERVAL = 0.5;
   public static final int DEFAULT_PING_TIMEOUT = 10;
   public static final int DEFAULT_MAX_HOP_CNT = 30;
   // Used to compute progress for user
   public static final int EXPECTED_HOP_CNT = 20;
   public static final int DEFAULT_PINGS_PER_HOP = 3;
-  private static final long DEFAULT_CNT = 1;
   
   /**
    * The description of the Traceroute measurement 
@@ -96,15 +92,6 @@ public class TracerouteTask extends MeasurementTask {
         return;
       }
       
-      // Common parameters that every MeasurementDesc has
-      if (this.count == 0) {
-        this.count = TracerouteTask.DEFAULT_CNT;
-      }      
-
-      if (this.intervalSec == 0) {
-        this.intervalSec = TracerouteTask.DEFAULT_PING_INTERVAL;
-      }
-      
       // HTTP specific parameters according to the design document
       this.target = params.get("target");
       try {        
@@ -125,7 +112,7 @@ public class TracerouteTask extends MeasurementTask {
             Integer.parseInt(val) > 0) {
           this.pingIntervalSec = Integer.parseInt(val);
         } else {
-          this.pingIntervalSec = TracerouteTask.DEFAULT_PING_INTERVAL;
+          this.pingIntervalSec = Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC;
         }
         if ((val = params.get("pings_per_hop")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {

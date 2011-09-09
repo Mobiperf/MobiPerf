@@ -2,7 +2,9 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.myjson.reflect.TypeToken;
 import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
+import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.RuntimeUtil;
 
 import android.app.AlarmManager;
@@ -21,8 +23,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -56,7 +61,6 @@ public class MeasurementScheduler extends Service {
   private Boolean pauseRequested = true;
   private boolean stopRequested = false;
   private boolean isSchedulerStarted = false;
-  private boolean isCheckinEnabled = Config.DEFAULT_CHECKIN_ENABLED;
   private Checkin checkin;
   private long checkinIntervalSec;
   private long checkinRetryIntervalSec;
@@ -85,6 +89,13 @@ public class MeasurementScheduler extends Service {
   
   private NotificationManager notificationManager;
   private int completedMeasurementCnt = 0;
+  
+  /** The ArrayAdapter that stores the results of user measurements. Persisted upon app exit. */
+  public ArrayAdapter<String> userResults;
+  /** The ArrayAdapter that stores the results of system measurements. Persisted upon app exit. */
+  public ArrayAdapter<String> systemResults;
+  /** The ArrayAdapter that stores the content of the system console. Persisted upon app exit. */
+  public ArrayAdapter<String> systemConsole;
   
   /**
    * The Binder class that returns an instance of running scheduler 
@@ -155,12 +166,22 @@ public class MeasurementScheduler extends Service {
               Config.MEASUREMENT_END_PROGRESS) {
             completedMeasurementCnt++;
             updateNotificationBar();
+            updateResultsConsole(intent);
           }
+        } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
+          String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
+          insertStringToConsole(systemConsole, msg);
         }
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
+    
+    initializeConsoles();
     startSpeedomterInForeGround();
+  }
+  
+  public boolean hasBatteryToScheduleExperiment() {
+    return powerManager.canScheduleExperiment();
   }
   
   private void startSpeedomterInForeGround() {
@@ -181,7 +202,10 @@ public class MeasurementScheduler extends Service {
     startForeground(NOTIFICATION_ID, notice);
   }
   
-  private void handleCheckin() {    
+  private void handleCheckin() {
+    if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
+      return;
+    }
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
      * the wake lock for the new thread here and release the lock when the thread finishes
      */
@@ -189,11 +213,7 @@ public class MeasurementScheduler extends Service {
     new Thread(checkinTask).start();
   }
   
-  private void handleMeasurement() {    
-    if (isPauseRequested()) {
-      return;
-    }
-    
+  private void handleMeasurement() {
     try {
       MeasurementTask task = taskQueue.peek();
       /* Process the head of the queue. If the count of the head task is greater than 0, 
@@ -209,7 +229,6 @@ public class MeasurementScheduler extends Service {
           // User task can override the power policy. So a different task wrapper is used.
           future = measurementExecutor.submit(new UserMeasurementTask(task));
         } else {
-          sendStringMsg("Scheduling " + task.toString());
           future = measurementExecutor.submit(new PowerAwareTask(task, powerManager, this));
         }
         synchronized (pendingTasks) {
@@ -218,10 +237,14 @@ public class MeasurementScheduler extends Service {
         
         MeasurementDesc desc = task.getDescription();
         long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
-        // Add a clone with the new start time into taskQueue if
-        if (desc.count > 1 && newStartTime < desc.endTime.getTime()) {
+        // Add a clone with the new start time into taskQueue if count is INFINITE_COUNT or
+        // desc.count is greater than one and that the task has not expired.
+        if (desc.count == MeasurementTask.INFINITE_COUNT || 
+            (desc.count > 1 && newStartTime < desc.endTime.getTime())) {
           MeasurementTask newTask = task.clone();
-          newTask.getDescription().count--;
+          if (desc.count != MeasurementTask.INFINITE_COUNT) {
+            newTask.getDescription().count--;
+          }
           newTask.getDescription().startTime.setTime(newStartTime);
           submitTask(newTask);
         }
@@ -310,17 +333,6 @@ public class MeasurementScheduler extends Service {
   public BatteryCapPowerManager getPowerManager() {
     return this.powerManager;
   }
-      
-  /** Check-in is by-default disabled. SpeedometerApp will enable it. 
-   *  Users can request to stop check-in altogether */
-  public synchronized void setIsCheckinEnabled(boolean val) {
-    this.isCheckinEnabled = val;
-  }
-  
-  /** Returns whether auto checkin is enabled at the scheduler */
-  public synchronized boolean getIsCheckinEnabled() {
-    return isCheckinEnabled;
-  }
   
   /** Set the interval for checkin in seconds */
   public synchronized void setCheckinInterval(long interval) {
@@ -345,13 +357,14 @@ public class MeasurementScheduler extends Service {
    * is being run. Remove all scheduled but not yet started tasks from the executor.
    * */
   public synchronized void pause() {
-    this.pauseRequested = true;    
+    this.pauseRequested = true;
+    refreshNotificationAndStatusBar();
   }
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
     this.pauseRequested = false;
-    this.notify(); 
+    refreshNotificationAndStatusBar(); 
   }
   
   /** Return whether new tasks can be scheduled */
@@ -430,29 +443,50 @@ public class MeasurementScheduler extends Service {
     Notification notice = new Notification(R.drawable.icon, 
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
-    String notificationContent = "Finished:" + completedMeasurementCnt;
-    notificationContent += " Pending:" + taskQueue.size();
+    String notificationContent;
+    if (isPauseRequested()) {
+      notificationContent = "Speedometer is paused";
+    } else if (!powerManager.canScheduleExperiment()) {
+      notificationContent = "Battery is below threshold";
+    } else {
+      notificationContent = "Finished:" + completedMeasurementCnt;
+      notificationContent += " Pending:" + taskQueue.size();
+    }
     //This is deprecated in 3.x. But most phones still run 2.x systems
     notice.setLatestEventInfo(this, "Speedometer", 
         notificationContent, pendIntent);
 
     notificationManager.notify(NOTIFICATION_ID, notice);
   }
+
+  /**
+   * Always call this method to ensure the notification bar and the system
+   * status bar are consistent with the system state. It is best to rely only on
+   * a single entity, the scheduler, to decide what should be printed. Here we
+   * update both the system status bar and the notification bar.
+   */
+  public void refreshNotificationAndStatusBar() {
+    Intent intent = new Intent();
+    intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    sendBroadcast(intent);
+    updateNotificationBar();
+  }
   
   private void updateFromPreference() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     try {
-      this.setIsCheckinEnabled(prefs.getBoolean(
-          getString(R.string.checkinEnabledPrefKey), Config.DEFAULT_CHECKIN_ENABLED));
-      // The user sets checkin interval in the unit of hours
-      this.setCheckinInterval(Integer.parseInt(
-          prefs.getString(getString(R.string.checkinIntervalPrefKey),
-          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
-      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: isCheckinEnabled=" + 
-          isCheckinEnabled + ", checkinInterval=" + checkinIntervalSec + 
+      
+      this.setCheckinInterval(Integer.parseInt(
+          prefs.getString(getString(R.string.checkinIntervalPrefKey),
+          String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
+      
+      refreshNotificationAndStatusBar();
+      
+      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
+          "checkinInterval=" + checkinIntervalSec +
           ", minBatThres= " + powerManager.getBatteryThresh());
     } catch (ClassCastException e) {
       Log.e(SpeedometerApp.TAG, "exception when casting preference values", e);
@@ -502,6 +536,11 @@ public class MeasurementScheduler extends Service {
     PhoneUtils.getPhoneUtils().shutDown();
     this.stopForeground(true);
     this.stopSelf();
+    
+    saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
+    saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    
     Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
   }
   
@@ -516,9 +555,12 @@ public class MeasurementScheduler extends Service {
     Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
+    // The new task schedule overrides the old one
+    removeAllUnscheduledTasks();
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
+      sendStringMsg("Adding to task queue " + task.toString());
       this.submitTask(task);
     }
   }
@@ -601,12 +643,10 @@ public class MeasurementScheduler extends Service {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
       sendStringMsg("checkin at " + Calendar.getInstance().getTime());
       try {
-        if (getIsCheckinEnabled()) {
-          uploadResults();
-          getTasksFromServer();
-          // Also reset checkin if we get a success
-          resetCheckin();
-        }
+        uploadResults();
+        getTasksFromServer();
+        // Also reset checkin if we get a success
+        resetCheckin();
         // Schedule the new expeirments
         handleMeasurement();
       } catch (Exception e) {
@@ -671,7 +711,7 @@ public class MeasurementScheduler extends Service {
       
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
-          " is running. " + (realTask.getDescription().count - 1) + " more to run.");
+          " is running. ");
       
       MeasurementScheduler.this.sendBroadcast(intent);
     }
@@ -691,14 +731,8 @@ public class MeasurementScheduler extends Service {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }
       MeasurementScheduler.this.sendBroadcast(intent);
-      
-      // Update the status bar if this is the last of the list of measurements the user
-      // has scheduled
-      if (realTask.measurementDesc.count == 1) {
-        intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-        intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Speedometer is running.");
-        MeasurementScheduler.this.sendBroadcast(intent);
-      }
+      // Update the status bar once the user measurement finishes
+      refreshNotificationAndStatusBar();
     }
     
     /**
@@ -714,11 +748,91 @@ public class MeasurementScheduler extends Service {
         broadcastMeasurementStart();
         result = realTask.call();
       } finally {
-        broadcastMeasurementEnd(result);
         setCurrentTask(null);
+        broadcastMeasurementEnd(result);
         PhoneUtils.getPhoneUtils().releaseWakeLock();
       }
       return result;
+    }
+  }
+  
+  /**
+   * Persists the content of the console as a JSON string
+   */
+  private void saveConsoleContent(ArrayAdapter<String> consoleContent, String prefKey) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor editor = prefs.edit();
+
+    int length = consoleContent.getCount();
+    ArrayList<String> items = new ArrayList<String>();
+    // Since we use insertToConsole later on to restore the content, we have to store them
+    // in the reverse order to maintain the same look
+    for (int i = length - 1; i >= 0; i--) {
+      items.add(consoleContent.getItem(i));
+    }
+    Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+    editor.putString(prefKey, MeasurementJsonConvertor.getGsonInstance().toJson(items, listType));
+    editor.commit();
+  }
+  
+  /**
+   * Restores the console content from the saved JSON string
+   */
+  private void initializeConsoles() {
+    userResults = new ArrayAdapter<String>(this, R.layout.list_item);
+    systemResults = new ArrayAdapter<String>(this, R.layout.list_item);
+    systemConsole = new ArrayAdapter<String>(this, R.layout.list_item);
+    
+    restoreConsole(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    restoreConsole(userResults, Config.PREF_KEY_USER_RESULTS);
+    restoreConsole(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+  }
+  
+  /**
+   * Restores content for consoleContent with the key prefKey
+   */
+  private void restoreConsole(ArrayAdapter<String> consoleContent, String prefKey) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    String savedConsole = prefs.getString(prefKey, null);
+    if (savedConsole != null) {
+      Type listType = new TypeToken<ArrayList<String>>(){}.getType();
+      ArrayList<String> items = MeasurementJsonConvertor.getGsonInstance().fromJson(savedConsole, 
+          listType);
+      if (items != null) {
+        for (String item : items) {
+          insertStringToConsole(consoleContent, item);
+        }
+      }
+    }
+  }
+
+  /**
+   * Inserts a string into the console with the latest message on top
+   */
+  private void insertStringToConsole(ArrayAdapter<String> adapter, String msg) {
+    if (msg != null) {
+      adapter.insert(msg, 0);
+      if (adapter.getCount() > Config.MAX_LIST_ITEMS) {
+        adapter.remove(adapter.getItem(adapter.getCount() - 1));
+      }
+    }
+  }
+  
+  /**
+   * Adds a string to the corresponding console depending on whether the result is a 
+   * user measurement or a system measurement
+   */
+  private void updateResultsConsole(Intent intent) {
+    intent.hasExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD);
+    int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
+        MeasurementTask.INVALID_PRIORITY);
+    String msg = intent.getStringExtra(UpdateIntent.STRING_PAYLOAD);
+    if (msg != null) {
+      if (priority == MeasurementTask.USER_PRIORITY) {
+        insertStringToConsole(userResults, msg);
+      } else if (priority != MeasurementTask.INVALID_PRIORITY) {
+        insertStringToConsole(systemResults, msg);
+      }
     }
   }
 }

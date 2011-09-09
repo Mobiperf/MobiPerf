@@ -33,9 +33,6 @@ public class DnsLookupTask extends MeasurementTask {
   public static final String TYPE = "dns_lookup";
   // Human readable name for the task
   public static final String DESCRIPTOR = "DNS Lookup";
-  
-  private static final String DEFAULT_TARGET = "www.google.com";
-  private static int DEFAULT_DNS_CNT_PER_TASK = 10;
 
   /**
    * The description of DNS lookup measurement 
@@ -67,10 +64,6 @@ public class DnsLookupTask extends MeasurementTask {
     protected void initalizeParams(Map<String, String> params) {
       if (params == null) {
         return;
-      }
-      
-      if (this.count == 0) {
-        this.count = DEFAULT_DNS_CNT_PER_TASK;
       }
       
       this.target = params.get("target");      

@@ -9,14 +9,19 @@ package com.google.wireless.speed.speedometer;
  *
  */
 public interface Config {
-  public static final boolean DEFAULT_START_ON_BOOT = false;
+  public static final boolean DEFAULT_START_ON_BOOT = true;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   public static final int PING_COUNT_PER_MEASUREMENT = 10;
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
   
-  public static final double DEFAULT_MEASUREMENT_INTERVAL_SEC = 10 * 60;
+  // Default interval in seconds between system measurements of a given measurement type
+  public static final double DEFAULT_SYSTEM_MEASUREMENT_INTERVAL_SEC = 15 * 60;
+  // Default interval in seconds between user measurements of a given measurement type
+  public static final double DEFAULT_USER_MEASUREMENT_INTERVAL_SEC = 5;
+  // Default value for the '-i' option in the ping command
+  public static final double DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC = 0.5;
   
   public static final float PING_FILTER_THRES = (float) 1.4;
   public static final int MAX_CONCURRENT_PING = 3;
@@ -38,7 +43,7 @@ public interface Config {
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
   // default minimum battery percentage to run measurements
   public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
-  public static final boolean DEFAULT_CHECKIN_ENABLED = true;
+  public static final boolean DEFAULT_MEASURE_WHEN_CHARGE = true;
   public static final long MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC = 3 * 1000L;
   
   /** Constants used in BatteryCapPowerManager.java */
@@ -64,4 +69,9 @@ public interface Config {
   
   public static final String PREF_KEY_SYSTEM_CONSOLE = "PREF_KEY_SYSTEM_CONSOLE";
   public static final String PREF_KEY_STATUS_BAR = "PREF_KEY_STATUS_BAR";
+  public static final String PREF_KEY_SYSTEM_RESULTS = "PREF_KEY_SYSTEM_RESULTS";
+  public static final String PREF_KEY_USER_RESULTS = "PREF_KEY_USER_RESULTS";
+  
+  /** Constants for the splash screen */
+  public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;
 }
