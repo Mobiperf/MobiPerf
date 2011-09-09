@@ -715,7 +715,7 @@ public class MeasurementScheduler extends Service {
       
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, realTask.getDescriptor() +
-          " is running. " + (realTask.getDescription().count - 1) + " more to run.");
+          " is running. ");
       
       MeasurementScheduler.this.sendBroadcast(intent);
     }
@@ -735,12 +735,8 @@ public class MeasurementScheduler extends Service {
         intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
       }
       MeasurementScheduler.this.sendBroadcast(intent);
-      
-      // Update the status bar if this is the last of the list of measurements the user
-      // has scheduled
-      if (realTask.measurementDesc.count == 1) {
-        refreshNotificationAndStatusBar();
-      }
+      // Update the status bar once the user measurement finishes
+      refreshNotificationAndStatusBar();
     }
     
     /**
