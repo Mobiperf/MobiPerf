@@ -1,12 +1,17 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.widget.ListView;
 
 /**
@@ -16,34 +21,34 @@ import android.widget.ListView;
  *
  */
 public class SystemConsoleActivity extends Activity {
-  public static final String TAB_TAG = "MEASUREMENT_MONITOR";
-  
   private ListView consoleView;
-  private BroadcastReceiver receiver;
   private MeasurementScheduler scheduler = null;
+  private boolean isBound = false;
   
-  public SystemConsoleActivity() {
-    // This receiver only receives intent actions generated from UpdateIntent
-    this.receiver = new BroadcastReceiver() {
-      @Override
-      public void onReceive(Context context, Intent intent) {
-        /* The content of the console is maintained by the scheduler. We simply hook up the 
-         * view with the content here. */
-        updateConsole();
-      }
-    };
-  }
+  /** Defines callbacks for service binding, passed to bindService() */
+  private ServiceConnection serviceConn = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName className, IBinder service) {
+      // We've bound to LocalService, cast the IBinder and get LocalService
+      // instance
+      SchedulerBinder binder = (SchedulerBinder) service;
+      scheduler = binder.getService();
+      isBound = true;
+      updateConsole();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName arg0) {
+      isBound = false;
+    }
+  };
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.console);
-    // Register activity specific BroadcastReceiver here    
-    IntentFilter filter = new IntentFilter();
-    filter.addAction(UpdateIntent.MSG_ACTION);
-    filter.addAction(UpdateIntent.SCHEDULER_CONNECTED_ACTION);
-    this.registerReceiver(this.receiver, filter);
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
+    bindToService();
   }
   
   @Override
@@ -52,19 +57,26 @@ public class SystemConsoleActivity extends Activity {
     updateConsole();
   }
   
+  private void bindToService() {
+    if (!isBound) {
+      // Bind to the scheduler service if it is not bounded
+      Intent intent = new Intent(this, MeasurementScheduler.class);
+      bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+    }
+  }
+  
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    this.unregisterReceiver(this.receiver);
+    if (isBound) {
+      unbindService(serviceConn);
+      isBound = false;
+    }
   }
   
   private void updateConsole() {
-    if (scheduler == null) {
-      SpeedometerApp parent = (SpeedometerApp) getParent();
-      scheduler = parent.getScheduler();
-      if (scheduler != null) {
-        consoleView.setAdapter(scheduler.systemConsole);
-      }
-    }    
+    if (scheduler != null) {
+      consoleView.setAdapter(scheduler.systemConsole);
+    }
   }
 }
