@@ -115,7 +115,32 @@
           android:lines="1"
           android:textSize="@dimen/smallTextSize"/>
       </LinearLayout>          
-    </TableRow>    
+    </TableRow>
+    <TableRow
+      android:layout_width="match_parent" 
+      android:layout_height="wrap_content"
+      android:id="@+id/dnsTargetView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/tracerouteTargetLabel"/>  
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/dnsLookupText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/pingTargetHint"
+          android:inputType="textUri"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize"/>
+      </LinearLayout>          
+    </TableRow>        
   </TableLayout>
   </ScrollView>
 </RelativeLayout>

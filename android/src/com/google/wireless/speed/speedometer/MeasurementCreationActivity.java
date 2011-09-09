@@ -1,6 +1,8 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask.HttpDesc;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
@@ -61,7 +63,7 @@ public class MeasurementCreationActivity extends Activity {
     spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     spinner.setAdapter(spinnerValues);
     spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
-    
+    spinner.requestFocus();
     /* Setup the 'run' button */
     Button runButton = (Button) this.findViewById(R.id.runTaskButton);
     runButton.setOnClickListener(new ButtonOnClickListener());
@@ -91,6 +93,8 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
+      this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     }
   }
   
@@ -142,7 +146,21 @@ public class MeasurementCreationActivity extends Activity {
             // This should never happen because we control the text
             Log.wtf(SpeedometerApp.TAG, "Number format exception.");
           }
-        }
+        } else if (measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
+          try {
+            EditText dnsTargetText = (EditText) findViewById(R.id.dnsLookupText);
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("target", dnsTargetText.getText().toString());
+            DnsLookupDesc desc = new DnsLookupDesc(null, Calendar.getInstance().getTime(), null,
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
+                MeasurementTask.USER_PRIORITY, params);
+            newTask = new DnsLookupTask(desc, 
+                MeasurementCreationActivity.this.getApplicationContext());
+          } catch (NumberFormatException e) {
+            // This should never happen because we control the text
+            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
+          }
+        } 
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
           if (scheduler != null && scheduler.submitTask(newTask)) {
