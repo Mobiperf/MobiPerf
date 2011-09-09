@@ -130,7 +130,11 @@ public class SpeedometerApp extends TabActivity {
         Intent intent = new Intent(getBaseContext(),
             AboutActivity.class);
         startActivity(intent);
-        return true;  
+        return true;
+      case R.id.menuLog:
+        intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
+        startActivity(intent);
+        return true;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -155,29 +159,22 @@ public class SpeedometerApp extends TabActivity {
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
+    
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
-        "Measure").setContent(intent);
+        "Measure", res.getDrawable(R.drawable.ic_tab_user_measurement)).setContent(intent);
     tabHost.addTab(spec);
     // Creates the user task console tab
     intent = new Intent().setClass(this, ResultsConsoleActivity.class);
     spec = tabHost.newTabSpec(ResultsConsoleActivity.TAB_TAG).setIndicator(
-        "Results").setContent(intent);
+        "Results", res.getDrawable(R.drawable.ic_tab_results_icon)).setContent(intent);
     tabHost.addTab(spec);
     
     // Creates the measurement schedule console tab
     intent = new Intent().setClass(this, MeasurementScheduleConsoleActivity.class);
     spec = tabHost.newTabSpec(MeasurementScheduleConsoleActivity.TAB_TAG).setIndicator(
-        "Task Queue").setContent(intent);
-    tabHost.addTab(spec);
-    
-    // Create an Intent to launch an Activity for the tab (to be reused)
-    intent = new Intent().setClass(this, SystemConsoleActivity.class);
-
-    // Initialize a TabSpec for each tab and add it to the TabHost
-    spec = tabHost.newTabSpec(SystemConsoleActivity.TAB_TAG).setIndicator(
-        "Log").setContent(intent);
+        "Task Queue", res.getDrawable(R.drawable.ic_tab_schedules)).setContent(intent);
     tabHost.addTab(spec);
 
     tabHost.setCurrentTabByTag(MeasurementCreationActivity.TAB_TAG);

@@ -12,4 +12,7 @@
     <item android:id="@+id/aboutPage"
           android:icon="@android:drawable/ic_menu_info_details"
           android:title="@string/menuAbout" />
+    <item android:id="@+id/menuLog"
+          android:icon="@android:drawable/ic_menu_view"
+          android:title="@string/menuLog" />
 </menu>
