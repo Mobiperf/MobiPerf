@@ -30,7 +30,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     
   /** Test what happens if a null task is added */
   public void testNullTaskAddition() {
-    scheduler.setIsCheckinEnabled(false);
     scheduler.pause();
     
     // pre-condition
@@ -65,7 +64,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
   /** Test the ordering of tasks of the same priority */
   public void testPriorityQueueOnStartTime() {
     scheduler.removeAllUnscheduledTasks();
-    scheduler.setIsCheckinEnabled(false);
     scheduler.pause();
     assertTrue(scheduler.getUnscheduledTaskCount() == 0);
     assertTrue(scheduler.getNextTaskToBeScheduled() == null);
@@ -96,7 +94,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
   /** Test the ordering of tasks of the same priority */
   public void testPriorityQueueOnPriority() {
     scheduler.removeAllUnscheduledTasks();
-    scheduler.setIsCheckinEnabled(false);
     scheduler.pause();
     assertTrue(scheduler.getUnscheduledTaskCount() == 0);
     assertTrue(scheduler.getNextTaskToBeScheduled() == null);
@@ -133,7 +130,6 @@ public class TestSchedulerBasic extends TestMeasurementTaskBase {
     scheduler.removeAllUnscheduledTasks();
     scheduler.resume();
     scheduler.setCheckinInterval(checkinInterval);
-    scheduler.setIsCheckinEnabled(true);
     // give some time for the scheduler to finish the initiated checkin but before we 
     // get to the next checkin
     try {

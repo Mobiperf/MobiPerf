@@ -25,7 +25,6 @@ import java.security.Security;
 
 /**
  * The main UI thread that manages different tabs
- * TODO(Wenjie): Implement button handler to stop all threads and the Speedometer app
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
@@ -113,10 +112,8 @@ public class SpeedometerApp extends TabActivity {
         if (this.scheduler != null) {
           if (this.scheduler.isPauseRequested()) {
             this.scheduler.resume();
-            updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
           } else {
             this.scheduler.pause();
-            updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
           }
         }
         return true;
@@ -196,7 +193,11 @@ public class SpeedometerApp extends TabActivity {
       // All onXyz() callbacks are single threaded
       public void onReceive(Context context, Intent intent) {
         String statusMsg = intent.getStringExtra(UpdateIntent.STATUS_MSG_PAYLOAD);
-        updateStatusBar(statusMsg);
+        if (statusMsg != null) {
+          updateStatusBar(statusMsg);
+        } else if (scheduler != null) {
+          initializeStatusBar();
+        }
       }
     };
     IntentFilter filter = new IntentFilter();
@@ -205,7 +206,12 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private void initializeStatusBar() {
-    if (!this.scheduler.isPauseRequested()) {
+    if (this.scheduler.isPauseRequested()) {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
+    }
+    else if (!scheduler.hasBatteryToScheduleExperiment()) {
+      updateStatusBar(SpeedometerApp.this.getString(R.string.powerThreasholdReachedMsg));
+    } else {
       MeasurementTask currentTask = scheduler.getCurrentTask();
       if (currentTask != null) {
         if (currentTask.getDescription().priority == MeasurementTask.USER_PRIORITY) {
@@ -216,8 +222,6 @@ public class SpeedometerApp extends TabActivity {
       } else {
         updateStatusBar(SpeedometerApp.this.getString(R.string.resumeMessage));
       }
-    } else {
-      updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
     }
   }
   
