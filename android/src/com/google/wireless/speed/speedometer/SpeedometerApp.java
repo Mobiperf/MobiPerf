@@ -208,8 +208,7 @@ public class SpeedometerApp extends TabActivity {
   private void initializeStatusBar() {
     if (this.scheduler.isPauseRequested()) {
       updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
-    }
-    else if (!scheduler.hasBatteryToScheduleExperiment()) {
+    } else if (!scheduler.hasBatteryToScheduleExperiment()) {
       updateStatusBar(SpeedometerApp.this.getString(R.string.powerThreasholdReachedMsg));
     } else {
       MeasurementTask currentTask = scheduler.getCurrentTask();
