@@ -2,7 +2,6 @@
 
 package com.google.wireless.speed.speedometer;
 
-import java.util.Date;
 
 
 /**
@@ -15,7 +14,7 @@ public class DeviceProperty {
 
   public String deviceId;
   public String appVersion;
-  public Date timestamp;
+  public long timestamp;
   public String osVersion;
   public String ipAddress;
   public GeoLocation location;
@@ -27,7 +26,7 @@ public class DeviceProperty {
   public String cellInfo;
   public int rssi;
 
-  public DeviceProperty(String deviceId, String appVersion, Date timeStamp, String osVersion,
+  public DeviceProperty(String deviceId, String appVersion, long timeStamp, String osVersion,
       String ipAddress, double longtitude, double latitude, String locationType, 
       String networkType, String carrier, int batteryLevel, boolean isCharging,
       String cellInfo, int rssi) {

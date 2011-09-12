@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Utility class for Speedometer that does not require runtime information
@@ -108,5 +109,10 @@ public class Util {
     } else {
       return 0;
     }
+  }
+  
+  public static String getTimeStringFromMicrosecond(long microsecond) {
+    Date timestamp = new Date(microsecond / 1000);
+    return timestamp.toString();
   }
 }

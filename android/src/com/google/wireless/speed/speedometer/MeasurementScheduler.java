@@ -688,8 +688,8 @@ public class MeasurementScheduler extends Service {
   
   private MeasurementResult getFailureResult(MeasurementTask task) {
     return new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-      RuntimeUtil.getDeviceProperty(), task.getType(), Calendar.getInstance().getTime(), 
-      false, task.measurementDesc);
+        RuntimeUtil.getDeviceProperty(), task.getType(), System.currentTimeMillis() * 1000,
+        false, task.measurementDesc);
   }
   
   /**

@@ -10,11 +10,11 @@ import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+import com.google.wireless.speed.speedometer.util.Util;
 
 import android.util.Log;
 import android.util.StringBuilderPrinter;
 
-import java.util.Date;
 import java.util.Formatter;
 import java.util.HashMap;
 
@@ -27,7 +27,7 @@ public class MeasurementResult {
 
   private String deviceId;
   private DeviceProperty properties;
-  private Date timestamp;
+  private long timestamp;
   private boolean success;
   private String taskKey;
   private String type;
@@ -42,7 +42,7 @@ public class MeasurementResult {
    * @param measurementDesc
    */
   public MeasurementResult(String id, DeviceProperty deviceProperty, String type, 
-                           Date timeStamp, boolean success, MeasurementDesc measurementDesc) {
+                           long timeStamp, boolean success, MeasurementDesc measurementDesc) {
     super();
     this.taskKey = measurementDesc.key;
     this.deviceId = id;
@@ -96,7 +96,7 @@ public class MeasurementResult {
     PingDesc desc = (PingDesc) parameters;
     printer.println("[Ping]");
     printer.println("Target: " + desc.target);
-    printer.println("Timestamp: " + properties.timestamp);
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     float packetLoss = Float.parseFloat(values.get("packet_loss"));
     int count = Config.PING_COUNT_PER_MEASUREMENT;
     printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
@@ -119,7 +119,7 @@ public class MeasurementResult {
     HttpDesc desc = (HttpDesc) parameters;
     printer.println("[HTTP]");
     printer.println("URL: " + desc.url);
-    printer.println("Timestamp: " + properties.timestamp);
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
     int headerLen = Integer.parseInt(values.get("headers_len"));
     int bodyLen = Integer.parseInt(values.get("body_len"));
@@ -133,7 +133,7 @@ public class MeasurementResult {
     DnsLookupDesc desc = (DnsLookupDesc) parameters;
     printer.println("[DNS Lookup]");
     printer.println("Target: " + desc.target);
-    printer.println("Timestamp: " + properties.timestamp);
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
     String ipAddress = removeQuotes(values.get("address"));
     if (ipAddress == null) {
@@ -148,7 +148,7 @@ public class MeasurementResult {
     TracerouteDesc desc = (TracerouteDesc) parameters;
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
-    printer.println("Timestamp: " + properties.timestamp);
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     // Manually inject a new line
     printer.println(" ");
     
@@ -164,7 +164,7 @@ public class MeasurementResult {
       
       key = "hop_" + i + "_rtt_ms";
       // The first and last character of this string are double quotes.
-      String timeStr= removeQuotes(values.get(key));
+      String timeStr = removeQuotes(values.get(key));
       if (timeStr == null) {
         timeStr = "Unknown";
       }

@@ -21,7 +21,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Calendar;
 import java.util.Enumeration;
 
 /**
@@ -155,7 +154,7 @@ public class RuntimeUtil {
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
 
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
-        Calendar.getInstance().getTime(), getVersionStr(), activeIp, location.getLongitude(),
+        System.currentTimeMillis() * 1000, getVersionStr(), activeIp, location.getLongitude(),
         location.getLatitude(), location.getProvider(), networkType, carrierName, 
         utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
         utils.getCurrentRssi());

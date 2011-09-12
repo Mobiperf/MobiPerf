@@ -34,7 +34,6 @@ import java.io.InvalidClassException;
 import java.net.MalformedURLException;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
@@ -238,8 +237,8 @@ public class HttpTask extends MeasurementTask {
       Log.d(SpeedometerApp.TAG, headers);
       
       MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-        RuntimeUtil.getDeviceProperty(), HttpTask.TYPE, Calendar.getInstance().getTime(), 
-        success, this.measurementDesc);
+          RuntimeUtil.getDeviceProperty(), HttpTask.TYPE, System.currentTimeMillis() * 1000,
+          success, this.measurementDesc);
       
       result.addResult("code", statusCode);
       

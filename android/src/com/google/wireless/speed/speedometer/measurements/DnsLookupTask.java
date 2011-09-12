@@ -17,7 +17,6 @@ import java.io.InvalidClassException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
@@ -116,7 +115,7 @@ public class DnsLookupTask extends MeasurementTask {
     if (resultInet != null) {
       Log.i(SpeedometerApp.TAG, "Successfully resolved target address");
       MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-          RuntimeUtil.getDeviceProperty(), DnsLookupTask.TYPE, Calendar.getInstance().getTime(), 
+          RuntimeUtil.getDeviceProperty(), DnsLookupTask.TYPE, System.currentTimeMillis() * 1000,
           true, this.measurementDesc);
       result.addResult("address", resultInet.getHostAddress());
       result.addResult("real_hostname", resultInet.getCanonicalHostName());

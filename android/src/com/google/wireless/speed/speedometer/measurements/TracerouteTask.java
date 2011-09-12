@@ -25,7 +25,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
@@ -219,8 +218,8 @@ public class TracerouteTask extends MeasurementTask {
             success = true;
             cleanUp(pingProc);
             result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-              RuntimeUtil.getDeviceProperty(), TracerouteTask.TYPE, 
-              Calendar.getInstance().getTime(), success, this.measurementDesc);
+                RuntimeUtil.getDeviceProperty(), TracerouteTask.TYPE, 
+                System.currentTimeMillis() * 1000, success, this.measurementDesc);
             result.addResult("num_hops", ttl);
             for (int i = 0; i < hopHosts.size(); i++) {
               HopInfo hopInfo = hopHosts.get(i);

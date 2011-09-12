@@ -35,7 +35,6 @@ import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
@@ -196,7 +195,7 @@ public class PingTask extends MeasurementTask {
     filteredAvg = filterPingResults(rrtVals, avg);
     
     MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-        RuntimeUtil.getDeviceProperty(), PingTask.TYPE, Calendar.getInstance().getTime(), 
+        RuntimeUtil.getDeviceProperty(), PingTask.TYPE, System.currentTimeMillis() * 1000,
         success, this.measurementDesc);
     
     result.addResult("mean_rtt_ms", avg);

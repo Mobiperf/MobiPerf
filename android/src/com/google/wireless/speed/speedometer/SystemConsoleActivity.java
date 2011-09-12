@@ -4,11 +4,9 @@ package com.google.wireless.speed.speedometer;
 import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;

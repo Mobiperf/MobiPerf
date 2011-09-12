@@ -82,9 +82,12 @@ class DeviceProperties(db.Model):
     self.location = db.GeoPt(lat, lon)
 
   def JSON_DECODE_timestamp(self, inputval):
-    # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
-    # and update the Android app to use that format
-    self.timestamp = util.StringToTime(inputval)
+    try:
+      self.timestamp = util.MicrosecondsSinceEpochToTime(int(inputval))
+    except ValueError:
+      logging.exception('Error occurs while converting timestamp '
+                        '%s to integer', inputval)
+      self.timestamp = None
 
   def __str__(self):
     return 'DeviceProperties <device %s>' % self.device_info
@@ -174,9 +177,12 @@ class Measurement(db.Expando):
                 k in self.dynamic_properties() if k.startswith('mval_'))
 
   def JSON_DECODE_timestamp(self, inputval):
-    # TODO(wenjie): Update this to use util.MicrosecondsSinceEpochToTime,
-    # and update the Android app to use that format
-    self.timestamp = util.StringToTime(inputval)
+    try:
+      self.timestamp = util.MicrosecondsSinceEpochToTime(int(inputval))
+    except ValueError:
+      logging.exception('Error occurs while converting timestamp '
+                        '%s to integer', inputval)
+      self.timestamp = None
 
   def JSON_DECODE_parameters(self, input_dict):
     for k, v in input_dict.items():
