@@ -18,6 +18,8 @@
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
+import datetime
+
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -25,6 +27,7 @@ from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
+from gspeedometer.helpers import util
 
 
 class Device(webapp.RequestHandler):
@@ -62,6 +65,11 @@ class Device(webapp.RequestHandler):
                           device.key())
       measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
 
+      # Get battery info for the past 7 days
+      now = datetime.datetime.utcnow()
+      end_date = datetime.date(now.year, now.month, now.day)
+      start_date = end_date - datetime.timedelta(days=7)
+
       template_args = {
           'error': errormsg,
           'device_id': device_id,
@@ -70,7 +78,10 @@ class Device(webapp.RequestHandler):
           'measurements': measurements,
           'schedule': cur_schedule,
           'user': users.get_current_user().email(),
-          'logout_link': users.create_logout_url('/')
+          'logout_link': users.create_logout_url('/'),
+          'batterychart_rows': self._GetBatteryInfo(device,
+                                                    start_date,
+                                                    end_date)
       }
       self.response.out.write(template.render(
           'templates/devicedetail.html', template_args))
@@ -91,6 +102,37 @@ class Device(webapp.RequestHandler):
     }
     self.response.out.write(template.render(
         'templates/home.html', template_args))
+
+  def _GetBatteryInfo(self, device,
+                      start_date,
+                      end_date):
+    batteryinfo_list = []
+    property_query = device.deviceproperties_set
+    end_time = datetime.datetime(end_date.year,
+                                 end_date.month,
+                                 end_date.day)
+    start_time = datetime.datetime(start_date.year,
+                                   start_date.month,
+                                   start_date.day)
+    min_time_gap = datetime.timedelta(
+        hours=config.BATTERY_INFO_INTERVAL_HOUR)
+    property_query.filter('timestamp >=', start_time)
+    property_query.filter('timestamp <=', end_time)
+    property_query.order('-timestamp')
+
+    last_timestamp = end_time
+
+    for prop in property_query:
+      # Show battery info every min_time_gap hours
+      if (hasattr(prop, 'battery_level') and
+          last_timestamp - prop.timestamp > min_time_gap):
+        batteryinfo_list.append(
+            '[new Date(%d), %d]' % (
+                util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
+                prop.battery_level))
+        last_timestamp = prop.timestamp
+
+    return batteryinfo_list
 
 
 def GetLatestDeviceProperties(device_info, create_new_if_none=False):

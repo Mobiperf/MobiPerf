@@ -19,23 +19,25 @@ from gspeedometer import config
 from gspeedometer import model
 from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
-from gspeedometer.helpers import util
 
 
 class FilterMeasurementForm(forms.Form):
   """A form to filter measurement results for a given device."""
 
   def clean(self):
-    start_date = self.cleaned_data['start_date']
-    end_date = self.cleaned_data['end_date']
-    if (end_date - start_date >
-        datetime.timedelta(days=config.MAX_QUERY_INTERVAL_DAY)):
-      raise forms.ValidationError('Query error! Start date and '
-                                  'end date have to be within '
-                                  '%d days' % config.MAX_QUERY_INTERVAL_DAY)
-    if end_date <= start_date:
-      raise forms.ValidationError('Query error! Start date should '
-                                  'be before end date')
+    try:
+      start_date = self.cleaned_data['start_date']
+      end_date = self.cleaned_data['end_date']
+      if (end_date - start_date >
+          datetime.timedelta(days=config.MAX_QUERY_INTERVAL_DAY)):
+        raise forms.ValidationError('Query error! Start date and '
+                                    'end date have to be within '
+                                    '%d days' % config.MAX_QUERY_INTERVAL_DAY)
+      if end_date <= start_date:
+        raise forms.ValidationError('Query error! Start date should '
+                                    'be before end date')
+    except KeyError:
+      raise forms.ValidationError('Incorrect format in start date or end date')
     return self.cleaned_data
 
   thetype = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
@@ -82,46 +84,11 @@ class GoogleMapView(webapp.RequestHandler):
     template_args = {
         'device_id': device_id,
         'filter_form': filter_measurement_form,
-        'map_code': self._GetJavascriptCodeForMap(measurements),
-        'batterychart_rows': self._GetBatteryInfo(device,
-                                                  start_date,
-                                                  end_date)
+        'map_code': self._GetJavascriptCodeForMap(measurements)
     }
     self.response.out.write(template.render(
         'templates/mapview.html', template_args))
 
-  def _GetBatteryInfo(self, device,
-                      start_date,
-                      end_date):
-    batteryinfo_list = []
-    logging.info('generating battery info for device %s' % device.id)
-    property_query = device.deviceproperties_set
-    end_time = datetime.datetime(end_date.year,
-                                 end_date.month,
-                                 end_date.day)
-    start_time = datetime.datetime(start_date.year,
-                                   start_date.month,
-                                   start_date.day)
-    min_time_gap = datetime.timedelta(
-        hours=config.BATTERY_INFO_INTERVAL_HOUR)
-    property_query.filter('timestamp >=', start_time)
-    property_query.filter('timestamp <=', end_time)
-    property_query.order('-timestamp')
-
-    last_timestamp = end_time
-
-    for prop in property_query:
-      # Show battery info every min_time_gap hours
-      if (hasattr(prop, 'battery_level') and
-          last_timestamp - prop.timestamp > min_time_gap):
-        batteryinfo_list.append(
-            '[new Date(%d), %d]' % (
-                util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
-                prop.battery_level))
-        last_timestamp = prop.timestamp
-    logging.info('battery info is : %s' % str(batteryinfo_list))
-
-    return batteryinfo_list
 
   def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
     # start_date and end_date are either initialized by the default value
