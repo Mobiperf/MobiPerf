@@ -1,6 +1,8 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
+import com.google.wireless.speed.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask.HttpDesc;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
@@ -61,7 +63,7 @@ public class MeasurementCreationActivity extends Activity {
     spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     spinner.setAdapter(spinnerValues);
     spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
-    
+    spinner.requestFocus();
     /* Setup the 'run' button */
     Button runButton = (Button) this.findViewById(R.id.runTaskButton);
     runButton.setOnClickListener(new ButtonOnClickListener());
@@ -91,6 +93,8 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
+      this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     }
   }
   
@@ -100,48 +104,42 @@ public class MeasurementCreationActivity extends Activity {
       MeasurementTask newTask = null;
       boolean showLengthWarning = false;
       try {
-        if (measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
-          try {
-            EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("target", pingTargetText.getText().toString());
-            PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
-                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
-                MeasurementTask.USER_PRIORITY, params);
-            newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
-          } catch (NumberFormatException e) {
-            // This should never happen because we control the text
-            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
-          }
-        } else if (measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
-          try {
-            EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("url", httpUrlText.getText().toString());
-            params.put("method", "get");
-            HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
-                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
-                MeasurementTask.USER_PRIORITY, params);
-            newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
-          } catch (NumberFormatException e) {
-            // This should never happen because we control the text
-            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
-          }        
-        } else if (measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
-          try {
-            EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("target", targetText.getText().toString());
-            TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
-                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT, 
-                MeasurementTask.USER_PRIORITY, params);
-            newTask = new TracerouteTask(desc, 
-                MeasurementCreationActivity.this.getApplicationContext());
-            showLengthWarning = true;
-          } catch (NumberFormatException e) {
-            // This should never happen because we control the text
-            Log.wtf(SpeedometerApp.TAG, "Number format exception.");
-          }
+        if (measurementTypeUnderEdit.equals(PingTask.TYPE)) {
+          EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", pingTargetText.getText().toString());
+          PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
+              Config.DEFAULT_USER_MEASUREMENT_COUNT, MeasurementTask.USER_PRIORITY, params);
+          newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+        } else if (measurementTypeUnderEdit.equals(HttpTask.TYPE)) {
+          EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("url", httpUrlText.getText().toString());
+          params.put("method", "get");
+          HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+        } else if (measurementTypeUnderEdit.equals(TracerouteTask.TYPE)) {
+          EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", targetText.getText().toString());
+          TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new TracerouteTask(desc,
+              MeasurementCreationActivity.this.getApplicationContext());
+          showLengthWarning = true;
+        } else if (measurementTypeUnderEdit.equals(DnsLookupTask.TYPE)) {
+          EditText dnsTargetText = (EditText) findViewById(R.id.dnsLookupText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", dnsTargetText.getText().toString());
+          DnsLookupDesc desc = new DnsLookupDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new DnsLookupTask(desc,
+              MeasurementCreationActivity.this.getApplicationContext());
         }
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
