@@ -1,25 +1,22 @@
 {# Actual googlemap view in the div section. #}
 
-<form method="post" action="/maps">
-  <table>
-    <tr>
-      <td align=center width=40%>
-        <table> {{ filter_form.as_table }} </table>
-      </td>
-    </tr>
-    <tr>
-      <td align=center width=40%>
-        <p><input type="submit" /></p>
-      </td>
-    </tr>
-  </table>
-</form>
-<br/>
-<div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">
-{{ map_code|safe }}
-</div>
-<br/>
-<br/>
-<div id="measurement_chart_div" style="width: 760px; height: 400px;">
-{% include "measurementchart.js" %}
-</div>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="//www.google.com/css/gcs.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
+  </head>
+
+  <body onload="load()" onunload="GUnload()">
+    <form method="post" action="/maps?device_id={{device_id}}"> <table> <tr> <td align=center width=40%> <table> {{ filter_form.as_table }} </table> </td> </tr> <tr> <td align=center width=40%> <p><input type="submit" /></p> </td> </tr> </table> </form>
+    <br/>
+    <div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">
+    {{ map_code|safe }}
+    </div>
+    <br/>
+    <br/>
+    <div id="measurement_chart_div" style="width: 760px; height: 400px;">
+    {% include "measurementchart.js" %}
+    </div>
+  </body>
+</html>

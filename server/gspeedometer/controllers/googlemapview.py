@@ -11,23 +11,19 @@ import logging
 import random
 
 from django import forms
-from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
+from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
 from gspeedometer.helpers import util
-from gspeedometer.controllers import measurement
 
 
 class FilterMeasurementForm(forms.Form):
-  def __init__(self, *args, **kwargs):
-    devices = kwargs.pop('device', [])
-    super(FilterMeasurementForm, self).__init__(*args, **kwargs)
-    self.fields['device'] = forms.ChoiceField(devices, label='Device ID')
+  """A form to filter measurement results for a given device."""
 
   def clean(self):
     start_date = self.cleaned_data['start_date']
@@ -61,90 +57,71 @@ class GoogleMapView(webapp.RequestHandler):
 
     form_initial = {'start_date': start_date,
                     'end_date': end_date}
-    deviceinfo_list = self._GetDevicesForUser()
-    device_key = ''
-    if deviceinfo_list:
-      device_key = str(deviceinfo_list[0].key())
-    logging.info('device_key is %s' % device_key)
-
-    device_choices = [(str(device.key()), device.id)
-                      for device in deviceinfo_list]
-    logging.info(device_choices)
+    device_id = self.request.get('device_id')
+    logging.info('device_id is %s' % device_id)
+    device = model.DeviceInfo.get_by_key_name(device_id)
 
     if not self.request.POST:
-      filter_measurement_form = FilterMeasurementForm(initial=form_initial,
-                                                      device=device_choices)
+      filter_measurement_form = FilterMeasurementForm(initial=form_initial)
     else:
       filter_measurement_form = FilterMeasurementForm(self.request.POST,
-                                                      initial=form_initial,
-                                                      device=device_choices)
+                                                      initial=form_initial)
       filter_measurement_form.full_clean()
       if filter_measurement_form.is_valid():
         thetype = filter_measurement_form.cleaned_data['thetype']
         start_date = filter_measurement_form.cleaned_data['start_date']
         end_date = filter_measurement_form.cleaned_data['end_date']
-        device_key = filter_measurement_form.cleaned_data['device']
 
     measurements = self._GetMeasurementsForUser(thetype,
                                                 start_date,
                                                 end_date,
-                                                device_key)
+                                                device.key())
 
     logging.debug('start_date=%s, end_date=%s' % (start_date, end_date))
 
     template_args = {
+        'device_id': device_id,
         'filter_form': filter_measurement_form,
         'map_code': self._GetJavascriptCodeForMap(measurements),
-        'batterychart_rows': self._GetBatteryInfo(device_key,
-                                                  deviceinfo_list,
+        'batterychart_rows': self._GetBatteryInfo(device,
                                                   start_date,
                                                   end_date)
     }
     self.response.out.write(template.render(
-        'templates/map.html', template_args))
+        'templates/mapview.html', template_args))
 
-  def _GetBatteryInfo(self, device_key,
-                      deviceinfo_list,
+  def _GetBatteryInfo(self, device,
                       start_date,
                       end_date):
     batteryinfo_list = []
-    for device in deviceinfo_list:
-      if str(device.key()) == device_key:
-        logging.info('generating battery info for device %s' % device.id)
-        property_query = device.deviceproperties_set
-        end_time = datetime.datetime(end_date.year,
-                                     end_date.month,
-                                     end_date.day)
-        start_time = datetime.datetime(start_date.year,
-                                       start_date.month,
-                                       start_date.day)
-        min_time_gap = datetime.timedelta(
-            hours=config.BATTERY_INFO_INTERVAL_HOUR)
-        property_query.filter('timestamp >=', start_time)
-        property_query.filter('timestamp <=', end_time)
-        property_query.order('-timestamp')
+    logging.info('generating battery info for device %s' % device.id)
+    property_query = device.deviceproperties_set
+    end_time = datetime.datetime(end_date.year,
+                                 end_date.month,
+                                 end_date.day)
+    start_time = datetime.datetime(start_date.year,
+                                   start_date.month,
+                                   start_date.day)
+    min_time_gap = datetime.timedelta(
+        hours=config.BATTERY_INFO_INTERVAL_HOUR)
+    property_query.filter('timestamp >=', start_time)
+    property_query.filter('timestamp <=', end_time)
+    property_query.order('-timestamp')
 
-        last_timestamp = end_time
+    last_timestamp = end_time
 
-        for prop in property_query:
-          # Show battery info every min_time_gap hours
-          if hasattr(prop, 'battery_level') and last_timestamp - prop.timestamp > min_time_gap:
-            batteryinfo_list.append(
-                '[new Date(%d), %d]' % (
-                    util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
-                    prop.battery_level))
-            last_timestamp = prop.timestamp
+    for prop in property_query:
+      # Show battery info every min_time_gap hours
+      if (hasattr(prop, 'battery_level') and
+          last_timestamp - prop.timestamp > min_time_gap):
+        batteryinfo_list.append(
+            '[new Date(%d), %d]' % (
+                util.TimeToMicrosecondsSinceEpoch(prop.timestamp) / 1000,
+                prop.battery_level))
+        last_timestamp = prop.timestamp
     logging.info('battery info is : %s' % str(batteryinfo_list))
 
     return batteryinfo_list
-
-  def _GetDevicesForUser(self):
-    user = users.get_current_user()
-    devices = model.DeviceInfo.all()
-    # TODO(wenjiezeng): Uncomment the folliwng line to add filter for users
-    # in the final version. Show all devices to make debugging easier for now
-    #devices.filter('user = ', user')
-    return devices.fetch(limit=config.NUM_DEVICES_PER_USER)
 
   def _GetMeasurementsForUser(self, thetype, start_date, end_date, device_key):
     # start_date and end_date are either initialized by the default value
