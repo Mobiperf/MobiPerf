@@ -11,12 +11,14 @@ import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -69,6 +71,19 @@ public class MeasurementCreationActivity extends Activity {
     runButton.setOnClickListener(new ButtonOnClickListener());
     
     this.measurementTypeUnderEdit = PingTask.TYPE;
+    setupEditTextFocusChangeListener();
+  }
+  
+  private void setupEditTextFocusChangeListener() {
+    EditBoxFocusChangeListener textFocusChangeListener = new EditBoxFocusChangeListener();
+    EditText text = (EditText) findViewById(R.id.pingTargetText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.tracerouteTargetText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.httpUrlText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.dnsLookupText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
   }
   
   @Override
@@ -95,6 +110,13 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
+    }
+  }
+  
+  private void hideKyeboard(EditText textBox) {
+    if (textBox != null) {
+      InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+      imm.hideSoftInputFromWindow(textBox.getWindowToken(), 0);
     }
   }
   
@@ -200,6 +222,9 @@ public class MeasurementCreationActivity extends Activity {
           break;
         default:
           break;
+      }
+      if (!hasFocus) {
+        hideKyeboard((EditText) v);
       }
     }
   }

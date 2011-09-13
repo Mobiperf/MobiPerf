@@ -5,6 +5,7 @@ package com.google.wireless.speed.speedometer.util;
 import com.google.wireless.speed.speedometer.DeviceInfo;
 import com.google.wireless.speed.speedometer.DeviceProperty;
 import com.google.wireless.speed.speedometer.PhoneUtils;
+import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
 import android.content.Context;
@@ -59,9 +60,20 @@ public class RuntimeUtil {
     return deviceInfo;
   }
   
-  /* TODO(Wenjie): Implements this using the location service.*/
   public static Location getLocation() {
     return PhoneUtils.getPhoneUtils().getLocation();
+  }
+  
+  private static Location getMockLocation() {
+    return new Location("MockProvider");
+  }
+  
+  public static String getServerUrl() {
+    return context.getResources().getString(R.string.speedometerServerUrl);
+  }
+  
+  public static boolean isTestingServer(String serverUrl) {
+    return serverUrl.indexOf("corp.google.com") > 0;
   }
   
   private static ConnectivityManager getConnManager() {      
@@ -142,7 +154,12 @@ public class RuntimeUtil {
     TelephonyManager manager =
         (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
     String carrierName = manager.getNetworkOperatorName();
-    Location location = getLocation();
+    Location location;
+    if (!isTestingServer(getServerUrl())) {
+      location = getLocation();
+    } else {
+      location = getMockLocation();
+    }
     ConnectivityManager connMan = getConnManager();
     NetworkInfo activeNetwork = connMan.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
