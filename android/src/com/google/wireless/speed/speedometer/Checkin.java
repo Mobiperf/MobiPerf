@@ -55,14 +55,14 @@ public class Checkin {
   
   public Checkin(Context context) {
     this.context = context;
-    this.serverUrl = context.getResources().getString(
-        R.string.speedometerServerUrl);
+    this.serverUrl = RuntimeUtil.getServerUrl();
     sendStringMsg("Server: " + this.serverUrl);
   }
   
   /** Returns whether the service is running on a testing server. */
   public boolean isTestingServer() {
-    if (serverUrl.indexOf("corp.google.com") > 0) {
+    if (RuntimeUtil.isTestingServer(serverUrl)) {
+      accountSelector = new AccountSelector(context, this);
       return true;
     } else {
       return false;
@@ -146,7 +146,7 @@ public class Checkin {
       throw new IOException("There is exception during checkin()");
     } catch (IOException e) {
       Log.e(SpeedometerApp.TAG, "Got exception during checkin: " + Log.getStackTraceString(e));
-      throw new IOException(e.getMessage());
+      throw e;
     } finally {
       if (!checkinSuccess) {
         // Failure probably due to authToken expiration. Will authenticate upon next checkin.
