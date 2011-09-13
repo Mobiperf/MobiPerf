@@ -10,7 +10,7 @@ import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 import com.google.wireless.speed.speedometer.util.Util;
 
 import android.content.Context;
@@ -124,7 +124,7 @@ public class PingTask extends MeasurementTask {
   public MeasurementTask clone() {
     MeasurementDesc desc = this.measurementDesc;
     PingDesc newDesc = new PingDesc(desc.key, desc.startTime, desc.endTime, 
-      desc.intervalSec, desc.count, desc.priority, desc.parameters);
+          desc.intervalSec, desc.count, desc.priority, desc.parameters);
     return new PingTask(newDesc, parent);
   }
   
@@ -194,8 +194,10 @@ public class PingTask extends MeasurementTask {
     mdev = Util.getStandardDeviation(rrtVals, avg);
     filteredAvg = filterPingResults(rrtVals, avg);
     
-    MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-        RuntimeUtil.getDeviceProperty(), PingTask.TYPE, System.currentTimeMillis() * 1000,
+    PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
+    
+    MeasurementResult result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId,
+        phoneUtils.getDeviceProperty(), PingTask.TYPE, System.currentTimeMillis() * 1000,
         success, this.measurementDesc);
     
     result.addResult("mean_rtt_ms", avg);

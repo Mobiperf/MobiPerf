@@ -8,7 +8,7 @@ import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 
 import android.content.Context;
 import android.util.Log;
@@ -114,8 +114,9 @@ public class DnsLookupTask extends MeasurementTask {
     
     if (resultInet != null) {
       Log.i(SpeedometerApp.TAG, "Successfully resolved target address");
-      MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-          RuntimeUtil.getDeviceProperty(), DnsLookupTask.TYPE, System.currentTimeMillis() * 1000,
+      PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
+      MeasurementResult result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId,
+          phoneUtils.getDeviceProperty(), DnsLookupTask.TYPE, System.currentTimeMillis() * 1000,
           true, this.measurementDesc);
       result.addResult("address", resultInet.getHostAddress());
       result.addResult("real_hostname", resultInet.getCanonicalHostName());

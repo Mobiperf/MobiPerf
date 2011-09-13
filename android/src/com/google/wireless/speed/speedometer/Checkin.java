@@ -2,7 +2,7 @@
 package com.google.wireless.speed.speedometer;
 
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
@@ -46,22 +46,25 @@ public class Checkin {
   private Date lastCheckin;
   private volatile Cookie authCookie = null;
   private AccountSelector accountSelector = null;
+  PhoneUtils phoneUtils;
   
   public Checkin(Context context, String serverUrl) {
+    phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
     this.serverUrl = serverUrl;
     sendStringMsg("Server: " + this.serverUrl);
   }
   
   public Checkin(Context context) {
+    phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
-    this.serverUrl = RuntimeUtil.getServerUrl();
+    this.serverUrl = phoneUtils.getServerUrl();
     sendStringMsg("Server: " + this.serverUrl);
   }
   
   /** Returns whether the service is running on a testing server. */
   public boolean isTestingServer() {
-    if (RuntimeUtil.isTestingServer(serverUrl)) {
+    if (phoneUtils.isTestingServer(serverUrl)) {
       accountSelector = new AccountSelector(context, this);
       return true;
     } else {
@@ -101,14 +104,14 @@ public class Checkin {
     boolean checkinSuccess = false;
     try {
       JSONObject status = new JSONObject();
-      DeviceInfo info = RuntimeUtil.getDeviceInfo();
+      DeviceInfo info = phoneUtils.getDeviceInfo();
       // TODO(Wenjie): There is duplicated info here, such as device ID. 
       status.put("id", info.deviceId);
       status.put("manufacturer", info.manufacturer);
       status.put("model", info.model);
       status.put("os", info.os);
       status.put("properties", 
-          MeasurementJsonConvertor.encodeToJson(RuntimeUtil.getDeviceProperty()));
+          MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
       
       Log.d(SpeedometerApp.TAG, status.toString());
       

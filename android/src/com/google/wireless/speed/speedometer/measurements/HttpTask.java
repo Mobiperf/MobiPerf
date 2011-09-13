@@ -9,7 +9,7 @@ import com.google.wireless.speed.speedometer.MeasurementResult;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 import com.google.wireless.speed.speedometer.util.Util;
 
 import android.content.Context;
@@ -236,8 +236,10 @@ public class HttpTask extends MeasurementTask {
       Log.d(SpeedometerApp.TAG, "HeaderInfo");
       Log.d(SpeedometerApp.TAG, headers);
       
-      MeasurementResult result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-          RuntimeUtil.getDeviceProperty(), HttpTask.TYPE, System.currentTimeMillis() * 1000,
+      PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
+      
+      MeasurementResult result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId,
+          phoneUtils.getDeviceProperty(), HttpTask.TYPE, System.currentTimeMillis() * 1000,
           success, this.measurementDesc);
       
       result.addResult("code", statusCode);

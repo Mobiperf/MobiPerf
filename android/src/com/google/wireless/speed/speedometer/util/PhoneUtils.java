@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package com.google.wireless.speed.speedometer;
+package com.google.wireless.speed.speedometer.util;
+
+import com.google.wireless.speed.speedometer.DeviceInfo;
+import com.google.wireless.speed.speedometer.DeviceProperty;
+import com.google.wireless.speed.speedometer.R;
+import com.google.wireless.speed.speedometer.SpeedometerApp;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -48,10 +53,12 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
@@ -108,6 +115,8 @@ public class PhoneUtils {
   /** Receiver that handles battery change broadcast intents */
   private BroadcastReceiver broadcastReceiver;
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
+  
+  private DeviceInfo deviceInfo = null;
 
   protected PhoneUtils(Context context) {
     this.context = context;
@@ -477,39 +486,6 @@ public class PhoneUtils {
   }
 
   /**
-   * Starts a command, redirecting its output to given streams.
-   * Returns a ProcessRunner object to track and control execution.
-   *
-   * @param command The command to launch.
-   * @param outStream Where to redirect stdout of the command.
-   * @param errStream Where to redirect stderr of the command.
-   * @return A {@link ProcessRunner} object for the running command.
-   * @throws IOException If there is an error launching the command.
-   */
-  public ProcessRunner startProcessAsRoot(List<String> command,
-                                    OutputStream outStream,
-                                    OutputStream errStream)
-      throws IOException {
-    ProcessRunner runner = new ProcessRunner(command);
-    runner.start(outStream, errStream);
-    return runner;
-  }
-
-
-  /** Runs a command and returns a list of stdout+stderr lines. */
-  public List<String> runCommandGetOutput(String cmd)
-      throws IOException {
-    return runCommandGetOutput(Arrays.asList(cmd));
-  }
-
-  /** Runs a command and returns a list of stdout+stderr lines. */
-  public List<String> runCommandGetOutput(List<String> cmd)
-      throws IOException {
-    ProcessRunner tmpRunner = new ProcessRunner(cmd);
-    return tmpRunner.runCommandGetOutput(/*requireZeroExit=*/true);
-  }
-
-  /**
    * Types of interfaces to return from {@link #getUpInterfaces(InterfaceType)}.
    */
   public enum InterfaceType {
@@ -518,48 +494,6 @@ public class PhoneUtils {
 
     /** Only external interfaces. */
     EXTERNAL_ONLY,
-  }
-
-  /**
-   * Returns a list of active ("up") network interface names.
-   *
-   * @param ifType  what interfaces to return -- see {@link InterfaceType}.
-   * @return a list of active network interface names.
-   */
-  public List<String> getUpInterfaces(InterfaceType ifType) throws IOException {
-    List<String> netcfgOut = runCommandGetOutput("netcfg");
-    List<String> upIfs = new ArrayList<String>();
-    for (String outLine : netcfgOut) {
-      String[] splitLine = outLine.split(" +", 3);
-      String linkDirection = splitLine[1];
-      if (splitLine.length != 3 ||
-          !(linkDirection.equals("UP") || linkDirection.equals("DOWN"))) {
-        throw new IOException("Bad netcfg output: " + outLine);
-      }
-      // 1) Must be up
-      // 2) If externalOnly, the name must not be "lo" or start with "dummy".
-      String interfaceName = splitLine[0];
-      if (splitLine[1].equals("UP") &&
-          !(ifType == InterfaceType.EXTERNAL_ONLY &&
-            (interfaceName.equals("lo") || interfaceName.startsWith("dummy")))) {
-          upIfs.add(splitLine[0]);
-      }
-    }
-
-    if (upIfs.size() > 1) {
-      for (String wifiInterface : new String[] {"eth0", "wlan0"}) {
-        if (upIfs.contains(wifiInterface)) {
-          // If both wifi and mobile-wireless interfaces exist, then the wifi one must be
-          // inactive (otherwise the phone would have turned off the mobile-wireless interface),
-          // so, remove the inactive wifi interface here.
-          // Note that if the device currently uses wifi actively, then mobile-wireless interface
-          // should be off and upIfs.size() would be 1, so, we won't reach here in that case.
-          upIfs.remove(wifiInterface);
-        }
-      }
-    }
-
-    return upIfs;
   }
 
   /** Returns a debug printable representation of a string list. */
@@ -582,40 +516,6 @@ public class PhoneUtils {
   /** Returns a debug printable representation of a string array. */
   public static String debugString(String[] arr) {
     return debugString(Arrays.asList(arr));
-  }
-
-  /** Returns a list of PIDs of processes with a given name. */
-  public List<String> getPids(String processName) throws IOException {
-    List<String> pids = new ArrayList<String>();
-    List<String> psOut = runCommandGetOutput("ps");
-    if (psOut.size() < 2) {
-      throw new IOException("Bad ps output: " + debugString(psOut));
-    }
-    String[] headers = psOut.get(0).split(" +");
-    if (headers.length != 8) {
-      throw new IOException("Number of ps headers is not 8: " +
-          debugString(headers));
-    } else if (!headers[1].equals("PID")) {
-      throw new IOException("Unexpected PID header (second item): " +
-          debugString(headers));
-    } else if (!headers[headers.length - 1].equals("NAME")) {
-      throw new IOException("Unexpected NAME header (last item): " +
-          debugString(headers));
-    }
-    Iterator<String> psLineIter = psOut.listIterator(1);  // From line #2
-    while (psLineIter.hasNext()) {
-      String psLine = psLineIter.next();
-      // Format: USER PID PPID VSIZE RSS WCHAN PC status NAME
-      String[] psItems = psLine.split(" +", 9);
-      if (psItems.length != 9) {
-        throw new IOException("Unexpected ps output: " +
-            debugString(psItems));
-      }
-      if (psItems[8].equals(processName)) {
-        pids.add(psItems[1]);
-      }
-    }
-    return pids;
   }
   
   public String getAppVersionName() {
@@ -697,4 +597,131 @@ public class PhoneUtils {
       }
     }
   }
+  
+  private String getVersionStr() {
+    return String.format("INCREMENTAL:%s, RELEASE:%s, SDK_INT:%s", Build.VERSION.INCREMENTAL,
+        Build.VERSION.RELEASE, Build.VERSION.SDK_INT);
+  }
+  
+  public DeviceInfo getDeviceInfo() {
+    if (deviceInfo == null) {
+      deviceInfo = new DeviceInfo();
+      TelephonyManager tManager = 
+          (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+      deviceInfo.deviceId = tManager.getDeviceId();
+      deviceInfo.manufacturer = Build.MANUFACTURER;
+      deviceInfo.model = Build.MODEL;
+      deviceInfo.os = getVersionStr();
+      deviceInfo.user = Build.VERSION.CODENAME;
+    }
+    
+    return deviceInfo;
+  }
+  
+  private Location getMockLocation() {
+    return new Location("MockProvider");
+  }
+  
+  public String getServerUrl() {
+    return context.getResources().getString(R.string.speedometerServerUrl);
+  }
+  
+  public boolean isTestingServer(String serverUrl) {
+    return serverUrl.indexOf("corp.google.com") > 0;
+  }
+  
+  private String getCellularIp() {
+    String ipAddress = null;
+   
+    try {
+      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); 
+          en.hasMoreElements();) {
+        NetworkInterface intf = en.nextElement();
+        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); 
+            enumIpAddr.hasMoreElements();) {
+          InetAddress inetAddress = enumIpAddr.nextElement();
+          if (!inetAddress.isLoopbackAddress()
+              && inetAddress.getHostAddress().compareTo("0.0.0.0") != 0) {
+            return inetAddress.getHostAddress().toString();
+          }
+        }
+      }
+    } catch (SocketException ex) {
+      return null;
+    }
+    return null;
+  }
+
+  /* TODO(Wenjie): It assume that WifiInfo.getIpAddress() always returns an integer in
+   * big endian. Otherwise, the order of the numbers in the IP String will need 
+   * to be reversed.*/
+  private String intToIp(int number) {
+    byte[] bytes = new byte[4];
+    for (int i = 0; i < bytes.length; i++) {
+      bytes[i] = (byte) ((number >> (32 - (4 - i) * 8)) & 0xFF);
+    }
+    try {
+       /* 
+       * Integer is encoded in network byte order (big endian), and getByAddress(byte[])
+       * address that endian issue internally.
+       */
+      InetAddress ipAddress = InetAddress.getByAddress(bytes);
+      return ipAddress.getHostAddress();
+    } catch (UnknownHostException e) {
+      Log.e(SpeedometerApp.TAG, "error when translating the wifi address to string");
+      return null;
+    }
+  }
+  
+  private String getWifiIp() {
+    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+    if (wifiInfo != null) {
+      int ipAddress = wifiInfo.getIpAddress();
+      return ipAddress == 0 ? null : intToIp(ipAddress);
+    } else {
+      return null;
+    }
+  }
+  
+  /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
+   * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
+   * network IP*/
+  private String getIp() {
+    String ipStr = getWifiIp();
+    if (ipStr == null) {
+      ipStr = getCellularIp();
+    }
+    if (ipStr == null) {
+      return "";
+    } else {
+      return ipStr;
+    }
+  }
+  
+  /** Returns the DeviceProperty needed to report the measurement result */
+  public DeviceProperty getDeviceProperty() {
+    String carrierName = telephonyManager.getNetworkOperatorName();
+    Location location;
+    if (!isTestingServer(getServerUrl())) {
+      location = getLocation();
+    } else {
+      location = getMockLocation();
+    }
+    
+    NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+    String networkType = PhoneUtils.getPhoneUtils().getNetwork();
+    String activeIp = getIp();
+    if (activeNetwork != null && activeIp.compareTo("") == 0) {
+      networkType = activeNetwork.getTypeName();
+    }
+    String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
+    PhoneUtils utils = PhoneUtils.getPhoneUtils();
+
+    return new DeviceProperty(getDeviceInfo().deviceId, versionName,
+        System.currentTimeMillis() * 1000, getVersionStr(), activeIp, location.getLongitude(),
+        location.getLatitude(), location.getProvider(), networkType, carrierName, 
+        utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
+        utils.getCurrentRssi());
+  }  
 }

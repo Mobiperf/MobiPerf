@@ -5,7 +5,7 @@ package com.google.wireless.speed.speedometer;
 import com.google.myjson.reflect.TypeToken;
 import com.google.wireless.speed.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -97,6 +97,7 @@ public class MeasurementScheduler extends Service {
   /** The ArrayAdapter that stores the content of the system console. Persisted upon app exit. */
   public ArrayAdapter<String> systemConsole;
   
+  private PhoneUtils phoneUtils;
   /**
    * The Binder class that returns an instance of running scheduler 
    */
@@ -117,9 +118,9 @@ public class MeasurementScheduler extends Service {
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
-    RuntimeUtil.setContext(this.getApplicationContext());
     PhoneUtils.setGlobalContext(this.getApplicationContext());
-    PhoneUtils.getPhoneUtils().registerSignalStrengthListener();
+    phoneUtils = PhoneUtils.getPhoneUtils();
+    phoneUtils.registerSignalStrengthListener();
     this.checkin = new Checkin(this);
     this.checkinRetryIntervalSec = Config.MIN_CHECKIN_RETRY_INTERVAL_SEC;
     this.checkinRetryCnt = 0;
@@ -687,8 +688,8 @@ public class MeasurementScheduler extends Service {
   }
   
   private MeasurementResult getFailureResult(MeasurementTask task) {
-    return new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-        RuntimeUtil.getDeviceProperty(), task.getType(), System.currentTimeMillis() * 1000,
+    return new MeasurementResult(phoneUtils.getDeviceInfo().deviceId, 
+        phoneUtils.getDeviceProperty(), task.getType(), System.currentTimeMillis() * 1000,
         false, task.measurementDesc);
   }
   

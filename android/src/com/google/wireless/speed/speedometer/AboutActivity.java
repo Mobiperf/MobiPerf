@@ -2,6 +2,8 @@
 
 package com.google.wireless.speed.speedometer;
 
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;

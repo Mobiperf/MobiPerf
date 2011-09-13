@@ -10,7 +10,7 @@ import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
-import com.google.wireless.speed.speedometer.util.RuntimeUtil;
+import com.google.wireless.speed.speedometer.util.PhoneUtils;
 import com.google.wireless.speed.speedometer.util.Util;
 
 import android.content.Context;
@@ -217,8 +217,9 @@ public class TracerouteTask extends MeasurementTask {
 
             success = true;
             cleanUp(pingProc);
-            result = new MeasurementResult(RuntimeUtil.getDeviceInfo().deviceId, 
-                RuntimeUtil.getDeviceProperty(), TracerouteTask.TYPE, 
+            PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
+            result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId, 
+                phoneUtils.getDeviceProperty(), TracerouteTask.TYPE, 
                 System.currentTimeMillis() * 1000, success, this.measurementDesc);
             result.addResult("num_hops", ttl);
             for (int i = 0; i < hopHosts.size(); i++) {
