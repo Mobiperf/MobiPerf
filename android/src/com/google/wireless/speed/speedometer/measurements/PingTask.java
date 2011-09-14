@@ -262,23 +262,38 @@ public class PingTask extends MeasurementTask {
       String line = null;
       int lineCnt = 0;
       ArrayList<Double> rrts = new ArrayList<Double>();
+      int lastIcmpSeq = 0;
       // Process each line of the ping output and store the rrt in array rrts.
       while ((line = br.readLine()) != null) {
         // Ping prints a number of 'param=value' pairs, among which we only need the 
         // 'time=rrt_val' pair
         String[] pairs = line.split(" ");
         int len = pairs.length;
+        double rrtVal = Double.MIN_VALUE;
+        int curIcmpSeq = 0;
         for (int  i = 0; i < len; i++) {
           if (pairs[i].startsWith("time")) {
             String[] tokens = pairs[i].split("=");
             if (tokens.length == 2) {
               // NumberFormatException handled in the end
-              double rrtVal = Double.parseDouble(tokens[1].trim());
-              rrts.add(rrtVal);
+              rrtVal = Double.parseDouble(tokens[1].trim());
             } else {
               Log.i(SpeedometerApp.TAG, "ping output " + pairs[i] + 
                   " is not in the format of param=value");
             }
+          } else if (pairs[i].startsWith("icmp_seq")) {
+            String[] tokens = pairs[i].split("=");
+            if (tokens.length == 2) {
+              // NumberFormatException handled in the end
+              curIcmpSeq = Integer.parseInt(tokens[1].trim());
+            } else {
+              Log.i(SpeedometerApp.TAG, "ping output " + pairs[i] + 
+                  " is not in the format of param=value");
+            }
+          }
+          if (curIcmpSeq > lastIcmpSeq && rrtVal != Double.MIN_VALUE) {
+            lastIcmpSeq = curIcmpSeq;
+            rrts.add(rrtVal);
           }
         }
         this.progress = 100 * ++lineCnt / Config.PING_COUNT_PER_MEASUREMENT;
