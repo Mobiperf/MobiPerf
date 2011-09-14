@@ -4,7 +4,7 @@ package com.google.wireless.speed.speedometer;
 
 /**
  * The system defaults.
- * TODO(Wenjie): These should be initialized by strings.xml for easy deployment customization
+ * 
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */

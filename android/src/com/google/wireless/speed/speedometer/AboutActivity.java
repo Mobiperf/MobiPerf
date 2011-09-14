@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 /**
- * A page that shows information about the Speedoemter application
+ * A page that shows information about the Speedometer application
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */

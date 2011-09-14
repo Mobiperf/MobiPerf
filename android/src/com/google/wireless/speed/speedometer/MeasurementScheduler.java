@@ -149,7 +149,7 @@ public class MeasurementScheduler extends Service {
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
     
     broadcastReceiver = new BroadcastReceiver() {
-      // If preferences are changed by the user, the scheduler will receive the update 
+      // Handles various broadcast intents.
       @Override
       public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(UpdateIntent.PREFERENCE_ACTION)) {
