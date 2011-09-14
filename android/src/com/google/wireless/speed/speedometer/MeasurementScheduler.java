@@ -511,13 +511,16 @@ public class MeasurementScheduler extends Service {
   
   private synchronized void cleanUp() {
     this.taskQueue.clear();
+    
+    if (this.currentTask != null) {
+      this.currentTask.stop();
+    }
     // remove all future tasks
     this.measurementExecutor.shutdown();
     // remove and stop all active tasks
     this.measurementExecutor.shutdownNow();
     this.checkin.shutDown();
-    
-    
+
     this.unregisterReceiver(broadcastReceiver);
     Log.i(SpeedometerApp.TAG, "canceling pending intents");
 

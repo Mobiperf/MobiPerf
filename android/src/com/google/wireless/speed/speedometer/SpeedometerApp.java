@@ -268,5 +268,6 @@ public class SpeedometerApp extends TabActivity {
       scheduler.requestStop();
     }
     this.finish();
+    System.exit(0);
   }
 }

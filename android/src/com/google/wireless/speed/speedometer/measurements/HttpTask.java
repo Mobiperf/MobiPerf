@@ -21,7 +21,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
@@ -57,6 +56,8 @@ public class HttpTask extends MeasurementTask {
   public static final int MAX_BODY_SIZE = 1024;
   // Not used by the HTTP protocol. Just in case we do not receive a status line from the response
   public static final int DEFAULT_STATUS_CODE = 0;
+  
+  private AndroidHttpClient httpClient = null;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
@@ -140,7 +141,7 @@ public class HttpTask extends MeasurementTask {
       String urlStr = task.url;
           
       // TODO(Wenjie): Need to set timeout for the HTTP methods
-      HttpClient client = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));      
+      httpClient = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));
       HttpRequestBase request = null;
       if (task.method.compareToIgnoreCase("head") == 0) {
         request = new HttpHead(urlStr);
@@ -171,7 +172,7 @@ public class HttpTask extends MeasurementTask {
       int totalBodyLen = 0;
       
       long startTime = System.currentTimeMillis();
-      HttpResponse response = client.execute(request);
+      HttpResponse response = httpClient.execute(request);
       
       /* TODO(Wenjie): HttpClient does not automatically handle the following codes
        * 301 Moved Permanently. HttpStatus.SC_MOVED_PERMANENTLY
@@ -268,6 +269,10 @@ public class HttpTask extends MeasurementTask {
           Log.e(SpeedometerApp.TAG, "Fails to close the input stream from the HTTP response");
         }
       }
+      if (httpClient != null) {
+        httpClient.close();
+      }
+      
     }
     throw new MeasurementError("Cannot get result from HTTP measurement because " + 
       errorMsg);
@@ -293,5 +298,12 @@ public class HttpTask extends MeasurementTask {
     HttpDesc desc = (HttpDesc) measurementDesc;
     return "[HTTP " + desc.method + "]\n  Target: " + desc.url + "\n  Interval (sec): " + 
         desc.intervalSec + "\n  Next run: " + desc.startTime;
+  }
+  
+  @Override
+  public void stop() {
+    if (httpClient != null) {
+      httpClient.close();
+    }
   }
 }

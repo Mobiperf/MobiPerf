@@ -52,6 +52,8 @@ public class PingTask extends MeasurementTask {
    * 64-byte ICMP packet */
   public static final int DEFAULT_PING_PACKET_SIZE = 56;
   public static final int DEFAULT_PING_TIMEOUT = 10;
+  
+  private Process pingProc = null;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
    * @author wenjiezeng@google.com (Steve Zeng)
@@ -212,11 +214,11 @@ public class PingTask extends MeasurementTask {
     
     return result;
   }
-
+  
   private void cleanUp(Process proc) {
     if (proc != null) {
       proc.destroy();
-    }      
+    }
   }
   
   /* Compute the average of the filtered rtts.
@@ -243,7 +245,6 @@ public class PingTask extends MeasurementTask {
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask() throws MeasurementError {
     PingDesc pingTask = (PingDesc) this.measurementDesc;
-    Process pingProc = null;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
@@ -401,5 +402,10 @@ public class PingTask extends MeasurementTask {
     PingDesc desc = (PingDesc) measurementDesc;
     return "[Ping]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
         + "\n  Next run: " + desc.startTime;
+  }
+  
+  @Override
+  public void stop() {
+    cleanUp(pingProc);
   }
 }
