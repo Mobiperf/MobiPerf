@@ -1,6 +1,7 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.util;
 
+import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
@@ -13,6 +14,8 @@ import android.util.Log;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for Speedometer that does not require runtime information
@@ -114,5 +117,33 @@ public class Util {
   public static String getTimeStringFromMicrosecond(long microsecond) {
     Date timestamp = new Date(microsecond / 1000);
     return timestamp.toString();
+  }
+  
+  public static String getIcmpSeqFromPingOutput(String outputLine) {
+    try {
+      Pattern pattern = Pattern.compile(Config.PING_OUTPUT_ICMP_SEQ_REGEX);
+      Matcher matcher = pattern.matcher(outputLine);
+      matcher.find();
+      
+      return matcher.group(2);
+    } catch (IllegalStateException e) {
+      return null;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+  
+  public static String getRttFromPingOutput(String outputLine) {
+    try {
+      Pattern pattern = Pattern.compile(Config.PING_OUTPUT_RTT_REGEX);
+      Matcher matcher = pattern.matcher(outputLine);
+      matcher.find();
+      
+      return matcher.group(2);
+    } catch (IllegalStateException e) {
+      return null;
+    } catch (Exception e) {
+      return null;
+    }
   }
 }

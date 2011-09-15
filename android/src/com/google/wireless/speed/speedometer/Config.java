@@ -15,6 +15,8 @@ public interface Config {
   public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   public static final int PING_COUNT_PER_MEASUREMENT = 10;
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
+  public static final String PING_OUTPUT_ICMP_SEQ_REGEX = "(icmp_seq=)([0-9]+)";
+  public static final String PING_OUTPUT_RTT_REGEX = "(time=)([0-9]+(\\.[0-9]+)*)";
   
   // Default interval in seconds between system measurements of a given measurement type
   public static final double DEFAULT_SYSTEM_MEASUREMENT_INTERVAL_SEC = 15 * 60;

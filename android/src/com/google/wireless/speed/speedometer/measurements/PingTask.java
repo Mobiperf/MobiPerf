@@ -37,8 +37,6 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A callable that executes a ping task using one of three methods
@@ -242,30 +240,6 @@ public class PingTask extends MeasurementTask {
     return rrtAvg;
   }
   
-  private String getIcmpSeqFromPingOutput(String outputLine) {
-    try {
-      String patternStr = "(icmp_seq=)([0-9]+)";
-      Pattern pattern = Pattern.compile(patternStr);
-      Matcher matcher = pattern.matcher(outputLine);
-      
-      return matcher.group(2);
-    } catch (IllegalStateException e) {
-      return null;
-    }
-  }
-  
-  private String getRttFromPingOutput(String outputLine) {
-    try {
-      String patternStr = "(time=)([0-9]+\\.[0-9]+)";
-      Pattern pattern = Pattern.compile(patternStr);
-      Matcher matcher = pattern.matcher(outputLine);
-      
-      return matcher.group(2);
-    } catch (IllegalStateException e) {
-      return null;
-    }
-  }
-  
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask() throws MeasurementError {
     PingDesc pingTask = (PingDesc) this.measurementDesc;
@@ -293,8 +267,8 @@ public class PingTask extends MeasurementTask {
       while ((line = br.readLine()) != null) {
         // Ping prints a number of 'param=value' pairs, among which we only need the 
         // 'time=rrt_val' pair
-        String rrtValStr = getRttFromPingOutput(line);
-        String icmpSeqStr = getIcmpSeqFromPingOutput(line);
+        String rrtValStr = Util.getRttFromPingOutput(line);
+        String icmpSeqStr = Util.getIcmpSeqFromPingOutput(line);
         if (rrtValStr != null && icmpSeqStr != null) {
           double rrtVal = Double.parseDouble(rrtValStr);
           int curIcmpSeq = Integer.parseInt(icmpSeqStr);
@@ -342,6 +316,7 @@ public class PingTask extends MeasurementTask {
     long pingEndTime = 0;
     ArrayList<Double> rrts = new ArrayList<Double>();
     String errorMsg = "";
+    MeasurementResult result = null;
 
     try {       
       int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
@@ -361,7 +336,7 @@ public class PingTask extends MeasurementTask {
         broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "java ping succeeds");
-      return constructResult(rrts);        
+      result = constructResult(rrts);
     } catch (IllegalArgumentException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -369,8 +344,12 @@ public class PingTask extends MeasurementTask {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } 
-    Log.i(SpeedometerApp.TAG, "java ping fails");
-    throw new MeasurementError(errorMsg);
+    if (result != null) {
+      return result;
+    } else {
+      Log.i(SpeedometerApp.TAG, "java ping fails");
+      throw new MeasurementError(errorMsg);
+    }
   }
   
   /** 
@@ -385,6 +364,7 @@ public class PingTask extends MeasurementTask {
     ArrayList<Double> rrts = new ArrayList<Double>();
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
+    MeasurementResult result = null;
 
     try {
       long totalPingDelay = 0;
@@ -408,7 +388,7 @@ public class PingTask extends MeasurementTask {
         broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
-      return constructResult(rrts);
+      result = constructResult(rrts);
     } catch (MalformedURLException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -416,8 +396,12 @@ public class PingTask extends MeasurementTask {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
     }
-    Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
-    throw new MeasurementError(errorMsg);
+    if (result != null) {
+      return result;
+    } else {
+      Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
+      throw new MeasurementError(errorMsg);
+    }
   }
   
   @Override
