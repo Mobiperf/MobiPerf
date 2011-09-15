@@ -54,7 +54,7 @@ public class PingTask extends MeasurementTask {
   public static final int DEFAULT_PING_TIMEOUT = 10;
   
   private Process pingProc = null;
-  public String targetIp = null;
+  private String targetIp = null;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
    * @author wenjiezeng@google.com (Steve Zeng)
@@ -205,7 +205,6 @@ public class PingTask extends MeasurementTask {
         success, this.measurementDesc);
     
     result.addResult("target_ip", targetIp);
-    result.addResult("mean_rtt_ms", avg);
     result.addResult("mean_rtt_ms", avg);
     result.addResult("min_rtt_ms", min);
     result.addResult("max_rtt_ms", max);
