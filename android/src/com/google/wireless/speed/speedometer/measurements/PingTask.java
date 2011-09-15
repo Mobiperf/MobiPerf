@@ -37,6 +37,8 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A callable that executes a ping task using one of three methods
@@ -238,7 +240,31 @@ public class PingTask extends MeasurementTask {
       Log.wtf(SpeedometerApp.TAG, "This should never happen because rrts is never empty");
     }
     return rrtAvg;
-  } 
+  }
+  
+  private String getIcmpSeqFromPingOutput(String outputLine) {
+    try {
+      String patternStr = "(icmp_seq=)([0-9]+)";
+      Pattern pattern = Pattern.compile(patternStr);
+      Matcher matcher = pattern.matcher(outputLine);
+      
+      return matcher.group(2);
+    } catch (IllegalStateException e) {
+      return null;
+    }
+  }
+  
+  private String getRttFromPingOutput(String outputLine) {
+    try {
+      String patternStr = "(time=)([0-9]+\\.[0-9]+)";
+      Pattern pattern = Pattern.compile(patternStr);
+      Matcher matcher = pattern.matcher(outputLine);
+      
+      return matcher.group(2);
+    } catch (IllegalStateException e) {
+      return null;
+    }
+  }
   
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask() throws MeasurementError {
@@ -267,35 +293,18 @@ public class PingTask extends MeasurementTask {
       while ((line = br.readLine()) != null) {
         // Ping prints a number of 'param=value' pairs, among which we only need the 
         // 'time=rrt_val' pair
-        String[] pairs = line.split(" ");
-        int len = pairs.length;
-        double rrtVal = Double.MIN_VALUE;
-        int curIcmpSeq = 0;
-        for (int  i = 0; i < len; i++) {
-          if (pairs[i].startsWith("time")) {
-            String[] tokens = pairs[i].split("=");
-            if (tokens.length == 2) {
-              // NumberFormatException handled in the end
-              rrtVal = Double.parseDouble(tokens[1].trim());
-            } else {
-              Log.i(SpeedometerApp.TAG, "ping output " + pairs[i] + 
-                  " is not in the format of param=value");
-            }
-          } else if (pairs[i].startsWith("icmp_seq")) {
-            String[] tokens = pairs[i].split("=");
-            if (tokens.length == 2) {
-              // NumberFormatException handled in the end
-              curIcmpSeq = Integer.parseInt(tokens[1].trim());
-            } else {
-              Log.i(SpeedometerApp.TAG, "ping output " + pairs[i] + 
-                  " is not in the format of param=value");
-            }
-          }
-          if (curIcmpSeq > lastIcmpSeq && rrtVal != Double.MIN_VALUE) {
-            lastIcmpSeq = curIcmpSeq;
-            rrts.add(rrtVal);
+        String rrtValStr = getRttFromPingOutput(line);
+        String icmpSeqStr = getIcmpSeqFromPingOutput(line);
+        if (rrtValStr != null && icmpSeqStr != null) {
+          double rrtVal = Double.parseDouble(rrtValStr);
+          int curIcmpSeq = Integer.parseInt(icmpSeqStr);
+  
+          if (curIcmpSeq > lastIcmpSeq) {
+              lastIcmpSeq = curIcmpSeq;
+              rrts.add(rrtVal);
           }
         }
+        
         this.progress = 100 * ++lineCnt / Config.PING_COUNT_PER_MEASUREMENT;
         this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
         broadcastProgressForUser(progress);
