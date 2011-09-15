@@ -54,6 +54,7 @@ public class PingTask extends MeasurementTask {
   public static final int DEFAULT_PING_TIMEOUT = 10;
   
   private Process pingProc = null;
+  public String targetIp = null;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
    * @author wenjiezeng@google.com (Steve Zeng)
@@ -136,7 +137,8 @@ public class PingTask extends MeasurementTask {
   public MeasurementResult call() throws MeasurementError {
     PingDesc desc = (PingDesc) measurementDesc;
     try {
-      InetAddress.getByName(desc.target);
+      InetAddress addr = InetAddress.getByName(desc.target);
+      targetIp = addr.getHostAddress();
     } catch (UnknownHostException e) {
       throw new MeasurementError("Unknown host " + desc.target);
     }
@@ -202,6 +204,8 @@ public class PingTask extends MeasurementTask {
         phoneUtils.getDeviceProperty(), PingTask.TYPE, System.currentTimeMillis() * 1000,
         success, this.measurementDesc);
     
+    result.addResult("target_ip", targetIp);
+    result.addResult("mean_rtt_ms", avg);
     result.addResult("mean_rtt_ms", avg);
     result.addResult("min_rtt_ms", min);
     result.addResult("max_rtt_ms", max);
@@ -253,7 +257,7 @@ public class PingTask extends MeasurementTask {
       String command = Util.constructCommand(pingTask.pingExe, "-i", 
           Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,
           "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
-          Config.PING_COUNT_PER_MEASUREMENT, pingTask.target);
+          Config.PING_COUNT_PER_MEASUREMENT, targetIp);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -325,7 +329,7 @@ public class PingTask extends MeasurementTask {
       long totalPingDelay = 0;
       for (int i = 0; i < Config.PING_COUNT_PER_MEASUREMENT; i++) {
         pingStartTime = System.currentTimeMillis();
-        boolean status = InetAddress.getByName(pingTask.target).isReachable(timeOut);
+        boolean status = InetAddress.getByName(targetIp).isReachable(timeOut);
         pingEndTime = System.currentTimeMillis();
         long rrtVal = pingEndTime - pingStartTime;
         if (status) {
@@ -370,7 +374,7 @@ public class PingTask extends MeasurementTask {
       long totalPingDelay = 0;
       
       HttpClient client = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));
-      HttpHead headMethod = new HttpHead("http://" + pingTask.target);
+      HttpHead headMethod = new HttpHead("http://" + targetIp);
       headMethod.addHeader(new BasicHeader("Connection", "close"));
       headMethod.setParams(new BasicHttpParams().setParameter(
           CoreConnectionPNames.CONNECTION_TIMEOUT, 1000));

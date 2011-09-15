@@ -96,7 +96,9 @@ public class MeasurementResult {
     PingDesc desc = (PingDesc) parameters;
     printer.println("[Ping]");
     printer.println("Target: " + desc.target);
+    printer.println("IP address: " + removeQuotes(values.get("target_ip")));
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    
     float packetLoss = Float.parseFloat(values.get("packet_loss"));
     int count = Config.PING_COUNT_PER_MEASUREMENT;
     printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
