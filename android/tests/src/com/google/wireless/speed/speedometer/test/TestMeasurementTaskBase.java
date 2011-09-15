@@ -40,7 +40,6 @@ public class TestMeasurementTaskBase extends
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase(boolean isCheckinEnabled) {
     super("com.google.wireless.speed.speedometer.SpeedometerApp", SpeedometerApp.class);
-    //TODO(Wenjie): Need a way to correctly initialize the scheduler on whether to enable checkin
   }
   
   @Override

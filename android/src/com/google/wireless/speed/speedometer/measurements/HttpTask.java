@@ -51,9 +51,12 @@ public class HttpTask extends MeasurementTask {
    */
   // The maximum number of bytes we will read from requested URL. Set to 1Mb.
   public static final long MAX_HTTP_RESPONSE_SIZE = 1024 * 1024;
-  // The buffer size we use to store the response body and report to the service. Set to 16Kb.
-  // If the response is larger than 1Kb, we will only report the first 1Kb of the body.
-  public static final int MAX_BODY_SIZE = 1024;
+  // The size of the response body we will report to the service.
+  // If the response is larger than MAX_BODY_SIZE_TO_UPLOAD bytes, we will 
+  // only report the first MAX_BODY_SIZE_TO_UPLOAD bytes of the body.
+  public static final int MAX_BODY_SIZE_TO_UPLOAD = 1024;
+  // The buffer size we use to read from the HTTP response stream
+  public static final int READ_BUFFER_SIZE = 1024;
   // Not used by the HTTP protocol. Just in case we do not receive a status line from the response
   public static final int DEFAULT_STATUS_CODE = 0;
   
@@ -129,7 +132,7 @@ public class HttpTask extends MeasurementTask {
     long originalHeadersLen = 0;
     long originalBodyLen;
     String headers = null;
-    ByteBuffer body = ByteBuffer.allocate(HttpTask.MAX_BODY_SIZE);
+    ByteBuffer body = ByteBuffer.allocate(HttpTask.MAX_BODY_SIZE_TO_UPLOAD);
     boolean success = false;
     String errorMsg = "";
     InputStream inputStream = null;
@@ -167,7 +170,7 @@ public class HttpTask extends MeasurementTask {
       }
       
       
-      byte[] readBuffer = new byte[HttpTask.MAX_BODY_SIZE];
+      byte[] readBuffer = new byte[HttpTask.READ_BUFFER_SIZE];
       int readLen;      
       int totalBodyLen = 0;
       
@@ -201,9 +204,6 @@ public class HttpTask extends MeasurementTask {
       
       if (responseEntity != null) {
         inputStream = responseEntity.getContent();
-        int offset = 0;
-        int lengthToRead = HttpTask.MAX_BODY_SIZE;
-        int lastPos = 0;
         while ((readLen = inputStream.read(readBuffer)) > 0 
             && totalBodyLen <= HttpTask.MAX_HTTP_RESPONSE_SIZE) {
           totalBodyLen += readLen;
@@ -233,9 +233,6 @@ public class HttpTask extends MeasurementTask {
           headers += hdr.toString() + "\r\n";
         }
       }
-      
-      Log.d(SpeedometerApp.TAG, "HeaderInfo");
-      Log.d(SpeedometerApp.TAG, headers);
       
       PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
       

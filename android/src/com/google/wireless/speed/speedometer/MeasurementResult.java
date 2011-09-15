@@ -156,7 +156,6 @@ public class MeasurementResult {
     
     int hops = Integer.parseInt(values.get("num_hops"));
     for (int i = 0; i < hops; i++) {
-      int host_cnt = 1;
       String key = "hop_" + i + "_addr_1";
       String ipAddress = removeQuotes(values.get(key));
       if (ipAddress == null) {

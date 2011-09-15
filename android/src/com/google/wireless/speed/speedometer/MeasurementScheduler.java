@@ -18,9 +18,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -75,7 +73,6 @@ public class MeasurementScheduler extends Service {
   private PendingIntent measurementIntentSender;
   private AlarmManager alarmManager;
   private BatteryCapPowerManager powerManager;
-  // TODO(Wenjie): add capacity control to the two queues.
   /* Both taskQueue and pendingTasks are thread safe and operations on them are atomic. 
    * To guarantee reliable value propagation between threads, use volatile keyword.
    */
@@ -353,10 +350,9 @@ public class MeasurementScheduler extends Service {
     return this.checkinIntervalSec;
   }
   
-  /** Prevents new tasks from being scheduled. All scheduled tasks will still run 
-   * TODO(Wenjie): Implement a call back in the MeasurementTask to indicate a task that
-   * is being run. Remove all scheduled but not yet started tasks from the executor.
-   * */
+  /** 
+   * Prevents new tasks from being scheduled. Started task will still run to finish. 
+   */
   public synchronized void pause() {
     this.pauseRequested = true;
     refreshNotificationAndStatusBar();
@@ -492,15 +488,6 @@ public class MeasurementScheduler extends Service {
           ", minBatThres= " + powerManager.getBatteryThresh());
     } catch (ClassCastException e) {
       Log.e(SpeedometerApp.TAG, "exception when casting preference values", e);
-    }
-    // TODO(Wenjie): Add code to deal with minBatThres, measureWhenPlugged, and startOnBoot.
-  }
-  
-  //Place holder to receive message from the UI thread
-  private class UpdateHandler extends Handler {
-    @Override
-    public void handleMessage(Message msg) {
-      
     }
   }
   
