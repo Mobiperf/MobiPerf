@@ -1,7 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.util;
 
-import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
@@ -118,31 +117,22 @@ public class Util {
     Date timestamp = new Date(microsecond / 1000);
     return timestamp.toString();
   }
-  
-  public static String getIcmpSeqFromPingOutput(String outputLine) {
+
+  /**
+   * Returns a String array that contains the ICMP sequence number and the round
+   * trip time extracted from a ping output. The first array element is the
+   * sequence number and the second element is the round trip time.
+   * 
+   * Returns a null object if either element cannot be found.
+   */
+  public static String[] extractInfoFromPingOutput(String outputLine) {
     try {
-      Pattern pattern = Pattern.compile(Config.PING_OUTPUT_ICMP_SEQ_REGEX);
+      Pattern pattern = Pattern.compile("icmp_seq=([0-9]+)\\s.* time=([0-9]+(\\.[0-9]+)?)");
       Matcher matcher = pattern.matcher(outputLine);
       matcher.find();
       
-      return matcher.group(2);
+      return new String[] {matcher.group(1), matcher.group(2)};
     } catch (IllegalStateException e) {
-      return null;
-    } catch (Exception e) {
-      return null;
-    }
-  }
-  
-  public static String getRttFromPingOutput(String outputLine) {
-    try {
-      Pattern pattern = Pattern.compile(Config.PING_OUTPUT_RTT_REGEX);
-      Matcher matcher = pattern.matcher(outputLine);
-      matcher.find();
-      
-      return matcher.group(2);
-    } catch (IllegalStateException e) {
-      return null;
-    } catch (Exception e) {
       return null;
     }
   }

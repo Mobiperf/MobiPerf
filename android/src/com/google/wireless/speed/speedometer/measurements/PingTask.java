@@ -268,11 +268,10 @@ public class PingTask extends MeasurementTask {
       while ((line = br.readLine()) != null) {
         // Ping prints a number of 'param=value' pairs, among which we only need the 
         // 'time=rrt_val' pair
-        String rrtValStr = Util.getRttFromPingOutput(line);
-        String icmpSeqStr = Util.getIcmpSeqFromPingOutput(line);
-        if (rrtValStr != null && icmpSeqStr != null) {
-          double rrtVal = Double.parseDouble(rrtValStr);
-          int curIcmpSeq = Integer.parseInt(icmpSeqStr);
+        String[] extractedValues = Util.extractInfoFromPingOutput(line);
+        if (extractedValues != null) {
+          int curIcmpSeq = Integer.parseInt(extractedValues[0]);
+          double rrtVal = Double.parseDouble(extractedValues[1]);
   
           if (curIcmpSeq > lastIcmpSeq) {
               lastIcmpSeq = curIcmpSeq;

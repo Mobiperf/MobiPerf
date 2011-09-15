@@ -1,7 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 package com.google.wireless.speed.speedometer.test;
 
-import com.google.wireless.speed.speedometer.Config;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
@@ -58,25 +57,21 @@ public class UtilTest extends AndroidTestCase {
     }
   }
   
-  public void testPingOutputPatternMatching() {    
-    Pattern pattern = Pattern.compile(Config.PING_OUTPUT_ICMP_SEQ_REGEX);
+  public void testPingOutputPatternMatching() {
+    String patternStr = "icmp_seq=([0-9]+)\\s.* time=([0-9]+(\\.[0-9]+)?)";
+    Pattern pattern = Pattern.compile(patternStr);
     Matcher matcher = pattern.matcher("64 bytes from pz-in-f105.1e100.net (74.125.127.105): " + 
         "icmp_seq=10 ttl=51 time=104 ms");
    
     assertEquals(matcher.find(), true);
-    assertEquals(matcher.group(2), "10");
-    
-    pattern = Pattern.compile(Config.PING_OUTPUT_RTT_REGEX);
-    matcher = pattern.matcher("64 bytes from pz-in-f105.1e100.net (74.125.127.105): " +
-       "icmp_seq=10 ttl=51 time=104 ms");
-    
-    assertEquals(matcher.find(), true);
+    assertEquals(matcher.group(1), "10");
     assertEquals(matcher.group(2), "104");
     
     matcher.reset("64 bytes from pz-in-f105.1e100.net (74.125.127.105): " + 
         "icmp_seq=10 ttl=51 time=104.34 ms");
     
     assertEquals(matcher.find(), true);
+    assertEquals(matcher.group(1), "10");
     assertEquals(matcher.group(2), "104.34");
   }
 }
