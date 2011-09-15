@@ -138,6 +138,7 @@ public class PingTask extends MeasurementTask {
     PingDesc desc = (PingDesc) measurementDesc;
     try {
       InetAddress addr = InetAddress.getByName(desc.target);
+      // All ping methods ping against targetIp rather than desc.target
       targetIp = addr.getHostAddress();
     } catch (UnknownHostException e) {
       throw new MeasurementError("Unknown host " + desc.target);
