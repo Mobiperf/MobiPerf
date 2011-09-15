@@ -149,4 +149,9 @@ public class DnsLookupTask extends MeasurementTask {
     return "[DNS Lookup]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
         + "\n  Next run: " + desc.startTime;
   }
+  
+  @Override
+  public void stop() {
+    //There is nothing we need to do to stop the DNS measurement
+  }
 }

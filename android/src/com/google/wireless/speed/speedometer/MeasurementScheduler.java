@@ -405,7 +405,8 @@ public class MeasurementScheduler extends Service {
   public synchronized void requestStop() {
     this.stopRequested = true;
     this.notifyAll();
-    this.cleanUp();
+    this.stopForeground(true);
+    this.stopSelf();
   }
   
   /** Submit a MeasurementTask to the scheduler. Caller of this method can broadcast
@@ -510,12 +511,16 @@ public class MeasurementScheduler extends Service {
   
   private synchronized void cleanUp() {
     this.taskQueue.clear();
+    
+    if (this.currentTask != null) {
+      this.currentTask.stop();
+    }
     // remove all future tasks
     this.measurementExecutor.shutdown();
     // remove and stop all active tasks
     this.measurementExecutor.shutdownNow();
     this.checkin.shutDown();
-    
+
     this.unregisterReceiver(broadcastReceiver);
     Log.i(SpeedometerApp.TAG, "canceling pending intents");
 
@@ -532,11 +537,8 @@ public class MeasurementScheduler extends Service {
       alarmManager.cancel(measurementIntentSender);
     }
     
-    
     this.notifyAll();
-    PhoneUtils.getPhoneUtils().shutDown();
-    this.stopForeground(true);
-    this.stopSelf();
+    phoneUtils.shutDown();
     
     saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
     saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);

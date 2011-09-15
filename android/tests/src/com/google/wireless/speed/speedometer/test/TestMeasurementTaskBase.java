@@ -120,5 +120,9 @@ public class TestMeasurementTaskBase extends
     public String getDescriptor() {
       return "DummyTask";
     }
+    
+    @Override
+    public void stop() {
+    }
   }
 }

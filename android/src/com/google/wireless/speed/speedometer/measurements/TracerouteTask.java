@@ -48,6 +48,8 @@ public class TracerouteTask extends MeasurementTask {
   public static final int EXPECTED_HOP_CNT = 20;
   public static final int DEFAULT_PINGS_PER_HOP = 3;
   
+  private Process pingProc = null;
+  private boolean stopRequested = false;
   /**
    * The description of the Traceroute measurement 
    */
@@ -155,7 +157,6 @@ public class TracerouteTask extends MeasurementTask {
     int maxHopCount = task.maxHopCount;
     int ttl = 1;
     String hostIp = null;
-    Process pingProc = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
     task.pingExe = parent.getString(R.string.ping_executable);
     String target = task.target;
@@ -173,7 +174,7 @@ public class TracerouteTask extends MeasurementTask {
     }
     MeasurementResult result = null;
     
-    while (maxHopCount-- >= 0) {
+    while (maxHopCount-- >= 0 && !stopRequested) {
       /* Current traceroute implementation sends out three ICMP probes per TTL.
        * One ping every 0.2s is the lower bound before some platforms requires
        * root to run ping. We ping once every time to get a rough rtt as we cannot
@@ -216,7 +217,6 @@ public class TracerouteTask extends MeasurementTask {
             Log.i(SpeedometerApp.TAG, " Finished! " + target + " reached in " + ttl + " hops");
 
             success = true;
-            cleanUp(pingProc);
             PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
             result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId, 
                 phoneUtils.getDeviceProperty(), TracerouteTask.TYPE, 
@@ -277,7 +277,7 @@ public class TracerouteTask extends MeasurementTask {
     if (proc != null) {
       // destroy() closes all open streams
       proc.destroy();
-    }      
+    }
   }
 
   private void processPingOutput(BufferedReader br, HashSet<String> hostsAtThisDistance,
@@ -359,5 +359,11 @@ public class TracerouteTask extends MeasurementTask {
     TracerouteDesc desc = (TracerouteDesc) measurementDesc;
     return "[Traceroute]\n  Target: " + desc.target + "\n  Interval (sec): " + desc.intervalSec 
     + "\n  Next run: " + desc.startTime;
+  }
+  
+  @Override
+  public void stop() {
+    stopRequested = true;
+    cleanUp(pingProc);
   }
 }

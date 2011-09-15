@@ -153,6 +153,12 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   @Override
   public abstract MeasurementTask clone();
   
+  /**
+   * Stop the measurement, even when it is running. There is no side effect 
+   * if the measurement has not started or is already finished.
+   */
+  public abstract void stop();
+  
   public void broadcastProgressForUser(int progress) {
     if (measurementDesc.priority == MeasurementTask.USER_PRIORITY) {
       Intent intent = new Intent();
