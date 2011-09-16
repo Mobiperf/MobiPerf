@@ -174,7 +174,8 @@ public class PingTask extends MeasurementTask {
     return this.progress;
   }
   
-  private MeasurementResult constructResult(ArrayList<Double> rrtVals) {
+  private MeasurementResult constructResult(ArrayList<Double> rrtVals, double packetLoss,
+                                            int packetsSent) {
     double min = Double.MAX_VALUE;
     double max = Double.MIN_VALUE;
     double mdev, avg, filteredAvg;
@@ -213,12 +214,8 @@ public class PingTask extends MeasurementTask {
     if (filteredAvg != avg) {
       result.addResult("filtered_mean_rtt_ms", filteredAvg);
     }
-    double packetLoss = 1 - ((double) rrtVals.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
     result.addResult("packet_loss", packetLoss);
-    if (packetLoss < 0) {
-      Log.e(SpeedometerApp.TAG, "packet_loss is negative. rrts have " 
-          + rrtVals.size() + " entries");
-    }
+    result.addResult("packets_sent", packetsSent);
     return result;
   }
   
@@ -270,7 +267,9 @@ public class PingTask extends MeasurementTask {
       String line = null;
       int lineCnt = 0;
       ArrayList<Double> rrts = new ArrayList<Double>();
-      int lastIcmpSeq = 0;
+      ArrayList<Integer> receivedIcmpSeq = new ArrayList<Integer>();
+      double packetLoss = Double.MIN_VALUE;
+      int packetsSent = Config.PING_COUNT_PER_MEASUREMENT;
       // Process each line of the ping output and store the rrt in array rrts.
       while ((line = br.readLine()) != null) {
         // Ping prints a number of 'param=value' pairs, among which we only need the 
@@ -280,23 +279,32 @@ public class PingTask extends MeasurementTask {
           int curIcmpSeq = Integer.parseInt(extractedValues[0]);
           double rrtVal = Double.parseDouble(extractedValues[1]);
   
-          if (curIcmpSeq > lastIcmpSeq) {
-            Log.i(SpeedometerApp.TAG, "The following line is used:" + line);
-            lastIcmpSeq = curIcmpSeq;
+          // ICMP responses from the system ping command could be duplicate and out of order
+          if (!receivedIcmpSeq.contains(curIcmpSeq)) {
             rrts.add(rrtVal);
-          }
-          if (rrts.size() > Config.PING_COUNT_PER_MEASUREMENT) {
-            Log.e(SpeedometerApp.TAG, "More ping responses than requests!" 
-                + rrts.size() + " responses have been received" );
+            receivedIcmpSeq.add(curIcmpSeq);
           }
         }
         
         this.progress = 100 * ++lineCnt / Config.PING_COUNT_PER_MEASUREMENT;
         this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
         broadcastProgressForUser(progress);
+        // Get the number of sent/received pings from the ping command output 
+        int[] packetLossInfo = Util.extractPacketLossInfoFromPingOutput(line);
+        if (packetLossInfo != null) {
+          packetsSent = packetLossInfo[0];
+          int packetsReceived = packetLossInfo[1];
+          packetLoss = 1 - ((double) packetsReceived / (double) packetsSent);
+        }
+        
         Log.i(SpeedometerApp.TAG, line);
       }
-      measurementResult = constructResult(rrts);
+      // Use the output from the ping command to compute packet loss. If that's not
+      // available, use an estimation.
+      if (packetLoss == Double.MIN_VALUE) {
+        packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
+      }
+      measurementResult = constructResult(rrts, packetLoss, packetsSent);
       Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(measurementResult));
     } catch (IOException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
@@ -348,7 +356,8 @@ public class PingTask extends MeasurementTask {
         broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "java ping succeeds");
-      result = constructResult(rrts);
+      double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
+      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (IllegalArgumentException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -400,7 +409,8 @@ public class PingTask extends MeasurementTask {
         broadcastProgressForUser(progress);
       }
       Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
-      result = constructResult(rrts);
+      double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
+      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (MalformedURLException e) {
       Log.e(SpeedometerApp.TAG, e.getMessage());
       errorMsg += e.getMessage() + "\n";

@@ -73,6 +73,13 @@ public class UtilTest extends AndroidTestCase {
     assertEquals(matcher.find(), true);
     assertEquals(matcher.group(1), "10");
     assertEquals(matcher.group(2), "104.34");
+    
+    pattern = Pattern.compile("([0-9]+)\\spackets.*\\s([0-9]+)\\sreceived");
+    matcher = pattern.matcher("16 packets transmitted, 12 received, 0% packet loss, time 9011ms");
+    
+    assertEquals(matcher.find(), true);
+    assertEquals(matcher.group(1), "16");
+    assertEquals(matcher.group(2), "12");
   }
 }
  

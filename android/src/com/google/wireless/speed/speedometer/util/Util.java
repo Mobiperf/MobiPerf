@@ -136,4 +136,27 @@ public class Util {
       return null;
     }
   }
+  
+  /**
+   * Returns an integer array that contains the number of ICMP requests sent and the number
+   * of responses received. The first element is the requests sent and the second element
+   * is the responses received.
+   * 
+   * Returns a null object if either element cannot be found.
+   */
+  public static int[] extractPacketLossInfoFromPingOutput(String outputLine) {    
+    try {
+      Pattern pattern = Pattern.compile("([0-9]+)\\spackets.*\\s([0-9]+)\\sreceived");
+      Matcher matcher = pattern.matcher(outputLine);
+      matcher.find();
+      
+      return new int[] {Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2))};
+    } catch (IllegalStateException e) {
+      return null;
+    } catch (NumberFormatException e) {
+      return null;
+    } catch (NullPointerException e) {    
+      return null;
+    }
+  }
 }

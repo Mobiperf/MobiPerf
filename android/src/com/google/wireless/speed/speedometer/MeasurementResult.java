@@ -100,7 +100,7 @@ public class MeasurementResult {
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
     float packetLoss = Float.parseFloat(values.get("packet_loss"));
-    int count = Config.PING_COUNT_PER_MEASUREMENT;
+    int count = Integer.parseInt(values.get("packets_sent"));
     printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
         " received, " + (packetLoss * 100) + "% packet loss");
     
