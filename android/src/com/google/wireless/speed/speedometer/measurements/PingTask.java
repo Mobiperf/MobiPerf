@@ -213,9 +213,12 @@ public class PingTask extends MeasurementTask {
     if (filteredAvg != avg) {
       result.addResult("filtered_mean_rtt_ms", filteredAvg);
     }
-    result.addResult("packet_loss", 1 - 
-        ((double) rrtVals.size() / (double) Config.PING_COUNT_PER_MEASUREMENT));
-    
+    double packetLoss = 1 - ((double) rrtVals.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
+    result.addResult("packet_loss", packetLoss);
+    if (packetLoss < 0) {
+      Log.e(SpeedometerApp.TAG, "packet_loss is negative. rrts have " 
+          + rrtVals.size() + " entries");
+    }
     return result;
   }
   
@@ -278,8 +281,13 @@ public class PingTask extends MeasurementTask {
           double rrtVal = Double.parseDouble(extractedValues[1]);
   
           if (curIcmpSeq > lastIcmpSeq) {
-              lastIcmpSeq = curIcmpSeq;
-              rrts.add(rrtVal);
+            Log.i(SpeedometerApp.TAG, "The following line is used:" + line);
+            lastIcmpSeq = curIcmpSeq;
+            rrts.add(rrtVal);
+          }
+          if (rrts.size() > Config.PING_COUNT_PER_MEASUREMENT) {
+            Log.e(SpeedometerApp.TAG, "More ping responses than requests!" 
+                + rrts.size() + " responses have been received" );
           }
         }
         
@@ -287,7 +295,7 @@ public class PingTask extends MeasurementTask {
         this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
         broadcastProgressForUser(progress);
         Log.i(SpeedometerApp.TAG, line);
-      }     
+      }
       measurementResult = constructResult(rrts);
       Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(measurementResult));
     } catch (IOException e) {
