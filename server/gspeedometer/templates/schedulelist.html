@@ -1,9 +1,8 @@
 {# Scheduling listing template. #}
 
 <div class="schedule-list-section">
-  <h2>Tasks &nbsp;&nbsp;&nbsp;
-    <button onclick="location.href='/schedule/add'">Manage schedule</a></h2>
-  <table class="schedule-list-table section-box">
+  <h2>Measurement Schedule</h2>
+  <table class="schedule-list-table section-box" width="100%">
     <tr>
       <th>ID</th>
       <th>Created (UTC)</th>
@@ -43,9 +42,7 @@
           </table>
         </td>
         <td>
-          {% if user == task.user.email %}
-          <a href="/schedule/delete?id={{task.key.id}}">Delete</a>
-          {% endif %}
+        <a href="/schedule/delete?id={{task.key.id}}">Delete</a>
         </td>
       </tr>
     {% endfor %}

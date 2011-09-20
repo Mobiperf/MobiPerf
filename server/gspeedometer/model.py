@@ -8,7 +8,9 @@ __author__ = 'mdw@google.com (Matt Welsh)'
 
 import logging
 
+from google.appengine.api import users
 from google.appengine.ext import db
+from gspeedometer.helpers import acl
 from gspeedometer.helpers import util
 
 
@@ -41,6 +43,15 @@ class DeviceInfo(db.Model):
   def __str__(self):
     return 'DeviceInfo <id %s, user %s, device %s-%s-%s>' % (
         self.id, self.user, self.manufacturer, self.model, self.os)
+
+  @classmethod
+  def GetDeviceListWithAcl(cls):
+    """Return a query for devices that can be accessed by the current user."""
+    all_devices = cls.all()
+    if acl.UserIsAdmin():
+      return all_devices
+    else:
+      return all_devices.filter("user =", users.get_current_user())
 
 
 class DeviceProperties(db.Model):
@@ -144,6 +155,25 @@ class Measurement(db.Expando):
   success = db.BooleanProperty()
   # Optional corresponding task
   task = db.ReferenceProperty(Task)
+
+  @classmethod
+  def GetMeasurementListWithAcl(cls, limit=None):
+    """Return a list of measurements that are accessible by the current user."""
+    all_measurements = cls.all()
+    all_measurements.order('-timestamp')
+    if acl.UserIsAdmin():
+      if limit:
+        return all_measurements.fetch(limit)
+      else:
+        return all_measurements
+    else:
+      retval = []
+      for measurement in all_measurements:
+        if measurement.device_properties.device_info.user == user:
+          retval.append(measurement)
+          if limit and len(retval) == limit:
+            return retval
+      return retval
 
   def GetTaskID(self):
     try:

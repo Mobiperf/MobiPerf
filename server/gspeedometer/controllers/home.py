@@ -20,11 +20,13 @@ class Home(webapp.RequestHandler):
     """Main handler for the service dashboard."""
     errormsg = None
 
-    devices = model.DeviceInfo.all()
-    measurements = model.Measurement.all().order('-timestamp')
-    measurements = measurements.fetch(config.NUM_MEASUREMENTS_IN_LIST)
+    devices = model.DeviceInfo.GetDeviceListWithAcl()
+
     schedule = model.Task.all()
     schedule.order('-created')
+
+    measurements = model.Measurement.GetMeasurementListWithAcl(
+        limit=config.NUM_MEASUREMENTS_IN_LIST)
 
     template_args = {
         'devices': devices,

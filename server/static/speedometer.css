@@ -24,7 +24,7 @@ body {
 
 #main-content {
   padding: 10px 15px 30px;
-  max-width: 1600px;
+  max-width: 90%;
 }
 
 #project-title {
@@ -46,7 +46,7 @@ body {
 
 #applicationContainer{
   margin:0;
-  max-width:1160px;
+  max-width: 90%;
   padding:0;
   position:relative;
 }
@@ -155,7 +155,13 @@ h2  {
 .measurement-detail-prop-name {
   color: #555;
   padding: 3px 10px 3px 0;
+  vertical-align: text-top;
   text-align: right;
+}
+
+.task-param-value {
+  max-width: 500px;
+  word-wrap: break-word;
 }
 
 .device-detail-table {
@@ -170,5 +176,4 @@ h2  {
 
 .section-box {
   border: 1px solid gray;
-  box-shadow: 2px 2px 1px #aaa;
 }
