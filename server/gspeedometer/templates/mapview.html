@@ -1,5 +1,4 @@
-{# Actual googlemap view in the div section. #}
-
+{# Actual Google map view in the iframe. #}
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -8,23 +7,29 @@
   </head>
 
   <body onload="load()" onunload="GUnload()">
-    <form method="post" action="/maps?device_id={{device_id}}">
-      <table>
-        <tr>
-          <td align=center width=40%>
-            <table> {{ filter_form.as_table }}
+    <table>
+      <tr>
+        <td style="padding: 0 30px 0 0;">
+          <div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">{{ map_code|safe }}</div>
+        </td>
+        <td>
+          <form method="post" action="/map">
+            <table>
+              <tr>
+                <td width=40%><table>{{ filter_form.as_table }}</table></td>
+              </tr>
+              <tr>
+                <td width=40%><input type="submit" /></p></td>
+              </tr>
+              <tr>
+                <td width=40%>
+                  <span class="message">
+                    {{ num_measurements }} measurements shown</span></td>
+              </tr>
             </table>
-          </td>
-        </tr>
-        <tr>
-          <td align=center width=40%> <p><input type="submit" /></p>
-          </td>
-        </tr>
-      </table>
-    </form>
-    <br/>
-    <div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">
-    {{ map_code|safe }}
-    </div>
+          </form>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

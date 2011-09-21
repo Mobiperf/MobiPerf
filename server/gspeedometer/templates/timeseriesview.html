@@ -5,14 +5,16 @@
   function drawChart() {
     var data = new google.visualization.DataTable();
     data.addColumn('datetime', 'Time');
-    data.addColumn('number', 'Remaining Battery');
-
-    {% for row in batterychart_rows %}
-    data.addRow({{row}});
+    {% for column in timeseries_columns %}
+      data.addColumn('number', '{{column}}');
+    {% endfor %}
+    {% for row in timeseries_rows %}
+      data.addRow({{row}});
     {% endfor %}
 
     var chart = new google.visualization.AnnotatedTimeLine(
-        document.getElementById('measurement_chart_div'));
+        document.getElementById('timeseries_div'));
     chart.draw(data, {});
   }
 </script>
+<div id="timeseries_div" style="width: 760px; height: 400px;"></div>

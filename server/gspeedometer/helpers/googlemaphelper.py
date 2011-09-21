@@ -44,7 +44,7 @@ class Map(object):
     self.width = width
     # map div height
     self.height = height
-    # center (lat, long) of the view port 
+    # center (lat, long) of the view port
     self.center = center
     # zoom level of the map
     self.zoom = zoom
@@ -89,7 +89,7 @@ class GoogleMapWrapper(object):
     }
 
     return template.render(
-        'templates/googlemaphelper.js', template_args)
+        'templates/googlemaphelper.html', template_args)
 
   def _GetPointsScript(self, themap):
     if not themap.points:
@@ -97,7 +97,7 @@ class GoogleMapWrapper(object):
 
     script_list = ['[']
 
-    # Constructs the points for the map 
+    # Constructs the points for the map
     for point in themap.points:
       script_list.append("[%f, %f, '%s', %s]" % point)
       script_list.append(',')
@@ -116,4 +116,3 @@ class GoogleMapWrapper(object):
 
     return 'GoogleMapWrapper <key %s, icons %s>' % (
         self.key, iconstr)
-

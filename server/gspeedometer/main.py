@@ -30,7 +30,8 @@ from gspeedometer.controllers import device
 from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
-from gspeedometer.controllers import googlemapview
+from gspeedometer.controllers import googlemap
+from gspeedometer.controllers import timeseries
 
 import routes
 
@@ -67,9 +68,13 @@ m.connect('/schedule/delete',
           controller='schedule:Schedule',
           action='Delete')
 
-m.connect('/maps',
-          controller='googlemapview:GoogleMapView',
+m.connect('/map',
+          controller='googlemap:MapView',
           action='MapView')
+
+m.connect('/timeseries',
+          controller='timeseries:Timeseries',
+          action='Timeseries')
 
 application = wsgi.WSGIApplication(m, debug=True)
 

@@ -38,6 +38,7 @@ class Measurement(webapp.RequestHandler):
 
     measurement_list = json.loads(self.request.body)
     for measurement_dict in measurement_list:
+      logging.info('Dict: %s', measurement_dict)
       logging.info('Device ID: ' + measurement_dict['device_id'])
       device_info = model.DeviceInfo.get_or_insert(
           measurement_dict['device_id'])

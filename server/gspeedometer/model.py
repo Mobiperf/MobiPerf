@@ -53,6 +53,14 @@ class DeviceInfo(db.Model):
     else:
       return all_devices.filter("user =", users.get_current_user())
 
+  @classmethod
+  def GetDeviceWithAcl(cls, device_id):
+    device = cls.get_by_key_name(device_id)
+    if acl.UserIsAdmin() or device.user == users.get_current_user():
+      return device
+    else:
+      raise RuntimeError('User cannot access device %s', device_id)
+
 
 class DeviceProperties(db.Model):
   """Represents the dynamic properties of a given device."""
@@ -157,23 +165,39 @@ class Measurement(db.Expando):
   task = db.ReferenceProperty(Task)
 
   @classmethod
-  def GetMeasurementListWithAcl(cls, limit=None):
+  def GetMeasurementListWithAcl(cls, limit=None, device_id=None,
+                                start_time=None, end_time=None):
     """Return a list of measurements that are accessible by the current user."""
-    all_measurements = cls.all()
-    all_measurements.order('-timestamp')
-    if acl.UserIsAdmin():
+    user = users.get_current_user()
+    query = cls.all()
+    query.order('-timestamp')
+
+    if device_id:
+      device = DeviceInfo.GetDeviceWithAcl(device_id)
+      query.ancestor(device.key())
+    if start_time:
+      query.filter('timestamp >=', start_time)
+    if end_time:
+      query.filter('timestamp <=', end_time)
+
+    # This query will work if either the device is specified
+    # or the user is an admin
+    if device_id or acl.UserIsAdmin():
       if limit:
-        return all_measurements.fetch(limit)
+        return query.fetch(limit)
       else:
-        return all_measurements
+        return query
     else:
+      # Need to check each result to see if user is allowed to access
+      # this device.
       retval = []
-      for measurement in all_measurements:
+      for measurement in query:
         if measurement.device_properties.device_info.user == user:
           retval.append(measurement)
           if limit and len(retval) == limit:
             return retval
       return retval
+
 
   def GetTaskID(self):
     try:

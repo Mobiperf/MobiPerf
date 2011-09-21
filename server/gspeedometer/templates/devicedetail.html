@@ -36,22 +36,9 @@
 </table>
 <br><br>
 
-<h2>
-Battery usage during last week
-</h2>
-<div id="measurement_chart_div" style="width: 760px; height: 400px;">
-{% include "measurementchart.js" %}
-</div>
-
-<br><br>
-<h2>
-Map view
-</h2>
-<iframe src="/maps?device_id={{dev.key.name}}" width="100%" height="600" frameborder="0">
-  <p>Your browser does not support the iframe tag.</p>
-</iframe>
+{% include "timeseries.html" %}
+{% include "map.html" %}
 {% endif %}
-
 
 {% if schedule %}
 {% include "schedulelist.html" %}

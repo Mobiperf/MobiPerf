@@ -38,7 +38,7 @@ class Device(webapp.RequestHandler):
     errormsg = None
 
     device_id = self.request.get('device_id')
-    device = model.DeviceInfo.get_by_key_name(device_id)
+    device = model.DeviceInfo.GetDeviceWithAcl(device_id)
     try:
       if not device:
         errormsg = 'Device %s not found' % device_id
@@ -79,9 +79,6 @@ class Device(webapp.RequestHandler):
           'schedule': cur_schedule,
           'user': users.get_current_user().email(),
           'logout_link': users.create_logout_url('/'),
-          'batterychart_rows': self._GetBatteryInfo(device,
-                                                    start_date,
-                                                    end_date)
       }
       self.response.out.write(template.render(
           'templates/devicedetail.html', template_args))
