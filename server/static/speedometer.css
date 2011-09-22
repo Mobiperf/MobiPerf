@@ -1,10 +1,14 @@
 
 body {
-  font-size: 80%;
+  font-size: 11px;
   font-family: Arial Unicode MS, Arial, sans-serif;
   background:#ffffff;
   padding: 0;
   margin: 3px 8px;
+}
+
+table {
+  font-size: 11px;
 }
 
 #header {
@@ -102,6 +106,10 @@ body {
 
 .message {
   color: #4040ff;
+}
+
+.smaller {
+  font-size: smaller;
 }
 
 h2  {

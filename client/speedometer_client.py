@@ -100,10 +100,10 @@ class SpeedometerClient(object):
             'latitude': 47.6508, 'longitude': -122.3515
             },
         'location_type': 'Fake location type',
-        'battery_level': 65,
+        'battery_level': random.randint(1,100),
         'is_battery_charging': False,
         'cell_info': 'LAC1,CID1,RSSI1;LAC2,CID2,RSSI2',
-        'rssi': 38,
+        'rssi': random.randint(1,100),
         }
     return retval
 

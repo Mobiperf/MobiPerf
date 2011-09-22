@@ -2,11 +2,10 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" type="text/css" href="//www.google.com/css/gcs.css"/>
     <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
   </head>
 
-  <body onload="load()" onunload="GUnload()">
+  <body onload="loadGoogleMap()" onunload="GUnload()">
     <table>
       <tr>
         <td style="padding: 0 30px 0 0;">
@@ -24,7 +23,7 @@
               <tr>
                 <td width=40%>
                   <span class="message">
-                    {{ num_measurements }} measurements shown</span></td>
+                    Showing {{ num_measurements }} measurements</span></td>
               </tr>
             </table>
           </form>

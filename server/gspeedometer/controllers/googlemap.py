@@ -11,15 +11,12 @@ import logging
 import random
 
 from django import forms
-from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
-from gspeedometer.controllers import measurement
 from gspeedometer.helpers import googlemaphelper
-
 
 
 # Stupid workaround to mismatch between Google App Engine
@@ -27,6 +24,7 @@ from gspeedometer.helpers import googlemaphelper
 # See http://vanderwijk.info/2011/02/
 class SelectMultiple(forms.widgets.SelectMultiple):
   """Fixed SelectMultiple to work with Google App Engine."""
+
   def value_from_datadict(self, data, unused_files, name):
     try:
       return data.getall(name)
@@ -50,11 +48,21 @@ class MapView(webapp.RequestHandler):
     all_devices = model.DeviceInfo.GetDeviceListWithAcl()
     all_device_ids = [dev.key().name() for dev in all_devices]
 
-    # If map invoked with one device ID, make this one the default
+    now = datetime.datetime.utcnow()
+    init_end_date = datetime.date(now.year, now.month, now.day)
+    init_end_date += datetime.timedelta(days=1)
+    init_start_date = init_end_date - datetime.timedelta(days=7)
+
     if self.request.get('device_id'):
+      # If map invoked with one device ID, make this one the default
       device_ids = [self.request.get('device_id')]
+      # And show most recent data for this device
+      start_date = None
+      end_date = None
     else:
       device_ids = all_device_ids
+      start_date = init_start_date
+      end_date = init_end_date
 
     class FilterMeasurementForm(forms.Form):
       """A form to filter measurement results for a given device."""
@@ -62,18 +70,10 @@ class MapView(webapp.RequestHandler):
           widget=SelectMultiple,
           choices=[DeviceChoice(dev) for dev in all_devices],
           required=False)
-      measurement_type = forms.ChoiceField(measurement.MEASUREMENT_TYPES,
-                                           label='Measurement type')
       start_date = forms.DateField(label='Start date (GMT)')
       end_date = forms.DateField(label='End date (GMT)')
 
-    measurement_type = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
-    now = datetime.datetime.utcnow()
-    end_date = datetime.date(now.year, now.month, now.day)
-    end_date = end_date + datetime.timedelta(days=1)
-    start_date = end_date - datetime.timedelta(days=7)
-
-    form_initial = {'start_date': start_date, 'end_date': end_date}
+    form_initial = {'start_date': init_start_date, 'end_date': init_end_date}
 
     if not self.request.POST:
       form = FilterMeasurementForm(initial=form_initial)
@@ -82,14 +82,10 @@ class MapView(webapp.RequestHandler):
       form.full_clean()
       if form.is_valid():
         device_ids = form.cleaned_data['device'] or device_ids
-        measurement_type = form.cleaned_data[ 'measurement_type']
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
 
-    measurements = self._GetMeasurements(device_ids,
-                                         measurement_type,
-                                         start_date,
-                                         end_date)
+    measurements = self._GetMeasurements(device_ids, start_date, end_date)
 
     template_args = {
         'filter_form': form,
@@ -99,13 +95,13 @@ class MapView(webapp.RequestHandler):
     self.response.out.write(template.render(
         'templates/mapview.html', template_args))
 
-
-  def _GetMeasurements(self, device_ids, measurement_type,
-                       start_date, end_date):
+  def _GetMeasurements(self, device_ids, start_date=None, end_date=None):
     results = []
+    per_device_limit = max(1, int(config.GOOGLEMAP_MARKER_LIMIT /
+                                  len(device_ids)))
     for device_id in device_ids:
       subquery = model.Measurement.GetMeasurementListWithAcl(
-          config.GOOGLEMAP_MARKER_LIMIT,
+          per_device_limit,
           device_id,
           start_date,
           end_date)
@@ -137,52 +133,51 @@ class MapView(webapp.RequestHandler):
     measurement_cnt = 0
     # Add points to the map
 
-    for measurement in measurements:
+    for meas in measurements:
       measurement_cnt += 1
-      prop_entity = measurement.device_properties
+      prop_entity = meas.device_properties
+      device_id = prop_entity.device_info.key().name()
       values = {}
       icon_to_use = red_icon
       # these attributes can be non-existent if the experiment fails
-      if measurement.success == True:
+      if meas.success == True:
         # type strings from controller/measurement.py
-        if measurement.type == 'ping':
-          values = {'target': measurement.mparam_target,
-                    'mean rtt': measurement.mval_mean_rtt_ms,
-                    'max rtt': measurement.mval_max_rtt_ms,
-                    'min rtt': measurement.mval_min_rtt_ms,
-                    'rtt stddev': measurement.mval_stddev_rtt_ms,
-                    'packet loss': measurement.mval_packet_loss}
-          if (float(measurement.mval_mean_rtt_ms) <
+        if meas.type == 'ping':
+          values = {'target': meas.mparam_target,
+                    'mean rtt': meas.mval_mean_rtt_ms,
+                    'max rtt': meas.mval_max_rtt_ms,
+                    'min rtt': meas.mval_min_rtt_ms,
+                    'rtt stddev': meas.mval_stddev_rtt_ms,
+                    'packet loss': meas.mval_packet_loss}
+          if (float(meas.mval_mean_rtt_ms) <
               config.SLOW_PING_THRESHOLD_MS):
             icon_to_use = green_icon
 
-        elif measurement.type == 'http':
-          values = {'url': measurement.mparam_url,
-                    'code': measurement.mval_code,
-                    'time (msec)': measurement.mval_time_ms,
-                    'header length (bytes)': measurement.mval_headers_len,
-                    'body length (bytes)': measurement.mval_body_len}
-          if measurement.mval_code == '200':
+        elif meas.type == 'http':
+          values = {'url': meas.mparam_url,
+                    'code': meas.mval_code,
+                    'time (msec)': meas.mval_time_ms,
+                    'header length (bytes)': meas.mval_headers_len,
+                    'body length (bytes)': meas.mval_body_len}
+          if meas.mval_code == '200':
             icon_to_use = green_icon
 
-        elif measurement.type == 'dns_lookup':
-          values = {'target': measurement.mparam_target,
-                    'IP address': measurement.mval_address,
-                    'real hostname': measurement.mval_real_hostname,
-                    'time (msec)': measurement.mval_time_ms}
-          if float(measurement.mval_time_ms) < config.SLOW_DNS_THRESHOLD_MS:
+        elif meas.type == 'dns_lookup':
+          values = {'target': meas.mparam_target,
+                    'IP address': meas.mval_address,
+                    'real hostname': meas.mval_real_hostname,
+                    'time (msec)': meas.mval_time_ms}
+          if float(meas.mval_time_ms) < config.SLOW_DNS_THRESHOLD_MS:
             icon_to_use = green_icon
 
-        elif measurement.type == 'traceroute':
-          values = {'target': measurement.mparam_target,
-                    '# of hops': measurement.mval_num_hops}
-          if (float(measurement.mval_num_hops) <
+        elif meas.type == 'traceroute':
+          values = {'target': meas.mparam_target,
+                    '# of hops': meas.mval_num_hops}
+          if (float(meas.mval_num_hops) <
               config.LONG_TRACEROUTE_HOP_COUNT_THRESHOLD):
             icon_to_use = green_icon
 
-      htmlstr = self._GetHtmlForMeasurement(measurement.device_id,
-                                            measurement.type,
-                                            values)
+      htmlstr = self._GetHtmlForMeasurement(device_id, meas, values)
       random_radius = 0.001
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
@@ -206,15 +201,16 @@ class MapView(webapp.RequestHandler):
 
     return mapcode
 
-  def _GetHtmlForMeasurement(self, device_id, meas_type, values):
+  def _GetHtmlForMeasurement(self, device_id, meas, values):
     """Returns the HTML string representing the Ping result."""
-    result = ['<html><body><h4>%s result on device %s</h4><br/>' %
-              (meas_type, device_id)]
-    result.append("""<style media="screen" type="text/css"></style>""")
-    result.append("""<table style="border:1px #000000 solid;">""")
+    result = '<html><body><b>%s</b><br/>' % meas.type
+    result += 'Device %s<br/>' % device_id
+    result += '%s<br/>' % meas.timestamp
+    result += """<style media="screen" type="text/css"></style>"""
+    result += """<table style="border:1px #000000 solid;">"""
 
     for k, v in values.iteritems():
-      result.append((
+      result += (
           '<tr>'
           '<td align=\"left\" '
           'style=\"padding-right:10px;border-bottom:'
@@ -222,9 +218,9 @@ class MapView(webapp.RequestHandler):
           '<td align=\"left\" '
           'style=\"padding-right:10px;border-bottom:'
           '1px #000000 dotted;\">%s</td>'
-          '</tr>' % (k, v)))
-    result.append('</table>')
+          '</tr>' % (k, v))
+    result += '</table>'
     if not values:
-      result.append('<br/>This measurement has failed.')
-    resultstr = ''.join(result)
-    return resultstr
+      result += '<br/>Measurement failed.'
+    result += '</body></html>'
+    return result

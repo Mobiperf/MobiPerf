@@ -6,18 +6,12 @@
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
-import datetime
-import logging
-import random
-
-from django import forms
-from google.appengine.ext import db
+from django.utils import simplejson as json
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
-from gspeedometer.controllers import measurement
 from gspeedometer.helpers import util
 
 
@@ -26,35 +20,47 @@ class Timeseries(webapp.RequestHandler):
 
   def Timeseries(self, **unused_args):
     """Main handler for the timeseries view."""
+
+    # This simply sets up the chart - the data is retrieved asynchronously.
     device_id = self.request.get('device_id')
-    device = model.DeviceInfo.GetDeviceWithAcl(device_id)
-
-    if self.request.get('measurement'):
-      measurement_type = self.request.get('measurement')
-    else:
-      measurement_type = config.DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING
-
-    now = datetime.datetime.utcnow()
-    end_date = datetime.date(now.year, now.month, now.day)
-    end_date = end_date + datetime.timedelta(days=1)
-    start_date = end_date - datetime.timedelta(days=7)
-
-    measurements = model.Measurement.GetMeasurementListWithAcl(
-        None, device_id, start_date, end_date)
-
-    colname = '%s (device %s)' % (measurement_type, device_id)
-
-    tsdata = []
-    for meas in measurements:
-      # TODO(mdw): This needs to be generalized for different measurement types
-      val = '[new Date(%d), %d]' % (
-          util.TimeToMicrosecondsSinceEpoch(meas.timestamp) / 1000,
-          float(meas.mval_mean_rtt_ms))
-      tsdata.append(val)
-
+    # Used to trigger permission check
+    unused_device = model.DeviceInfo.GetDeviceWithAcl(device_id)
+    tscolumns = []
+    tscolumns.append('Signal strength (%s)' % device_id)
+    tscolumns.append('Battery level (%s)' % device_id)
     template_args = {
-        'timeseries_columns': [colname],
-        'timeseries_rows': tsdata,
+        'limit': config.TIMESERIES_POINT_LIMIT,
+        'device_id': device_id,
+        'timeseries_columns': tscolumns,
     }
     self.response.out.write(template.render(
         'templates/timeseriesview.html', template_args))
+
+  def TimeseriesData(self, **unused_args):
+    """Returns data for the timeseries view in JSON format."""
+    device_id = self.request.get('device_id')
+    start_time = self.request.get('start_time')
+    end_time = self.request.get('start_time')
+    limit = self.request.get('limit')
+
+    # Used to trigger permission check
+    unused_device = model.DeviceInfo.GetDeviceWithAcl(device_id)
+    if start_time:
+      start_time = util.MicrosecondsSinceEpochToTime(int(start_time))
+    if end_time:
+      end_time = util.MicrosecondsSinceEpochToTime(int(end_time))
+    if limit:
+      limit = int(limit)
+
+    measurements = model.Measurement.GetMeasurementListWithAcl(
+        limit, device_id, start_time, end_time)
+
+    tsdata = []
+    for meas in measurements:
+      ms_time = util.TimeToMicrosecondsSinceEpoch(meas.timestamp) / 1000
+      rssi = meas.device_properties.rssi or 0
+      battery = meas.device_properties.battery_level or 0
+      val = ('new Date(%d)' % ms_time, rssi, battery)
+      tsdata.append(val)
+
+    self.response.out.write(json.dumps(tsdata))

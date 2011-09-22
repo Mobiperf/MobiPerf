@@ -3,8 +3,8 @@
 PYTHON=python
 APPSERVER=`which dev_appserver.py`
 
-CLEAN="-c"
-#CLEAN=""
+#CLEAN="-c"
+CLEAN=""
 
 ./set_version.sh --notag
 

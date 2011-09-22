@@ -27,10 +27,10 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from gspeedometer import wsgi
 from gspeedometer.controllers import checkin
 from gspeedometer.controllers import device
+from gspeedometer.controllers import googlemap
 from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
-from gspeedometer.controllers import googlemap
 from gspeedometer.controllers import timeseries
 
 import routes
@@ -75,6 +75,10 @@ m.connect('/map',
 m.connect('/timeseries',
           controller='timeseries:Timeseries',
           action='Timeseries')
+
+m.connect('/timeseries/data',
+          controller='timeseries:Timeseries',
+          action='TimeseriesData')
 
 application = wsgi.WSGIApplication(m, debug=True)
 

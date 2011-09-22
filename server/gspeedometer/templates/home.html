@@ -5,10 +5,8 @@
 {% block body %}
 {% if devices %}
 {% include "devicelist.html" %}
-{% endif %}
-
-{% include "timeseries.html" %}
 {% include "map.html" %}
+{% endif %}
 
 {% if schedule %}
 {% include "schedulelist.html" %}

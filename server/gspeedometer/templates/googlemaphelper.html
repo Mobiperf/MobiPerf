@@ -1,6 +1,6 @@
 <script src="http://maps.google.com/maps?file=api&amp;v=2&amp;key={{googlemap_key}}" type="text/javascript"></script>
 <script type="text/javascript">
-function load() {
+function loadGoogleMap() {
   if (GBrowserIsCompatible()) {
 
     var markerBounds = new GLatLngBounds();
@@ -67,7 +67,7 @@ function load() {
     {{icon.icon_id}}.iconSize = new GSize{{icon.icon_size}};
     {{icon.icon_id}}.shadowSize = new GSize{{icon.shadow_size}};
     {{icon.icon_id}}.iconAnchor = new GPoint{{icon.icon_anchor}};
-    {{icon.icon_id}}.infoWindowAnchor = 
+    {{icon.icon_id}}.infoWindowAnchor =
         new GPoint{{icon.info_window_anchor}};
     {% endfor %}
 
