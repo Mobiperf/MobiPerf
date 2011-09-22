@@ -232,7 +232,7 @@ class AbstractRpcServer(object):
     Returns:
       The response body, as a string.
     """
-    # TODO: Don't require authentication.  Let the server say
+    # TODO(mdw): Don't require authentication.  Let the server say
     # whether it is necessary.
     if not self.authenticated:
       self._Authenticate()

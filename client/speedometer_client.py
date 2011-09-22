@@ -100,10 +100,10 @@ class SpeedometerClient(object):
             'latitude': 47.6508, 'longitude': -122.3515
             },
         'location_type': 'Fake location type',
-        'battery_level': random.randint(1,100),
+        'battery_level': random.randint(1, 100),
         'is_battery_charging': False,
         'cell_info': 'LAC1,CID1,RSSI1;LAC2,CID2,RSSI2',
-        'rssi': random.randint(1,100),
+        'rssi': random.randint(1, 100),
         }
     return retval
 
@@ -158,20 +158,20 @@ def main():
   elif options.fake_post_measurements:
     # Generate a bunch of fake measurements
     timestamp = datetime.datetime.utcnow()
-    timestamp = timestamp - datetime.timedelta(days=1)
+    timestamp -= datetime.timedelta(days=1)
 
     for x in range(10):
       device_id = 'fakedevice_%d' % x
       print client.FakeDeviceCheckin(device_id)
-      for y in range(25):
+      for unused_y in range(25):
         timestamp += datetime.timedelta(minutes=1)
         params = {'target': 'www.faketarget.com'}
         vals = {'target_ip': '1.2.3.4',
                 'ping_method': 'ping_cmd',
-                'mean_rtt_ms': str(random.randint(25,75)),
-                'min_rtt_ms': str(random.randint(1,25)),
-                'max_rtt_ms': str(random.randint(75,100)),
-                'stddev_rtt_ms': str(random.randint(1,10)),
+                'mean_rtt_ms': str(random.randint(25, 75)),
+                'min_rtt_ms': str(random.randint(1, 25)),
+                'max_rtt_ms': str(random.randint(75, 100)),
+                'stddev_rtt_ms': str(random.randint(1, 10)),
                 'packet_loss': '0.25'}
         client.FakePostMeasurement(device_id,
                                    measurement_type='ping',
