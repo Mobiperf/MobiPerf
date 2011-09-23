@@ -16,15 +16,19 @@ from google.appengine.ext.webapp import template
 
 from gspeedometer import model
 from gspeedometer.controllers import measurement
+from gspeedometer.helpers import acl
 
 
 class AddToScheduleForm(forms.Form):
+  """Form to add a task to the schedule."""
   type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
   param1 = forms.CharField(required=False)
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
-  count = forms.CharField(required=False)
-  interval = forms.FloatField(required=False, label='Interval (sec)')
+  count = forms.IntegerField(required=False, initial=0,
+                             min_value=0, max_value=1000)
+  interval = forms.IntegerField(required=True, label='Interval (sec)',
+                                min_value=1, initial=600)
   tag = forms.CharField(required=False)
   filter = forms.CharField(required=False)
 
@@ -34,6 +38,10 @@ class Schedule(webapp.RequestHandler):
 
   def Add(self, **unused_args):
     """Add a task to the schedule."""
+    if not acl.UserIsScheduleAdmin():
+      self.error(404)
+      return
+
     if not self.request.POST:
       add_to_schedule_form = AddToScheduleForm()
     else:
@@ -46,7 +54,7 @@ class Schedule(webapp.RequestHandler):
         param3 = add_to_schedule_form.cleaned_data['param3']
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
-        count = add_to_schedule_form.cleaned_data['count']
+        count = add_to_schedule_form.cleaned_data['count'] or 0
         interval = add_to_schedule_form.cleaned_data['interval']
 
         logging.info('Got TYPE: ' + thetype)
@@ -55,10 +63,12 @@ class Schedule(webapp.RequestHandler):
         task.created = datetime.datetime.utcnow()
         task.user = users.get_current_user()
         task.type = thetype
-        task.tag = tag
-        task.filter = thefilter
-        task.count = int(count)
-        task.interval_sec = interval
+        if tag:
+          task.tag = tag
+        if thefilter:
+          task.filter = thefilter
+        task.count = count
+        task.interval_sec = float(interval)
 
         # Set up correct type-specific measurement parameters
         if task.type == 'ping':
@@ -76,14 +86,13 @@ class Schedule(webapp.RequestHandler):
         elif task.type == 'dns_lookup':
           task.mparam_target = param1
           task.mparam_server = param2
-        # TODO(wenjiezeng): FINISH THIS...
-
         task.put()
 
     schedule = model.Task.all()
     schedule.order('-created')
 
     template_args = {
+        'user_schedule_admin': acl.UserIsScheduleAdmin(),
         'add_form': add_to_schedule_form,
         'schedule': schedule,
         'user': users.get_current_user().email(),
@@ -94,15 +103,18 @@ class Schedule(webapp.RequestHandler):
 
   def Delete(self, **unused_args):
     """Delete a task from the schedule."""
+    if not acl.UserIsScheduleAdmin():
+      self.error(404)
+      return
+
     errormsg = None
     message = None
+    add_to_schedule_form = AddToScheduleForm()
 
     task_id = self.request.get('id')
     task = model.Task.get_by_id(int(task_id))
     if not task:
       errormsg = 'Task %s does not exist' % task_id
-    elif task.user != users.get_current_user():
-      errormsg = 'You do not have permission to delete task %s' % task_id
     else:
       # TODO(mdw): Do we need to wrap the following in a transaction?
       # First DeviceTasks that refer to this one
@@ -119,6 +131,8 @@ class Schedule(webapp.RequestHandler):
     schedule.order('-created')
 
     template_args = {
+        'user_schedule_admin': acl.UserIsScheduleAdmin(),
+        'add_form': add_to_schedule_form,
         'message': message,
         'error': errormsg,
         'schedule': schedule,

@@ -9,6 +9,9 @@ __author__ = 'mdw@google.com (Matt Welsh)'
 # Set of users with admin privileges
 ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
 
+# Set of users with rights to administer tasks
+SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
+
 NUM_PROPERTIES_IN_LIST = 25
 NUM_MEASUREMENTS_IN_LIST = 25
 

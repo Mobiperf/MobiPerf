@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="/static/kennedy.css"/>
     <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
   </head>
 
@@ -13,12 +14,12 @@
         </td>
         <td>
           <form method="post" action="/map">
-            <table>
+            <table class="filter-form-table">
               <tr>
                 <td width=40%><table>{{ filter_form.as_table }}</table></td>
               </tr>
               <tr>
-                <td width=40%><input type="submit" /></p></td>
+                <td><input class="kd-button kd-button-red" type="submit"/></td>
               </tr>
               <tr>
                 <td width=40%>

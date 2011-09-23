@@ -9,13 +9,13 @@
 {% block body %}
 {% if add_form %}
 <form method="post" action="/schedule/add">
-<table>
+  <table>
 <tr>
-<td align=left width=40%>
-<table> {{ add_form.as_table }} </table>
+<td align=left width=40% style="vertical-align:top; padding: 5px 10px;">
+<table class="schedule-form-table"> {{ add_form.as_table }} </table>
 </td>
-<td align=left>
-<div class="make-smaller">
+<td align=left width=50% style="vertical-align:top; padding: 5px 20px;">
+<div class="tips-box">
 <ul>
 <li> <b>Type</b> is the type of measurement to perform
 <li> <b>Target</b> is the target of the measurement (e.g., IP address or URL)
@@ -25,7 +25,7 @@
 </td>
 </tr>
 </table>
-<input type="submit" /></form>
+<input class="kd-button kd-button-red" type="submit" /></form>
 {% endif %}
 
 {% if schedule %}

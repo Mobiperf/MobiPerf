@@ -1,7 +1,12 @@
 {# Scheduling listing template. #}
 
 <div class="schedule-list-section">
-  <h2>Measurement Schedule</h2>
+  <h2>Measurement Schedule&nbsp;&nbsp;
+    {% if user_schedule_admin %}
+    <button class="kd-button kd-button-red"
+      onclick="location.href='/schedule/add'">Manage</button>
+    {% endif %}
+  </h2>
   <table class="schedule-list-table section-box" width="100%">
     <tr>
       <th>ID</th>
@@ -16,7 +21,9 @@
       <th>Count</th>
       <th>Priority</th>
       <th>Params</th>
+      {% if user_schedule_admin %}
       <th>Delete</th>
+      {% endif %}
     </tr>
     {% for task in schedule %}
       <tr>
@@ -41,9 +48,11 @@
             {% endfor %}
           </table>
         </td>
+        {% if user_schedule_admin %}
         <td>
-        <a href="/schedule/delete?id={{task.key.id}}">Delete</a>
+          <a href="/schedule/delete?id={{task.key.id}}">Delete</a>
         </td>
+        {% endif %}
       </tr>
     {% endfor %}
   </table>

@@ -6,40 +6,53 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Google Speedometer - Measuring your mobile performance</title>
 <link rel="stylesheet" type="text/css" href="//www.google.com/css/gcs.css"/>
+<link rel="stylesheet" type="text/css" href="/static/kennedy.css"/>
 <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
 
 {% block extra_meta_link %}{% endblock %}
-
 </head>
 <body onunload="GUnload()">
-  <div id="header">
-    <a class="productLink" href="/">
-      <img class="logo" src="/static/logo.png" height="80">
-    </a>
-    <div id="buildinfo">Version __BUILDVERSION__</div>
+{# Google Feedback API #}
+<script type="text/javascript">
+(function() { // Protect global namespace
+  var prefix = ('https:' == document.location.protocol) ?
+ 'https://ssl' : 'http://www';
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = prefix + '.gstatic.com/feedback/api.js';
+  document.body.appendChild(script);
+})();
+</script>
+
+  <div id="kd-googlebar" style="margin-bottom:44px">
+  <div id="kd-appswitcher">
+  <a href="/"><span class="logo"><img src="/static/logo.png" height=70></span></a>
+  </div>
+  <div id="kd-search">
+  <a href="/"><span class="productname">Speedometer</span></a>
+  <div class="linkbox">
+  <span class="link">Hi, {{ user }}</span>
+  <span class="link"><a href="{{logout_link}}">Logouot</a></span>
+  <span class="link"><a href="http://goto.google.com/speedometer">Help</a></span>
+  <span class="link">
+  <a href="http://goto.google.com/velodrome" onclick="
+  try{
+    userfeedback.api.startFeedback(
+      { productId: '70097' },
+      { build: '__BUILDVERSION__'});
+      return false;
+    }catch(e){}">Report an Issue</a></span>
+  <span class="link" id="buildinfo">Version __BUILDVERSION__</span>
+  </div>
+  </div>
   </div>
 
   <div id="applicationContainer">
-    <div id="topNav">
-      <h1>Google Speedometer</h1>
-        <ul class="topNavTabs">
-        <li><a title="Speedometer home page"
-            href="/">Home</a></li>
-          <li><a title="Schedule management" href="/schedule/add">Manage schedule</a></li>
-          <li><a title="Speedometer documentation"
-            class="selected" href="http://goto.google.com/speedometer">Docs</a>
-          </li>
-          <li><a
-            title="Mobile speed team"
-            href="http://goto.google.com/mobile-speed">mobile-speed team</a></li>
-          <li> &nbsp;&nbsp;Hi, {{ user }} &nbsp;&nbsp;
-          <a href="{{logout_link}}">logout</a>
-        </ul>
-    </div>
     <blockquote>
-    <br><b>Speedometer</b> is a mobile application and a Web-based
-    service for measuring mobile networking performance in the wild.
-    See <a href="http://goto.google.com/speedometer">go/speedometer</a>.
+    <br><b>Speedometer</b> is an Android app for collecting mobile
+    network measurements in the wild.
+    For more information, see
+    <a href="http://goto.google.com/speedometer">go/speedometer</a>.
    </blockquote>
 
   <div id="main-content">

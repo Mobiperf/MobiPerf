@@ -11,6 +11,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from gspeedometer import config
 from gspeedometer import model
+from gspeedometer.helpers import acl
 
 
 class Home(webapp.RequestHandler):
@@ -29,6 +30,7 @@ class Home(webapp.RequestHandler):
         limit=config.NUM_MEASUREMENTS_IN_LIST)
 
     template_args = {
+        'user_schedule_admin': acl.UserIsScheduleAdmin(),
         'devices': devices,
         'measurements': measurements,
         'schedule': schedule,
