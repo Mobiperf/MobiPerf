@@ -44,7 +44,6 @@ h2  {
 
 .section-box td, .section-box th {
   border: 1px solid #aaa;
-  white-space: nowrap;
 }
 
 .device-list-table,
