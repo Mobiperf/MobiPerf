@@ -79,19 +79,4 @@
     android:text="@string/appCopyRight"
     android:textSize="@dimen/largeTextSize" >
   </TextView>
-  <TextView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="@dimen/smallMarginBetweenRows"
-    android:background="@color/gray"
-    android:text="@string/aboutAuthorTitle"
-    android:textSize="@dimen/largeTextSize" >
-  </TextView>
-  <TextView
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="@dimen/smallMarginBetweenRows"
-    android:text="@string/appAuthor"
-    android:textSize="@dimen/largeTextSize" >
-  </TextView>
 </LinearLayout>
