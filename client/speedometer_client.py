@@ -16,32 +16,22 @@ import sys
 import appengine_client
 
 
-def ParseList(unused_option, opt_str, value, parser_object):
-  """Parse a list from a command line argument."""
-  # Get rid of the "--" part of the opt_str
-  try:
-    option_name = opt_str[2:]
-    parser_object.values[option_name] = json.loads(value)
-  except:
-    raise optparse.OptionValueError('Invalid %s value given: %s' %
-                                    (opt_str, value))
-
 parser = optparse.OptionParser()
 
 parser.add_option('--speedometer_server',
                   default='http://speedometer.googleplex.com',
-                  help='Velodrome server')
+                  help='Speedometer server')
 
 parser.add_option('--use_local_dev_server', action='store_true',
                   default=False, help='Connect to a local development server')
 
 parser.add_option('--username', default=None,
-                  help='Username to login with if not using Stubby')
+                  help='Username to login with')
 parser.add_option('--password', default=None,
-                  help='Application-specific password if not using Stubby')
+                  help='Application-specific password')
 
 parser.add_option('--list_devices', action='store_true', default=False,
-                  help='List accessible Velodrome devices')
+                  help='List accessible devices')
 
 parser.add_option('--fake_checkin', action='store_true', default=False,
                   help='Perform a fake device checkin')
@@ -52,7 +42,13 @@ options, unused_leftover_args = parser.parse_args(args=sys.argv)
 
 
 def TimeToMicrosecondsSinceEpoch(dt):
-  """Convert a datetime object to microseconds since the epoch UTC."""
+  """Convert a datetime object to microseconds since the epoch UTC.
+
+  Args:
+    dt: A datetime.datetime object.
+  Returns:
+    A long in microseconds since the epoch UTC.
+  """
   epoch = datetime.datetime(1970, 1, 1)
   diff = dt - epoch
   microsec_since_epoch = int(((diff.days * 86400) + (diff.seconds)) * 1000000)

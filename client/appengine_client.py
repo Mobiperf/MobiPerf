@@ -263,9 +263,6 @@ class AbstractRpcServer(object):
             raise
           elif e.code == 401 or e.code == 302:
             self._Authenticate()
-##           elif e.code >= 500 and e.code < 600:
-##             # Server Error - try again.
-##             continue
           elif e.code == 301:
             # Handle permanent redirect manually.
             url = e.info()['location']

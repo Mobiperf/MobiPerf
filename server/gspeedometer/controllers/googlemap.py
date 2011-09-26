@@ -19,7 +19,7 @@ from gspeedometer import model
 from gspeedometer.helpers import googlemaphelper
 
 
-# Stupid workaround to mismatch between Google App Engine
+# Workaround to mismatch between Google App Engine
 # and Django types for MultipleChoiceField inputs
 # See http://vanderwijk.info/2011/02/
 class SelectMultiple(forms.widgets.SelectMultiple):
@@ -96,6 +96,15 @@ class MapView(webapp.RequestHandler):
         'templates/mapview.html', template_args))
 
   def _GetMeasurements(self, device_ids, start_date=None, end_date=None):
+    """Return a list of measurements.
+
+    Args:
+      device_ids: List of device IDs to retrieve measurements for.
+      start_date: datetime.datetime object representing start date.
+      end_date: datetime.datetime object representing end date.
+    Returns:
+      A list of measurement objects.
+    """
     results = []
     per_device_limit = max(1, int(config.GOOGLEMAP_MARKER_LIMIT /
                                   len(device_ids)))
@@ -109,7 +118,7 @@ class MapView(webapp.RequestHandler):
     return results
 
   def _GetJavascriptCodeForMap(self, measurements):
-    """Constructs the java script code to map measurement resultsp."""
+    """Constructs the javascript code to map measurement results."""
     # TODO(mattp) - This whole thing should be redone as a heatmap
     tmap = googlemaphelper.Map()
     red_icon = googlemaphelper.Icon(icon_id='red_icon',
@@ -122,8 +131,6 @@ class MapView(webapp.RequestHandler):
     gmap = googlemaphelper.GoogleMapWrapper(key=my_key, themap=tmap)
     gmap.AddIcon(green_icon)
     gmap.AddIcon(red_icon)
-
-    logging.info(str(gmap))
 
     tmap.zoom = config.GOOGLE_MAP_ZOOM
     lat_sum = 0
@@ -202,7 +209,14 @@ class MapView(webapp.RequestHandler):
     return mapcode
 
   def _GetHtmlForMeasurement(self, device_id, meas, values):
-    """Returns the HTML string representing the Ping result."""
+    """Returns the HTML string representing a measurement result.
+    Args:
+      device_id: The device ID
+      meas: The measurement object.
+      values: The measurement values to include in the table.
+    Returns:
+      An HTML string.
+    """
     result = '<html><body><b>%s</b><br/>' % meas.type
     result += 'Device %s<br/>' % device_id
     result += '%s<br/>' % meas.timestamp
