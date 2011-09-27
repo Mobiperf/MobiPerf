@@ -24,21 +24,23 @@
           android:layout_height="wrap_content"
           android:layout_alignParentLeft="true"
           android:textSize="@dimen/regularTextSize"
-          android:textOn="User Measurements"
-          android:textOff="User Measurements"/>
+          android:textOn="Manual"
+          android:textOff="Manual"/>
         <ToggleButton android:id="@+id/showSystemResults"
           android:layout_width="150dp"
           android:layout_height="wrap_content"
           android:layout_alignParentRight="true"
           android:textSize="@dimen/regularTextSize"
-          android:textOn="System Measurements"
-          android:textOff="System Measurements"/>
+          android:textOn="Scheduled"
+          android:textOff="Scheduled"/>
     </RelativeLayout>      
     <ListView
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:id="@+id/resultConsole"
       android:scrollbars="vertical"
+      android:textColor="#000000"
       android:layout_below="@id/resultFilter"/>
+      
   </RelativeLayout>
 </FrameLayout>

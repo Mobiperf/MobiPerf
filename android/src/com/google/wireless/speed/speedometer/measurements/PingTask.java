@@ -47,7 +47,7 @@ public class PingTask extends MeasurementTask {
   // Type name for internal use
   public static final String TYPE = "ping";
   // Human readable name for the task
-  public static final String DESCRIPTOR = "Ping";
+  public static final String DESCRIPTOR = "ping";
   /* Default payload size of the ICMP packet, plus the 8-byte ICMP header resulting in a total of 
    * 64-byte ICMP packet */
   public static final int DEFAULT_PING_PACKET_SIZE = 56;

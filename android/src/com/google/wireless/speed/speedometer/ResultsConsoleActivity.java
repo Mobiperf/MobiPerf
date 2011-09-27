@@ -30,7 +30,7 @@ public class ResultsConsoleActivity extends Activity {
   private ArrayAdapter<String> userResults;
   private ArrayAdapter<String> systemResults;
   BroadcastReceiver receiver;
-  ProgressBar progresBar;
+  ProgressBar progressBar;
   boolean showUserResults = true;
   ToggleButton showUserResultButton;
   ToggleButton showSystemResultButton;
@@ -46,9 +46,9 @@ public class ResultsConsoleActivity extends Activity {
 
     this.consoleView = (ListView) this.findViewById(R.id.resultConsole);
     getConsoleContentFromScheduler();
-    this.progresBar = (ProgressBar) this.findViewById(R.id.progress_bar);
-    this.progresBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);
-    this.progresBar.setProgress(Config.MAX_PROGRESS_BAR_VALUE);
+    this.progressBar = (ProgressBar) this.findViewById(R.id.progress_bar);
+    this.progressBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);
+    this.progressBar.setProgress(Config.MAX_PROGRESS_BAR_VALUE);
     showUserResultButton = (ToggleButton) findViewById(R.id.showUserResults);
     showSystemResultButton = (ToggleButton) findViewById(R.id.showSystemResults);
     showUserResultButton.setChecked(showUserResults);
@@ -118,13 +118,13 @@ public class ResultsConsoleActivity extends Activity {
   private void upgradeProgress(int progress, int max) {
     Log.i(SpeedometerApp.TAG, "Progress is " + progress);
     if (progress >= 0 && progress <= max) {
-      progresBar.setProgress(progress);
-      this.progresBar.setVisibility(View.VISIBLE);
+      progressBar.setProgress(progress);
+      this.progressBar.setVisibility(View.VISIBLE);
     } else {
       /* UserMeasurementTask broadcast a progress greater than max to indicate the
        * termination of the measurement
        */
-      this.progresBar.setVisibility(View.INVISIBLE);
+      this.progressBar.setVisibility(View.INVISIBLE);
     }
   }
   

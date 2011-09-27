@@ -31,7 +31,7 @@ public class DnsLookupTask extends MeasurementTask {
   // Type name for internal use
   public static final String TYPE = "dns_lookup";
   // Human readable name for the task
-  public static final String DESCRIPTOR = "DNS Lookup";
+  public static final String DESCRIPTOR = "DNS lookup";
 
   /**
    * The description of DNS lookup measurement 
