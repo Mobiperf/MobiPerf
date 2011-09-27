@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -64,6 +65,7 @@ public class MeasurementScheduler extends Service {
   private long checkinRetryIntervalSec;
   private int checkinRetryCnt;
   private CheckinTask checkinTask;
+  private Calendar lastCheckinTime;
   
   private PendingIntent checkinIntentSender;
   /** 
@@ -168,7 +170,8 @@ public class MeasurementScheduler extends Service {
           }
         } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
           String msg = intent.getExtras().getString(UpdateIntent.STRING_PAYLOAD);
-          insertStringToConsole(systemConsole, msg);
+          Date now = Calendar.getInstance().getTime();
+          insertStringToConsole(systemConsole, now + "\n\n" + msg);
         }
       }
     };
@@ -200,7 +203,10 @@ public class MeasurementScheduler extends Service {
     startForeground(NOTIFICATION_ID, notice);
   }
   
-  private void handleCheckin() {
+  /**
+   * Perform a checkin operation.
+   */
+  public void handleCheckin() {
     if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
       return;
     }
@@ -223,10 +229,11 @@ public class MeasurementScheduler extends Service {
         Log.i(SpeedometerApp.TAG, "Processing task " + task.toString());
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-          sendStringMsg("***** USER_TASK *****");
+          sendStringMsg("Scheduling user measurement:\n" + task);
           // User task can override the power policy. So a different task wrapper is used.
           future = measurementExecutor.submit(new UserMeasurementTask(task));
         } else {
+          sendStringMsg("Scheduling system measurement:\n" + task);
           future = measurementExecutor.submit(new PowerAwareTask(task, powerManager, this));
         }
         synchronized (pendingTasks) {
@@ -247,7 +254,7 @@ public class MeasurementScheduler extends Service {
           submitTask(newTask);
         }
       }
-      // Schedule for the next experiment in taskQueue
+      // Schedule the next measurement in the taskQueue
       task = taskQueue.peek();
       if (task != null) {
         long timeFromExecution = Math.max(task.timeFromExecution(),
@@ -350,6 +357,26 @@ public class MeasurementScheduler extends Service {
     return this.checkinIntervalSec;
   }
   
+  /** Returns the last checkin time */
+  public synchronized Date getLastCheckinTime() {
+    if (lastCheckinTime != null) {
+      return lastCheckinTime.getTime();
+    } else {
+      return null;
+    }
+  }
+  
+  /** Returns the next (expected) checkin time */
+  public synchronized Date getNextCheckinTime() {
+    if (lastCheckinTime != null) {
+      Calendar nextCheckinTime = (Calendar)lastCheckinTime.clone();
+      nextCheckinTime.add(Calendar.SECOND, (int)getCheckinInterval());
+      return nextCheckinTime.getTime();
+    } else {
+      return null;
+    }
+  }
+  
   /** 
    * Prevents new tasks from being scheduled. Started task will still run to finish. 
    */
@@ -445,10 +472,10 @@ public class MeasurementScheduler extends Service {
     if (isPauseRequested()) {
       notificationContent = "Speedometer is paused";
     } else if (!powerManager.canScheduleExperiment()) {
-      notificationContent = "Battery is below threshold";
+      notificationContent = "Battery below threshold";
     } else {
       notificationContent = "Finished:" + completedMeasurementCnt;
-      notificationContent += " Pending:" + taskQueue.size();
+      notificationContent += "\nNext checkin:" + getNextCheckinTime();
     }
     //This is deprecated in 3.x. But most phones still run 2.x systems
     notice.setLatestEventInfo(this, "Speedometer", 
@@ -550,7 +577,7 @@ public class MeasurementScheduler extends Service {
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
-      sendStringMsg("Adding to task queue " + task.toString());
+      sendStringMsg("Adding measurement to task queue " + task.toString());
       this.submitTask(task);
     }
   }
@@ -631,13 +658,13 @@ public class MeasurementScheduler extends Service {
     @Override
     public void run() {
       Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
-      sendStringMsg("checkin at " + Calendar.getInstance().getTime());
+      lastCheckinTime = Calendar.getInstance();
       try {
         uploadResults();
         getTasksFromServer();
         // Also reset checkin if we get a success
         resetCheckin();
-        // Schedule the new expeirments
+        // Schedule the new tasks
         handleMeasurement();
       } catch (Exception e) {
         /*
@@ -666,8 +693,7 @@ public class MeasurementScheduler extends Service {
         }
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
-        // Otherwise, we simply wait for the next checkin period since it's shorter than the
-        // retry interval
+        refreshNotificationAndStatusBar();
       }
     }
   }
@@ -776,6 +802,11 @@ public class MeasurementScheduler extends Service {
     restoreConsole(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
     restoreConsole(userResults, Config.PREF_KEY_USER_RESULTS);
     restoreConsole(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    
+    insertStringToConsole(systemResults, "Automatically-scheduled measurement results will " +
+    		"appear here.");
+    insertStringToConsole(userResults, "Your measurement results will appear here.");
+    
   }
   
   /**

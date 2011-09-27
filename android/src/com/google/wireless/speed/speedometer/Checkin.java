@@ -52,14 +52,14 @@ public class Checkin {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
     this.serverUrl = serverUrl;
-    sendStringMsg("Server: " + this.serverUrl);
+    sendStringMsg("Using server " + this.serverUrl);
   }
   
   public Checkin(Context context) {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
     this.serverUrl = phoneUtils.getServerUrl();
-    sendStringMsg("Server: " + this.serverUrl);
+    sendStringMsg("Using server " + this.serverUrl);
   }
   
   /** Returns whether the service is running on a testing server. */
@@ -114,6 +114,7 @@ public class Checkin {
           MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
       
       Log.d(SpeedometerApp.TAG, status.toString());
+      sendStringMsg("Checking in");
       
       String result = speedometerServiceRequest("checkin", status.toString());
       Log.d(SpeedometerApp.TAG, "Checkin result: " + result);
@@ -121,6 +122,7 @@ public class Checkin {
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
+      sendStringMsg("Checkin received " + jsonArray.length() + " measurement tasks.");
       
       for (int i = 0; i < jsonArray.length(); i++) {
         Log.d(SpeedometerApp.TAG, "Parsing index " + i);
@@ -170,6 +172,7 @@ public class Checkin {
       }
     }
     
+    sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() uploading: " + 
         resultArray.toString());
     String response = 
@@ -183,6 +186,7 @@ public class Checkin {
       throw new IOException(e.getMessage());
     }
     Log.i(SpeedometerApp.TAG, "TaskSchedule.uploadMeasurementResult() complete");
+    sendStringMsg("Result upload complete.");
   }
   
   private String speedometerServiceRequest(String url, String jsonString) 

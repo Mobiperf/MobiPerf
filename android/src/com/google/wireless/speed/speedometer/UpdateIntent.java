@@ -19,6 +19,7 @@ public class UpdateIntent extends Intent {
   public static final String PROGRESS_PAYLOAD = "PROGRESS_PAYLOAD";
   public static final String STATUS_MSG_PAYLOAD = "STATUS_MSG_PAYLOAD";
   public static final String TASK_PRIORITY_PAYLOAD = "TASK_PRIORITY_PAYLOAD";
+  
   // Different types of actions that this intent can represent
   private static final String PACKAGE_PREFIX = UpdateIntent.class.getPackage().getName();
   public static final String MSG_ACTION = PACKAGE_PREFIX + ".MSG_ACTION";
@@ -32,6 +33,8 @@ public class UpdateIntent extends Intent {
       PACKAGE_PREFIX + ".SYSTEM_STATUS_UPDATE_ACTION";
   public static final String SCHEDULER_CONNECTED_ACTION = 
       PACKAGE_PREFIX + ".SCHEDULER_CONNECTED_ACTION";
+  public static final String SCHEDULE_UPDATE_ACTION =
+      PACKAGE_PREFIX + ".SCHEDULE_UPDATE_ACTION";
   
   /**
    * Creates an intent of the specified action with an optional message

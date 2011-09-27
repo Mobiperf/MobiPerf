@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuInflater;
@@ -20,8 +21,10 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.AbstractCollection;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -36,6 +39,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   private MeasurementScheduler scheduler;
   private SpeedometerApp parent;
   private ListView consoleView;
+  private TextView lastCheckinTimeText;
   private ArrayAdapter<String> consoleContent;
   // Maps the toString() of a measurementTask to its key
   private HashMap<String, String> taskMap;
@@ -52,14 +56,12 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
     this.consoleView = (ListView) this.findViewById(R.id.measurementScheduleConsole);
     this.consoleView.setAdapter(consoleContent);
-    Button refreshButton = (Button) this.findViewById(R.id.refreshScheduleButton);
-    refreshButton.setOnClickListener(new OnClickListener() {
-      /**
-       * Updates the schedule in the console
-       */
+    lastCheckinTimeText = (TextView)this.findViewById(R.id.lastCheckinTime);
+    Button checkinButton = (Button) this.findViewById(R.id.checkinButton);
+    checkinButton.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        updateConsole();
+        doCheckin();
       }
     });
 
@@ -74,12 +76,15 @@ public class MeasurementScheduleConsoleActivity extends Activity {
         return false;
       }
     });
+    
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.SCHEDULER_CONNECTED_ACTION);
+    filter.addAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
     this.receiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
+        Log.d(SpeedometerApp.TAG, "MeasurementConsole got intent");
         /* The content of the console is maintained by the scheduler. We simply hook up the 
          * view with the content here. */
         updateConsole();
@@ -134,7 +139,21 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     return false;
   }
   
+  private void updateLastCheckinTime() {
+    Log.i(SpeedometerApp.TAG, "updateLastCheckinTime() called");
+    scheduler = parent.getScheduler();
+    if (scheduler != null) {
+      Date lastCheckin = scheduler.getLastCheckinTime();
+      if (lastCheckin != null) {
+        lastCheckinTimeText.setText("Last checkin " + lastCheckin);
+      } else {
+        lastCheckinTimeText.setText("No checkins yet");
+      }
+    }
+  }
+  
   private void updateConsole() {
+    Log.i(SpeedometerApp.TAG, "updateConsole() called");
     scheduler = parent.getScheduler();
     if (scheduler != null) {
       AbstractCollection<MeasurementTask> tasks = scheduler.getTaskQueue();
@@ -146,5 +165,16 @@ public class MeasurementScheduleConsoleActivity extends Activity {
         taskMap.put(taskStr, task.getDescription().key);
       }
     }
+    updateLastCheckinTime();
   }
+  
+  private void doCheckin() {
+    Log.i(SpeedometerApp.TAG, "doCheckin() called");
+    scheduler = parent.getScheduler();
+    if (scheduler != null) {
+      lastCheckinTimeText.setText("Checking in...");
+      scheduler.handleCheckin();
+    }
+  }
+  
 }

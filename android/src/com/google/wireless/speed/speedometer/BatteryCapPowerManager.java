@@ -72,8 +72,7 @@ public class BatteryCapPowerManager {
     private void broadcastMeasurementStart() {
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "System measurement " + 
-          realTask.getDescriptor() + " is running.");
+      intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Running " + realTask.getDescriptor());
       
       scheduler.sendBroadcast(intent);
     }

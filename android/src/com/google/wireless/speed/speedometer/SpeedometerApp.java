@@ -181,7 +181,7 @@ public class SpeedometerApp extends TabActivity {
     
     statusBar = (TextView) findViewById(R.id.systemStatusBar);
     
-    // We only need one instance of scheduler thread
+    // We only need one instance of the scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
     this.startService(intent);
     
