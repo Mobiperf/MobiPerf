@@ -25,8 +25,8 @@ class AddToScheduleForm(forms.Form):
   param1 = forms.CharField(required=False)
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
-  count = forms.IntegerField(required=False, initial=0,
-                             min_value=0, max_value=1000)
+  count = forms.IntegerField(required=False, initial=-1,
+                             min_value=-1, max_value=1000)
   interval = forms.IntegerField(required=True, label='Interval (sec)',
                                 min_value=1, initial=600)
   tag = forms.CharField(required=False)
@@ -54,7 +54,7 @@ class Schedule(webapp.RequestHandler):
         param3 = add_to_schedule_form.cleaned_data['param3']
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
-        count = add_to_schedule_form.cleaned_data['count'] or 0
+        count = add_to_schedule_form.cleaned_data['count'] or -1
         interval = add_to_schedule_form.cleaned_data['interval']
 
         logging.info('Got TYPE: ' + thetype)
