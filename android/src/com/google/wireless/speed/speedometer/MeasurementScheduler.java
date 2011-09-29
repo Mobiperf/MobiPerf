@@ -220,9 +220,7 @@ public class MeasurementScheduler extends Service {
   private void handleMeasurement() {
     try {
       MeasurementTask task = taskQueue.peek();
-      /* Process the head of the queue. If the count of the head task is greater than 0, 
-       * we make a clone of it with the next start time and add the clone to taskQueue.
-       */
+      // Process the head of the queue.
       if (task != null && task.timeFromExecution() <= 0) {
         taskQueue.poll();
         Future<MeasurementResult> future;
@@ -242,10 +240,10 @@ public class MeasurementScheduler extends Service {
         
         MeasurementDesc desc = task.getDescription();
         long newStartTime = desc.startTime.getTime() + (long) desc.intervalSec * 1000;
-        // Add a clone with the new start time into taskQueue if count is INFINITE_COUNT or
-        // desc.count is greater than one and that the task has not expired.
-        if (desc.count == MeasurementTask.INFINITE_COUNT || 
-            (desc.count > 1 && newStartTime < desc.endTime.getTime())) {
+        
+        // Add a clone of the task if it's still valid.
+        if (newStartTime < desc.endTime.getTime() &&
+            (desc.count == MeasurementTask.INFINITE_COUNT || desc.count > 1)) {
           MeasurementTask newTask = task.clone();
           if (desc.count != MeasurementTask.INFINITE_COUNT) {
             newTask.getDescription().count--;
