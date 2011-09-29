@@ -207,7 +207,12 @@ public class MeasurementScheduler extends Service {
    * Perform a checkin operation.
    */
   public void handleCheckin() {
-    if (isPauseRequested() || !powerManager.canScheduleExperiment()) {
+    if (isPauseRequested()) {
+      sendStringMsg("Skipping checkin - app is paused");
+      return;
+    } 
+    if (!powerManager.canScheduleExperiment()) {
+      sendStringMsg("Skipping checkin - below battery threshold");
       return;
     }
     /* The CPU can go back to sleep immediately after onReceive() returns. Acquire
@@ -266,10 +271,12 @@ public class MeasurementScheduler extends Service {
       }
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
-      Log.e(SpeedometerApp.TAG, "Exception when clonig objects");
+      Log.e(SpeedometerApp.TAG, "Exception when cloning objects");
+      sendStringMsg("Exception when cloning tasks: " + e);
     } catch (Exception e) {
       // We don't want any unexpected exception to crash the process
       Log.e(SpeedometerApp.TAG, "Exception when handling measurements", e);
+      sendStringMsg("Exception running task: " + e);
     }
   }
   
@@ -314,6 +321,7 @@ public class MeasurementScheduler extends Service {
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
     Log.i(SpeedometerApp.TAG, "starting scheduler");
+    sendStringMsg("Scheduler starting");
     if (!isSchedulerStarted) {
       updateFromPreference();
       this.resume();
@@ -379,12 +387,14 @@ public class MeasurementScheduler extends Service {
    * Prevents new tasks from being scheduled. Started task will still run to finish. 
    */
   public synchronized void pause() {
+    sendStringMsg("Scheduler pausing");
     this.pauseRequested = true;
     refreshNotificationAndStatusBar();
   }
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
+    sendStringMsg("Scheduler resuming");
     this.pauseRequested = false;
     refreshNotificationAndStatusBar(); 
   }
@@ -424,6 +434,7 @@ public class MeasurementScheduler extends Service {
   
   /** Request the scheduler to stop execution. */
   public synchronized void requestStop() {
+    sendStringMsg("Scheduler stop requested");
     this.stopRequested = true;
     this.notifyAll();
     this.stopForeground(true);
@@ -472,8 +483,8 @@ public class MeasurementScheduler extends Service {
     } else if (!powerManager.canScheduleExperiment()) {
       notificationContent = "Battery below threshold";
     } else {
-      notificationContent = "Finished:" + completedMeasurementCnt;
-      notificationContent += "\nNext checkin:" + getNextCheckinTime();
+      notificationContent = completedMeasurementCnt + " completed tasks, ";
+      notificationContent += getPendingTaskCount() + " pending tasks";
     }
     //This is deprecated in 3.x. But most phones still run 2.x systems
     notice.setLatestEventInfo(this, "Speedometer", 
