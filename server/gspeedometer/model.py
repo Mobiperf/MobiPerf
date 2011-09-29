@@ -45,6 +45,12 @@ class DeviceInfo(db.Model):
     return 'DeviceInfo <id %s, user %s, device %s-%s-%s>' % (
         self.id, self.user, self.manufacturer, self.model, self.os)
 
+  def LastUpdateTime(self):
+    lastup = self.last_update()
+    if not lastup:
+      return None
+    return lastup.timestamp
+
   @classmethod
   def GetDeviceListWithAcl(cls):
     """Return a query for devices that can be accessed by the current user."""

@@ -22,6 +22,9 @@ class Home(webapp.RequestHandler):
     errormsg = None
 
     devices = model.DeviceInfo.GetDeviceListWithAcl()
+    devices = list(devices)
+    devices.sort(key=lambda dev: dev.LastUpdateTime())
+    devices.reverse()
 
     schedule = model.Task.all()
     schedule.order('-created')
