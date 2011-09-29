@@ -7,7 +7,7 @@
 __author__ = 'mdw@google.com (Matt Welsh)'
 
 # Set of users with admin privileges
-ADMIN_USERS = ['mattp@google.com']
+ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
 
 # Set of users with rights to administer tasks
 SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
