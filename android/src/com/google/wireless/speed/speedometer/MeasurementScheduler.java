@@ -271,8 +271,8 @@ public class MeasurementScheduler extends Service {
       }
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
-      Log.e(SpeedometerApp.TAG, "Exception when cloning objects");
-      sendStringMsg("Exception when cloning tasks: " + e);
+      Log.e(SpeedometerApp.TAG, "Exception when cloning task");
+      sendStringMsg("Exception when cloning task: " + e);
     } catch (Exception e) {
       // We don't want any unexpected exception to crash the process
       Log.e(SpeedometerApp.TAG, "Exception when handling measurements", e);
