@@ -7,7 +7,7 @@
 __author__ = 'mdw@google.com (Matt Welsh)'
 
 # Set of users with admin privileges
-ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
+ADMIN_USERS = ['mattp@google.com']
 
 # Set of users with rights to administer tasks
 SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
@@ -29,6 +29,8 @@ DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
 GOOGLEMAP_MARKER_LIMIT = 500
 # The number of timeseries points to retrieve
 TIMESERIES_POINT_LIMIT = 250
+# The total number of elements to fetch for a given query
+QUERY_FETCH_LIMIT = 500
 # The number of devices to retrieve per user
 NUM_DEVICES_PER_USER = 20
 # The minimum ping delay in ms that we consider 'slow'
