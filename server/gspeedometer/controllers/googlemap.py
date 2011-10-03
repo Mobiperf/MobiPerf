@@ -141,8 +141,11 @@ class MapView(webapp.RequestHandler):
     # Add points to the map
 
     for meas in measurements:
-      measurement_cnt += 1
       prop_entity = meas.device_properties
+      # Skip measurements without a location associated with them
+      if not prop_entity.location or prop_entity.location_type == 'unknown':
+        continue
+
       device_id = prop_entity.device_info.key().name()
       values = {}
       icon_to_use = red_icon
@@ -185,7 +188,7 @@ class MapView(webapp.RequestHandler):
             icon_to_use = green_icon
 
       htmlstr = self._GetHtmlForMeasurement(device_id, meas, values)
-      random_radius = 0.001
+      random_radius = config.LOCATION_FUZZ_FACTOR
       # Use random offset to deal with overlapping points
       rand_lat = (random.random() - 0.5) * random_radius
       rand_lon = (random.random() - 0.5) * random_radius
@@ -194,6 +197,7 @@ class MapView(webapp.RequestHandler):
                htmlstr, icon_to_use.icon_id)
       lat_sum += prop_entity.location.lat
       lon_sum += prop_entity.location.lon
+      measurement_cnt += 1
       tmap.AddPoint(point)
 
     # Set the center of the viewport
