@@ -1,7 +1,7 @@
 {# Template for measurement listing. #}
 
 <div class="measurement-list-section">
-<h2>Measurements</h2>
+<h2>Recent Measurements</h2>
 
 <table class="measurement-list-table section-box" width="100%">
   <tr>
@@ -10,11 +10,16 @@
     <th>Task ID</th>
     <th>Timestamp (UTC)</th>
     <th>Type</th>
+    <th>Success</th>
     <th>Params</th>
     <th>Values</th>
   </tr>
   {% for m in measurements %}
+    {% if not m.success %}
+    <tr bgcolor="#e0e0e0">
+    {% else %}
     <tr>
+    {% endif %}
       <td><a
           href="/measurement/view?deviceid={{m.device_properties.device_info.id}}&measid={{m.key.id}}" target="_blank">{{m.key.id}}</a></td>
       <td><a href="/device/view?device_id={{m.device_properties.device_info.id}}"
@@ -22,6 +27,7 @@
       <td>{% if m.GetTaskID %}{{m.GetTaskID}}{% else %}Unknown{% endif %}</td>
       <td>{{m.timestamp}}</td>
       <td>{{m.type}}</td>
+      <td>{{m.success}}</td>
       <td>
         <table class="task-param-table">
           {% for key,value in m.Params.items %}

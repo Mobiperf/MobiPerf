@@ -33,7 +33,8 @@
 }
 
 .smaller {
-  font-size: smaller;
+  font: normal 10px Arial;
+  color: #808080;
 }
 
 h2  {

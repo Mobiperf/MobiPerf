@@ -10,6 +10,7 @@ import logging
 
 from google.appengine.api import users
 from google.appengine.ext import db
+from gspeedometer import config
 from gspeedometer.helpers import acl
 from gspeedometer.helpers import util
 
@@ -43,6 +44,12 @@ class DeviceInfo(db.Model):
   def __str__(self):
     return 'DeviceInfo <id %s, user %s, device %s-%s-%s>' % (
         self.id, self.user, self.manufacturer, self.model, self.os)
+
+  def LastUpdateTime(self):
+    lastup = self.last_update()
+    if not lastup:
+      return None
+    return lastup.timestamp
 
   @classmethod
   def GetDeviceListWithAcl(cls):
@@ -186,12 +193,12 @@ class Measurement(db.Expando):
       if limit:
         return query.fetch(limit)
       else:
-        return query
+        return query.fetch(config.QUERY_FETCH_LIMIT)
     else:
       # Need to check each result to see if user is allowed to access
       # this device.
       retval = []
-      for measurement in query:
+      for measurement in query.fetch(config.QUERY_FETCH_LIMIT):
         if measurement.device_properties.device_info.user == user:
           retval.append(measurement)
           if limit and len(retval) == limit:
