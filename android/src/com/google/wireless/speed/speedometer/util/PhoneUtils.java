@@ -387,13 +387,19 @@ public class PhoneUtils {
    * @return the location of the device
    */
   public Location getLocation() {
-    initLocation();
-    Location location = locationManager.getLastKnownLocation(locationProviderName);
-    if (location == null) {
-      Log.e(SpeedometerApp.TAG,
-            "Cannot obtain location from provider " + locationProviderName);
+    try {
+      initLocation();
+      Location location = locationManager.getLastKnownLocation(locationProviderName);
+      if (location == null) {
+        Log.e(SpeedometerApp.TAG,
+              "Cannot obtain location from provider " + locationProviderName);
+        return new Location("unknown");
+      }
+      return location;
+    } catch (IllegalArgumentException e) {
+      Log.e(SpeedometerApp.TAG, "Cannot obtain location", e);
+      return new Location("unknown");
     }
-    return location;
   }
 
   /** Wakes up the CPU of the phone if it is sleeping. */
