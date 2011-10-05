@@ -25,6 +25,9 @@ DEFAULT_MAP_CENTER = (47.6508, -122.3515)
 
 DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
 
+# Amount to randomize lat/long of locations on the map
+LOCATION_FUZZ_FACTOR = 0.001
+
 # The number of markers to show on google map per device
 GOOGLEMAP_MARKER_LIMIT = 500
 # The number of timeseries points to retrieve
