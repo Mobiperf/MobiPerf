@@ -188,10 +188,9 @@ class MapView(webapp.RequestHandler):
             icon_to_use = green_icon
 
       htmlstr = self._GetHtmlForMeasurement(device_id, meas, values)
-      random_radius = config.LOCATION_FUZZ_FACTOR
       # Use random offset to deal with overlapping points
-      rand_lat = (random.random() - 0.5) * random_radius
-      rand_lon = (random.random() - 0.5) * random_radius
+      rand_lat = (random.random() - 0.5) * config.LOCATION_FUZZ_FACTOR
+      rand_lon = (random.random() - 0.5) * config.LOCATION_FUZZ_FACTOR
       point = (prop_entity.location.lat + rand_lat,
                prop_entity.location.lon + rand_lon,
                htmlstr, icon_to_use.icon_id)
