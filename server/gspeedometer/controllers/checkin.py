@@ -27,31 +27,38 @@ class Checkin(webapp.RequestHandler):
       raise error.BadRequest('Not a POST request.')
 
     checkin = json.loads(self.request.body)
+    logging.info('Got checkin: %s', self.request.body)
 
-    # Extract DeviceInfo
-    device_info = model.DeviceInfo.get_or_insert(checkin['id'])
-    device_info.user = users.get_current_user()
-    # Don't want the embedded properties in the device_info structure
-    device_info_dict = dict(checkin)
-    del device_info_dict['properties']
-    util.ConvertFromDict(device_info, device_info_dict)
-    device_info.put()
+    try:
+      # Extract DeviceInfo
+      device_info = model.DeviceInfo.get_or_insert(checkin['id'])
 
-    # Extract DeviceProperties
-    device_properties = model.DeviceProperties(parent=device_info)
-    device_properties.device_info = device_info
-    util.ConvertFromDict(device_properties, checkin['properties'])
-    device_properties.put()
+      device_info.user = users.get_current_user()
+      # Don't want the embedded properties in the device_info structure
+      device_info_dict = dict(checkin)
+      del device_info_dict['properties']
+      util.ConvertFromDict(device_info, device_info_dict)
+      device_info.put()
 
-    logging.info('Created device properties: ' + repr(device_properties))
-    logging.info('Associated device info: ' +
-                 repr(device_properties.device_info))
+      # Extract DeviceProperties
+      device_properties = model.DeviceProperties(parent=device_info)
+      device_properties.device_info = device_info
+      util.ConvertFromDict(device_properties, checkin['properties'])
+      device_properties.put()
 
-    device_schedule = GetDeviceSchedule(device_properties)
-    self.response.headers['Content-Type'] = 'application/json'
-    self.response.out.write(EncodeScheduleAsJson(device_schedule))
-    logging.info('Sent checkin response: %s',
-                 EncodeScheduleAsJson(device_schedule))
+      logging.info('Created device properties: ' + repr(device_properties))
+      logging.info('Associated device info: ' +
+                  repr(device_properties.device_info))
+
+      device_schedule = GetDeviceSchedule(device_properties)
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.out.write(EncodeScheduleAsJson(device_schedule))
+      logging.info('Sent checkin response: %s',
+                  EncodeScheduleAsJson(device_schedule))
+    except Exception, e:
+      logging.exception('Got exception during checkin', e)
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.out.write(json.dumps([]))
 
 
 def GetDeviceSchedule(device_properties):
