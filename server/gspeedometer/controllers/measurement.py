@@ -35,11 +35,9 @@ class Measurement(webapp.RequestHandler):
 
     try:
       measurement_list = json.loads(self.request.body)
-      logging.info('PostMeasurement: Got %d measurements',
+      logging.info('PostMeasurement: Got %d measurements to write',
                    len(measurement_list))
-      for index, measurement_dict in enumerate(measurement_list):
-        logging.info('PostMeasurement: Processing %d/%d',
-                     index, len(measurement_list))
+      for measurement_dict in measurement_list:
         device_info = model.DeviceInfo.get_or_insert(
             measurement_dict['device_id'])
 
@@ -63,9 +61,9 @@ class Measurement(webapp.RequestHandler):
         measurement.device_properties = device_properties
         measurement.put()
     except Exception, e:
-      logging.exception('Got exception posting measurements', e)
+      logging.exception('Got exception posting measurements')
 
-    logging.info('PostMeasurement: Done processing')
+    logging.info('PostMeasurement: Done processing measurements')
     response = {'success': True}
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps(response))
