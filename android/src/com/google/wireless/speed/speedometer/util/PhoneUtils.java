@@ -44,6 +44,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.provider.Settings.Secure;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
@@ -609,12 +610,21 @@ public class PhoneUtils {
         Build.VERSION.RELEASE, Build.VERSION.SDK_INT);
   }
   
+  private String getDeviceId() {
+    String deviceId = telephonyManager.getDeviceId();  // This ID is permanent to a physical phone.
+    // "generic" means the emulator.
+    if (deviceId == null || Build.DEVICE.equals("generic")) {
+      // This ID changes on OS reinstall/factory reset.
+      deviceId = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+    }
+    return deviceId;
+  }
+
+  
   public DeviceInfo getDeviceInfo() {
     if (deviceInfo == null) {
       deviceInfo = new DeviceInfo();
-      TelephonyManager tManager = 
-          (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-      deviceInfo.deviceId = tManager.getDeviceId();
+      deviceInfo.deviceId = getDeviceId();
       deviceInfo.manufacturer = Build.MANUFACTURER;
       deviceInfo.model = Build.MODEL;
       deviceInfo.os = getVersionStr();

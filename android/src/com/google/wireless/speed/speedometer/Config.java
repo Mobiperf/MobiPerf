@@ -42,7 +42,7 @@ public interface Config {
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
   // default minimum battery percentage to run measurements
-  public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
+  public static final int DEFAULT_BATTERY_THRESH_PRECENT = 80;
   public static final boolean DEFAULT_MEASURE_WHEN_CHARGE = true;
   public static final long MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC = 3 * 1000L;
   

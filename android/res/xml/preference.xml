@@ -3,13 +3,13 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:title="Preferences">
   <EditTextPreference
-    android:defaultValue="4"
+    android:defaultValue="1"
     android:summary="The interval (hours) speedometer fetches and pushes measurements"
     android:key="@string/checkinIntervalPrefKey" 
     android:inputType="number" 
     android:title="Checkin Interval (hour)"/>    
   <EditTextPreference
-    android:defaultValue="60"
+    android:defaultValue="80"
     android:summary="The minimum battery percentage to pause all measurements"
     android:key="@string/batteryMinThresPrefKey" 
     android:title="Battery Threshold"
