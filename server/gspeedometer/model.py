@@ -63,7 +63,8 @@ class DeviceInfo(db.Model):
   @classmethod
   def GetDeviceWithAcl(cls, device_id):
     device = cls.get_by_key_name(device_id)
-    if acl.UserIsAdmin() or device.user == users.get_current_user():
+    if device and (acl.UserIsAdmin() or
+                   device.user == users.get_current_user()):
       return device
     else:
       raise RuntimeError('User cannot access device %s', device_id)
@@ -199,12 +200,21 @@ class Measurement(db.Expando):
       # this device.
       retval = []
       for measurement in query.fetch(config.QUERY_FETCH_LIMIT):
-        if measurement.device_properties.device_info.user == user:
-          retval.append(measurement)
-          if limit and len(retval) == limit:
-            return retval
-      return retval
+        # Need to catch case where device has been deleted
+        try:
+          device_info = measurement.device_properties.device_info
+          if device_info.user == user:
+            retval.append(measurement)
+            if limit and len(retval) == limit:
+              return retval
 
+        except db.ReferencePropertyResolveError:
+          logging.exception('Device deleted for measurement %s',
+                            measurement.key().id())
+          # Skip this measurement
+          continue
+
+      return retval
 
   def GetTaskID(self):
     try:

@@ -47,6 +47,8 @@ class Device(webapp.RequestHandler):
             'user': users.get_current_user().email(),
             'logout_link': users.create_logout_url('/')
         }
+        self.response.out.write(template.render(
+            'templates/devicedetail.html', template_args))
         return
 
       # Get set of properties associated with this device
@@ -86,19 +88,39 @@ class Device(webapp.RequestHandler):
       raise
 
   def Delete(self, **unused_args):
-    """Handler to delete a device."""
-    device_id = self.request.get('device_id')
-    device = model.DeviceInfo.get(device_id)
-    if not device:
-      self.response.out.write('Device not found.')
-      return
-    device.delete()
+    """Delete a specific device."""
+    errormsg = None
 
-    template_args = {
-        'message': 'Device ' + device_id + ' deleted'
-    }
-    self.response.out.write(template.render(
-        'templates/home.html', template_args))
+    device_id = self.request.get('device_id')
+    device = model.DeviceInfo.GetDeviceWithAcl(device_id)
+    if not device:
+      errormsg = 'Device %s not found' % device_id
+      template_args = {
+          'error': errormsg,
+          'user': users.get_current_user().email(),
+          'logout_link': users.create_logout_url('/')
+      }
+      self.response.out.write(template.render(
+          'templates/devicedelete.html', template_args))
+      return
+    else:
+      if self.request.get('confirm') == '1':
+        # Do the deletion
+        # XXX XXX XXX MDW - What happens if we do this?
+        device.delete()
+        self.redirect('/')
+        return
+      else:
+        # Not confirmed
+        template_args = {
+            'device_id': device_id,
+            'dev': device,
+            'user': users.get_current_user().email(),
+            'logout_link': users.create_logout_url('/')
+        }
+        self.response.out.write(template.render(
+            'templates/devicedelete.html', template_args))
+        return
 
   def _GetBatteryInfo(self, device,
                       start_date,

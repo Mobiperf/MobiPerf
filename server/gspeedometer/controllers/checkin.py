@@ -64,6 +64,8 @@ def GetDeviceSchedule(device_properties):
   """Return entries from the global schedule that match this device."""
 
   matched = set()
+  if not device_properties.device_info:
+    return matched
 
   schedule = model.Task.all()
   for task in schedule:
@@ -90,7 +92,7 @@ def GetDeviceSchedule(device_properties):
         logging.warn('Bad filter expression %s', task.filter)
 
       for dev in devices:
-        if dev.id == device_properties.device_info.id:
+        if dev and dev.id == device_properties.device_info.id:
           matched.add(task)
 
   # Un-assign all current tasks from this device

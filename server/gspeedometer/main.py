@@ -48,6 +48,10 @@ m.connect('/device/view',
           controller='device:Device',
           action='DeviceDetail')
 
+m.connect('/device/delete',
+          controller='device:Device',
+          action='Delete')
+
 m.connect('/postmeasurement',
           controller='measurement:Measurement',
           action='PostMeasurement')

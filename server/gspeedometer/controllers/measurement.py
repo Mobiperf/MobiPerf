@@ -96,6 +96,15 @@ class Measurement(webapp.RequestHandler):
 
     output = []
     for measurement in results:
+      # Need to catch case where device has been deleted
+      try:
+        unused_device_info = measurement.device_properties.device_info
+      except db.ReferencePropertyResolveError:
+        logging.exception('Device deleted for measurement %s',
+                          measurement.key().id())
+        # Skip this measurement
+        continue
+
       # Need to catch case where task has been deleted
       try:
         unused_task = measurement.task
