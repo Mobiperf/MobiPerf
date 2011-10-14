@@ -58,7 +58,7 @@ class DeviceInfo(db.Model):
     if acl.UserIsAdmin():
       return all_devices
     else:
-      return all_devices.filter("user =", users.get_current_user())
+      return all_devices.filter('user =', users.get_current_user())
 
   @classmethod
   def GetDeviceWithAcl(cls, device_id):
