@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+{% if dev %}
+<br>
+<h2>Device details</h2>
+<table class="section-box">
+  <tr>
+  <td style="vertical-align:top; padding: 5px 10px;">
+    <table class="device-detail-table">
+      <tr>
+        <td class="device-detail-prop-name">Device ID</td>
+        <td>{{device_id}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Last update</td>
+        <td>{{dev.last_update.timestamp}} UTC</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Owner</td>
+        <td>{{dev.user.email}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Manufacturer</td>
+        <td>{{dev.manufacturer}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">Model</td>
+        <td>{{dev.model}}</td>
+      </tr><tr>
+        <td class="device-detail-prop-name">OS</td>
+        <td>{{dev.os}}</td>
+      </tr>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+
+<br><br>
+Clicking the button below will <b>delete this device</b>.
+Please confirm you wish to do this.
+
+<br><br>
+<button class="kd-button kd-button-red"
+  onclick="location.href='/device/delete?device_id={{device_id}}&confirm=1'">Yes, delete this device</button>
+
+<button class="kd-button kd-button-submit"
+  onclick="location.href='/device/view?device_id={{device_id}}'">Cancel</button>
+
+{% endif %}
+{% endblock %}
