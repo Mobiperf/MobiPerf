@@ -178,6 +178,7 @@ class Measurement(db.Expando):
     """Return a list of measurements that are accessible by the current user."""
     user = users.get_current_user()
     query = cls.all()
+    query.filter('success =', True)
     query.order('-timestamp')
 
     if device_id:

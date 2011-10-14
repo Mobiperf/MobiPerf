@@ -59,7 +59,7 @@ class Device(webapp.RequestHandler):
 
       # Get measurements
       query = db.GqlQuery('SELECT * FROM Measurement '
-                          'WHERE ANCESTOR IS :1 '
+                          'WHERE ANCESTOR IS :1 AND success = TRUE '
                           'ORDER BY timestamp DESC',
                           device.key())
       measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
