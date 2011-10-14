@@ -33,38 +33,37 @@ class Measurement(webapp.RequestHandler):
     if self.request.method.lower() != 'post':
       raise error.BadRequest('Not a POST request.')
 
-    logging.info('PostMeasurement: request is ' + str(self.request))
-    logging.info('PostMeasurement: body is ' + self.request.body)
+    try:
+      measurement_list = json.loads(self.request.body)
+      logging.info('PostMeasurement: Got %d measurements to write',
+                   len(measurement_list))
+      for measurement_dict in measurement_list:
+        device_info = model.DeviceInfo.get_or_insert(
+            measurement_dict['device_id'])
 
-    measurement_list = json.loads(self.request.body)
-    for measurement_dict in measurement_list:
-      logging.info('Dict: %s', measurement_dict)
-      logging.info('Device ID: ' + measurement_dict['device_id'])
-      device_info = model.DeviceInfo.get_or_insert(
-          measurement_dict['device_id'])
+        # Write new device properties, if present
+        if 'properties' in measurement_dict:
+          device_properties = model.DeviceProperties(parent=device_info)
+          device_properties.device_info = device_info
+          properties_dict = measurement_dict['properties']
+          # TODO(wenjiezeng): Sanitize input that contains bad fields
+          util.ConvertFromDict(device_properties, properties_dict)
+          # Don't want the embedded properties in the Measurement object
+          del measurement_dict['properties']
+        else:
+          # Get most recent device properties
+          device_properties = device.GetLatestDeviceProperties(
+              device_info, create_new_if_none=True)
+        device_properties.put()
 
-      # Write new device properties, if present
-      if 'properties' in measurement_dict:
-        device_properties = model.DeviceProperties(parent=device_info)
-        device_properties.device_info = device_info
-        properties_dict = measurement_dict['properties']
-        # TODO(wenjiezeng): Sanitize input that contains bad fields
-        util.ConvertFromDict(device_properties, properties_dict)
-        # Don't want the embedded properties in the Measurement object
-        del measurement_dict['properties']
-      else:
-        # Get most recent device properties
-        device_properties = device.GetLatestDeviceProperties(
-            device_info, create_new_if_none=True)
-      device_properties.put()
+        measurement = model.Measurement(parent=device_info)
+        util.ConvertFromDict(measurement, measurement_dict)
+        measurement.device_properties = device_properties
+        measurement.put()
+    except Exception, e:
+      logging.exception('Got exception posting measurements')
 
-      measurement = model.Measurement(parent=device_info)
-      util.ConvertFromDict(measurement, measurement_dict)
-      measurement.device_properties = device_properties
-      measurement.put()
-      logging.info('Stored measurement: ' + str(measurement))
-      logging.info('Device: ' + str(measurement.device_properties))
-
+    logging.info('PostMeasurement: Done processing measurements')
     response = {'success': True}
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps(response))
