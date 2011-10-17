@@ -220,8 +220,12 @@ public class PingTask extends MeasurementTask {
   }
   
   private void cleanUp(Process proc) {
-    if (proc != null) {
-      proc.destroy();
+    try { 
+      if (proc != null) {
+        proc.destroy();
+      }
+    } catch (Exception e) { 
+      Log.w(SpeedometerApp.TAG, "Unable to kill ping process", e);
     }
   }
   
@@ -248,6 +252,7 @@ public class PingTask extends MeasurementTask {
   
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask() throws MeasurementError {
+    Log.i(SpeedometerApp.TAG, "Starting executePingCmdTask");
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
@@ -258,6 +263,7 @@ public class PingTask extends MeasurementTask {
           Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,
           "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
           Config.PING_COUNT_PER_MEASUREMENT, targetIp);
+      Log.i(SpeedometerApp.TAG, "Running: " + command);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -324,6 +330,7 @@ public class PingTask extends MeasurementTask {
     }
     
     if (measurementResult == null) {
+      Log.e(SpeedometerApp.TAG, "Error running ping: " + errorMsg);
       throw new MeasurementError(errorMsg);
     }
     return measurementResult;

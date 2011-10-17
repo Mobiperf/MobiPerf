@@ -155,7 +155,8 @@ public class HttpTask extends MeasurementTask {
         HttpPost postRequest = (HttpPost) request;
         postRequest.setEntity(new StringEntity(task.body));
       } else {
-        Log.e(SpeedometerApp.TAG, "Unsupported HTTP task");
+        // Use GET by default
+        request = new HttpGet(urlStr);
       }
       
       if (task.headers != null && task.headers.trim().length() > 0) {

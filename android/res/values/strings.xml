@@ -11,7 +11,7 @@
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Speedometer-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="speedometerServerUrl">http://speedometer.googleplex.com</string>
+    <string name="speedometerServerUrl">https://speedometer.googleplex.com</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="pauseMessage">Speedometer is paused.</string>

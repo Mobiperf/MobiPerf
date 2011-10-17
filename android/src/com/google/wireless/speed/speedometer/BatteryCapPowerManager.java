@@ -6,6 +6,7 @@ import com.google.wireless.speed.speedometer.util.PhoneUtils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.Calendar;
 import java.util.concurrent.Callable;
@@ -70,6 +71,7 @@ public class BatteryCapPowerManager {
     }
     
     private void broadcastMeasurementStart() {
+      Log.i(SpeedometerApp.TAG, "Starting PowerAwareTask " + realTask);
       Intent intent = new Intent();
       intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
       intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD, "Running " + realTask.getDescriptor());
@@ -77,11 +79,12 @@ public class BatteryCapPowerManager {
       scheduler.sendBroadcast(intent);
     }
     
-    private void broadcastMeasurementEnd(MeasurementResult result) {
+    private void broadcastMeasurementEnd(MeasurementResult result, MeasurementError error) {
+      Log.i(SpeedometerApp.TAG, "Ending PowerAwareTask " + realTask);
       /* Only broadcast information about measurements if we are above battery threshold and
        * that the scheduler is not paused. Otherwise, the measurement is simply skipped and we
        * should not print anything about it.
-       **/
+       */
       if (pManager.canScheduleExperiment() && !scheduler.isPauseRequested()) {
         Intent intent = new Intent();
         intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
@@ -92,8 +95,11 @@ public class BatteryCapPowerManager {
         if (result != null) {
           intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
         } else {
-          String errorString = "Measurement " + realTask.getDescriptor() + " has failed. ";
+          String errorString = "Measurement " + realTask.toString() + " failed. ";
           errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
+          if (error != null) {
+            errorString += "\n\n" + error.toString();
+          } 
           intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
         }
         
@@ -117,12 +123,25 @@ public class BatteryCapPowerManager {
         }
         scheduler.setCurrentTask(realTask);
         broadcastMeasurementStart();
-        result = realTask.call(); 
-        return result;
+        try {
+          Log.i(SpeedometerApp.TAG, "Calling PowerAwareTask " + realTask);
+          result = realTask.call(); 
+          Log.i(SpeedometerApp.TAG, "Got result " + result);
+          broadcastMeasurementEnd(result, null);
+          return result;
+        } catch (MeasurementError e) {
+          Log.e(SpeedometerApp.TAG, "Got MeasurementError running task", e);
+          broadcastMeasurementEnd(null, e);
+          throw e;
+        } catch (Exception e) {
+          Log.e(SpeedometerApp.TAG, "Got exception running task", e);
+          MeasurementError err = new MeasurementError("Got exception running task", e);
+          broadcastMeasurementEnd(null, err);
+          throw err;
+        }
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         scheduler.setCurrentTask(null);
-        broadcastMeasurementEnd(result);
       }
     }
   }

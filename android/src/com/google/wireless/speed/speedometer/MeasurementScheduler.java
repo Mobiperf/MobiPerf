@@ -24,6 +24,9 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -609,20 +612,17 @@ public class MeasurementScheduler extends Service {
                   result = future.get();
                   finishedTasks.add(result);
                 } else {
-                  finishedTasks.add(this.getFailureResult(task));
+                  Log.e(SpeedometerApp.TAG, "Task execution was canceled");
+                  finishedTasks.add(this.getFailureResult(task,
+                      new CancellationException("Task canceled")));
                 }
               } catch (InterruptedException e) {
-                /*
-                 * Since the task is done, we should not need to wait anymore to get
-                 * result. So we simply assume something bad happens and we return a
-                 * failure result
-                 */
-                Log.e(SpeedometerApp.TAG, e.getMessage());
+                Log.e(SpeedometerApp.TAG, "Task execution interrupted", e);
               } catch (ExecutionException e) {
-                finishedTasks.add(this.getFailureResult(task));
-                Log.e(SpeedometerApp.TAG, e.getMessage());
+                Log.e(SpeedometerApp.TAG, "Task execution failed", e);
+                finishedTasks.add(this.getFailureResult(task, e.getCause()));
               } catch (CancellationException e) {
-                Log.e(SpeedometerApp.TAG, e.getMessage());
+                Log.e(SpeedometerApp.TAG, "Task cancelled", e);
               }
             } else if (task.isPassedDeadline()) {
               /* If a task has reached its deadline but has not been run, 
@@ -630,7 +630,8 @@ public class MeasurementScheduler extends Service {
                */
               this.pendingTasks.remove(task);
               future.cancel(true);
-              finishedTasks.add(this.getFailureResult(task));
+              finishedTasks.add(this.getFailureResult(task,
+                  new RuntimeException("Deadline passed before execution")));
             }
           }
             
@@ -639,7 +640,8 @@ public class MeasurementScheduler extends Service {
              * null future.
              */
             this.pendingTasks.remove(task);
-            finishedTasks.add(this.getFailureResult(task));
+            finishedTasks.add(this.getFailureResult(task,
+                new RuntimeException("Task scheduled after deadline")));
           }
         }
       } catch (ConcurrentModificationException e) {
@@ -711,10 +713,23 @@ public class MeasurementScheduler extends Service {
     return this.stopRequested;
   }
   
-  private MeasurementResult getFailureResult(MeasurementTask task) {
-    return new MeasurementResult(phoneUtils.getDeviceInfo().deviceId, 
-        phoneUtils.getDeviceProperty(), task.getType(), System.currentTimeMillis() * 1000,
-        false, task.measurementDesc);
+  private String getStackTrace(Throwable error) {
+    final Writer result = new StringWriter();
+    final PrintWriter printWriter = new PrintWriter(result);
+    error.printStackTrace(printWriter);
+    return result.toString();
+  }
+  
+  private MeasurementResult getFailureResult(MeasurementTask task, Throwable error) {
+    MeasurementResult result = new MeasurementResult(
+        phoneUtils.getDeviceInfo().deviceId,
+        phoneUtils.getDeviceProperty(),
+        task.getType(),
+        System.currentTimeMillis() * 1000,
+        false,
+        task.measurementDesc);
+    result.addResult("error", error.toString() + "\n" + getStackTrace(error));
+    return result;
   }
   
   /**
@@ -765,7 +780,7 @@ public class MeasurementScheduler extends Service {
      * measurement finishes.
      */
     @Override
-    public MeasurementResult call() throws MeasurementError{
+    public MeasurementResult call() throws MeasurementError {
       MeasurementResult result = null;
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
