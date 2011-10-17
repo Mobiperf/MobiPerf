@@ -174,11 +174,13 @@ class Measurement(db.Expando):
 
   @classmethod
   def GetMeasurementListWithAcl(cls, limit=None, device_id=None,
-                                start_time=None, end_time=None):
+                                start_time=None, end_time=None,
+                                exclude_errors=True):
     """Return a list of measurements that are accessible by the current user."""
     user = users.get_current_user()
     query = cls.all()
-    query.filter('success =', True)
+    if exclude_errors:
+      query.filter('success =', True)
     query.order('-timestamp')
 
     if device_id:
@@ -262,8 +264,9 @@ class Measurement(db.Expando):
 
   def JSON_DECODE_values(self, input_dict):
     for k, v in input_dict.items():
-      # body and headers can be fairly long. Use the Text data type instead
-      if k == 'body' or k == 'headers':
+      # body, headers, and error messages can be fairly long.
+      # Use the Text data type instead
+      if k == 'body' or k == 'headers' or k == 'error':
         setattr(self, 'mval_' + k, db.Text(v))
       else:
         setattr(self, 'mval_' + k, v)

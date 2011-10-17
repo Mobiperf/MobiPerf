@@ -81,6 +81,11 @@
 </div>
 {% endif %}
 
+<br>
+<button class="kd-button kd-button-submit"
+  onclick="location.href='/device/view?device_id={{device_id}}&all=1'">Show all measurements</button>
+<br>
+
 {% if measurements %}
 {% include "measurementlist.html" %}
 {% endif %}
