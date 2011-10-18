@@ -109,8 +109,6 @@ class Measurement(webapp.RequestHandler):
       try:
         unused_task = measurement.task
       except db.ReferencePropertyResolveError:
-        logging.exception('Cannot resolve task for measurement %s',
-                          measurement.key().id())
         measurement.task = None
         measurement.put()
 
