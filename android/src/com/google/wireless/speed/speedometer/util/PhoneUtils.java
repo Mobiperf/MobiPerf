@@ -358,9 +358,16 @@ public class PhoneUtils {
       criteriaCoarse.setPowerRequirement(Criteria.POWER_LOW);
       String providerName =
           manager.getBestProvider(criteriaCoarse, /*enabledOnly=*/true);
+      
       List<String> providers = manager.getAllProviders();
       for (String providerNameIter : providers) {
-        LocationProvider provider = manager.getProvider(providerNameIter);
+        try {
+          LocationProvider provider = manager.getProvider(providerNameIter);
+        } catch (SecurityException se) {
+          // Not allowed to use this provider
+          Log.w(SpeedometerApp.TAG, "Unable to use provider " + providerNameIter);
+          continue;
+        }
         Log.i(DEBUG_TAG, providerNameIter + ": " +
               (manager.isProviderEnabled(providerNameIter) ? "enabled" : "disabled"));
       }
