@@ -12,7 +12,6 @@ public interface Config {
   public static final boolean DEFAULT_START_ON_BOOT = true;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
-  public static final String DEFAULT_PING_HOST = "www.dealsea.com";
   public static final int PING_COUNT_PER_MEASUREMENT = 10;
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
   

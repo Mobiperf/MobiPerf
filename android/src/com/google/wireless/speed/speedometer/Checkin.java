@@ -9,29 +9,52 @@ import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.util.Log;
 
+import org.apache.http.HttpVersion;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Handles checkins with the SpeedometerApp server.
@@ -189,6 +212,93 @@ public class Checkin {
     sendStringMsg("Result upload complete.");
   }
   
+  
+  /**
+   * Used to generate SSL sockets.
+   */
+  class MySSLSocketFactory extends SSLSocketFactory {
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+
+    public MySSLSocketFactory(KeyStore truststore)
+        throws NoSuchAlgorithmException, KeyManagementException,
+        KeyStoreException, UnrecoverableKeyException {
+      super(truststore);
+
+      X509TrustManager tm = new X509TrustManager() {
+        public X509Certificate[] getAcceptedIssuers() {
+          return null;
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+          // Do nothing
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+          // Do nothing
+        }
+      };
+
+      sslContext.init(null, new TrustManager[] { tm }, null);
+    }
+
+    @Override
+    public Socket createSocket(Socket socket, String host, int port,
+        boolean autoClose) throws IOException, UnknownHostException {
+      return sslContext.getSocketFactory().createSocket(socket, host, port,
+          autoClose);
+    }
+
+    @Override
+    public Socket createSocket() throws IOException {
+      return sslContext.getSocketFactory().createSocket();
+    }
+  }
+
+  /**
+   * Return an appropriately-configured HTTP client.
+   */
+  private HttpClient getNewHttpClient() {
+    DefaultHttpClient client;
+    try {
+      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      trustStore.load(null, null);
+
+      SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
+      sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+
+      HttpParams params = new BasicHttpParams();
+      HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+      HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+      
+      HttpConnectionParams.setConnectionTimeout(params, POST_TIMEOUT_MILLISEC);
+      HttpConnectionParams.setSoTimeout(params, POST_TIMEOUT_MILLISEC);
+
+      SchemeRegistry registry = new SchemeRegistry();
+      registry.register(new Scheme("http", PlainSocketFactory
+          .getSocketFactory(), 80));
+      registry.register(new Scheme("https", sf, 443));
+
+      ClientConnectionManager ccm = new ThreadSafeClientConnManager(params,
+          registry);
+      client = new DefaultHttpClient(ccm, params);
+    } catch (Exception e) {
+      Log.w(SpeedometerApp.TAG, "Unable to create SSL HTTP client", e);
+      client = new DefaultHttpClient();
+    }
+    
+    // TODO(mdw): For some reason this is not sending the cookie to the
+    // test server, probably because the cookie itself is not properly
+    // initialized. Below I manually set the Cookie header instead.
+    CookieStore store = new BasicCookieStore();
+    store.addCookie(authCookie);
+    client.setCookieStore(store);
+    return client;
+  }
+  
   private String speedometerServiceRequest(String url, String jsonString) 
       throws IOException {
     
@@ -200,24 +310,7 @@ public class Checkin {
       }
     }
     
-    /* TODO(Wenjie): the post method sometimes takes a very long time to finish.
-     * POST_TIMEOUT_MILLISEC should be set in a more adaptive way based on the average
-     * network condition under test. */
-    HttpParams httpParameters = new BasicHttpParams();
-    // Set the timeout in milliseconds until a connection is established.
-    HttpConnectionParams.setConnectionTimeout(httpParameters, POST_TIMEOUT_MILLISEC);
-    // Set the default socket timeout (SO_TIMEOUT)
-    // in milliseconds which is the timeout for waiting for data.
-    HttpConnectionParams.setSoTimeout(httpParameters, POST_TIMEOUT_MILLISEC);
-    DefaultHttpClient client = new DefaultHttpClient(httpParameters);
-    // TODO(mdw): For some reason this is not sending the cookie to the
-    // test server, probably because the cookie itself is not properly
-    // initialized. Below I manually set the Cookie header instead.
-    CookieStore store = new BasicCookieStore();
-    store.addCookie(authCookie);
-    client.setCookieStore(store);
-    Log.i(SpeedometerApp.TAG, "authCookie is: " + authCookie);
-    
+    HttpClient client = getNewHttpClient();
     String fullurl = serverUrl + "/" + url;
     HttpPost postMethod = new HttpPost(fullurl);
     
@@ -234,6 +327,7 @@ public class Checkin {
     postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
 
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
+    Log.i(SpeedometerApp.TAG, "Sending request: " + fullurl);
     String result = client.execute(postMethod, responseHandler);
     return result;
   }
