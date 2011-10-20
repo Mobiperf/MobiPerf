@@ -4,10 +4,13 @@ package com.google.wireless.speed.speedometer;
 
 import com.google.wireless.speed.speedometer.MeasurementScheduler.SchedulerBinder;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.TabActivity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -32,6 +35,7 @@ public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
   
+  private static final int DIALOG_CONSENT = 0;
   private MeasurementScheduler scheduler;
   private TabHost tabHost;
   private boolean isBound = false;
@@ -145,6 +149,9 @@ public class SpeedometerApp extends TabActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     
+    /* Before doing anything, show the consent dialog. */
+    showDialog(DIALOG_CONSENT);
+    
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
      * on these properties but may enforce them in future versions.
@@ -202,6 +209,15 @@ public class SpeedometerApp extends TabActivity {
     this.registerReceiver(this.receiver, filter);
   }
   
+  protected Dialog onCreateDialog(int id) {
+    switch(id) {
+    case DIALOG_CONSENT:
+      return showConsentDialog();
+    default:
+      return null;
+    }
+}
+  
   private void initializeStatusBar() {
     if (this.scheduler.isPauseRequested()) {
       updateStatusBar(SpeedometerApp.this.getString(R.string.pauseMessage));
@@ -235,6 +251,21 @@ public class SpeedometerApp extends TabActivity {
       isBindingToService = true;
     }
   }
+  
+  private Dialog showConsentDialog() {
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setMessage(getString(R.string.consentDialogMsg))
+           .setCancelable(false)
+           .setPositiveButton("Okay, got it", null)
+           .setNegativeButton("No thanks", new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int id) {
+                 quitApp();
+               }
+           });
+    Log.i(SpeedometerApp.TAG, "Showing consent dialog");
+    return builder.create(); 
+  }
+  
   
   @Override
   protected void onStart() {

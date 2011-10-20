@@ -47,4 +47,20 @@
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
     <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
+    <string name="consentDialogMsg">
+	Welcome to Speedometer!\n\nThis app runs in the background on
+	your device and periodically runs network measurements (ping,
+	traceroute, DNS lookups, and HTTP fetches) and uploads measurement
+	results to http://speedometer.googleplex.com. The data collected by
+	your device will help Google build a map of 3G network performance.
+	\n\nMeasurement data is associated with your @google.com ID. If you have
+	enabled location services on this device, the coarse-grained
+	(network-based) location will be associated with each measurement as
+	well. You can visit http://speedometer.googleplex.com to see the data
+	that has been collected by your device.\n\nTo avoid draining your battery,
+	Speedometer will not collect any data when your battery is below 80%
+	(by default). The app uploads new measurements once an hour. You can
+	change these settings in the Menu > Settings page.\n\nIf you ever wish to
+	disable data collection, you can select Menu > Quit or uninstall the
+	app.\n\nIf you have any questions, please contact speedometer@google.com.</string>
 </resources>
