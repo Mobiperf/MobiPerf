@@ -58,10 +58,16 @@ class Device(webapp.RequestHandler):
                       in device.devicetask_set]
 
       # Get measurements
-      query = db.GqlQuery('SELECT * FROM Measurement '
-                          'WHERE ANCESTOR IS :1 '
-                          'ORDER BY timestamp DESC',
-                          device.key())
+      if self.request.get('all') == '1':
+        query = db.GqlQuery('SELECT * FROM Measurement '
+                            'WHERE ANCESTOR IS :1 '
+                            'ORDER BY timestamp DESC',
+                            device.key())
+      else:
+        query = db.GqlQuery('SELECT * FROM Measurement '
+                            'WHERE ANCESTOR IS :1 AND success = TRUE '
+                            'ORDER BY timestamp DESC',
+                            device.key())
       measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
 
       template_args = {
