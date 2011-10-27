@@ -168,7 +168,6 @@ public class MeasurementScheduler extends Service {
           if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == 
               Config.MEASUREMENT_END_PROGRESS) {
             completedMeasurementCnt++;
-            updateNotificationBar();
             updateResultsConsole(intent);
           }
         } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
@@ -181,13 +180,19 @@ public class MeasurementScheduler extends Service {
     this.registerReceiver(broadcastReceiver, filter);
     
     initializeConsoles();
-    startSpeedomterInForeGround();
+    
+    // TODO(mdw): Make this a user-selectable option
+    //startSpeedomterInForeGround();
   }
   
   public boolean hasBatteryToScheduleExperiment() {
     return powerManager.canScheduleExperiment();
   }
   
+  /**
+   * This will put a notification icon in the phone status bar, and keep the service
+   * in the foreground, preventing it from being killed in low-memory situations.
+   */
   private void startSpeedomterInForeGround() {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -392,14 +397,16 @@ public class MeasurementScheduler extends Service {
   public synchronized void pause() {
     sendStringMsg("Scheduler pausing");
     this.pauseRequested = true;
-    refreshNotificationAndStatusBar();
+    updateStatus();
+    updateNotificationBar("Speedometer paused");
   }
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
     sendStringMsg("Scheduler resuming");
     this.pauseRequested = false;
-    refreshNotificationAndStatusBar(); 
+    updateStatus(); 
+    updateNotificationBar("Speedometer started");
   }
   
   /** Return whether new tasks can be scheduled */
@@ -465,48 +472,33 @@ public class MeasurementScheduler extends Service {
     } catch (ClassCastException e) {
       Log.e(SpeedometerApp.TAG, "cannot compare this task against existing ones");
       return false;
-    } finally {
-      updateNotificationBar();
     }
   }
   
-  private void updateNotificationBar() {
+  private void updateNotificationBar(String notificationMsg) {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
     PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
         PendingIntent.FLAG_CANCEL_CURRENT);
-
+    
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
     Notification notice = new Notification(R.drawable.icon, 
-        getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+        notificationMsg, System.currentTimeMillis());
 
-    String notificationContent;
-    if (isPauseRequested()) {
-      notificationContent = "Speedometer is paused";
-    } else if (!powerManager.canScheduleExperiment()) {
-      notificationContent = "Battery below threshold";
-    } else {
-      notificationContent = completedMeasurementCnt + " completed tasks, ";
-      notificationContent += getPendingTaskCount() + " pending tasks";
-    }
     //This is deprecated in 3.x. But most phones still run 2.x systems
-    notice.setLatestEventInfo(this, "Speedometer", 
-        notificationContent, pendIntent);
+    notice.setLatestEventInfo(this, "Speedometer", notificationMsg, pendIntent);
+
 
     notificationManager.notify(NOTIFICATION_ID, notice);
   }
 
   /**
-   * Always call this method to ensure the notification bar and the system
-   * status bar are consistent with the system state. It is best to rely only on
-   * a single entity, the scheduler, to decide what should be printed. Here we
-   * update both the system status bar and the notification bar.
+   * Broadcast an intent to update the system status.
    */
-  public void refreshNotificationAndStatusBar() {
+  public void updateStatus() {
     Intent intent = new Intent();
     intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
     sendBroadcast(intent);
-    updateNotificationBar();
   }
   
   private void updateFromPreference() {
@@ -520,7 +512,7 @@ public class MeasurementScheduler extends Service {
           prefs.getString(getString(R.string.checkinIntervalPrefKey),
           String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
       
-      refreshNotificationAndStatusBar();
+      updateStatus();
       
       Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
           "checkinInterval=" + checkinIntervalSec +
@@ -704,7 +696,8 @@ public class MeasurementScheduler extends Service {
         }
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
-        refreshNotificationAndStatusBar();
+        updateStatus();
+        updateNotificationBar("Performed checkin");
       }
     }
   }
@@ -772,7 +765,7 @@ public class MeasurementScheduler extends Service {
       }
       MeasurementScheduler.this.sendBroadcast(intent);
       // Update the status bar once the user measurement finishes
-      refreshNotificationAndStatusBar();
+      updateStatus();
     }
     
     /**

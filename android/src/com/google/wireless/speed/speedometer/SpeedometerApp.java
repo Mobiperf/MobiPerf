@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -35,6 +36,7 @@ public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
   
+  private boolean consentDialogShown = false;
   private static final int DIALOG_CONSENT = 0;
   private MeasurementScheduler scheduler;
   private TabHost tabHost;
@@ -42,6 +44,12 @@ public class SpeedometerApp extends TabActivity {
   private boolean isBindingToService = false;
   private BroadcastReceiver receiver;
   TextView statusBar;
+  
+  @Override
+  protected void onSaveInstanceState(Bundle savedInstanceState) {
+    savedInstanceState.putBoolean("consentDialogShown", consentDialogShown);
+  }
+  
   
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
@@ -148,9 +156,15 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+    if (savedInstanceState != null) {
+      consentDialogShown = savedInstanceState.getBoolean("consentDialogShown");
+    }
     
-    /* Before doing anything, show the consent dialog. */
-    showDialog(DIALOG_CONSENT);
+    if (!consentDialogShown) {
+      /* Before doing anything, show the consent dialog. */
+      showDialog(DIALOG_CONSENT);
+      consentDialogShown = true;
+    } 
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
@@ -216,7 +230,7 @@ public class SpeedometerApp extends TabActivity {
     default:
       return null;
     }
-}
+  }
   
   private void initializeStatusBar() {
     if (this.scheduler.isPauseRequested()) {
@@ -262,7 +276,6 @@ public class SpeedometerApp extends TabActivity {
                  quitApp();
                }
            });
-    Log.i(SpeedometerApp.TAG, "Showing consent dialog");
     return builder.create(); 
   }
   

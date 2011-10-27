@@ -105,8 +105,7 @@ public class BatteryCapPowerManager {
         
         scheduler.sendBroadcast(intent);
       }
-      
-      scheduler.refreshNotificationAndStatusBar();
+      scheduler.updateStatus();
     }
     
     @Override
@@ -118,7 +117,7 @@ public class BatteryCapPowerManager {
           throw new MeasurementError("Scheduler is paused.");
         }
         if (!pManager.canScheduleExperiment()) {
-          scheduler.refreshNotificationAndStatusBar();
+          scheduler.updateStatus();
           throw new MeasurementError("Not enough power");
         }
         scheduler.setCurrentTask(realTask);
