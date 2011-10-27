@@ -48,6 +48,7 @@ public class SpeedometerApp extends TabActivity {
   @Override
   protected void onSaveInstanceState(Bundle savedInstanceState) {
     savedInstanceState.putBoolean("consentDialogShown", consentDialogShown);
+    super.onSaveInstanceState(savedInstanceState);
   }
   
   
