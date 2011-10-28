@@ -200,7 +200,7 @@ public class MeasurementScheduler extends Service {
         PendingIntent.FLAG_CANCEL_CURRENT);
 
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-    Notification notice = new Notification(R.drawable.icon, 
+    Notification notice = new Notification(R.drawable.icon_statusbar,
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
     //This is deprecated in 3.x. But most phones still run 2.x systems
@@ -482,7 +482,7 @@ public class MeasurementScheduler extends Service {
         PendingIntent.FLAG_CANCEL_CURRENT);
     
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-    Notification notice = new Notification(R.drawable.icon, 
+    Notification notice = new Notification(R.drawable.icon_statusbar, 
         notificationMsg, System.currentTimeMillis());
 
     //This is deprecated in 3.x. But most phones still run 2.x systems
@@ -697,7 +697,6 @@ public class MeasurementScheduler extends Service {
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         updateStatus();
-        updateNotificationBar("Performed checkin");
       }
     }
   }
