@@ -26,5 +26,9 @@
       {% endwith %}
     {% endfor %}
   </table>
+  {% if more_devices_link %}
+  <a href="{{more_devices_link}}"
+    style='font-weight:normal;font-size:small;'>More &gt;&gt;</a> &nbsp;&nbsp;
+  {% endif %}
 </div>
 

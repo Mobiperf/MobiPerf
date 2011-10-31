@@ -7,7 +7,6 @@
 __author__ = 'wenjiezeng@google.com (Wenjie Zeng)'
 
 import datetime
-import logging
 import random
 
 from django import forms
@@ -85,7 +84,10 @@ class MapView(webapp.RequestHandler):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
 
-    measurements = self._GetMeasurements(device_ids, start_date, end_date)
+    # Impose a time limit on this to avoid deadline exceeded errors
+    timelimit = datetime.datetime.utcnow() + datetime.timedelta(seconds=10)
+    measurements = self._GetMeasurements(device_ids, start_date, end_date,
+                                         timelimit)
 
     template_args = {
         'filter_form': form,
@@ -95,13 +97,16 @@ class MapView(webapp.RequestHandler):
     self.response.out.write(template.render(
         'templates/mapview.html', template_args))
 
-  def _GetMeasurements(self, device_ids, start_date=None, end_date=None):
+  def _GetMeasurements(self, device_ids, start_date=None, end_date=None,
+                       timelimit=None):
     """Return a list of measurements.
 
     Args:
       device_ids: List of device IDs to retrieve measurements for.
       start_date: datetime.datetime object representing start date.
       end_date: datetime.datetime object representing end date.
+      timelimit: datetime.datetime object for max time that we should
+        keep querying for results.
     Returns:
       A list of measurement objects.
     """
@@ -109,12 +114,15 @@ class MapView(webapp.RequestHandler):
     per_device_limit = max(1, int(config.GOOGLEMAP_MARKER_LIMIT /
                                   len(device_ids)))
     for device_id in device_ids:
+      if timelimit and datetime.datetime.utcnow() > timelimit:
+        break
       subquery = model.Measurement.GetMeasurementListWithAcl(
-          per_device_limit,
-          device_id,
-          start_date,
-          end_date)
+          limit=per_device_limit,
+          device_id=device_id,
+          start_time=start_date,
+          end_time=end_date)
       results.extend(subquery)
+
     return results
 
   def _GetJavascriptCodeForMap(self, measurements):
@@ -213,6 +221,7 @@ class MapView(webapp.RequestHandler):
 
   def _GetHtmlForMeasurement(self, device_id, meas, values):
     """Returns the HTML string representing a measurement result.
+
     Args:
       device_id: The device ID
       meas: The measurement object.

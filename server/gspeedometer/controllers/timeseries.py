@@ -53,7 +53,8 @@ class Timeseries(webapp.RequestHandler):
       limit = int(limit)
 
     measurements = model.Measurement.GetMeasurementListWithAcl(
-        limit, device_id, start_time, end_time)
+        limit=limit, device_id=device_id,
+        start_time=start_time, end_time=end_time)
 
     tsdata = []
     for meas in measurements:

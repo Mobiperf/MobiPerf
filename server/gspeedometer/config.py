@@ -12,8 +12,9 @@ ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
 # Set of users with rights to administer tasks
 SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
 
-NUM_PROPERTIES_IN_LIST = 25
-NUM_MEASUREMENTS_IN_LIST = 25
+NUM_PROPERTIES_IN_LIST = 5
+NUM_MEASUREMENTS_IN_LIST = 20
+NUM_DEVICES_IN_LIST = 20
 
 GOOGLE_MAP_ZOOM = 15
 DEFAULT_GOOGLEMAP_ICON_IMAGE = '/static/green_location_pin.png'
@@ -31,11 +32,9 @@ LOCATION_FUZZ_FACTOR = 0.001
 # The number of markers to show on google map per device
 GOOGLEMAP_MARKER_LIMIT = 500
 # The number of timeseries points to retrieve
-TIMESERIES_POINT_LIMIT = 250
+TIMESERIES_POINT_LIMIT = 100
 # The total number of elements to fetch for a given query
 QUERY_FETCH_LIMIT = 500
-# The number of devices to retrieve per user
-NUM_DEVICES_PER_USER = 20
 # The minimum ping delay in ms that we consider 'slow'
 SLOW_PING_THRESHOLD_MS = 150
 # The minimum dns lookup delay in ms that we consider 'slow'
@@ -48,3 +47,6 @@ LONG_TRACEROUTE_HOP_COUNT_THRESHOLD = 14
 BATTERY_INFO_INTERVAL_HOUR = 2
 # The maximum time span in days the query covers
 MAX_QUERY_INTERVAL_DAY = 31
+
+# Timespan over which we consider a device to be active
+ACTIVE_DAYS = 5

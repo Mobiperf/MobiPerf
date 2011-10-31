@@ -87,8 +87,26 @@ m.connect('/timeseries/data',
 application = wsgi.WSGIApplication(m, debug=True)
 
 
-def main():
+def real_main():
   run_wsgi_app(application)
+
+
+def profile_main():
+  # This is the main function for profiling
+  import cProfile, pstats, StringIO, logging
+  prof = cProfile.Profile()
+  prof = prof.runctx('real_main()', globals(), locals())
+  print '<pre>'
+  stats = pstats.Stats(prof)
+  stats.sort_stats('cumulative')
+  stats.print_stats(80)  # 80 = how many to print
+  stats.print_callees()
+  stats.print_callers()
+  print '</pre>'
+
+
+#main = profile_main
+main = real_main
 
 
 if __name__ == '__main__':

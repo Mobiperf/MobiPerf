@@ -18,6 +18,9 @@
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
+import urllib
+import urlparse
+
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -58,6 +61,7 @@ class Device(webapp.RequestHandler):
                       in device.devicetask_set]
 
       # Get measurements
+      cursor = self.request.get('measurement_cursor')
       if self.request.get('all') == '1':
         query = db.GqlQuery('SELECT * FROM Measurement '
                             'WHERE ANCESTOR IS :1 '
@@ -68,7 +72,21 @@ class Device(webapp.RequestHandler):
                             'WHERE ANCESTOR IS :1 AND success = TRUE '
                             'ORDER BY timestamp DESC',
                             device.key())
+      if cursor:
+        query.with_cursor(cursor)
+
       measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
+      # If there are more measurements to show, give the user a cursor
+      if len(measurements) == config.NUM_MEASUREMENTS_IN_LIST:
+        cursor = query.cursor()
+        parsed_url = list(urlparse.urlparse(self.request.url))
+        url_query_dict = {'device_id': device_id,
+                          'measurement_cursor': cursor,
+                          'all': self.request.get('all')}
+        parsed_url[4] = urllib.urlencode(url_query_dict)
+        more_measurements_link = urlparse.urlunparse(parsed_url)
+      else:
+        more_measurements_link = None
 
       template_args = {
           'error': errormsg,
@@ -76,6 +94,7 @@ class Device(webapp.RequestHandler):
           'dev': device,
           'properties': properties,
           'measurements': measurements,
+          'more_measurements_link': more_measurements_link,
           'schedule': cur_schedule,
           'user': users.get_current_user().email(),
           'logout_link': users.create_logout_url('/'),

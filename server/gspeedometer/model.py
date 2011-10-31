@@ -52,13 +52,14 @@ class DeviceInfo(db.Model):
     return lastup.timestamp
 
   @classmethod
-  def GetDeviceListWithAcl(cls):
+  def GetDeviceListWithAcl(cls, cursor=None):
     """Return a query for devices that can be accessed by the current user."""
-    all_devices = cls.all()
-    if acl.UserIsAdmin():
-      return all_devices
-    else:
-      return all_devices.filter('user =', users.get_current_user())
+    query = cls.all()
+    if not acl.UserIsAdmin():
+      query.filter('user =', users.get_current_user())
+    if cursor:
+      query.with_cursor(cursor)
+    return query
 
   @classmethod
   def GetDeviceWithAcl(cls, device_id):
@@ -177,47 +178,34 @@ class Measurement(db.Expando):
                                 start_time=None, end_time=None,
                                 exclude_errors=True):
     """Return a list of measurements that are accessible by the current user."""
-    user = users.get_current_user()
-    query = cls.all()
-    if exclude_errors:
-      query.filter('success =', True)
-    query.order('-timestamp')
-
     if device_id:
-      device = DeviceInfo.GetDeviceWithAcl(device_id)
-      query.ancestor(device.key())
-    if start_time:
-      query.filter('timestamp >=', start_time)
-    if end_time:
-      query.filter('timestamp <=', end_time)
-
-    # This query will work if either the device is specified
-    # or the user is an admin
-    if device_id or acl.UserIsAdmin():
-      if limit:
-        return query.fetch(limit)
-      else:
-        return query.fetch(config.QUERY_FETCH_LIMIT)
+      try:
+        devices = [DeviceInfo.GetDeviceWithAcl(device_id)]
+      except RuntimeError:
+        devices = []
     else:
-      # Need to check each result to see if user is allowed to access
-      # this device.
-      retval = []
-      for measurement in query.fetch(config.QUERY_FETCH_LIMIT):
-        # Need to catch case where device has been deleted
-        try:
-          device_info = measurement.device_properties.device_info
-          if device_info.user == user:
-            retval.append(measurement)
-            if limit and len(retval) == limit:
-              return retval
+      devices = list(DeviceInfo.GetDeviceListWithAcl())
 
-        except db.ReferencePropertyResolveError:
-          logging.exception('Device deleted for measurement %s',
-                            measurement.key().id())
-          # Skip this measurement
-          continue
+    if not devices:
+      return []
 
-      return retval
+    results = []
+    limit = limit or config.QUERY_FETCH_LIMIT
+    per_query_limit = max(1, int(limit / len(devices)))
+
+    for device in devices:
+      query = cls.all()
+      query.ancestor(device.key())
+      if exclude_errors:
+        query.filter('success =', True)
+      query.order('-timestamp')
+      if start_time:
+        query.filter('timestamp >=', start_time)
+      if end_time:
+        query.filter('timestamp <=', end_time)
+      for result in query.fetch(per_query_limit):
+        results.append(result)
+    return results
 
   def GetTaskID(self):
     try:
@@ -229,7 +217,8 @@ class Measurement(db.Expando):
       logging.exception('Cannot resolve task for measurement %s',
                         self.key().id())
       self.task = None
-      self.put()
+      # TODO(mdw): Decide if we should do this here. Can be expensive.
+      #self.put()
       return None
 
   def GetParam(self, key):
