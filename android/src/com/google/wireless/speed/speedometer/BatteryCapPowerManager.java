@@ -81,11 +81,8 @@ public class BatteryCapPowerManager {
     
     private void broadcastMeasurementEnd(MeasurementResult result, MeasurementError error) {
       Log.i(SpeedometerApp.TAG, "Ending PowerAwareTask " + realTask);
-      /* Only broadcast information about measurements if we are above battery threshold and
-       * that the scheduler is not paused. Otherwise, the measurement is simply skipped and we
-       * should not print anything about it.
-       */
-      if (pManager.canScheduleExperiment() && !scheduler.isPauseRequested()) {
+      // Only broadcast information about measurements if they are true errors.
+      if (!(error instanceof MeasurementSkippedException)) {
         Intent intent = new Intent();
         intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
         intent.putExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
@@ -102,7 +99,6 @@ public class BatteryCapPowerManager {
           } 
           intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
         }
-        
         scheduler.sendBroadcast(intent);
       }
       scheduler.updateStatus();
@@ -111,14 +107,20 @@ public class BatteryCapPowerManager {
     @Override
     public MeasurementResult call() throws MeasurementError {
       MeasurementResult result = null;
+      scheduler.sendStringMsg("Running:\n" + realTask.toString());
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
         if (scheduler.isPauseRequested()) {
-          throw new MeasurementError("Scheduler is paused.");
+          Log.i(SpeedometerApp.TAG, "Skipping measurement - scheduler paused");
+          throw new MeasurementSkippedException("Scheduler paused");
         }
         if (!pManager.canScheduleExperiment()) {
-          scheduler.updateStatus();
-          throw new MeasurementError("Not enough power");
+          Log.i(SpeedometerApp.TAG, "Skipping measurement - low battery");
+          throw new MeasurementSkippedException("Not enough battery power");
+        }
+        if (PhoneUtils.getPhoneUtils().getNetwork() == PhoneUtils.NETWORK_WIFI) {
+          Log.i(SpeedometerApp.TAG, "Skipping measurement - on wifi");
+          throw new MeasurementSkippedException("Connected via WiFi");
         }
         scheduler.setCurrentTask(realTask);
         broadcastMeasurementStart();
@@ -141,6 +143,7 @@ public class BatteryCapPowerManager {
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         scheduler.setCurrentTask(null);
+        scheduler.sendStringMsg("Done running:\n" + realTask.toString());
       }
     }
   }
