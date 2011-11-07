@@ -173,7 +173,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     scheduler = parent.getScheduler();
     if (scheduler != null) {
       lastCheckinTimeText.setText("Checking in...");
-      scheduler.handleCheckin();
+      scheduler.handleCheckin(true);
     }
   }
   

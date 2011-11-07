@@ -159,7 +159,7 @@ public class MeasurementScheduler extends Service {
         } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
               intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
           Log.d(SpeedometerApp.TAG, "Checkin intent received");
-          handleCheckin();
+          handleCheckin(false);
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
           Log.d(SpeedometerApp.TAG, "MeasurementIntent intent received");
           handleMeasurement();
@@ -200,7 +200,7 @@ public class MeasurementScheduler extends Service {
         PendingIntent.FLAG_CANCEL_CURRENT);
 
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-    Notification notice = new Notification(R.drawable.icon, 
+    Notification notice = new Notification(R.drawable.icon_statusbar,
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
 
     //This is deprecated in 3.x. But most phones still run 2.x systems
@@ -214,12 +214,12 @@ public class MeasurementScheduler extends Service {
   /**
    * Perform a checkin operation.
    */
-  public void handleCheckin() {
-    if (isPauseRequested()) {
+  public void handleCheckin(boolean force) {
+    if (!force && isPauseRequested()) {
       sendStringMsg("Skipping checkin - app is paused");
       return;
     } 
-    if (!powerManager.canScheduleExperiment()) {
+    if (!force && !powerManager.canScheduleExperiment()) {
       sendStringMsg("Skipping checkin - below battery threshold");
       return;
     }
@@ -240,11 +240,11 @@ public class MeasurementScheduler extends Service {
         Log.i(SpeedometerApp.TAG, "Processing task " + task.toString());
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-          sendStringMsg("Scheduling user measurement:\n" + task);
+          sendStringMsg("Scheduling user task:\n" + task);
           // User task can override the power policy. So a different task wrapper is used.
           future = measurementExecutor.submit(new UserMeasurementTask(task));
         } else {
-          sendStringMsg("Scheduling system measurement:\n" + task);
+          sendStringMsg("Scheduling task:\n" + task);
           future = measurementExecutor.submit(new PowerAwareTask(task, powerManager, this));
         }
         synchronized (pendingTasks) {
@@ -398,7 +398,6 @@ public class MeasurementScheduler extends Service {
     sendStringMsg("Scheduler pausing");
     this.pauseRequested = true;
     updateStatus();
-    updateNotificationBar("Speedometer paused");
   }
   
   /** Enables new tasks to be scheduled */
@@ -406,7 +405,6 @@ public class MeasurementScheduler extends Service {
     sendStringMsg("Scheduler resuming");
     this.pauseRequested = false;
     updateStatus(); 
-    updateNotificationBar("Speedometer started");
   }
   
   /** Return whether new tasks can be scheduled */
@@ -482,7 +480,7 @@ public class MeasurementScheduler extends Service {
         PendingIntent.FLAG_CANCEL_CURRENT);
     
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
-    Notification notice = new Notification(R.drawable.icon, 
+    Notification notice = new Notification(R.drawable.icon_statusbar, 
         notificationMsg, System.currentTimeMillis());
 
     //This is deprecated in 3.x. But most phones still run 2.x systems
@@ -522,7 +520,10 @@ public class MeasurementScheduler extends Service {
     }
   }
   
-  private void sendStringMsg(String str) {
+  /**
+   * Write a string to the system console.
+   */
+  public void sendStringMsg(String str) {
     UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
     this.sendBroadcast(intent);    
   }
@@ -581,7 +582,6 @@ public class MeasurementScheduler extends Service {
 
     for (MeasurementTask task : tasksFromServer) {
       Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
-      sendStringMsg("Adding measurement to task queue " + task.toString());
       this.submitTask(task);
     }
   }
@@ -597,6 +597,7 @@ public class MeasurementScheduler extends Service {
         for (MeasurementTask task : this.pendingTasks.keySet()) {
           future = this.pendingTasks.get(task);
           if (future != null) {
+            sendStringMsg("Finished:\n" + task);
             if (future.isDone()) {
               try {
                 this.pendingTasks.remove(task);
@@ -606,13 +607,21 @@ public class MeasurementScheduler extends Service {
                 } else {
                   Log.e(SpeedometerApp.TAG, "Task execution was canceled");
                   finishedTasks.add(this.getFailureResult(task,
-                      new CancellationException("Task canceled")));
+                      new CancellationException("Task cancelled")));
                 }
               } catch (InterruptedException e) {
                 Log.e(SpeedometerApp.TAG, "Task execution interrupted", e);
               } catch (ExecutionException e) {
-                Log.e(SpeedometerApp.TAG, "Task execution failed", e);
-                finishedTasks.add(this.getFailureResult(task, e.getCause()));
+                if (e.getCause() instanceof MeasurementSkippedException) {
+                  // Don't do anything with this - no need to report skipped measurements
+                  sendStringMsg("Task skipped - " + e.getCause().toString() + "\n" + task);
+                  Log.i(SpeedometerApp.TAG, "Task skipped", e.getCause());
+                } else {
+                  // Log the error
+                  sendStringMsg("Task failed - " + e.getCause().toString() + "\n" + task);
+                  Log.e(SpeedometerApp.TAG, "Task execution failed", e.getCause());
+                  finishedTasks.add(this.getFailureResult(task, e.getCause()));
+                }
               } catch (CancellationException e) {
                 Log.e(SpeedometerApp.TAG, "Task cancelled", e);
               }
@@ -697,7 +706,6 @@ public class MeasurementScheduler extends Service {
       } finally {
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         updateStatus();
-        updateNotificationBar("Performed checkin");
       }
     }
   }
@@ -775,6 +783,7 @@ public class MeasurementScheduler extends Service {
     @Override
     public MeasurementResult call() throws MeasurementError {
       MeasurementResult result = null;
+      sendStringMsg("Running:\n" + realTask.toString());
       try {
         PhoneUtils.getPhoneUtils().acquireWakeLock();
         setCurrentTask(realTask);
@@ -784,6 +793,7 @@ public class MeasurementScheduler extends Service {
         setCurrentTask(null);
         broadcastMeasurementEnd(result);
         PhoneUtils.getPhoneUtils().releaseWakeLock();
+        sendStringMsg("Done running:\n" + realTask.toString());
       }
       return result;
     }

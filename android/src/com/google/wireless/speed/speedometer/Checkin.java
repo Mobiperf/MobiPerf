@@ -145,7 +145,7 @@ public class Checkin {
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
-      sendStringMsg("Checkin received " + jsonArray.length() + " measurement tasks.");
+      sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
       
       for (int i = 0; i < jsonArray.length(); i++) {
         Log.d(SpeedometerApp.TAG, "Parsing index " + i);
