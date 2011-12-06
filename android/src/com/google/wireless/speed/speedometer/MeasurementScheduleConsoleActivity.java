@@ -97,7 +97,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
     this.receiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-        Log.d(SpeedometerApp.TAG, "MeasurementConsole got intent");
+        Logger.d("MeasurementConsole got intent");
         /* The content of the console is maintained by the scheduler. We simply hook up the 
          * view with the content here. */
         updateConsole();
@@ -153,7 +153,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   }
   
   private void updateLastCheckinTime() {
-    Log.i(SpeedometerApp.TAG, "updateLastCheckinTime() called");
+    Logger.i("updateLastCheckinTime() called");
     scheduler = parent.getScheduler();
     if (scheduler != null) {
       Date lastCheckin = scheduler.getLastCheckinTime();
@@ -166,7 +166,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   }
   
   private void updateConsole() {
-    Log.i(SpeedometerApp.TAG, "updateConsole() called");
+    Logger.i("updateConsole() called");
     scheduler = parent.getScheduler();
     if (scheduler != null) {
       AbstractCollection<MeasurementTask> tasks = scheduler.getTaskQueue();
@@ -182,7 +182,7 @@ public class MeasurementScheduleConsoleActivity extends Activity {
   }
   
   private void doCheckin() {
-    Log.i(SpeedometerApp.TAG, "doCheckin() called");
+    Logger.i("doCheckin() called");
     scheduler = parent.getScheduler();
     if (scheduler != null) {
       lastCheckinTimeText.setText("Checking in...");

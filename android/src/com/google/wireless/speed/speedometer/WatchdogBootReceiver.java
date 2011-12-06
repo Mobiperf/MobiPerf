@@ -32,13 +32,13 @@ public class WatchdogBootReceiver extends BroadcastReceiver {
 
   @Override
   public final void onReceive(Context context, Intent intent) {
-    Log.i(SpeedometerApp.TAG, "Boot intent received.");
+    Logger.i("Boot intent received.");
     Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
     
     if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
         Config.DEFAULT_START_ON_BOOT)) {
-      Log.i(SpeedometerApp.TAG, "Starting MeasurementScheduler from watch dog");
+      Logger.i("Starting MeasurementScheduler from watch dog");
       context.startService(serviceIntent);
     }
   }

@@ -143,7 +143,7 @@ public class SpeedometerApp extends TabActivity {
         }
         return true;
       case R.id.menuQuit:
-        Log.i(TAG, "User requests exit. Quiting the app");
+        Logger.i("User requests exit. Quiting the app");
         quitApp();
         return true;
       case R.id.menuSettings:

@@ -16,6 +16,7 @@ package com.google.wireless.speed.speedometer.util;
 
 import com.google.wireless.speed.speedometer.DeviceInfo;
 import com.google.wireless.speed.speedometer.DeviceProperty;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
@@ -73,7 +74,6 @@ import java.util.List;
  */
 public class PhoneUtils {
 
-  private static final String DEBUG_TAG = "PhoneUtils";
   private static final String ANDROID_STRING = "Android";
   /** Returned by {@link #getNetwork()}. */
   public static final String NETWORK_WIFI = "Wifi";
@@ -221,9 +221,9 @@ public class PhoneUtils {
       // Some interesting info to look at in the logs
       NetworkInfo[] infos = connectivityManager.getAllNetworkInfo();
       for (NetworkInfo networkInfo : infos) {
-        Log.i(DEBUG_TAG, "Network: " + networkInfo);
+        Logger.i("Network: " + networkInfo);
       }
-      Log.i(DEBUG_TAG, "Phone type: " + getTelephonyPhoneType() +
+      Logger.i("Phone type: " + getTelephonyPhoneType() +
             ", Carrier: " + getTelephonyCarrierName());
     }
     assert connectivityManager != null;
@@ -363,10 +363,10 @@ public class PhoneUtils {
           LocationProvider provider = manager.getProvider(providerNameIter);
         } catch (SecurityException se) {
           // Not allowed to use this provider
-          Log.w(SpeedometerApp.TAG, "Unable to use provider " + providerNameIter);
+          Logger.w("Unable to use provider " + providerNameIter);
           continue;
         }
-        Log.i(DEBUG_TAG, providerNameIter + ": " +
+        Logger.i(providerNameIter + ": " +
               (manager.isProviderEnabled(providerNameIter) ? "enabled" : "disabled"));
       }
 
@@ -397,13 +397,12 @@ public class PhoneUtils {
       initLocation();
       Location location = locationManager.getLastKnownLocation(locationProviderName);
       if (location == null) {
-        Log.e(SpeedometerApp.TAG,
-              "Cannot obtain location from provider " + locationProviderName);
+        Logger.e("Cannot obtain location from provider " + locationProviderName);
         return new Location("unknown");
       }
       return location;
     } catch (IllegalArgumentException e) {
-      Log.e(SpeedometerApp.TAG, "Cannot obtain location", e);
+      Logger.e("Cannot obtain location", e);
       return new Location("unknown");
     }
   }
@@ -414,7 +413,7 @@ public class PhoneUtils {
       PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
       wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "tag");
     }
-    Log.d(SpeedometerApp.TAG, "PowerLock acquired");
+    Logger.d("PowerLock acquired");
     wakeLock.acquire();
   }
 
@@ -424,9 +423,9 @@ public class PhoneUtils {
     if (wakeLock != null) {
       try {
         wakeLock.release();
-        Log.i(SpeedometerApp.TAG, "PowerLock released");
+        Logger.i("PowerLock released");
       } catch (RuntimeException e) {
-        Log.e(SpeedometerApp.TAG, "Exception when releasing wakeup lock", e);
+        Logger.e("Exception when releasing wakeup lock", e);
       }
     }
   }
@@ -478,22 +477,22 @@ public class PhoneUtils {
 
     @Override
     public void onLocationChanged(Location location) {
-      Log.d(DEBUG_TAG, "location changed");
+      Logger.d("location changed");
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-      Log.d(DEBUG_TAG, "provider disabled: " + provider);
+      Logger.d("provider disabled: " + provider);
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-      Log.d(DEBUG_TAG, "provider enabled: " + provider);
+      Logger.d("provider enabled: " + provider);
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-      Log.d(DEBUG_TAG, "status changed: " + provider + "=" + status);
+      Logger.d("status changed: " + provider + "=" + status);
     }
   }
 
@@ -535,7 +534,7 @@ public class PhoneUtils {
       String packageName = context.getPackageName();
       return context.getPackageManager().getPackageInfo(packageName, 0).versionName;
     } catch (Exception e) {
-      Log.e(SpeedometerApp.TAG, "version name of the application cannot be found", e);
+      Logger.e("version name of the application cannot be found", e);
     }
     return "Unknown";
   }
@@ -579,7 +578,7 @@ public class PhoneUtils {
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
         BatteryManager.BATTERY_STATUS_UNKNOWN) == BatteryManager.BATTERY_STATUS_CHARGING;
     
-    Log.i(SpeedometerApp.TAG, 
+    Logger.i(
         "Current power level is " + curBatteryLevel + " and isCharging = " + isCharging);
   }
   
@@ -689,7 +688,7 @@ public class PhoneUtils {
       InetAddress ipAddress = InetAddress.getByAddress(bytes);
       return ipAddress.getHostAddress();
     } catch (UnknownHostException e) {
-      Log.e(SpeedometerApp.TAG, "error when translating the wifi address to string");
+      Logger.e("error when translating the wifi address to string");
       return null;
     }
   }

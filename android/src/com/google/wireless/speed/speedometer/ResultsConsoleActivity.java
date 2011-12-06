@@ -129,7 +129,7 @@ public class ResultsConsoleActivity extends Activity {
    *  Upgrades the progress bar in the UI.
    *  */
   private void upgradeProgress(int progress, int max) {
-    Log.i(SpeedometerApp.TAG, "Progress is " + progress);
+    Logger.i("Progress is " + progress);
     if (progress >= 0 && progress <= max) {
       progressBar.setProgress(progress);
       this.progressBar.setVisibility(View.VISIBLE);

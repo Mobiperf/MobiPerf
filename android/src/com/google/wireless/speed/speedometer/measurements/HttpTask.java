@@ -16,6 +16,7 @@
 package com.google.wireless.speed.speedometer.measurements;
 
 import com.google.wireless.speed.speedometer.Config;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -264,20 +265,20 @@ public class HttpTask extends MeasurementTask {
         result.addResult("body", Base64.encodeToString(body.array(), Base64.DEFAULT));
       }
       
-      Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
+      Logger.i(MeasurementJsonConvertor.toJsonString(result));
       return result;    
     } catch (MalformedURLException e) {
       errorMsg += e.getMessage() + "\n";
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
     } catch (IOException e) {
       errorMsg += e.getMessage() + "\n";
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
     } finally {
       if (inputStream != null) {
         try {
           inputStream.close();
         } catch (IOException e) {
-          Log.e(SpeedometerApp.TAG, "Fails to close the input stream from the HTTP response");
+          Logger.e("Fails to close the input stream from the HTTP response");
         }
       }
       if (httpClient != null) {

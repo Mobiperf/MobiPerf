@@ -43,7 +43,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     
     /* This should never occur. */
     if (intervalPref == null || batteryPref == null) {
-      Log.w(SpeedometerApp.TAG, "Cannot find some of the preferences");
+      Logger.w("Cannot find some of the preferences");
       Toast.makeText(SpeedometerPreferenceActivity.this, 
         getString(R.string.menuInitializationExceptionToast), Toast.LENGTH_LONG).show();
       return;
@@ -63,10 +63,10 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
             }
             return true;
           } catch (ClassCastException e) {
-            Log.e(SpeedometerApp.TAG, "Cannot cast checkin interval preference value to Integer");
+            Logger.e("Cannot cast checkin interval preference value to Integer");
             return false;
           } catch (NumberFormatException e) {
-            Log.e(SpeedometerApp.TAG, "Cannot cast checkin interval preference value to Integer");
+            Logger.e("Cannot cast checkin interval preference value to Integer");
             return false;
           }
         } else if (prefKey.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
@@ -79,10 +79,10 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
             }
             return true;
           } catch (ClassCastException e) {
-            Log.e(SpeedometerApp.TAG, "Cannot cast battery preference value to Integer");
+            Logger.e("Cannot cast battery preference value to Integer");
             return false;
           } catch (NumberFormatException e) {
-            Log.e(SpeedometerApp.TAG, "Cannot cast battery preference value to Integer");
+            Logger.e("Cannot cast battery preference value to Integer");
             return false;
           }
         }

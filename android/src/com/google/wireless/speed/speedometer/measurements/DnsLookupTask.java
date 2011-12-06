@@ -15,6 +15,7 @@
 package com.google.wireless.speed.speedometer.measurements;
 
 import com.google.wireless.speed.speedometer.Config;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -109,7 +110,7 @@ public class DnsLookupTask extends MeasurementTask {
     for (int i = 0; i < Config.DEFAULT_DNS_COUNT_PER_MEASUREMENT; i++) {
       try {
         DnsLookupDesc taskDesc = (DnsLookupDesc) this.measurementDesc;
-        Log.i(SpeedometerApp.TAG, "Running DNS Lookup for target " + taskDesc.target);
+        Logger.i("Running DNS Lookup for target " + taskDesc.target);
         Date startTime = new Date();
         t1 = System.currentTimeMillis();
         InetAddress inet = InetAddress.getByName(taskDesc.target);
@@ -126,7 +127,7 @@ public class DnsLookupTask extends MeasurementTask {
     }
     
     if (resultInet != null) {
-      Log.i(SpeedometerApp.TAG, "Successfully resolved target address");
+      Logger.i("Successfully resolved target address");
       PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
       MeasurementResult result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId,
           phoneUtils.getDeviceProperty(), DnsLookupTask.TYPE, System.currentTimeMillis() * 1000,
@@ -134,7 +135,7 @@ public class DnsLookupTask extends MeasurementTask {
       result.addResult("address", resultInet.getHostAddress());
       result.addResult("real_hostname", resultInet.getCanonicalHostName());
       result.addResult("time_ms", totalTime / successCnt);
-      Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
+      Logger.i(MeasurementJsonConvertor.toJsonString(result));
       return result;   
     } else {
       throw new MeasurementError("Cannot resovle domain name");
