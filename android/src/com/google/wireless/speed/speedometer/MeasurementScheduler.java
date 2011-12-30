@@ -104,6 +104,7 @@ public class MeasurementScheduler extends Service {
   
   private NotificationManager notificationManager;
   private int completedMeasurementCnt = 0;
+  private int failedMeasurementCnt = 0;
   
   /** The ArrayAdapter that stores the results of user measurements. Persisted upon app exit. */
   public ArrayAdapter<String> userResults;
@@ -180,7 +181,11 @@ public class MeasurementScheduler extends Service {
           Logger.d("MeasurementIntent update intent received");
           if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == 
               Config.MEASUREMENT_END_PROGRESS) {
-            completedMeasurementCnt++;
+            if (intent.getStringExtra(UpdateIntent.ERROR_STRING_PAYLOAD) != null) {
+              failedMeasurementCnt++;
+            } else {
+              completedMeasurementCnt++;
+            }
             updateResultsConsole(intent);
           }
         } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
@@ -192,6 +197,7 @@ public class MeasurementScheduler extends Service {
     };
     this.registerReceiver(broadcastReceiver, filter);
     
+    restoreStats();
     initializeConsoles();
     
     // TODO(mdw): Make this a user-selectable option
@@ -206,6 +212,7 @@ public class MeasurementScheduler extends Service {
    * This will put a notification icon in the phone status bar, and keep the service
    * in the foreground, preventing it from being killed in low-memory situations.
    */
+  @SuppressWarnings("unused")
   private void startSpeedomterInForeGround() {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -344,9 +351,10 @@ public class MeasurementScheduler extends Service {
     Logger.i("starting scheduler");
     sendStringMsg("Scheduler starting");
     if (!isSchedulerStarted) {
+      restoreStats();
       updateFromPreference();
       this.resume();
-      /* There is no onStop() for services. The service is only stopped when the user exists the
+      /* There is no onStop() for services. The service is only stopped when the user exits the
        * application. So don't worry about setting isSchedulerStarted to false.*/
       isSchedulerStarted = true;
     }
@@ -486,6 +494,7 @@ public class MeasurementScheduler extends Service {
     }
   }
   
+  @SuppressWarnings("unused")
   private void updateNotificationBar(String notificationMsg) {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -509,6 +518,8 @@ public class MeasurementScheduler extends Service {
   public void updateStatus() {
     Intent intent = new Intent();
     intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    String statsMsg = completedMeasurementCnt + " completed, " + failedMeasurementCnt + " failed";
+    intent.putExtra(UpdateIntent.STATS_MSG_PAYLOAD, statsMsg);
     sendBroadcast(intent);
   }
   
@@ -575,6 +586,7 @@ public class MeasurementScheduler extends Service {
     saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
     saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
     saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    saveStats();
     
     Logger.i("Shut down all executors and stopping service");
   }
@@ -723,6 +735,7 @@ public class MeasurementScheduler extends Service {
     }
   }
   
+  @SuppressWarnings("unused")
   private synchronized boolean isStopRequested() {
     return this.stopRequested;
   }
@@ -782,7 +795,7 @@ public class MeasurementScheduler extends Service {
       } else {
         String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
         errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
-        intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+        intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD, errorString);
       }
       MeasurementScheduler.this.sendBroadcast(intent);
       // Update the status bar once the user measurement finishes
@@ -810,6 +823,26 @@ public class MeasurementScheduler extends Service {
       }
       return result;
     }
+  }
+  
+  /**
+   * Save measurement statistics to persistent storage.
+   */
+  private void saveStats() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, completedMeasurementCnt);
+    editor.putInt(Config.PREF_KEY_FAILED_MEASUREMENTS, failedMeasurementCnt);
+    editor.commit();
+  }
+  
+  /**
+   * Restore measurement statistics from persistent storage.
+   */
+  private void restoreStats() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    completedMeasurementCnt = prefs.getInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
+    failedMeasurementCnt = prefs.getInt(Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
   }
   
   /**
@@ -884,10 +917,13 @@ public class MeasurementScheduler extends Service {
    * user measurement or a system measurement
    */
   private void updateResultsConsole(Intent intent) {
-    intent.hasExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD);
     int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
         MeasurementTask.INVALID_PRIORITY);
     String msg = intent.getStringExtra(UpdateIntent.STRING_PAYLOAD);
+    if (msg == null) {
+      // Pull out error string instead
+      msg = intent.getStringExtra(UpdateIntent.ERROR_STRING_PAYLOAD);
+    }
     if (msg != null) {
       if (priority == MeasurementTask.USER_PRIORITY) {
         insertStringToConsole(userResults, msg);

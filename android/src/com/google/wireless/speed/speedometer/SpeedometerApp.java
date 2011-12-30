@@ -49,13 +49,14 @@ public class SpeedometerApp extends TabActivity {
   public static final String TAG = "Speedometer";
   
   private boolean consentDialogShown = false;
+  
   private static final int DIALOG_CONSENT = 0;
   private MeasurementScheduler scheduler;
   private TabHost tabHost;
   private boolean isBound = false;
   private boolean isBindingToService = false;
   private BroadcastReceiver receiver;
-  TextView statusBar;
+  TextView statusBar, statsBar;
   
   @Override
   protected void onSaveInstanceState(Bundle savedInstanceState) {
@@ -193,7 +194,6 @@ public class SpeedometerApp extends TabActivity {
     TabHost.TabSpec spec;  // Resusable TabSpec for each tab
     Intent intent;  // Reusable Intent for each tab
 
-    
     // Do the same for the other tabs
     intent = new Intent().setClass(this, MeasurementCreationActivity.class);
     spec = tabHost.newTabSpec(MeasurementCreationActivity.TAB_TAG).setIndicator(
@@ -214,6 +214,7 @@ public class SpeedometerApp extends TabActivity {
     tabHost.setCurrentTabByTag(MeasurementCreationActivity.TAB_TAG);
     
     statusBar = (TextView) findViewById(R.id.systemStatusBar);
+    statsBar = (TextView) findViewById(R.id.systemStatsBar);
     
     // We only need one instance of the scheduler thread
     intent = new Intent(this, MeasurementScheduler.class);
@@ -223,11 +224,17 @@ public class SpeedometerApp extends TabActivity {
       @Override
       // All onXyz() callbacks are single threaded
       public void onReceive(Context context, Intent intent) {
+        // Update the status bar on SYSTEM_STATUS_UPDATE_ACTION intents
         String statusMsg = intent.getStringExtra(UpdateIntent.STATUS_MSG_PAYLOAD);
         if (statusMsg != null) {
           updateStatusBar(statusMsg);
         } else if (scheduler != null) {
           initializeStatusBar();
+        }
+        
+        String statsMsg = intent.getStringExtra(UpdateIntent.STATS_MSG_PAYLOAD);
+        if (statsMsg != null) {
+          updateStatsBar(statsMsg);
         }
       }
     };
@@ -267,6 +274,12 @@ public class SpeedometerApp extends TabActivity {
   private void updateStatusBar(String statusMsg) {
     if (statusMsg != null) {
       statusBar.setText(statusMsg);
+    }
+  }
+  
+  private void updateStatsBar(String statsMsg) {
+    if (statsMsg != null) {
+      statsBar.setText(statsMsg);
     }
   }
   

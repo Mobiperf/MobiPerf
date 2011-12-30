@@ -109,7 +109,7 @@ public class BatteryCapPowerManager {
           if (error != null) {
             errorString += "\n\n" + error.toString();
           } 
-          intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+          intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD, errorString);
         }
         scheduler.sendBroadcast(intent);
       }
