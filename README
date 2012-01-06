@@ -1,8 +1,6 @@
 This is a project to develop a mobile app and service for collecting
-mobile network conditions in the wild.
+mobile network measurements.
 
-See http://go/speedometer for details.
+https://github.com/mdwelsh/Speedometer
 
-Now with git! Making all kinds of wacky changes!
-
-Matt Welsh <mdw@google.com>
+Matt Welsh <mdw@mdw.la>
