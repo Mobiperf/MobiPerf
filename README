@@ -8,6 +8,9 @@ Home page:
 Contact:
   Matt Welsh <mdw@mdw.la>
 
+This code is released under the Apache 2.0 License (see LICENSE for
+details).
+
 Overview of this code
 ---------------------
 
@@ -34,6 +37,18 @@ for managing device checkins, handing out measurement tasks, and
 collecting results. It has a simple Web dashboard for presenting
 measurement results to the user. There is also a mechanism for
 querying measurement results.
+
+IMPORTANT NOTE:
+
+This code was originally developed as an internal measurement tool by
+Google. We decided to open source it to support the mobile networking
+research community. As such, in its current form, the code is designed
+to work on Google's internal AppEngine infrastructure, and will need
+some work to remove the Google dependencies before it can be used more
+broadly. In particular the app checks for a "google.com" account on
+the device and the service assumes that devices and users have
+authenticated with a google.com account. These dependencies will need
+to be stripped out to make this more generally useful.
 
 Protocol Description
 --------------------
