@@ -11,6 +11,27 @@ Contact:
 This code is released under the Apache 2.0 License (see LICENSE for
 details).
 
+How to Contribute to this Codebase
+----------------------------------
+
+The official version of Speedometer is hosted at Github:
+
+  https://github.com/mdwelsh/Speedometer
+
+If you wish to contribute, clone the above repository, make your
+changes, and submit a pull request to mdwelsh on github for review. If
+your changes are approved, your patch will be merged with the
+official code.
+
+All new code should adhere to the Google Style Guides:
+
+Python: http://code.google.com/p/google-styleguide/
+Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
+
+to maintain consistency with internal code that we are developing and
+contributions from the open source community. Please familiarize
+yourself with this style and use it consistently any new code.
+
 Overview of this code
 ---------------------
 
