@@ -48,7 +48,7 @@ some work to remove the Google dependencies before it can be used more
 broadly. In particular the app checks for a "google.com" account on
 the device and the service assumes that devices and users have
 authenticated with a google.com account. These dependencies will need
-to be stripped out to make this more generally useful.
+to be stripped out to make this useful outside of Google.
 
 Protocol Description
 --------------------
