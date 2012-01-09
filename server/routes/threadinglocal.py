@@ -33,4 +33,3 @@ else:
                     raise AttributeError(
                         "No variable %s defined for thread %s"
                         % (attr, g()))
-

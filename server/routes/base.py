@@ -1,4 +1,4 @@
-"""Route and Mapper core classes"""
+"""Route and Mapper core classes."""
 
 import re
 import sys
@@ -1211,4 +1211,3 @@ class Mapper(object):
         self.connect(name_prefix + member_name, member_path, **route_options)
         self.connect("formatted_" + name_prefix + member_name, 
                      member_path + ".:(format)", **route_options)
-    

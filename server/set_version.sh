@@ -1,6 +1,5 @@
 #!/bin/bash
 #
-# Copyright 2011 Google Inc. All Rights Reserved.
 # Author: mdw@google.com (Matt Welsh)
 
 # Tag a version of the codebase and expand the base.html template
