@@ -11,6 +11,19 @@ Contact:
 This code is released under the Apache 2.0 License (see LICENSE for
 details).
 
+IMPORTANT NOTE:
+
+This code was originally developed as an internal measurement tool by
+Google. We decided to open source it to support the mobile networking
+research community. As such, in its current form, the code is designed
+to work on Google's internal AppEngine infrastructure, and will need
+some work to remove the Google dependencies before it can be used more
+broadly. In particular the app checks for a "google.com" account on
+the device and the service assumes that devices and users have
+authenticated with a google.com account. These dependencies will need
+to be stripped out to make this useful outside of Google.
+
+
 How to Contribute to this Codebase
 ----------------------------------
 
@@ -18,10 +31,56 @@ The official version of Speedometer is hosted at Google Code:
 
   https://code.google.com/p/gspeedometer
 
-If you wish to contribute, clone the above repository, make your
-changes, and submit a code review request to me (mdw@google.com).
-If your changes are approved, your patch will be merged with the
-official code.
+If you wish to contribute, you must first submit any propsed changes
+for code review, following the instructions below:
+
+1) Clone the Speedometer code repository using:
+
+   % git clone https://code.google.com/p/gspeedometer
+
+2) Create a new git branch for your proposed changes (if you don't do
+   this, then code reviews will not work correctly):
+
+   % git branch mybranch
+   % git checkout mybranch
+
+3) Edit your code and then do a commit to your local repository.
+
+   % [ edit some files .... ]
+
+   # The command below will commit only to your local repository, so this
+   # is safe!
+   # Be sure to use descriptive log messages for local commits since
+   # these will appear in the file revision history.
+   % git commit -a
+
+4) When you have some changes ready to review, use the "upload.py"
+   script to upload them to the code review system, described below.
+
+5) Once you have an LGTM for your changes, you can commit them to the
+shared repository as follows:
+
+  # Switch back to (local) master branch
+  % git checkout master
+  # Sync with any changes in the shared repository
+  % git pull
+  # Merge your local changes back into the master branch
+  % git merge mybranch
+
+  # Push your changes to the shared repository
+  % git push
+
+The last step requires that you have commit access to the code, which
+we will grant once you have demonstrated that you can go through the
+code review and contribution process.
+
+Code Reviews
+------------
+
+All new code must be submitted for review before it will be accepted
+for inclusion in the main line tree. Code reviews are an excellent way
+to ensure that any new code is designed well and that we can catch
+bugs early.
 
 All new code should adhere to the Google Style Guides:
 
@@ -31,6 +90,51 @@ Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-styl
 to maintain consistency with internal code that we are developing and
 contributions from the open source community. Please familiarize
 yourself with this style and use it consistently any new code.
+
+The code review system is hosted at:
+
+ http://speedometer-reviews.appspot.com/
+
+To use it, follow the below instructions:
+
+1) Download a copy of the Rietveld upload.py script here:
+   http://codereview.appspot.com/static/upload.py
+
+2) Save this script to a local "bin" directory (on your PATH).
+
+3) Edit upload.py and change the line
+     DEFAULT_REVIEW_SERVER = "codereview.appspot.com"
+   to:
+     DEFAULT_REVIEW_SERVER = "speedometer-reviews.appspot.com"
+   (Alternately, you can pass "-s speedometer-reviews.appspot.com"
+   every time you run upload.py.)
+
+4) Be sure any edits you have made have been done in your private
+branch -- not in the "master" branch.
+
+5) In your GIT tree, run:
+
+  % upload.py master
+
+This will upload a patch for your changes to the code review system
+and assign a new "issue ID" to the patch. Be sure to enter a meaningful
+description for the patch.
+
+6) Go to http://speedometer-reviews.appspot.com and click on the
+new issue you created. Click "Edit Issue" on the left and add
+reviewers to the "Reviewers" field. Click "Update Issue".
+
+8) Click on "Publish/Mail Comments" to send the review email off.
+
+9) Respond to comments made by the reviewers and update your code
+accordingly. To update an existing issue with revisions (e.g., when
+addressing review comments), use:
+
+   % upload.py -i <issuenumber> master
+
+When you get your LGTM, you are almost ready to commit; follow the
+instructions above to sync your code with master before pushing the
+changes back to the main tree.
 
 Overview of this code
 ---------------------
@@ -58,18 +162,6 @@ for managing device checkins, handing out measurement tasks, and
 collecting results. It has a simple Web dashboard for presenting
 measurement results to the user. There is also a mechanism for
 querying measurement results.
-
-IMPORTANT NOTE:
-
-This code was originally developed as an internal measurement tool by
-Google. We decided to open source it to support the mobile networking
-research community. As such, in its current form, the code is designed
-to work on Google's internal AppEngine infrastructure, and will need
-some work to remove the Google dependencies before it can be used more
-broadly. In particular the app checks for a "google.com" account on
-the device and the service assumes that devices and users have
-authenticated with a google.com account. These dependencies will need
-to be stripped out to make this useful outside of Google.
 
 Protocol Description
 --------------------
