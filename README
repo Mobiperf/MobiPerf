@@ -3,10 +3,10 @@ mobile network measurements. This is intended for experimental use
 only.
 
 Home page:
-  https://github.com/mdwelsh/Speedometer
+  https://code.google.com/p/gspeedometer
 
 Contact:
-  Matt Welsh <mdw@mdw.la>
+  Matt Welsh <mdw@google.com>
 
 This code is released under the Apache 2.0 License (see LICENSE for
 details).
@@ -14,13 +14,13 @@ details).
 How to Contribute to this Codebase
 ----------------------------------
 
-The official version of Speedometer is hosted at Github:
+The official version of Speedometer is hosted at Google Code:
 
-  https://github.com/mdwelsh/Speedometer
+  https://code.google.com/p/gspeedometer
 
 If you wish to contribute, clone the above repository, make your
-changes, and submit a pull request to mdwelsh on github for review. If
-your changes are approved, your patch will be merged with the
+changes, and submit a code review request to me (mdw@google.com).
+If your changes are approved, your patch will be merged with the
 official code.
 
 All new code should adhere to the Google Style Guides:
