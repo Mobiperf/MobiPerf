@@ -3,7 +3,7 @@ mobile network measurements. This is intended for experimental use
 only.
 
 Home page:
-  https://code.google.com/p/gspeedometer
+  https://github.com/Mobiperf/Speedometer
 
 Contact:
   Matt Welsh <mdw@google.com>
@@ -27,60 +27,21 @@ to be stripped out to make this useful outside of Google.
 How to Contribute to this Codebase
 ----------------------------------
 
-The official version of Speedometer is hosted at Google Code:
+This code can be found here:
+  https://github.com/Mobiperf/Speedometer
 
+This is a github fork of the original Speedometer code found at Google Code:
   https://code.google.com/p/gspeedometer
 
-If you wish to contribute, you must first submit any propsed changes
-for code review, following the instructions below:
-
-1) Clone the Speedometer code repository using:
-
-   % git clone https://code.google.com/p/gspeedometer
-
-2) Create a new git branch for your proposed changes (if you don't do
-   this, then code reviews will not work correctly):
-
-   % git branch mybranch
-   % git checkout mybranch
-
-3) Edit your code and then do a commit to your local repository.
-
-   % [ edit some files .... ]
-
-   # The command below will commit only to your local repository, so this
-   # is safe!
-   # Be sure to use descriptive log messages for local commits since
-   # these will appear in the file revision history.
-   % git commit -a
-
-4) When you have some changes ready to review, use the "upload.py"
-   script to upload them to the code review system, described below.
-
-5) Once you have an LGTM for your changes, you can commit them to the
-shared repository as follows:
-
-  # Switch back to (local) master branch
-  % git checkout master
-  # Sync with any changes in the shared repository
-  % git pull
-  # Merge your local changes back into the master branch
-  % git merge mybranch
-
-  # Push your changes to the shared repository
-  % git push
-
-The last step requires that you have commit access to the code, which
-we will grant once you have demonstrated that you can go through the
-code review and contribution process.
+If you wish to contribute, please clone the above project on github
+and submit a pull request.
 
 Code Reviews
 ------------
 
-All new code must be submitted for review before it will be accepted
-for inclusion in the main line tree. Code reviews are an excellent way
-to ensure that any new code is designed well and that we can catch
-bugs early.
+All pull requests on github will be subject to code review. Code reviews
+are an excellent way to ensure that any new code is designed well and
+that we can catch bugs early.
 
 All new code should adhere to the Google Style Guides:
 
@@ -90,51 +51,6 @@ Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-styl
 to maintain consistency with internal code that we are developing and
 contributions from the open source community. Please familiarize
 yourself with this style and use it consistently any new code.
-
-The code review system is hosted at:
-
- http://speedometer-reviews.appspot.com/
-
-To use it, follow the below instructions:
-
-1) Download a copy of the Rietveld upload.py script here:
-   http://codereview.appspot.com/static/upload.py
-
-2) Save this script to a local "bin" directory (on your PATH).
-
-3) Edit upload.py and change the line
-     DEFAULT_REVIEW_SERVER = "codereview.appspot.com"
-   to:
-     DEFAULT_REVIEW_SERVER = "speedometer-reviews.appspot.com"
-   (Alternately, you can pass "-s speedometer-reviews.appspot.com"
-   every time you run upload.py.)
-
-4) Be sure any edits you have made have been done in your private
-branch -- not in the "master" branch.
-
-5) In your GIT tree, run:
-
-  % upload.py master
-
-This will upload a patch for your changes to the code review system
-and assign a new "issue ID" to the patch. Be sure to enter a meaningful
-description for the patch.
-
-6) Go to http://speedometer-reviews.appspot.com and click on the
-new issue you created. Click "Edit Issue" on the left and add
-reviewers to the "Reviewers" field. Click "Update Issue".
-
-8) Click on "Publish/Mail Comments" to send the review email off.
-
-9) Respond to comments made by the reviewers and update your code
-accordingly. To update an existing issue with revisions (e.g., when
-addressing review comments), use:
-
-   % upload.py -i <issuenumber> master
-
-When you get your LGTM, you are almost ready to commit; follow the
-instructions above to sync your code with master before pushing the
-changes back to the main tree.
 
 Overview of this code
 ---------------------
