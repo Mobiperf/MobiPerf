@@ -27,6 +27,10 @@
     <string name="pingTargetHint">e.g. www.google.com</string>
     <string name="pingTargetLabel">Where to ping?</string>
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
+    <string name="UDPUpTargetLabel"> Server name/IP?</string>
+    <string name="UDPUpTargetHint"> magma.cs.jhu.edu</string>
+    <string name="UDPDownTargetLabel"> Server name/IP?</string>
+    <string name="UDPDownTargetHint"> magma.cs.jhu.edu</string>
     <string name="httpMethodLabel">HTTP Method</string>
     <string name="httpGetRadioText">Get</string>
     <string name="httpHeadRadioText">Head</string>

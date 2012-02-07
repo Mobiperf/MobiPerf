@@ -141,6 +141,56 @@
           android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
       </LinearLayout>
     </TableRow>
-  </TableLayout>
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/UDPUpTargetView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/UDPUpTargetLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/UDPLookupUpText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/UDPUpTargetHint"
+          android:inputType="textUri"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize" android:text="magma.cs.jhu.edu"/>
+      </LinearLayout>
+    </TableRow>
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/UDPDownTargetView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/UDPUpTargetLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/UDPLookupDownText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/UDPDownTargetHint"
+          android:inputType="textUri"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize" android:text="magma.cs.jhu.edu"/>
+      </LinearLayout>
+    </TableRow>    
+    </TableLayout>
   </ScrollView>
 </RelativeLayout>

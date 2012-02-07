@@ -22,7 +22,10 @@ import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
+import com.google.wireless.speed.speedometer.measurements.UDPTask;
+import com.google.wireless.speed.speedometer.measurements.UDPTask.UDPDesc;
 
+// import android.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -97,6 +100,10 @@ public class MeasurementCreationActivity extends Activity {
     text.setOnFocusChangeListener(textFocusChangeListener);
     text = (EditText) findViewById(R.id.dnsLookupText);
     text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.UDPLookupUpText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.UDPLookupDownText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
   }
   
   @Override
@@ -123,6 +130,10 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(UDPTask.TYPE_UP) == 0) {
+      this.findViewById(R.id.UDPUpTargetView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(UDPTask.TYPE_DOWN) == 0) {
+      this.findViewById(R.id.UDPDownTargetView).setVisibility(View.VISIBLE);
     }
   }
   
@@ -175,7 +186,27 @@ public class MeasurementCreationActivity extends Activity {
               MeasurementTask.USER_PRIORITY, params);
           newTask = new DnsLookupTask(desc,
               MeasurementCreationActivity.this.getApplicationContext());
+        } else if (measurementTypeUnderEdit.equals(UDPTask.TYPE_UP)) {
+          EditText UDPTargetText = (EditText) findViewById(R.id.UDPLookupUpText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", UDPTargetText.getText().toString());
+          params.put("direction", "up");
+          UDPDesc desc = new UDPDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
+              Config.DEFAULT_USER_MEASUREMENT_COUNT, MeasurementTask.USER_PRIORITY, params);
+          newTask = new UDPTask(desc, MeasurementCreationActivity.this.getApplicationContext());        
+        } else if (measurementTypeUnderEdit.equals(UDPTask.TYPE_DOWN)) {
+            EditText UDPDownTargetText = (EditText) findViewById(R.id.UDPLookupDownText);
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("target", UDPDownTargetText.getText().toString());
+            params.put("direction", "down");
+            UDPDesc desc = new UDPDesc(null, Calendar.getInstance().getTime(), null,
+                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
+                Config.DEFAULT_USER_MEASUREMENT_COUNT, MeasurementTask.USER_PRIORITY, params);
+            newTask = new UDPTask(desc, MeasurementCreationActivity.this.getApplicationContext()); 
         }
+
+
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
           if (scheduler != null && scheduler.submitTask(newTask)) {
