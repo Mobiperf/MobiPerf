@@ -1,7 +1,0 @@
-This directory contains the UDP server used with UDPUpTask and UDPDownTask measurements. 
-
-udpserver.c: server's source code
-udpclient.c: simple client to test the server
-
-
-Contact: aterzis@google.com

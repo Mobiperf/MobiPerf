@@ -1,0 +1,8 @@
+This directory contains the UDP server used with UDPUTask measurements. 
+
+udpburstserver.c: server's source code
+udpclient.c: simple client to test the server
+Makefile: the makefile
+
+
+Contact: aterzis@google.com

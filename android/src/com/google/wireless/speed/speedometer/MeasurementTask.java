@@ -19,7 +19,7 @@ import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
-import com.google.wireless.speed.speedometer.measurements.UDPTask;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask;
 
 
 import android.content.Context;
@@ -69,10 +69,10 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
-    measurementTypes.put(UDPTask.TYPE_UP, UDPTask.class);
-    measurementDescToType.put(UDPTask.DESCRIPTOR_UP, UDPTask.TYPE_UP);    
-    measurementTypes.put(UDPTask.TYPE_DOWN, UDPTask.class);
-    measurementDescToType.put(UDPTask.DESCRIPTOR_DOWN, UDPTask.TYPE_DOWN);
+    measurementTypes.put(UDPBurstTask.TYPE_DOWN, UDPBurstTask.class);
+    measurementTypes.put(UDPBurstTask.TYPE_UP, UDPBurstTask.class);
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR_UP, UDPBurstTask.TYPE_UP);    
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR_DOWN, UDPBurstTask.TYPE_DOWN);
   }
   
   /** Gets the currently available measurement types*/
