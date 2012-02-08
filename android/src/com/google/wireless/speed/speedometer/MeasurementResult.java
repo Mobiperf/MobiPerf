@@ -195,9 +195,9 @@ public class MeasurementResult {
   private void getUDPBurstResult(StringBuilderPrinter printer, HashMap<String, String> values) {
     UDPBurstDesc desc = (UDPBurstDesc) parameters;
     if (desc.Up) {
-      printer.println("[UDPUp]");
+      printer.println("[UDPBurstUp]");
     } else {
-      printer.println("[UDPDown]");
+      printer.println("[UDPBurstDown]");
     }
     printer.println("Target: " + desc.target);
     printer.println("IP addr: " + values.get("target_ip"));
