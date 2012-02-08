@@ -31,7 +31,7 @@ int main(int argc, char**argv) {
   long lport;
 
   if (argc != 3) {
-    printf("usage:  %s <IP address> port\n", argv[0]);
+    printf("usage:  %s <IP address> <port>\n", argv[0]);
     return -1;
   }
 
