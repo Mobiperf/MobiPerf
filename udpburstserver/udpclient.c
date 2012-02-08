@@ -3,13 +3,12 @@
 
 /* Test UDP client */
 
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <strings.h>
 #include <arpa/inet.h>
-
-#define PORT 31341
 
 #define PKT_ERROR 1
 #define PKT_RESPONSE 2
@@ -29,9 +28,17 @@ int main(int argc, char**argv) {
   int sockfd;
   struct sockaddr_in servaddr;
   struct packet pkt;
+  long lport;
 
-  if (argc != 2) {
-    printf("usage:  %s <IP address>\n", argv[0]);
+  if (argc != 3) {
+    printf("usage:  %s <IP address> port\n", argv[0]);
+    return -1;
+  }
+
+  lport = strtol(argv[2], NULL, 10);
+
+  if (lport < 0 || lport > 65535) {
+    printf("Invalid port %ld\n", lport);
     return -1;
   }
 
@@ -40,7 +47,7 @@ int main(int argc, char**argv) {
   bzero(&servaddr, sizeof(servaddr));
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = inet_addr(argv[1]);
-  servaddr.sin_port = htons(PORT);
+  servaddr.sin_port = htons(lport);
 
   pkt.ptype = htonl(PKT_REQUEST);
   pkt.burstsize = htonl(4);
