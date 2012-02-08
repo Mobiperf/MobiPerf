@@ -22,8 +22,8 @@ import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
-import com.google.wireless.speed.speedometer.measurements.UDPTask;
-import com.google.wireless.speed.speedometer.measurements.UDPTask.UDPDesc;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask.UDPBurstDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.Util;
 
@@ -95,9 +95,8 @@ public class MeasurementResult {
         getDnsResult(printer, values);
       } else if (type == TracerouteTask.TYPE) {
         getTracerouteResult(printer, values);
-      } else if (type == UDPTask.TYPE_UP || 
-          type == UDPTask.TYPE_DOWN) {
-          getUDPResult(printer, values);
+      } else if (type == UDPBurstTask.TYPE) {
+          getUDPBurstResult(printer, values);
       }
       return builder.toString();
     } catch (NumberFormatException e) {
@@ -193,17 +192,17 @@ public class MeasurementResult {
     }
   }
   
-  private void getUDPResult(StringBuilderPrinter printer, HashMap<String, String> values) {
-	    UDPDesc desc = (UDPDesc) parameters;
-	    if (desc.Up) {
-	       printer.println("[UDPUp]");
-	    } else {
-	      printer.println("[UDPDown]");
-	    }
-	    printer.println("Target: " + desc.target);
-	    printer.println("IP addr: " + values.get("target_ip"));
-	    printer.println("PRR: " + values.get("PRR"));
-	    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+  private void getUDPBurstResult(StringBuilderPrinter printer, HashMap<String, String> values) {
+    UDPBurstDesc desc = (UDPBurstDesc) parameters;
+    if (desc.Up) {
+      printer.println("[UDPUp]");
+    } else {
+      printer.println("[UDPDown]");
+    }
+    printer.println("Target: " + desc.target);
+    printer.println("IP addr: " + values.get("target_ip"));
+    printer.println("PRR: " + values.get("PRR"));
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
   }
 
   

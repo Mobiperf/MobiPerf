@@ -1,5 +1,6 @@
-/* UDP Server */
+// Copyright 2012 Google Inc. All Rights Reserved.
 
+/* UDPBurst Server */
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -14,9 +15,9 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
-#define PORT 31341
 #define CLIARRAYSIZE 256
 #define BUFSIZE 1500
+#define STRBUFSIZE 40
 
 #define TIMEOUT 3
 
@@ -26,14 +27,14 @@
 #define PKT_REQUEST 4
 
 struct clientrec {
-  unsigned char full;       // used/unused record
-  unsigned long addr;       // client address
-  unsigned short port;      // client port
-  unsigned int seq;         // burst sequence
-  unsigned int pktrecvd;    // how many packets received so far
-  unsigned int burstsize;   // size of the burst
-  unsigned int pktsize;     // size of packet to be sent
-  struct timeval lastrecvd; // last time a packet was received
+  unsigned char full;        // used/unused record
+  unsigned long addr;        // client address
+  unsigned short port;       // client port
+  unsigned int seq;          // burst sequence
+  unsigned int pktrecvd;     // how many packets received so far
+  unsigned int burstsize;    // size of the burst
+  unsigned int pktsize;      // size of packet to be sent
+  struct timeval lastrecvd;  // last time a packet was received
 };
 
 struct packet {
@@ -48,21 +49,21 @@ struct packet {
  * Prints a log message, including a timestamp. Second argument can be NULL
  *
  */
-
 void logmsg(char *msg1, char *msg2) {
   time_t timer;
   char buffer[25];
   struct tm* tm_info;
 
   assert(msg1);
-
   time(&timer);
   tm_info = localtime(&timer);
   strftime(buffer, 25, "%Y:%m:%d:%H:%M:%S", tm_info);
-  if (msg2)
-    printf("%s %s %s\n",buffer, msg1, msg2);
-  else
-    printf("%s %s\n",buffer, msg1);
+
+  if (msg2) {
+    printf("%s %s %s\n", buffer, msg1, msg2);
+  } else {
+    printf("%s %s\n", buffer, msg1);
+  }
 }
 
 /**
@@ -75,11 +76,10 @@ void logmsg(char *msg1, char *msg2) {
  * -1, on failure
  *
  */
-
 int sendresponse(int sockfd, struct clientrec *clientp, unsigned int type) {
   struct sockaddr_in cliaddr;
   struct packet resppacket;
-  char buf[40];
+  char buf[STRBUFSIZE];
   int resp;
   char *buffer;
 
@@ -108,26 +108,25 @@ int sendresponse(int sockfd, struct clientrec *clientp, unsigned int type) {
       return -1;
   }
 
-  snprintf(buf, 40, "%s b:%d p:%d s:%d", inet_ntoa(cliaddr.sin_addr),
-	   clientp->burstsize, clientp->pktrecvd, clientp->pktsize);
+  snprintf(buf, sizeof(buf), "%s b:%d p:%d s:%d", inet_ntoa(cliaddr.sin_addr),
+           clientp->burstsize, clientp->pktrecvd, clientp->pktsize);
+  buffer = (char *) malloc((size_t) clientp->pktsize);
 
-  buffer = (char *)malloc((size_t)clientp->pktsize);
   if (!buffer) {
     logmsg("Error allocating buffer for response to", buf);
     return -1;
   }
 
-  memcpy(buffer, (void *)&resppacket, sizeof(resppacket));
+  memcpy(buffer, (void *) &resppacket, sizeof(resppacket));
 
   if ((resp = sendto(sockfd, buffer, clientp->pktsize, 0,
-		     (struct sockaddr *) &cliaddr, sizeof(cliaddr))) == -1) {
+                     (struct sockaddr *) &cliaddr, sizeof(cliaddr))) == -1) {
     logmsg("Error sending response to", buf);
     return -1;
   }
 
-  snprintf(buf, 40, "%s b:%d p:%d s:%d", inet_ntoa(cliaddr.sin_addr),
-	   clientp->burstsize, clientp->pktrecvd, resp);
-
+  snprintf(buf, sizeof(buf), "%s b:%d p:%d s:%d", inet_ntoa(cliaddr.sin_addr),
+           clientp->burstsize, clientp->pktrecvd, resp);
   logmsg("Sent response to", buf);
   return 0;
 }
@@ -137,7 +136,6 @@ int sendresponse(int sockfd, struct clientrec *clientp, unsigned int type) {
  * Cleans up record pointed by clientp
  *
  */
-
 void cleanrecord(struct clientrec *clientp) {
   assert(clientp);
 
@@ -150,7 +148,7 @@ void cleanrecord(struct clientrec *clientp) {
   clientp->pktsize = 0;
   clientp->lastrecvd.tv_sec = 0;
   clientp->lastrecvd.tv_usec = 0;
-} // cleanrecord()
+}  // cleanrecord()
 
 /**
  *
@@ -163,7 +161,6 @@ void cleanrecord(struct clientrec *clientp) {
  * -1, on failure
  *
  */
-
 int removeoldrecords(struct clientrec *clientp, int sockfd) {
   int i;
   struct clientrec client;
@@ -175,42 +172,37 @@ int removeoldrecords(struct clientrec *clientp, int sockfd) {
     return -1;
   }
 
-  for (i=0; i< CLIARRAYSIZE; i++) {
+  for (i = 0; i < CLIARRAYSIZE; i++) {
     client = clientp[i];
     if (client.full && curtime.tv_sec - client.lastrecvd.tv_sec > TIMEOUT) {
-      sendresponse(sockfd, clientp+i, PKT_RESPONSE);
-      cleanrecord(clientp+i);
+      sendresponse(sockfd, clientp + i, PKT_RESPONSE);
+      cleanrecord(clientp + i);
     }
   }
   return 0;
-} // removeoldrecords()
+}  // removeoldrecords()
 
 /**
  *
  */
-
 int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
-		  struct sockaddr_in cliaddr) {
+                  struct sockaddr_in cliaddr) {
   unsigned char index;
   struct clientrec *cp;
   struct timeval tim;
   struct packet *clipacketp;
-  char buf[20];
-  int ptype;
-  int i;
-  int burstsize;
+  char buf[STRBUFSIZE];
+  int ptype, i, burstsize;
 
   assert(msgp);
   assert(clientp);
 
   index = ntohl(cliaddr.sin_addr.s_addr) & 0x000000FF;
-
-  clipacketp = (struct packet *)msgp;
-
+  clipacketp = (struct packet *) msgp;
   ptype = ntohl(clipacketp->ptype);
 
   if (ptype != PKT_DATA && ptype != PKT_REQUEST) {
-    cp = (struct clientrec *)malloc(sizeof(struct clientrec));
+    cp = (struct clientrec *) malloc(sizeof(struct clientrec));
     assert(cp);
     cp->addr = ntohl(cliaddr.sin_addr.s_addr);
     cp->port = ntohs(cliaddr.sin_port);
@@ -225,7 +217,7 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
   }
 
   if (ptype == PKT_REQUEST) {
-    cp = (struct clientrec *)malloc(sizeof(struct clientrec));
+    cp = (struct clientrec *) malloc(sizeof(struct clientrec));
     assert(cp);
     burstsize = ntohl(clipacketp->burstsize);
 
@@ -234,9 +226,11 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
     cp->pktsize = ntohl(clipacketp->pktsize);
     cp->burstsize = burstsize;
     cp->seq = 0;
+
     if (cp->pktsize < sizeof(struct packet)) {
       return -1;
     }
+
     for (i = 0; i < burstsize; i++) {
       cp->pktrecvd = i;
       sendresponse(sockfd, cp, PKT_DATA);
@@ -245,19 +239,17 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
     return 0;
   }
 
-  snprintf(buf, 20, "s:%d b:%d p:%d",
-	   ntohl(clipacketp->seq),
-	   ntohl(clipacketp->burstsize),
-	   ntohl(clipacketp->pktnum));
-  logmsg("Data packet" ,buf);
+  snprintf(buf, sizeof(buf), "s:%d b:%d p:%d", ntohl(clipacketp->seq),
+           ntohl(clipacketp->burstsize), ntohl(clipacketp->pktnum));
+  logmsg("Data packet", buf);
 
-  cp = clientp+index;
+  cp = clientp + index;
 
   if (cp->full) {
     // record already exists
     if (cp->addr == ntohl(cliaddr.sin_addr.s_addr) &&
-	cp->port == ntohs(cliaddr.sin_port) &&
-	cp->seq == ntohl(clipacketp->seq)) {
+        cp->port == ntohs(cliaddr.sin_port) &&
+        cp->seq == ntohl(clipacketp->seq)) {
       cp->pktrecvd++;
     } else {
       // record is used by a different client or
@@ -276,7 +268,7 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
     cp->seq = ntohl(clipacketp->seq);
   }
 
-  if (gettimeofday(&tim,NULL) < 0)  {
+  if (gettimeofday(&tim, NULL) < 0)  {
     return -1;
   }
   cp->lastrecvd.tv_sec = tim.tv_sec;
@@ -289,73 +281,85 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
   }
 
   return 0;
-} // processpacket()
+}  // processpacket()
 
-int main(int argc, char**argv)
-{
-  int sockfd,n,i,rc;
-   struct sockaddr_in servaddr,cliaddr;
-   socklen_t len;
-   char mesg[BUFSIZE];
-   struct clientrec clients[CLIARRAYSIZE];
-   fd_set fdset, workset;
-   struct timeval timeout;
+int main(int argc, char**argv) {
+  int sockfd, n, i, rc;
+  struct sockaddr_in servaddr, cliaddr;
+  socklen_t len;
+  char mesg[BUFSIZE];
+  struct clientrec clients[CLIARRAYSIZE];
+  fd_set fdset, workset;
+  struct timeval timeout;
+  long lport;
 
-   // Initialize the client array
+  if (argc != 2) {
+    printf("Usage %s portnumber\n", argv[0]);
+    return -1;
+  }
 
-   for (i = 0; i < CLIARRAYSIZE; i++) {
-     cleanrecord(clients+i);
-   }
+  lport = strtol(argv[1], NULL, 10);
 
-   // Open the socket and bind to the port
-   sockfd=socket(AF_INET,SOCK_DGRAM,0);
-   if (sockfd == -1) {
-     perror("Failed opening socket");
-     return -1;
-   }
+  if (lport < 0 || lport > 65535) {
+    printf("Invalid port %ld\n", lport);
+    return -1;
+  }
 
-   bzero(&servaddr,sizeof(servaddr));
-   servaddr.sin_family = AF_INET;
-   servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
-   servaddr.sin_port=htons(PORT);
-   if (bind(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr))) {
-     perror("Error binding socket");
-     close(sockfd);
-     return -1;
-   }
+  // Initialize the client array
 
-   FD_ZERO(&fdset);
-   FD_SET(sockfd,&fdset);
-   timeout.tv_sec = TIMEOUT;
-   timeout.tv_usec = 0;
+  for (i = 0; i < CLIARRAYSIZE; i++) {
+    cleanrecord(clients + i);
+  }
 
-   for (;;)
-   {
-     memcpy(&workset, &fdset, sizeof(fdset));
-     rc = select(sockfd+1, &workset, NULL, NULL, &timeout);
+  // Open the socket and bind to the port
+  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (sockfd == -1) {
+    perror("Failed opening socket");
+    return -1;
+  }
 
-     if (rc < 0) {
-       perror("select() failed");
-       break;
-     }
+  bzero(&servaddr, sizeof(servaddr));
+  servaddr.sin_family = AF_INET;
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servaddr.sin_port = htons(lport);
+  if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
+    perror("Error binding socket");
+    close(sockfd);
+    return -1;
+  }
 
-     if (rc == 0) {
-       // Timeout occured
-       // logmsg("Cleaning up records", NULL);
-       removeoldrecords(clients,sockfd);
-     }
+  FD_ZERO(&fdset);
+  FD_SET(sockfd, &fdset);
+  timeout.tv_sec = TIMEOUT;
+  timeout.tv_usec = 0;
 
-     if (FD_ISSET(sockfd,&workset)) {
-       len = sizeof(cliaddr);
-       n = recvfrom(sockfd,mesg,BUFSIZE,0,(struct sockaddr *)&cliaddr,&len);
+  for (;;) {
+    memcpy(&workset, &fdset, sizeof(fdset));
+    rc = select(sockfd+1, &workset, NULL, NULL, &timeout);
 
-       logmsg("received message from", inet_ntoa(cliaddr.sin_addr));
+    if (rc < 0) {
+      perror("select() failed");
+      break;
+    }
 
-       if (processpacket(sockfd, clients, mesg, cliaddr)) {
-	 // log error
-	 logmsg("Error processing message", NULL);
-       }
-     }
-   }
-   return 0;
+    if (rc == 0) {
+      // Timeout occured
+      // logmsg("Cleaning up records", NULL);
+      removeoldrecords(clients, sockfd);
+    }
+
+    if (FD_ISSET(sockfd, &workset)) {
+      len = sizeof(cliaddr);
+      n = recvfrom(sockfd, mesg, BUFSIZE, 0, (struct sockaddr *) &cliaddr,
+                   &len);
+
+      logmsg("received message from", inet_ntoa(cliaddr.sin_addr));
+
+      if (processpacket(sockfd, clients, mesg, cliaddr)) {
+        // log error
+        logmsg("Error processing message", NULL);
+      }
+    }
+  }
+  return 0;
 }

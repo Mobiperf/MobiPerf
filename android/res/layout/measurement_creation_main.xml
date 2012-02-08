@@ -151,7 +151,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
         android:textSize="@dimen/regularTextSize"
-        android:text="@string/UDPUpTargetLabel"/>
+        android:text="@string/UDPTargetLabel"/>
       <LinearLayout
         android:paddingLeft="@dimen/marginBetweenColumns"
         android:orientation="horizontal"
@@ -160,10 +160,10 @@
         <EditText android:id="@+id/UDPLookupUpText"
           android:layout_height="@dimen/editTextBoxHeight"
           android:layout_width="match_parent"
-          android:hint="@string/UDPUpTargetHint"
+          android:hint="@string/UDPTargetHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/smallTextSize" android:text="magma.cs.jhu.edu"/>
+          android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
       </LinearLayout>
     </TableRow>
     <TableRow
@@ -176,7 +176,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
         android:textSize="@dimen/regularTextSize"
-        android:text="@string/UDPUpTargetLabel"/>
+        android:text="@string/UDPTargetLabel"/>
       <LinearLayout
         android:paddingLeft="@dimen/marginBetweenColumns"
         android:orientation="horizontal"
@@ -185,10 +185,10 @@
         <EditText android:id="@+id/UDPLookupDownText"
           android:layout_height="@dimen/editTextBoxHeight"
           android:layout_width="match_parent"
-          android:hint="@string/UDPDownTargetHint"
+          android:hint="@string/UDPTargetHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/smallTextSize" android:text="magma.cs.jhu.edu"/>
+          android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
       </LinearLayout>
     </TableRow>    
     </TableLayout>
