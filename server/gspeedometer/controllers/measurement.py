@@ -34,7 +34,9 @@ MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
                      ('http', 'HTTP get'),
-                     ('ndt', 'NDT measurement')]
+                     ('ndt', 'NDT measurement'),
+                     ('UDPBurst Up', 'UDPBurst Up'),
+                     ('UDPBurst Down', 'UDPBurst Down')]
 
 
 class Measurement(webapp.RequestHandler):
