@@ -40,6 +40,7 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TableLayout;
@@ -62,6 +63,7 @@ public class MeasurementCreationActivity extends Activity {
   private SpeedometerApp parent;
   private String measurementTypeUnderEdit;
   private ArrayAdapter<String> spinnerValues;
+  private String udpDir;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +90,15 @@ public class MeasurementCreationActivity extends Activity {
     
     this.measurementTypeUnderEdit = PingTask.TYPE;
     setupEditTextFocusChangeListener();
+    
+    this.udpDir = "Up";
+    
+    final RadioButton radioUp = (RadioButton) findViewById(R.id.UDPBurstUpButton);
+    final RadioButton radioDown = (RadioButton) findViewById(R.id.UDPBurstDownButton);
+    
+    radioUp.setChecked(true);
+    radioUp.setOnClickListener(new RadioOnClickListener());
+    radioDown.setOnClickListener(new RadioOnClickListener());
   }
   
   private void setupEditTextFocusChangeListener() {
@@ -100,9 +111,7 @@ public class MeasurementCreationActivity extends Activity {
     text.setOnFocusChangeListener(textFocusChangeListener);
     text = (EditText) findViewById(R.id.dnsLookupText);
     text.setOnFocusChangeListener(textFocusChangeListener);
-    text = (EditText) findViewById(R.id.UDPLookupUpText);
-    text.setOnFocusChangeListener(textFocusChangeListener);
-    text = (EditText) findViewById(R.id.UDPLookupDownText);
+    text = (EditText) findViewById(R.id.UDPBurstLookupText);
     text.setOnFocusChangeListener(textFocusChangeListener);
   }
   
@@ -130,10 +139,9 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
-    } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE_UP) == 0) {
-      this.findViewById(R.id.UDPUpTargetView).setVisibility(View.VISIBLE);
-    } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE_DOWN) == 0) {
-      this.findViewById(R.id.UDPDownTargetView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE) == 0) {
+      this.findViewById(R.id.UDPBurstTargetView).setVisibility(View.VISIBLE);
+      this.findViewById(R.id.UDPBurstDirView).setVisibility(View.VISIBLE);
     }
   }
   
@@ -141,6 +149,14 @@ public class MeasurementCreationActivity extends Activity {
     if (textBox != null) {
       InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
       imm.hideSoftInputFromWindow(textBox.getWindowToken(), 0);
+    }
+  }
+  
+  private class RadioOnClickListener implements OnClickListener {
+    @Override
+    public void onClick(View v) {
+      RadioButton rb = (RadioButton) v;
+      MeasurementCreationActivity.this.udpDir = (String) rb.getText();
     }
   }
   
@@ -186,28 +202,17 @@ public class MeasurementCreationActivity extends Activity {
               MeasurementTask.USER_PRIORITY, params);
           newTask = new DnsLookupTask(desc,
               MeasurementCreationActivity.this.getApplicationContext());
-        } else if (measurementTypeUnderEdit.equals(UDPBurstTask.TYPE_UP)) {
-          EditText UDPTargetText = (EditText) findViewById(R.id.UDPLookupUpText);
+        } else if (measurementTypeUnderEdit.equals(UDPBurstTask.TYPE)) {
+          EditText udpTargetText = (EditText) findViewById(R.id.UDPBurstLookupText);
           Map<String, String> params = new HashMap<String, String>();
-          params.put("target", UDPTargetText.getText().toString());
-          params.put("direction", "up");
+          params.put("target", udpTargetText.getText().toString());
+          params.put("direction", udpDir);
           UDPBurstDesc desc = new UDPBurstDesc(null, Calendar.getInstance().getTime(), null,
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT, MeasurementTask.USER_PRIORITY, params);
           newTask = new UDPBurstTask(desc, 
-              MeasurementCreationActivity.this.getApplicationContext());      
-        } else if (measurementTypeUnderEdit.equals(UDPBurstTask.TYPE_DOWN)) {
-            EditText UDPDownTargetText = (EditText) findViewById(R.id.UDPLookupDownText);
-            Map<String, String> params = new HashMap<String, String>();
-            params.put("target", UDPDownTargetText.getText().toString());
-            params.put("direction", "down");
-            UDPBurstDesc desc = new UDPBurstDesc(null, Calendar.getInstance().getTime(), null,
-                Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
-                Config.DEFAULT_USER_MEASUREMENT_COUNT, MeasurementTask.USER_PRIORITY, params);
-            newTask = new UDPBurstTask(desc, 
-                MeasurementCreationActivity.this.getApplicationContext()); 
+              MeasurementCreationActivity.this.getApplicationContext());       
         }
-
 
         if (newTask != null) {
           MeasurementScheduler scheduler = parent.getScheduler();
@@ -293,7 +298,7 @@ public class MeasurementCreationActivity extends Activity {
     public void onNothingSelected(AdapterView<?> parent) {
       // TODO(Wenjie): at the moment there is nothing we need to do here
     }
-  }
+  }  
   
   
 }

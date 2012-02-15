@@ -69,10 +69,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
-    measurementTypes.put(UDPBurstTask.TYPE_DOWN, UDPBurstTask.class);
-    measurementTypes.put(UDPBurstTask.TYPE_UP, UDPBurstTask.class);
-    measurementDescToType.put(UDPBurstTask.DESCRIPTOR_UP, UDPBurstTask.TYPE_UP);    
-    measurementDescToType.put(UDPBurstTask.DESCRIPTOR_DOWN, UDPBurstTask.TYPE_DOWN);
+    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
   }
   
   /** Gets the currently available measurement types*/

@@ -41,10 +41,7 @@ import java.util.Map;
 public class UDPBurstTask extends MeasurementTask {
 
   public static final String TYPE = "UDPBurst";
-  public static final String TYPE_UP = "UDPBurst Up";
-  public static final String TYPE_DOWN = "UDPBurst Down";
-  public static final String DESCRIPTOR_UP = "UDP Up";
-  public static final String DESCRIPTOR_DOWN = "UDP Down";
+  public static final String DESCRIPTOR = "UDP Burst";
 
   private static final int DEFAULT_UDP_PACKET_SIZE = 100;
   private static final int DEFAULT_UDP_BURST = 10;
@@ -72,10 +69,10 @@ public class UDPBurstTask extends MeasurementTask {
     // Declare static parameters specific to SampleMeasurement here
 
     public int packetSizeByte = UDPBurstTask.DEFAULT_UDP_PACKET_SIZE;  
-    public int UDPBurstCount = UDPBurstTask.DEFAULT_UDP_BURST;
+    public int udpBurstCount = UDPBurstTask.DEFAULT_UDP_BURST;
     public int dstPort = UDPBurstTask.DEFAULT_PORT;
     public String target = null;
-    public boolean Up = false;
+    public boolean dirUp = false;
 
     public UDPBurstDesc(String key, Date startTime,
         Date endTime, double intervalSec, long count, 
@@ -118,7 +115,7 @@ public class UDPBurstTask extends MeasurementTask {
         }
         if ((val = params.get("packet_burst")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {
-          this.UDPBurstCount = Integer.parseInt(val);  
+          this.udpBurstCount = Integer.parseInt(val);  
         }
         if ((val = params.get("dst_port")) != null && val.length() > 0 
             && Integer.parseInt(val) > 0) {
@@ -130,8 +127,8 @@ public class UDPBurstTask extends MeasurementTask {
 
       String dir = null;
       if ((dir = params.get("direction")) != null && dir.length() > 0) {
-        if (dir.compareTo("up") == 0) {
-          this.Up = true;
+        if (dir.compareTo("Up") == 0) {
+          this.dirUp = true;
         }
       }
     }
@@ -213,11 +210,11 @@ public class UDPBurstTask extends MeasurementTask {
     byte[] data = byteOut.toByteArray();
     DatagramPacket packet = new DatagramPacket(data, data.length, addr, desc.dstPort);
     // Send burst
-    for (int i = 0; i < desc.UDPBurstCount; i++) {
+    for (int i = 0; i < desc.udpBurstCount; i++) {
       byteOut.reset();
       try {
         dataOut.writeInt(UDPBurstTask.PKT_DATA);
-        dataOut.writeInt(desc.UDPBurstCount);
+        dataOut.writeInt(desc.udpBurstCount);
         dataOut.writeInt(i);
         dataOut.writeInt(desc.packetSizeByte);
         dataOut.writeInt(seq);
@@ -326,12 +323,12 @@ public class UDPBurstTask extends MeasurementTask {
 
     sock = openSocket();
 
-    Log.i(SpeedometerApp.TAG, "Requesting UDP burst:" + desc.UDPBurstCount + " pktsize: " 
+    Log.i(SpeedometerApp.TAG, "Requesting UDP burst:" + desc.udpBurstCount + " pktsize: " 
         + desc.packetSizeByte + " to " + desc.target + ": " + targetIp);
 
     try {
       dataOut.writeInt(UDPBurstTask.PKT_REQUEST);
-      dataOut.writeInt(desc.UDPBurstCount);
+      dataOut.writeInt(desc.udpBurstCount);
       dataOut.writeInt(0);
       dataOut.writeInt(desc.packetSizeByte);
       dataOut.writeInt(seq);
@@ -380,7 +377,7 @@ public class UDPBurstTask extends MeasurementTask {
     byte buffer[] = new byte[desc.packetSizeByte];
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
 
-    for (int i = 0; i < desc.UDPBurstCount; i++) {
+    for (int i = 0; i < desc.udpBurstCount; i++) {
       int ptype, burstsize, pktnum; 
 
       try {
@@ -441,15 +438,15 @@ public class UDPBurstTask extends MeasurementTask {
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
 
     try {
-      if (desc.Up == true) {
+      if (desc.dirUp == true) {
         socket = sendUpBurst();
         pktrecv = recvUpResponse(socket);
-        response = pktrecv / (float) desc.UDPBurstCount;
+        response = pktrecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       } else {
         socket = sendDownRequest();
         pktrecv = recvDownResponse(socket);
-        response = pktrecv / (float) desc.UDPBurstCount;
+        response = pktrecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       }
     } catch (MeasurementError e) {
@@ -482,13 +479,8 @@ public class UDPBurstTask extends MeasurementTask {
    */
   @Override
   public String getDescriptor() {
-    UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
-    
-    if (desc.Up) {
-      return UDPBurstTask.DESCRIPTOR_UP;
-    } else {
-      return UDPBurstTask.DESCRIPTOR_DOWN;
-    }
+    UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;   
+      return UDPBurstTask.DESCRIPTOR;
   }
 
   private void cleanUp() {
@@ -515,7 +507,7 @@ public class UDPBurstTask extends MeasurementTask {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
     String resp;
     
-    if (desc.Up) {
+    if (desc.dirUp) {
       resp = "[UDPUp]\n";
     } else {
       resp = "[UDPDown]\n";
