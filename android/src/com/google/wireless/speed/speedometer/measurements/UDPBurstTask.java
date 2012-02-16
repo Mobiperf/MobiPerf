@@ -40,7 +40,7 @@ import java.util.Map;
  */
 public class UDPBurstTask extends MeasurementTask {
 
-  public static final String TYPE = "UDPBurst";
+  public static final String TYPE = "udp_burst";
   public static final String DESCRIPTOR = "UDP Burst";
 
   private static final int DEFAULT_UDP_PACKET_SIZE = 100;
