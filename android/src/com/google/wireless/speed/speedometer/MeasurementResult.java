@@ -22,6 +22,8 @@ import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask.UDPBurstDesc;
 import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
 import com.google.wireless.speed.speedometer.util.Util;
 
@@ -93,6 +95,8 @@ public class MeasurementResult {
         getDnsResult(printer, values);
       } else if (type == TracerouteTask.TYPE) {
         getTracerouteResult(printer, values);
+      } else if (type == UDPBurstTask.TYPE) {
+          getUDPBurstResult(printer, values);
       }
       return builder.toString();
     } catch (NumberFormatException e) {
@@ -187,6 +191,20 @@ public class MeasurementResult {
       printer.println(hopInfo + "\t\t" + String.format("%.1f", time) + " ms");
     }
   }
+  
+  private void getUDPBurstResult(StringBuilderPrinter printer, HashMap<String, String> values) {
+    UDPBurstDesc desc = (UDPBurstDesc) parameters;
+    if (desc.dirUp) {
+      printer.println("[UDPBurstUp]");
+    } else {
+      printer.println("[UDPBurstDown]");
+    }
+    printer.println("Target: " + desc.target);
+    printer.println("IP addr: " + values.get("target_ip"));
+    printer.println("PRR: " + values.get("PRR"));
+    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+  }
+
   
   /**
    * Removes the quotes surrounding the string. If the string is less than 2 in length,

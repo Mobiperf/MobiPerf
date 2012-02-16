@@ -19,6 +19,8 @@ import com.google.wireless.speed.speedometer.measurements.DnsLookupTask;
 import com.google.wireless.speed.speedometer.measurements.HttpTask;
 import com.google.wireless.speed.speedometer.measurements.PingTask;
 import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
+import com.google.wireless.speed.speedometer.measurements.UDPBurstTask;
+
 
 import android.content.Context;
 import android.content.Intent;
@@ -67,6 +69,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
+    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
   }
   
   /** Gets the currently available measurement types*/
