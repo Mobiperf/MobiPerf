@@ -38,6 +38,7 @@ class AddToScheduleForm(forms.Form):
   param2 = forms.CharField(required=False)
   param3 = forms.CharField(required=False)
   param4 = forms.CharField(required=False)
+  param5 = forms.CharField(required=False)
   count = forms.IntegerField(required=False, initial=-1,
                              min_value=-1, max_value=1000)
   interval = forms.IntegerField(required=True, label='Interval (sec)',
@@ -66,6 +67,7 @@ class Schedule(webapp.RequestHandler):
         param2 = add_to_schedule_form.cleaned_data['param2']
         param3 = add_to_schedule_form.cleaned_data['param3']
         param4 = add_to_schedule_form.cleaned_data['param4']
+        param5 = add_to_schedule_form.cleaned_data['param5']
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count'] or -1
@@ -100,18 +102,12 @@ class Schedule(webapp.RequestHandler):
         elif task.type == 'dns_lookup':
           task.mparam_target = param1
           task.mparam_server = param2
-        elif task.type == 'UDPBurstUp':
+        elif task.type == 'udp_burst':
           task.mparam_target = param1
           task.mparam_packet_size_byte = param2
           task.mparam_packet_burst = param3
           task.mparam_dst_port = param4
-          task.mparam_direction = "up"
-        elif task.type == 'UDPBurstDown':
-          task.mparam_target = param1
-          task.mparam_packet_size_byte = param2
-          task.mparam_packet_burst = param3
-          task.mparam_dst_port = param4
-          task.mparam_direction = "down"
+          task.mparam_direction = param5
         task.put()
 
     schedule = model.Task.all()
