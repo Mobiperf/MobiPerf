@@ -27,9 +27,9 @@
     <string name="pingTargetHint">e.g. www.google.com</string>
     <string name="pingTargetLabel">Where to ping?</string>
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
-    <string name="UDPBurstTargetLabel"> Server name/IP?</string>
+    <string name="UDPBurstTargetLabel">Server name/IP?</string>
     <string name="UDPBurstDirLabel">Direction: </string>
-    <string name="UDPBurstTargetHint"> www.google.com</string>
+    <string name="UDPBurstTargetHint">www.google.com</string>
     <string name="httpMethodLabel">HTTP Method</string>
     <string name="httpGetRadioText">Get</string>
     <string name="httpHeadRadioText">Head</string>
