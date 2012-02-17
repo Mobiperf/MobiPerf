@@ -100,11 +100,11 @@ public class MeasurementResult {
       }
       return builder.toString();
     } catch (NumberFormatException e) {
-      Log.e(SpeedometerApp.TAG, "Exception occurs during constructing result string for user", e);
+      Logger.e("Exception occurs during constructing result string for user", e);
     } catch (ClassCastException e) {
-      Log.e(SpeedometerApp.TAG, "Exception occurs during constructing result string for user", e);
+      Logger.e("Exception occurs during constructing result string for user", e);
     } catch (Exception e) {
-      Log.e(SpeedometerApp.TAG, "Exception occurs during constructing result string for user", e);
+      Logger.e("Exception occurs during constructing result string for user", e);
     }
     return "Measurement has failed";
   }

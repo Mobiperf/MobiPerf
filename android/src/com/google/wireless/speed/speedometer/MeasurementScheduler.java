@@ -104,6 +104,7 @@ public class MeasurementScheduler extends Service {
   
   private NotificationManager notificationManager;
   private int completedMeasurementCnt = 0;
+  private int failedMeasurementCnt = 0;
   
   /** The ArrayAdapter that stores the results of user measurements. Persisted upon app exit. */
   public ArrayAdapter<String> userResults;
@@ -171,16 +172,20 @@ public class MeasurementScheduler extends Service {
           updateFromPreference();
         } else if (intent.getAction().equals(UpdateIntent.CHECKIN_ACTION) ||
               intent.getAction().equals(UpdateIntent.CHECKIN_RETRY_ACTION)) {
-          Log.d(SpeedometerApp.TAG, "Checkin intent received");
+          Logger.d("Checkin intent received");
           handleCheckin(false);
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
-          Log.d(SpeedometerApp.TAG, "MeasurementIntent intent received");
+          Logger.d("MeasurementIntent intent received");
           handleMeasurement();
         } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
-          Log.d(SpeedometerApp.TAG, "MeasurementIntent update intent received");
+          Logger.d("MeasurementIntent update intent received");
           if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == 
               Config.MEASUREMENT_END_PROGRESS) {
-            completedMeasurementCnt++;
+            if (intent.getStringExtra(UpdateIntent.ERROR_STRING_PAYLOAD) != null) {
+              failedMeasurementCnt++;
+            } else {
+              completedMeasurementCnt++;
+            }
             updateResultsConsole(intent);
           }
         } else if (intent.getAction().equals(UpdateIntent.MSG_ACTION)) {
@@ -192,6 +197,7 @@ public class MeasurementScheduler extends Service {
     };
     this.registerReceiver(broadcastReceiver, filter);
     
+    restoreStats();
     initializeConsoles();
     
     // TODO(mdw): Make this a user-selectable option
@@ -206,6 +212,7 @@ public class MeasurementScheduler extends Service {
    * This will put a notification icon in the phone status bar, and keep the service
    * in the foreground, preventing it from being killed in low-memory situations.
    */
+  @SuppressWarnings("unused")
   private void startSpeedomterInForeGround() {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -250,7 +257,7 @@ public class MeasurementScheduler extends Service {
       if (task != null && task.timeFromExecution() <= 0) {
         taskQueue.poll();
         Future<MeasurementResult> future;
-        Log.i(SpeedometerApp.TAG, "Processing task " + task.toString());
+        Logger.i("Processing task " + task.toString());
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
           sendStringMsg("Scheduling user task:\n" + task);
@@ -292,11 +299,11 @@ public class MeasurementScheduler extends Service {
       }
     } catch (IllegalArgumentException e) {
       // Task creation in clone can create this exception
-      Log.e(SpeedometerApp.TAG, "Exception when cloning task");
+      Logger.e("Exception when cloning task");
       sendStringMsg("Exception when cloning task: " + e);
     } catch (Exception e) {
       // We don't want any unexpected exception to crash the process
-      Log.e(SpeedometerApp.TAG, "Exception when handling measurements", e);
+      Logger.e("Exception when handling measurements", e);
       sendStringMsg("Exception running task: " + e);
     }
   }
@@ -341,12 +348,13 @@ public class MeasurementScheduler extends Service {
   @Override 
   public int onStartCommand(Intent intent, int flags, int startId)  {
     // Start up the thread running the service. Using one single thread for all requests
-    Log.i(SpeedometerApp.TAG, "starting scheduler");
+    Logger.i("starting scheduler");
     sendStringMsg("Scheduler starting");
     if (!isSchedulerStarted) {
+      restoreStats();
       updateFromPreference();
       this.resume();
-      /* There is no onStop() for services. The service is only stopped when the user exists the
+      /* There is no onStop() for services. The service is only stopped when the user exits the
        * application. So don't worry about setting isSchedulerStarted to false.*/
       isSchedulerStarted = true;
     }
@@ -376,7 +384,7 @@ public class MeasurementScheduler extends Service {
         System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC, 
         checkinIntervalSec * 1000, checkinIntentSender);
     
-    Log.i(SpeedometerApp.TAG, "Setting checkin interval to " + interval + " seconds");
+    Logger.i("Setting checkin interval to " + interval + " seconds");
   }
   
   /** Returns the checkin interval of the scheduler in seconds */
@@ -478,14 +486,15 @@ public class MeasurementScheduler extends Service {
       //Automatically notifies the scheduler waiting on taskQueue.take()
       return this.taskQueue.add(task);
     } catch (NullPointerException e) {
-      Log.e(SpeedometerApp.TAG, "The task to be added is null");
+      Logger.e("The task to be added is null");
       return false;
     } catch (ClassCastException e) {
-      Log.e(SpeedometerApp.TAG, "cannot compare this task against existing ones");
+      Logger.e("cannot compare this task against existing ones");
       return false;
     }
   }
   
+  @SuppressWarnings("unused")
   private void updateNotificationBar(String notificationMsg) {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
@@ -509,6 +518,8 @@ public class MeasurementScheduler extends Service {
   public void updateStatus() {
     Intent intent = new Intent();
     intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
+    String statsMsg = completedMeasurementCnt + " completed, " + failedMeasurementCnt + " failed";
+    intent.putExtra(UpdateIntent.STATS_MSG_PAYLOAD, statsMsg);
     sendBroadcast(intent);
   }
   
@@ -525,11 +536,11 @@ public class MeasurementScheduler extends Service {
       
       updateStatus();
       
-      Log.i(SpeedometerApp.TAG, "Preference set from SharedPreference: " + 
+      Logger.i("Preference set from SharedPreference: " + 
           "checkinInterval=" + checkinIntervalSec +
           ", minBatThres= " + powerManager.getBatteryThresh());
     } catch (ClassCastException e) {
-      Log.e(SpeedometerApp.TAG, "exception when casting preference values", e);
+      Logger.e("exception when casting preference values", e);
     }
   }
   
@@ -554,7 +565,7 @@ public class MeasurementScheduler extends Service {
     this.checkin.shutDown();
 
     this.unregisterReceiver(broadcastReceiver);
-    Log.i(SpeedometerApp.TAG, "canceling pending intents");
+    Logger.i("canceling pending intents");
 
     if (checkinIntentSender != null) {
       checkinIntentSender.cancel();
@@ -575,8 +586,9 @@ public class MeasurementScheduler extends Service {
     saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
     saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
     saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    saveStats();
     
-    Log.i(SpeedometerApp.TAG, "Shut down all executors and stopping service");
+    Logger.i("Shut down all executors and stopping service");
   }
   
   private void resetCheckin() {
@@ -587,14 +599,14 @@ public class MeasurementScheduler extends Service {
   }
   
   private void getTasksFromServer() throws IOException {
-    Log.i(SpeedometerApp.TAG, "Downloading tasks from the server");
+    Logger.i("Downloading tasks from the server");
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
     // The new task schedule overrides the old one
     removeAllUnscheduledTasks();
 
     for (MeasurementTask task : tasksFromServer) {
-      Log.i(SpeedometerApp.TAG, "added task: " + task.toString());
+      Logger.i("added task: " + task.toString());
       this.submitTask(task);
     }
   }
@@ -618,25 +630,25 @@ public class MeasurementScheduler extends Service {
                   result = future.get();
                   finishedTasks.add(result);
                 } else {
-                  Log.e(SpeedometerApp.TAG, "Task execution was canceled");
+                  Logger.e("Task execution was canceled");
                   finishedTasks.add(this.getFailureResult(task,
                       new CancellationException("Task cancelled")));
                 }
               } catch (InterruptedException e) {
-                Log.e(SpeedometerApp.TAG, "Task execution interrupted", e);
+                Logger.e("Task execution interrupted", e);
               } catch (ExecutionException e) {
                 if (e.getCause() instanceof MeasurementSkippedException) {
                   // Don't do anything with this - no need to report skipped measurements
                   sendStringMsg("Task skipped - " + e.getCause().toString() + "\n" + task);
-                  Log.i(SpeedometerApp.TAG, "Task skipped", e.getCause());
+                  Logger.i("Task skipped", e.getCause());
                 } else {
                   // Log the error
                   sendStringMsg("Task failed - " + e.getCause().toString() + "\n" + task);
-                  Log.e(SpeedometerApp.TAG, "Task execution failed", e.getCause());
+                  Logger.e("Task execution failed", e.getCause());
                   finishedTasks.add(this.getFailureResult(task, e.getCause()));
                 }
               } catch (CancellationException e) {
-                Log.e(SpeedometerApp.TAG, "Task cancelled", e);
+                Logger.e("Task cancelled", e);
               }
             } else if (task.isPassedDeadline()) {
               /* If a task has reached its deadline but has not been run, 
@@ -663,7 +675,7 @@ public class MeasurementScheduler extends Service {
          * ConcurrentModificationException. Since we have synchronized all changes to pendingTasks
          * this should not happen. 
          */
-        Log.e(SpeedometerApp.TAG, "Pending tasks is changed during measurement upload");
+        Logger.e("Pending tasks is changed during measurement upload");
       }
     }
     
@@ -671,18 +683,18 @@ public class MeasurementScheduler extends Service {
       try {
         this.checkin.uploadMeasurementResult(finishedTasks);
       } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, "Error when uploading message");
+        Logger.e("Error when uploading message");
       }
     }
     
-    Log.i(SpeedometerApp.TAG, "A total of " + finishedTasks.size() + " uploaded");
-    Log.i(SpeedometerApp.TAG, "A total of " + this.pendingTasks.size() + " is in pendingTasks");
+    Logger.i("A total of " + finishedTasks.size() + " uploaded");
+    Logger.i("A total of " + this.pendingTasks.size() + " is in pendingTasks");
   }
   
   private class CheckinTask implements Runnable {
     @Override
     public void run() {
-      Log.i(SpeedometerApp.TAG, "checking Speedometer service for new tasks");
+      Logger.i("checking Speedometer service for new tasks");
       lastCheckinTime = Calendar.getInstance();
       try {
         uploadResults();
@@ -696,13 +708,13 @@ public class MeasurementScheduler extends Service {
          * Executor stops all subsequent execution of a periodic task if a raised
          * exception is uncaught. We catch all undeclared exceptions here
          */
-        Log.e(SpeedometerApp.TAG, "Unexpected exceptions caught", e);
+        Logger.e("Unexpected exceptions caught", e);
         if (checkinRetryCnt > Config.MAX_CHECKIN_RETRY_COUNT) {
           /* If we have retried more than MAX_CHECKIN_RETRY_COUNT times upon a checkin failure, 
            * we will stop retrying and wait until the next checkin period*/
           resetCheckin();
         } else if (checkinRetryIntervalSec < checkinIntervalSec) {
-          Log.i(SpeedometerApp.TAG, "Retrying checkin in " + checkinRetryIntervalSec + " seconds");
+          Logger.i("Retrying checkin in " + checkinRetryIntervalSec + " seconds");
           /* Use checkinRetryIntentSender so that the periodic checkin schedule will
            * remain intact
            */
@@ -723,6 +735,7 @@ public class MeasurementScheduler extends Service {
     }
   }
   
+  @SuppressWarnings("unused")
   private synchronized boolean isStopRequested() {
     return this.stopRequested;
   }
@@ -782,7 +795,7 @@ public class MeasurementScheduler extends Service {
       } else {
         String errorString = "Measurement " + realTask.getDescriptor() + " has failed";
         errorString += "\nTimestamp: " + Calendar.getInstance().getTime();
-        intent.putExtra(UpdateIntent.STRING_PAYLOAD, errorString);
+        intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD, errorString);
       }
       MeasurementScheduler.this.sendBroadcast(intent);
       // Update the status bar once the user measurement finishes
@@ -810,6 +823,26 @@ public class MeasurementScheduler extends Service {
       }
       return result;
     }
+  }
+  
+  /**
+   * Save measurement statistics to persistent storage.
+   */
+  private void saveStats() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, completedMeasurementCnt);
+    editor.putInt(Config.PREF_KEY_FAILED_MEASUREMENTS, failedMeasurementCnt);
+    editor.commit();
+  }
+  
+  /**
+   * Restore measurement statistics from persistent storage.
+   */
+  private void restoreStats() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    completedMeasurementCnt = prefs.getInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
+    failedMeasurementCnt = prefs.getInt(Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
   }
   
   /**
@@ -884,10 +917,13 @@ public class MeasurementScheduler extends Service {
    * user measurement or a system measurement
    */
   private void updateResultsConsole(Intent intent) {
-    intent.hasExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD);
     int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
         MeasurementTask.INVALID_PRIORITY);
     String msg = intent.getStringExtra(UpdateIntent.STRING_PAYLOAD);
+    if (msg == null) {
+      // Pull out error string instead
+      msg = intent.getStringExtra(UpdateIntent.ERROR_STRING_PAYLOAD);
+    }
     if (msg != null) {
       if (priority == MeasurementTask.USER_PRIORITY) {
         insertStringToConsole(userResults, msg);

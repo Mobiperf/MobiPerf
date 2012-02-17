@@ -16,6 +16,7 @@
 package com.google.wireless.speed.speedometer.measurements;
 
 import com.google.wireless.speed.speedometer.Config;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -158,15 +159,15 @@ public class PingTask extends MeasurementTask {
     }
     
     try {
-      Log.i(SpeedometerApp.TAG, "running ping command");
+      Logger.i("running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
       return executePingCmdTask();
     } catch (MeasurementError e) {
       try {
-        Log.i(SpeedometerApp.TAG, "running java ping");
+        Logger.i("running java ping");
         return executeJavaPingTask();
       } catch (MeasurementError ee) {
-        Log.i(SpeedometerApp.TAG, "running http ping");
+        Logger.i("running http ping");
         return executeHttpPingTask();
       }
     }
@@ -238,7 +239,7 @@ public class PingTask extends MeasurementTask {
         proc.destroy();
       }
     } catch (Exception e) { 
-      Log.w(SpeedometerApp.TAG, "Unable to kill ping process", e);
+      Logger.w("Unable to kill ping process", e);
     }
   }
   
@@ -265,7 +266,7 @@ public class PingTask extends MeasurementTask {
   
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask() throws MeasurementError {
-    Log.i(SpeedometerApp.TAG, "Starting executePingCmdTask");
+    Logger.i("Starting executePingCmdTask");
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
@@ -276,7 +277,7 @@ public class PingTask extends MeasurementTask {
           Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,
           "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
           Config.PING_COUNT_PER_MEASUREMENT, targetIp);
-      Log.i(SpeedometerApp.TAG, "Running: " + command);
+      Logger.i("Running: " + command);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -316,7 +317,7 @@ public class PingTask extends MeasurementTask {
           packetLoss = 1 - ((double) packetsReceived / (double) packetsSent);
         }
         
-        Log.i(SpeedometerApp.TAG, line);
+        Logger.i(line);
       }
       // Use the output from the ping command to compute packet loss. If that's not
       // available, use an estimation.
@@ -324,18 +325,18 @@ public class PingTask extends MeasurementTask {
         packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       }
       measurementResult = constructResult(rrts, packetLoss, packetsSent);
-      Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(measurementResult));
+      Logger.i(MeasurementJsonConvertor.toJsonString(measurementResult));
     } catch (IOException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (SecurityException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (NumberFormatException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";  
     } catch (InvalidParameterException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } finally {
       // All associated streams with the process will be closed upon destroy()
@@ -343,7 +344,7 @@ public class PingTask extends MeasurementTask {
     }
     
     if (measurementResult == null) {
-      Log.e(SpeedometerApp.TAG, "Error running ping: " + errorMsg);
+      Logger.e("Error running ping: " + errorMsg);
       throw new MeasurementError(errorMsg);
     }
     return measurementResult;
@@ -375,20 +376,20 @@ public class PingTask extends MeasurementTask {
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
         broadcastProgressForUser(progress);
       }
-      Log.i(SpeedometerApp.TAG, "java ping succeeds");
+      Logger.i("java ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (IllegalArgumentException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (IOException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } 
     if (result != null) {
       return result;
     } else {
-      Log.i(SpeedometerApp.TAG, "java ping fails");
+      Logger.i("java ping fails");
       throw new MeasurementError(errorMsg);
     }
   }
@@ -428,20 +429,20 @@ public class PingTask extends MeasurementTask {
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
         broadcastProgressForUser(progress);
       }
-      Log.i(SpeedometerApp.TAG, "HTTP get ping succeeds");
+      Logger.i("HTTP get ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (MalformedURLException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (IOException e) {
-      Log.e(SpeedometerApp.TAG, e.getMessage());
+      Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     }
     if (result != null) {
       return result;
     } else {
-      Log.i(SpeedometerApp.TAG, "HTTP get ping fails");
+      Logger.i("HTTP get ping fails");
       throw new MeasurementError(errorMsg);
     }
   }

@@ -25,6 +25,7 @@ import com.google.myjson.JsonParseException;
 import com.google.myjson.JsonPrimitive;
 import com.google.myjson.JsonSerializationContext;
 import com.google.myjson.JsonSerializer;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementTask;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
@@ -87,22 +88,22 @@ public class MeasurementJsonConvertor {
     } catch (JSONException e) {
       throw new IllegalArgumentException(e);
     } catch (SecurityException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Logger.w(e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (NoSuchMethodException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Logger.w(e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (IllegalArgumentException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Logger.w(e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (InstantiationException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Logger.w(e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (IllegalAccessException e) {
-      Log.w(SpeedometerApp.TAG, e.getMessage());
+      Logger.w(e.getMessage());
       throw new IllegalArgumentException(e);
     } catch (InvocationTargetException e) {
-      Log.w(SpeedometerApp.TAG, e.toString());
+      Logger.w(e.toString());
       throw new IllegalArgumentException(e);
     } 
   }
@@ -135,7 +136,7 @@ public class MeasurementJsonConvertor {
       } catch (NumberFormatException e) {
         throw new JsonParseException("Cannot convert time string: "  + json.toString());
       } catch (IllegalArgumentException e) {
-        Log.e(SpeedometerApp.TAG, "Cannot convert time string:" + json.toString());
+        Logger.e("Cannot convert time string:" + json.toString());
         throw new JsonParseException("Cannot convert time string: " + json.toString());
       } catch (ParseException e) {
         throw new JsonParseException("Cannot convert UTC time string: "  + json.toString());

@@ -103,7 +103,7 @@ public class AccountSelector {
   /** Starts an authentication request  */
   public void authenticate() 
     throws OperationCanceledException, AuthenticatorException, IOException {
-    Log.i(SpeedometerApp.TAG, "AccountSelector.authenticate() running");
+    Logger.i("AccountSelector.authenticate() running");
     /* We only need to authenticate every AUTHENTICATE_PERIOD_MILLI milliseconds, during
      * which we can reuse the cookie. If authentication fails due to expired
      * authToken, the client of AccountSelector can call authImmedately() to request
@@ -116,19 +116,19 @@ public class AccountSelector {
       return;
     }
     
-    Log.i(SpeedometerApp.TAG, "Authenticating. Last authentication is " + 
+    Logger.i("Authenticating. Last authentication is " + 
         timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
     
     AccountManager accountManager = AccountManager.get(
         context.getApplicationContext());
     if (this.authToken != null) {
       // There will be no effect on the token if it is still valid
-      Log.i(SpeedometerApp.TAG, "Invalidating token");
+      Logger.i("Invalidating token");
       accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
     }
     
     Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-    Log.i(SpeedometerApp.TAG, "Got " + accounts.length + " accounts");
+    Logger.i("Got " + accounts.length + " accounts");
     
     if (accounts != null && accounts.length > 0) {
       // TODO(mdw): If multiple accounts, need to pick the correct one
@@ -136,24 +136,23 @@ public class AccountSelector {
       // We prefer google's corporate account to personal accounts such as somebody@gmail.com
       for (Account account : accounts) {
         if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
-          Log.i(SpeedometerApp.TAG, 
-              "Using the preferred google.com account: " + account.name);
+          Logger.i("Using the preferred google.com account: " + account.name);
           accountToUse = account;
           break;
         }
       }
       
-      Log.i(SpeedometerApp.TAG, "Trying to get auth token for " + accountToUse);
+      Logger.i("Trying to get auth token for " + accountToUse);
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
           accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
         public void run(AccountManagerFuture<Bundle> result) {
-          Log.i(SpeedometerApp.TAG, "AccountManagerCallback invoked");
+          Logger.i("AccountManagerCallback invoked");
           try {
             getAuthToken(result);
           } catch (RuntimeException e) {
-            Log.e(SpeedometerApp.TAG, "Failed to get authToken", e);
+            Logger.e("Failed to get authToken", e);
             /* TODO(Wenjie): May ask the user whether to quit the app nicely here if a number
              * of trials have been made and failed. Since Speedometer is basically useless 
              * without checkin
@@ -161,14 +160,14 @@ public class AccountSelector {
           }
         }},
         null);
-      Log.i(SpeedometerApp.TAG, "AccountManager.getAuthToken returned " + future);
+      Logger.i("AccountManager.getAuthToken returned " + future);
     } else {
       throw new RuntimeException("No google account found");
     }
   }
   
   private void getAuthToken(AccountManagerFuture<Bundle> result) {
-    Log.i(SpeedometerApp.TAG, "getAuthToken() called, result " + result);
+    Logger.i("getAuthToken() called, result " + result);
     String errMsg = "Failed to get login cookie. ";
     Bundle bundle;
     try {
@@ -177,24 +176,24 @@ public class AccountSelector {
       if (intent != null) {
         // User input required. (A UI will pop up for user's consent to allow
         // this app access account information.)
-        Log.i(SpeedometerApp.TAG, "Starting account manager activity");
+        Logger.i("Starting account manager activity");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
       } else {
-        Log.i(SpeedometerApp.TAG, "Executing getCookie task");
+        Logger.i("Executing getCookie task");
         synchronized (this) {
           this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
           this.checkinFuture = checkinExecutor.submit(new GetCookieTask());
         }
       }
     } catch (OperationCanceledException e) {
-      Log.e(SpeedometerApp.TAG, errMsg, e);
+      Logger.e(errMsg, e);
       throw new RuntimeException("Can't get login cookie", e);
     } catch (AuthenticatorException e) {
-      Log.e(SpeedometerApp.TAG, errMsg, e);
+      Logger.e(errMsg, e);
       throw new RuntimeException("Can't get login cookie", e);
     } catch (IOException e) {
-      Log.e(SpeedometerApp.TAG, errMsg, e);
+      Logger.e(errMsg, e);
       throw new RuntimeException("Can't get login cookie", e);
     }
   }
@@ -202,7 +201,7 @@ public class AccountSelector {
   private class GetCookieTask implements Callable<Cookie> {    
     @Override
     public Cookie call() {
-      Log.i(SpeedometerApp.TAG, "GetCookieTask running: " + authToken);
+      Logger.i("GetCookieTask running: " + authToken);
       DefaultHttpClient httpClient = new DefaultHttpClient();
       boolean success = false;
       try {
@@ -214,11 +213,11 @@ public class AccountSelector {
             ClientPNames.HANDLE_REDIRECTS, false);
         HttpGet httpGet = new HttpGet(loginUrlPrefix + authToken);
         HttpResponse response;
-        Log.i(SpeedometerApp.TAG, "Accessing: " + loginUrlPrefix + authToken);
+        Logger.i("Accessing: " + loginUrlPrefix + authToken);
         response = httpClient.execute(httpGet);
         if (response.getStatusLine().getStatusCode() != 302) {
           // Response should be a redirect to the "continue" URL.
-          Log.e(SpeedometerApp.TAG, "Failed to get login cookie: " +
+          Logger.e("Failed to get login cookie: " +
               loginUrlPrefix + " returned unexpected error code " +
               response.getStatusLine().getStatusCode());
           throw new RuntimeException("Failed to get login cookie: " +
@@ -226,27 +225,27 @@ public class AccountSelector {
               response.getStatusLine().getStatusCode());
         }
         
-        Log.i(SpeedometerApp.TAG, "Got " + 
+        Logger.i("Got " + 
             httpClient.getCookieStore().getCookies().size() + " cookies back");
         
         for (Cookie cookie : httpClient.getCookieStore().getCookies()) {
-          Log.i(SpeedometerApp.TAG, "Checking cookie " + cookie);
+          Logger.i("Checking cookie " + cookie);
           if (cookie.getName().equals("SACSID")
               || cookie.getName().equals("ACSID")) {
-            Log.i(SpeedometerApp.TAG, "Got cookie " + cookie);
+            Logger.i("Got cookie " + cookie);
             setLastAuthTime(System.currentTimeMillis());
             success = true;
             return cookie;
           }
         }
-        Log.e(SpeedometerApp.TAG, "No (S)ASCID cookies returned");
+        Logger.e("No (S)ASCID cookies returned");
         throw new RuntimeException("Failed to get login cookie: " +
             loginUrlPrefix + " did not return any (S)ACSID cookie");
       } catch (ClientProtocolException e) {
-        Log.e(SpeedometerApp.TAG, "Failed to get login cookie", e);
+        Logger.e("Failed to get login cookie", e);
         throw new RuntimeException("Failed to get login cookie", e);
       } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, "Failed to get login cookie", e);
+        Logger.e("Failed to get login cookie", e);
         throw new RuntimeException("Failed to get login cookie", e);
       } finally {
         httpClient.getParams().setBooleanParameter(

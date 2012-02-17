@@ -14,6 +14,7 @@
  */
 package com.google.wireless.speed.speedometer.util;
 
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.R;
 import com.google.wireless.speed.speedometer.SpeedometerApp;
 
@@ -108,7 +109,7 @@ public class Util {
       return context.getString(R.string.user_agent);
 
     } catch (NameNotFoundException e) {
-      Log.e(SpeedometerApp.TAG, "Couldn't find package information in PackageManager", e);
+      Logger.e("Couldn't find package information in PackageManager", e);
       return context.getString(R.string.default_user_agent);
     }
   }

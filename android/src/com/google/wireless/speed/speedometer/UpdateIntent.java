@@ -21,19 +21,21 @@ import android.content.Intent;
 import java.security.InvalidParameterException;
 
 /**
- * A repackage Intent class that include Speedometer specific information 
+ * A repackaged Intent class that includes Speedometer-specific information. 
  * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
 public class UpdateIntent extends Intent {
   
-  // Different types of payload this intent can carry
+  // Different types of payloads that this intent can carry:
   public static final String STRING_PAYLOAD = "STRING_PAYLOAD";
+  public static final String ERROR_STRING_PAYLOAD = "ERROR_STRING_PAYLOAD";
   public static final String PROGRESS_PAYLOAD = "PROGRESS_PAYLOAD";
   public static final String STATUS_MSG_PAYLOAD = "STATUS_MSG_PAYLOAD";
+  public static final String STATS_MSG_PAYLOAD = "STATS_MSG_PAYLOAD";
   public static final String TASK_PRIORITY_PAYLOAD = "TASK_PRIORITY_PAYLOAD";
   
-  // Different types of actions that this intent can represent
+  // Different types of actions that this intent can represent:
   private static final String PACKAGE_PREFIX = UpdateIntent.class.getPackage().getName();
   public static final String MSG_ACTION = PACKAGE_PREFIX + ".MSG_ACTION";
   public static final String PREFERENCE_ACTION = PACKAGE_PREFIX + ".PREFERENCE_ACTION";

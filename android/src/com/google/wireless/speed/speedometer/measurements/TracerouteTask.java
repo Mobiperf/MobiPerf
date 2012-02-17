@@ -16,6 +16,7 @@
 package com.google.wireless.speed.speedometer.measurements;
 
 import com.google.wireless.speed.speedometer.Config;
+import com.google.wireless.speed.speedometer.Logger;
 import com.google.wireless.speed.speedometer.MeasurementDesc;
 import com.google.wireless.speed.speedometer.MeasurementError;
 import com.google.wireless.speed.speedometer.MeasurementResult;
@@ -176,13 +177,13 @@ public class TracerouteTask extends MeasurementTask {
     boolean success = false;
     ArrayList<HopInfo> hopHosts = new ArrayList<HopInfo>();
     
-    Log.d(SpeedometerApp.TAG, "Starting traceroute on host " + task.target);
+    Logger.d("Starting traceroute on host " + task.target);
     
     
     try {
       hostIp = InetAddress.getByName(target).getHostAddress();
     } catch (UnknownHostException e) {
-      Log.e(SpeedometerApp.TAG, "Cannont resolve host " + target);
+      Logger.e("Cannont resolve host " + target);
       throw new MeasurementError("target " + target + " cannot be resolved");
     }
     MeasurementResult result = null;
@@ -214,7 +215,7 @@ public class TracerouteTask extends MeasurementTask {
           try {
             Thread.sleep((long) (task.pingIntervalSec * 1000));
           } catch (InterruptedException e) {
-            Log.i(SpeedometerApp.TAG, "Sleep interrupted between ping intervals");
+            Logger.i("Sleep interrupted between ping intervals");
           }
         }
         rtt = rtt / task.pingsPerHop;
@@ -226,8 +227,8 @@ public class TracerouteTask extends MeasurementTask {
         for (String ip : hostsAtThisDistance) {
           // If we have reached the final destination hostIp, print it out and clean up
           if (ip.compareTo(hostIp) == 0) {
-            Log.i(SpeedometerApp.TAG, ttl + ": " + hostIp);
-            Log.i(SpeedometerApp.TAG, " Finished! " + target + " reached in " + ttl + " hops");
+            Logger.i(ttl + ": " + hostIp);
+            Logger.i(" Finished! " + target + " reached in " + ttl + " hops");
 
             success = true;
             PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
@@ -243,7 +244,7 @@ public class TracerouteTask extends MeasurementTask {
               }
               result.addResult("hop_" + i + "_rtt_ms", String.format("%.3f", hopInfo.rtt));
             }
-            Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(result));
+            Logger.i(MeasurementJsonConvertor.toJsonString(result));
             return result;
           } else {
             // Otherwise, we aggregate various hosts at a given hop distance for printout
@@ -252,13 +253,13 @@ public class TracerouteTask extends MeasurementTask {
         }
         // Remove the trailing separators
         progressStr.delete(progressStr.length() - 3, progressStr.length());
-        Log.i(SpeedometerApp.TAG, progressStr.toString());
+        Logger.i(progressStr.toString());
 
       } catch (SecurityException e) {
-        Log.e(SpeedometerApp.TAG, "Does not have the permission to run ping on this device");
+        Logger.e("Does not have the permission to run ping on this device");
       } catch (IOException e) {
-        Log.e(SpeedometerApp.TAG, "The ping program cannot be executed");
-        Log.e(SpeedometerApp.TAG, e.getMessage());
+        Logger.e("The ping program cannot be executed");
+        Logger.e(e.getMessage());
       } finally {
         cleanUp(pingProc);
       }
@@ -297,7 +298,7 @@ public class TracerouteTask extends MeasurementTask {
       String hostIp) throws IOException {
     String line = null;
     while ((line = br.readLine()) != null) {
-      Log.d(SpeedometerApp.TAG, line);
+      Logger.d(line);
       if (line.startsWith("From")) {
         String ip = getHostIp(line);
         if (ip != null && ip.compareTo(hostIp) != 0) {
@@ -346,7 +347,7 @@ public class TracerouteTask extends MeasurementTask {
             return false;
           }
         } catch (NumberFormatException e) {
-          Log.d(SpeedometerApp.TAG, ip + " is not a valid IP address");
+          Logger.d(ip + " is not a valid IP address");
           return false;
         }
       }

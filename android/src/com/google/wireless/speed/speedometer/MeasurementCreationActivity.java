@@ -260,7 +260,7 @@ public class MeasurementCreationActivity extends Activity {
           }
         }
       } catch (Exception e) {
-        Log.e(SpeedometerApp.TAG, "Exception when creating user measurements", e);
+        Logger.e("Exception when creating user measurements", e);
         Toast.makeText(MeasurementCreationActivity.this, R.string.invalidUserMeasurementInputToast,
             Toast.LENGTH_LONG).show();
       }
