@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:title="Preferences">
+  <EditTextPreference
+    android:defaultValue="1"
+    android:summary="The interval (hours) speedometer fetches and pushes measurements"
+    android:key="@string/checkinIntervalPrefKey" 
+    android:inputType="number" 
+    android:title="Checkin Interval (hour)"/>    
+  <EditTextPreference
+    android:defaultValue="80"
+    android:summary="The minimum battery percentage to pause all measurements"
+    android:key="@string/batteryMinThresPrefKey" 
+    android:title="Battery Threshold"
+    android:inputType="number"/>
+  <CheckBoxPreference
+    android:title="Start on Boot"
+    android:defaultValue="true"
+    android:summary="Start Speedometer automatically when the phone boots?"
+    android:key="@string/startOnBootPrefKey" />
+</PreferenceScreen>

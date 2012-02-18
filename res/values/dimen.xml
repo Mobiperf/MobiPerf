@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="marginBetweenColumns">20dip</dimen>
+    <dimen name="marginBetweenRows">20dip</dimen>
+    <dimen name="smallMarginBetweenRows">10dip</dimen>
+    <dimen name="largeTextSize">14sp</dimen>
+    <dimen name="regularTextSize">12sp</dimen>
+    <dimen name="smallTextSize">10sp</dimen>
+    <dimen name="editTextBoxHeight">35dip</dimen>
+</resources>
