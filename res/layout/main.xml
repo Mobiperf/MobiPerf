@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:screenOrientation="portrait"
+  android:configChanges="orientation|keyboardHidden|keyboard"
+  android:layout_width="match_parent" 
+  android:layout_height="wrap_content">
+  <TabHost
+    android:id="@android:id/tabhost" 
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout 
+      android:orientation="vertical"
+      android:layout_width="match_parent" 
+      android:layout_height="match_parent">
+      <TabWidget 
+        android:id="@android:id/tabs" 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/largeTextSize"
+        android:gravity="center_horizontal"
+        android:background="@color/lightGray"
+        android:textColor="@color/white"
+        android:id="@+id/systemStatusBar"/>
+      <FrameLayout 
+        android:id="@android:id/tabcontent"
+        android:layout_width="match_parent" 
+        android:layout_height="match_parent"
+        android:padding="5dp">
+      </FrameLayout>
+    </LinearLayout>
+  </TabHost>
+</LinearLayout>
