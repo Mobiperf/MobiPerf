@@ -1,0 +1,58 @@
+{# Template for measurement listing. #}
+
+<div class="measurement-list-section"><h2>Measurement results</h2>
+
+<table class="measurement-list-table section-box" width="100%">
+  <tr>
+    <th>ID</th>
+    <th>Device</th>
+    <th>Task ID</th>
+    <th>Timestamp (UTC)</th>
+    <th>Type</th>
+    <th>Success</th>
+    <th>Params</th>
+    <th>Values</th>
+  </tr>
+  {% for m in measurements %}
+    {% if not m.success %}
+    <tr bgcolor="#e0e0e0">
+    {% else %}
+    <tr>
+    {% endif %}
+      <td><a
+          href="/measurement/view?deviceid={{m.device_properties.device_info.id}}&measid={{m.key.id}}" target="_blank">{{m.key.id}}</a></td>
+      <td><a href="/device/view?device_id={{m.device_properties.device_info.id}}"
+          target="_blank">{{m.device_properties.device_info.id}}</a></td>
+      <td>{% if m.GetTaskID %}{{m.GetTaskID}}{% else %}Unknown{% endif %}</td>
+      <td>{{m.timestamp}}</td>
+      <td>{{m.type}}</td>
+      <td>{{m.success}}</td>
+      <td>
+        <table class="task-param-table">
+          {% for key,value in m.Params.items %}
+          <tr>
+            <td class="task-param-name">{{key}}:</td>
+            <td class="task-param-value">{{value}}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+      <td>
+        <table class="task-param-table">
+          {% for key,value in m.Values.items %}
+          <tr>
+            <td class="task-param-name">{{key}}:</td>
+            <td class="task-param-value">{{value}}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+{% if more_measurements_link %}
+<a href="{{more_measurements_link}}"
+style='font-weight:normal;font-size:small;'>More &gt;&gt;</a>&nbsp;&nbsp;
+{% endif %}
+
+</div>

@@ -1,0 +1,36 @@
+{# Schedule management template. #}
+
+{% extends "base.html" %}
+
+{% block extra_meta_link %}
+  <meta http-equiv="refresh" content="60">
+{% endblock %}
+
+{% block body %}
+{% if add_form %}
+<form method="post" action="/schedule/add">
+  <table>
+<tr>
+<td align=left width=40% style="vertical-align:top; padding: 5px 10px;">
+<table class="schedule-form-table"> {{ add_form.as_table }} </table>
+</td>
+<td align=left width=50% style="vertical-align:top; padding: 5px 20px;">
+<div class="tips-box">
+<ul>
+<li> <b>Type</b> is the type of measurement to perform
+<li> <b>Target</b> is the target of the measurement (e.g., IP address or URL)
+<li> <b>Count</b> is the number of times the measurement should be repeated
+A count of <b>-1</b> means to run the measurement indefinitely.
+<li> <b>Interval</b> is the interval in seconds between each repeating measurement
+</div>
+</td>
+</tr>
+</table>
+<input class="kd-button kd-button-red" type="submit" /></form>
+{% endif %}
+
+{% if schedule %}
+{% include "schedulelist.html" %}
+{% endif %}
+
+{% endblock %}
