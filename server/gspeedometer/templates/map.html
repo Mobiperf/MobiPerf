@@ -1,0 +1,15 @@
+<p>
+<h2>Map</h2>
+<p class="smaller">
+Points will appear on this map once your device uploads measurement results.
+Map points are intentionally randomized somewhat, and the Android app uses
+coarse-grained network location (not GPS), so location is not exact.
+</p>
+{% if device_id %}
+<iframe src="/map?device_id={{device_id}}"
+{% else %}
+<iframe src="/map"
+{% endif %}
+  width="100%" height="490" frameborder="0">
+<p>Your browser does not support the iframe tag.</p>
+</iframe>

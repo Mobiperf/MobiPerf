@@ -1,0 +1,175 @@
+#header {
+  overflow: hidden;
+  padding: 5px 15px;
+}
+
+.header .logo{vertical-align:top;border:0;margin:1em;}
+.header .productLink{text-decoration:none;}
+
+#buildinfo {
+  display: inline;
+  font:normal 10px Arial;
+  color:#808080;
+}
+
+#main-content {
+  padding: 10px 15px 30px;
+  max-width: 1600px;
+}
+
+#applicationContainer{
+  margin:0;
+  padding:0;
+  position:relative;
+}
+
+.error {
+  color: red;
+  font-size: 1.5em;
+}
+
+.message {
+  color: #4040ff;
+}
+
+.smaller {
+  font: normal 10px Arial;
+  color: #808080;
+}
+
+h2  {
+  font-size: 1.2em;
+  color: #036;
+  padding: 0 0 10px;
+}
+
+.section-box td, .section-box th {
+  border: 1px solid #aaa;
+}
+
+.device-list-table,
+.task-list-table,
+.schedule-list-table,
+.measurement-list-table {
+  border-collapse: collapse;
+  border-spacing: 0px;
+  padding: 0px;
+}
+
+.device-list-section,
+.device-properties-list-section,
+.schedule-list-section,
+.measurement-list-section {
+  margin-top: 3em;
+}
+
+/*.device-list-table th,
+.device-properties-list-table th,
+.schedule-list-table th,
+.measurement-list-table th {
+  color: #777;
+}
+*/
+
+.device-list-table td,
+.device-list-table th,
+.device-properties-list-table td,
+.device-properties-list-table th,
+.schedule-list-table td,
+.schedule-list-table th,
+.measurement-list-table td,
+.measurement-list-table th {
+  padding: 5px 10px;
+  border: 1px solid #aaa;
+}
+
+.task-param-table td,
+.task-param-table th {
+  padding: 3px 3px;
+  border: 0px;
+}
+
+.measurement-list-url {
+  max-width: 300px;
+  overflow: hidden;
+}
+
+.measurement-detail-table {
+  display: inline-block;
+}
+
+.task-param-name,
+.measurement-detail-prop-name {
+  color: #555;
+  padding: 3px 10px 3px 0;
+  vertical-align: text-top;
+  text-align: right;
+}
+
+.task-param-value {
+  max-width: 500px;
+  word-wrap: break-word;
+}
+
+.device-detail-table {
+  display: inline-block;
+}
+
+
+.device-detail-prop-name {
+  color: #555;
+  padding: 3px 10px 3px 0;
+  text-align: right;
+}
+
+div.tips-box {
+  font-size: smaller;
+  border: 1px solid #ccf;
+  background-color: #f2f2fe;
+  width: 280px;
+  padding: 10px 10px 10px 10px;
+}
+
+table.filter-form-table th,
+table.schedule-form-table th
+{
+  vertical-align: middle;
+  text-align: right;
+  padding-right: 3px;
+}
+
+table.filter-form-table label,
+table.schedule-form-table label
+{
+  white-space: nowrap;?| 
+}
+
+.filter-form-table th,
+.schedule-form-table th
+{
+  font-size: 10px;
+  font-weight: normal;
+  text-align:left;
+  vertical-align:top;
+  padding: 1px 1px;
+}
+
+.filter-form-table td,
+.filter-form-table input[type="text"],
+.filter-form-table select,
+.schedule-form-table td,
+.schedule-form-table input[type="text"],
+.schedule-form-table select
+{
+  font-size: 10px;
+  width:500px;
+  text-align:left;
+  vertical-align:top;
+  padding: 1px 1px;
+}
+
+
+.device-detail-table td,
+.device-detail-table th {
+  border: 0px;
+}
