@@ -16,13 +16,13 @@
 
 """Configuration options for the Speedometer service."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = 'mdw@google.com (Matt Welsh), David Choffnes'
 
 # Set of users with admin privileges
-ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
+ADMIN_USERS = ['drchoffnes@gmail.com']
 
 # Set of users with rights to administer tasks
-SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
+SCHEDULE_ADMIN_USERS = ['drchoffnes@gmail.com']
 
 NUM_PROPERTIES_IN_LIST = 5
 NUM_MEASUREMENTS_IN_LIST = 20
@@ -30,8 +30,9 @@ NUM_DEVICES_IN_LIST = 20
 
 GOOGLE_MAP_ZOOM = 15
 DEFAULT_GOOGLEMAP_ICON_IMAGE = '/static/green_location_pin.png'
-GOOGLEMAP_KEY = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
-                 'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
+GOOGLEMAP_KEY=('AIzaSyBGcqV5HgIdC-EXeO_pQOEBLrhz4bpRwZM')
+#GOOGLEMAP_KEY = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
+#                 'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
 
 # Default viewport of map is Google's PKV office building in Seattle
 DEFAULT_MAP_CENTER = (47.6508, -122.3515)
