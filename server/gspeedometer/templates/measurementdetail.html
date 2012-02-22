@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block body %}
+  <br>
+  <h2>Measurement details - measurement ID {{id}}</h2>
+  <table class="section-box">
+    <tr>
+      <th style="font-size:1.3em; padding: 5px 10px;">Measurement Info</th>
+      <th style="font-size:1.3em; padding: 5px 10px;">Device Info</th>
+    </tr>
+    <tr><td style="vertical-align:top; padding: 5px 10px;">
+      <table class="measurement-detail-table">
+        <tr>
+          <td class="measurement-detail-prop-name">ID</td><td>{{measurement.key.id}}</td>
+        </tr><tr>
+        </tr><tr>
+        <td class="measurement-detail-prop-name">Type</td><td>{{measurement.type}}</td>
+        </tr><tr>
+          <td class="measurement-detail-prop-name">Timestamp (UTC)</td><td>{{measurement.timestamp}}</td>
+        </tr>
+        {% if measurement.GetTaskID %}
+        <tr>
+          <td class="measurement-detail-prop-name">Task ID</td>
+          <td>{{measurement.GetTaskID}}</td>
+        </tr>
+        {% else %}
+        <tr><td class="measurement-detail-prop-name">Task ID</td><td>Unknown</td></tr>
+        {% endif %}
+        {% for key,value in measurement.Params.items %}
+        <tr>
+          <td class="task-param-name">{{key}}</td>
+          <td>{{value}}</td>
+        </tr>
+        {% endfor %}
+        {% for key,value in measurement.Values.items %}
+        <tr>
+          <td class="task-param-name">{{key}}</td>
+          <td>{{value}}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </td><td style="vertical-align:top; padding: 5px 10px;">
+      <table class="measurement-detail-table">
+        <tr>
+          <td class="measurement-detail-prop-name">Device ID</td>
+          <td><a
+              href="/device/view?device_id={{measurement.device_properties.device_info.id}}">{{measurement.device_properties.device_info.id}}</a></td>
+        </tr>
+      </table>
+    </td>
+  </table>
+  <br><br>
+
+{% endblock %}

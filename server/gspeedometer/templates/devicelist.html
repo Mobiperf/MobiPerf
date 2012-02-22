@@ -1,0 +1,34 @@
+{# Template for devices listing. #}
+
+<div class="device-list-section">
+  <h2>Devices</h2>
+  <table class="device-list-table section-box" width="100%">
+    <tr>
+      <th>ID</th>
+      <th>Last update</th>
+      <th>Owner</th>
+      <th>App version</th>
+      <th>Device</th>
+      <th>Network</th>
+      <th>Last location</th>
+    </tr>
+    {% for dev in devices %}
+      {% with dev.last_update as last_update %}
+      <tr>
+        <td><a href="/device/view?device_id={{dev.key.name}}">{{dev.key.name}}</a></td>
+        <td>{{last_update.timestamp|timesince}} ago</td>
+        <td>{{dev.user.email}}</td>
+        <td>{{last_update.app_version}}</td>
+        <td>{{dev.manufacturer}} {{dev.model}}</td>
+        <td>{{last_update.carrier}} {{last_update.network_type}}</td>
+        <td> <a href="http://maps.google.com/maps?q=loc:{{last_update.location.lat}},{{last_update.location.lon}}" target="_blank">{{last_update.location.lat}},{{last_update.location.lon}}</a></td>
+      </tr>
+      {% endwith %}
+    {% endfor %}
+  </table>
+  {% if more_devices_link %}
+  <a href="{{more_devices_link}}"
+    style='font-weight:normal;font-size:small;'>More &gt;&gt;</a> &nbsp;&nbsp;
+  {% endif %}
+</div>
+

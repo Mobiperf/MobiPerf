@@ -1,0 +1,59 @@
+{# Scheduling listing template. #}
+
+<div class="schedule-list-section">
+  <h2>Measurement schedule&nbsp;&nbsp;
+    {% if user_schedule_admin %}
+    <button class="kd-button kd-button-red"
+      onclick="location.href='/schedule/add'">Manage</button>
+    {% endif %}
+  </h2>
+  <table class="schedule-list-table section-box" width="100%">
+    <tr>
+      <th>ID</th>
+      <th>Created (UTC)</th>
+      <th>Created by</th>
+      <th>Type</th>
+      <th>Tag</th>
+      <th>Filter</th>
+      <th>Start (UTC)</th>
+      <th>End (UTC)</th>
+      <th>Interval (sec)</th>
+      <th>Count</th>
+      <th>Priority</th>
+      <th>Params</th>
+      {% if user_schedule_admin %}
+      <th>Delete</th>
+      {% endif %}
+    </tr>
+    {% for task in schedule %}
+      <tr>
+        <td>{{task.key.id}}</td>
+        <td>{{task.created}}</td>
+        <td>{{task.user}}</td>
+        <td>{{task.type}}</td>
+        <td>{{task.tag}}</td>
+        <td>{{task.filter}}</td>
+        <td>{{task.start_time}}</td>
+        <td>{{task.end_time}}</td>
+        <td>{{task.interval_sec}}</td>
+        <td>{{task.count}}</td>
+        <td>{{task.priority}}</td>
+        <td>
+          <table class="task-param-table">
+            {% for key,value in task.Params.items %}
+            <tr>
+              <td class="task-param-name">{{key}}:</td>
+              <td>{{value}}</td>
+            </tr>
+            {% endfor %}
+          </table>
+        </td>
+        {% if user_schedule_admin %}
+        <td>
+          <a href="/schedule/delete?id={{task.key.id}}">Delete</a>
+        </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </table>
+</div>
