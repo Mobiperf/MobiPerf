@@ -1,0 +1,65 @@
+<html><head>
+<link rel="stylesheet" type="text/css" href="/static/kennedy.css"/>
+<link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load("visualization", "1", {packages:["annotatedtimeline"]});
+  google.load("jquery", "1.6.4");
+
+  var chart, chartData;
+
+  function drawChart() {
+    chart = new google.visualization.AnnotatedTimeLine(
+        document.getElementById('timeseries_div'));
+    chartData = new google.visualization.DataTable();
+    chartData.addColumn('datetime', 'Time');
+    {% for column in timeseries_columns %}
+      chartData.addColumn('number', '{{column}}');
+    {% endfor %}
+    chart.draw(chartData, {});
+    setTimeout("fetchData()", 100);
+  }
+
+  function fetchData() {
+    $.getJSON('/timeseries/data?device_id={{device_id}}&limit={{limit}}',
+        drawData);
+  }
+
+  function drawData(data) {
+    clearSpinner();
+    for (var rownum in data) {
+      data[rownum][0] = eval(data[rownum][0]);
+      chartData.addRow(data[rownum]);
+    }
+    chart.draw(chartData, {});
+    setStatus(data.length);
+  }
+
+  function clearSpinner() {
+//    var tsparent = document.getElementById('tsparent');
+//    var tsspinner = document.getElementById('tsspinner');
+//    tsparent.removeChild(tsspinner);
+    var tsspinner = document.getElementById('tsspinner');
+    tsspinner.innerHTML = 'done';
+  }
+
+  function setStatus(dataLen) {
+    var tsspinner = document.getElementById('tsspinner');
+    tsspinner.innerHTML = '<span class="message">Showing ' + dataLen + ' measurements</span>';
+  }
+
+</script>
+</head>
+<body onload="drawChart()">
+  <table>
+    <tr>
+      <td style="padding: 0 30px 0 0;">
+        <div id="timeseries_div" style="width: 760px; height: 400px;"></div></td>
+      <td valign="top">
+        <div id="tsparent">
+          <div id="tsspinner">
+            <img src="/static/spinner.gif"></div></div></td>
+    </tr>
+  </table>
+</body>
+</html>

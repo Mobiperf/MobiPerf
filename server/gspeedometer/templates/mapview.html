@@ -1,0 +1,35 @@
+{# Actual Google map view in the iframe. #}
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="/static/kennedy.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
+  </head>
+
+  <body onload="loadGoogleMap()" onunload="GUnload()">
+    <table>
+      <tr>
+        <td style="padding: 0 30px 0 0;">
+          <div id="map" style="width: 760px; height: 460px; border: 2px solid #3366CC;">{{ map_code|safe }}</div>
+        </td>
+        <td>
+          <form method="post" action="/map">
+            <table class="filter-form-table">
+              <tr>
+                <td width=40%><table>{{ filter_form.as_table }}</table></td>
+              </tr>
+              <tr>
+                <td><input class="kd-button kd-button-red" type="submit"/></td>
+              </tr>
+              <tr>
+                <td width=40%>
+                  <span class="message">
+                    Showing {{ num_measurements }} measurements</span></td>
+              </tr>
+            </table>
+          </form>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
