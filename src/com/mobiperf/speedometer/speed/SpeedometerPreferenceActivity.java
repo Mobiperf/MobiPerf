@@ -15,7 +15,7 @@
 
 package com.mobiperf.speedometer.speed;
 
-import com.mobiperf.ui.R;
+import com.mobiperf.mobiperf.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -30,80 +30,90 @@ import android.widget.Toast;
  * Activity that handles user preferences
  * 
  * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * 
  */
 public class SpeedometerPreferenceActivity extends PreferenceActivity {
-  
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    addPreferencesFromResource(R.xml.preference);
-    
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
-    Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
-    
-    /* This should never occur. */
-    if (intervalPref == null || batteryPref == null) {
-      Logger.w("Cannot find some of the preferences");
-      Toast.makeText(SpeedometerPreferenceActivity.this, 
-        getString(R.string.menuInitializationExceptionToast), Toast.LENGTH_LONG).show();
-      return;
-    }
-    
-    OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
-      @Override
-      public boolean onPreferenceChange(Preference preference, Object newValue) {
-        String prefKey = preference.getKey();
-        if (prefKey.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
-          try {
-            Integer val = Integer.parseInt((String) newValue);
-            if (val <= 0 || val > 24) {
-              Toast.makeText(SpeedometerPreferenceActivity.this,
-                  getString(R.string.invalidCheckinIntervalToast), Toast.LENGTH_LONG).show();
-              return false;
-            }
-            return true;
-          } catch (ClassCastException e) {
-            Logger.e("Cannot cast checkin interval preference value to Integer");
-            return false;
-          } catch (NumberFormatException e) {
-            Logger.e("Cannot cast checkin interval preference value to Integer");
-            return false;
-          }
-        } else if (prefKey.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
-          try {
-            Integer val = Integer.parseInt((String) newValue);
-            if (val < 0 || val > 100) {
-              Toast.makeText(SpeedometerPreferenceActivity.this,
-                  getString(R.string.invalidBatteryToast), Toast.LENGTH_LONG).show();
-              return false;
-            }
-            return true;
-          } catch (ClassCastException e) {
-            Logger.e("Cannot cast battery preference value to Integer");
-            return false;
-          } catch (NumberFormatException e) {
-            Logger.e("Cannot cast battery preference value to Integer");
-            return false;
-          }
-        }
-        return true;
-      }
-    };
-    
-    intervalPref.setOnPreferenceChangeListener(prefChangeListener);
-    batteryPref.setOnPreferenceChangeListener(prefChangeListener);
-  }
-  
-  /** 
-   * As we leave the settings page, changes should be reflected in various applicable components
-   * */
-  @Override
-  protected void onDestroy() {
-    super.onDestroy();
-    // The scheduler has a receiver monitoring this intent to get the update
-    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings
-    this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
-  }
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		addPreferencesFromResource(R.xml.preference);
+
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
+		Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
+
+		/* This should never occur. */
+		if (intervalPref == null || batteryPref == null) {
+			Logger.w("Cannot find some of the preferences");
+			Toast.makeText(SpeedometerPreferenceActivity.this,
+					getString(R.string.menuInitializationExceptionToast),
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+
+		OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
+			@Override
+			public boolean onPreferenceChange(Preference preference,
+					Object newValue) {
+				String prefKey = preference.getKey();
+				if (prefKey
+						.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
+					try {
+						Integer val = Integer.parseInt((String) newValue);
+						if (val <= 0 || val > 24) {
+							Toast.makeText(
+									SpeedometerPreferenceActivity.this,
+									getString(R.string.invalidCheckinIntervalToast),
+									Toast.LENGTH_LONG).show();
+							return false;
+						}
+						return true;
+					} catch (ClassCastException e) {
+						Logger.e("Cannot cast checkin interval preference value to Integer");
+						return false;
+					} catch (NumberFormatException e) {
+						Logger.e("Cannot cast checkin interval preference value to Integer");
+						return false;
+					}
+				} else if (prefKey
+						.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
+					try {
+						Integer val = Integer.parseInt((String) newValue);
+						if (val < 0 || val > 100) {
+							Toast.makeText(SpeedometerPreferenceActivity.this,
+									getString(R.string.invalidBatteryToast),
+									Toast.LENGTH_LONG).show();
+							return false;
+						}
+						return true;
+					} catch (ClassCastException e) {
+						Logger.e("Cannot cast battery preference value to Integer");
+						return false;
+					} catch (NumberFormatException e) {
+						Logger.e("Cannot cast battery preference value to Integer");
+						return false;
+					}
+				}
+				return true;
+			}
+		};
+
+		intervalPref.setOnPreferenceChangeListener(prefChangeListener);
+		batteryPref.setOnPreferenceChangeListener(prefChangeListener);
+	}
+
+	/**
+	 * As we leave the settings page, changes should be reflected in various
+	 * applicable components
+	 * */
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		// The scheduler has a receiver monitoring this intent to get the update
+		// TODO(Wenjie): Only broadcast update intent when there is real change
+		// in the settings
+		this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
+	}
 }

@@ -8,7 +8,7 @@
                 android:defaultValue="false"
                 android:summary="enable periodic running"
                 android:key="PeriodicPref" />
-            <com.mobiperf.ui.TimeSetting
+            <com.mobiperf.mobiperf.TimeSetting
                 android:key="duration"
         		android:title="Test period "
         		android:summary="Set specific time for periodic running"

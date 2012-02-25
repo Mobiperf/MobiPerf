@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mobiperf.ui"
+    package="com.mobiperf.mobiperf"
     android:versionCode="1"
     android:versionName="1.0">
   <uses-permission android:name="android.permission.INTERNET" />
@@ -43,7 +43,7 @@
       android:name="com.mobiperf.speedometer.speed.MeasurementScheduler" 
       android:exported="false">
     </service>
-    <receiver android:name=".WatchdogBootReceiver">
+    <receiver android:name="com.mobiperf.mobiperf.WatchdogBootReceiver">
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED" />
         <category android:name="android.intent.category.HOME" />

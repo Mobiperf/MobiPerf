@@ -15,7 +15,7 @@
 
 package com.mobiperf.speedometer.speed;
 
-import com.mobiperf.ui.R;
+import com.mobiperf.mobiperf.R;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -26,22 +26,23 @@ import android.util.Log;
 
 /**
  * A broadcast receiver that starts SpeedomterApp upon the BOOT_COMPLETED event.
- *
+ * 
  * @author wenjiezeng@google.com (Wenjie Zeng)
- *
+ * 
  */
 public class WatchdogBootReceiver extends BroadcastReceiver {
 
-  @Override
-  public final void onReceive(Context context, Intent intent) {
-    Logger.i("Boot intent received.");
-    Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-    
-    if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
-        Config.DEFAULT_START_ON_BOOT)) {
-      Logger.i("Starting MeasurementScheduler from watch dog");
-      context.startService(serviceIntent);
-    }
-  }
+	@Override
+	public final void onReceive(Context context, Intent intent) {
+		Logger.i("Boot intent received.");
+		Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(context);
+
+		if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
+				Config.DEFAULT_START_ON_BOOT)) {
+			Logger.i("Starting MeasurementScheduler from watch dog");
+			context.startService(serviceIntent);
+		}
+	}
 }
