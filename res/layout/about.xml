@@ -1,0 +1,56 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="500dip"
+    
+    android:padding="6dip">
+    
+    <ImageView
+        android:id="@+id/icon"
+        
+        android:layout_width="60dip"
+        android:layout_height="80dip"
+        android:layout_marginRight="6dip"
+        
+        android:src="@drawable/icon" />
+
+    <LinearLayout
+        android:orientation="vertical"
+    
+        android:layout_width="0dip"
+        android:layout_weight="1"
+        android:layout_height="1000dip">
+
+        <TextView
+        	android:id="@+id/about1"
+            android:layout_width="fill_parent"
+            android:layout_height="50dip"
+            android:textSize = "25px"
+            android:gravity="center_vertical"
+            android:text="About Us" />
+            
+            <TextView  
+			android:background = "@drawable/whiteline"
+			android:layout_width="fill_parent"
+			 android:layout_height="2dip"
+            />
+             <TextView  
+             android:id="@+id/about2"
+            android:layout_width="fill_parent"
+            android:layout_height="350dip"
+             android:textSize = "20px"
+             android:maxLines = "15"
+            android:scrollbars="vertical" 
+             android:singleLine="false"
+             android:textColor="@android:color/secondary_text_dark_nodisable"
+            android:text="We are Junxian Huang, Cheng Chen and Yutong Pei, students in the Department of Computer Science, the University of Michigan, Ann Arbor. We work with Prof. Z. Morley Mao in collaboration with Dr. Ming Zhang and Victor Bahl from Microsoft Research. The project is also partially funded by University of Michigan, NSF, and CISCO. And we are actively looking for other sources of funding to improve the tool." 
+            /> 
+            
+            <TextView
+		    	android:id="@+id/link1_view"
+		        android:layout_width="fill_parent"
+		        android:layout_height="fill_parent"
+   		        android:autoLink="web"
+   		        android:textSize = "18px"
+		        android:text="http://mobiperf.com"/>
+    </LinearLayout>
+</LinearLayout>

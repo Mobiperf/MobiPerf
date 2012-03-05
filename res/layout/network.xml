@@ -1,0 +1,32 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="500dip"
+
+	android:padding="6dip">
+
+	<ImageView android:id="@+id/temp" android:layout_width="60dip"
+		android:layout_height="80dip" android:layout_marginRight="6dip"
+
+		android:src="@drawable/icon" />
+
+	<LinearLayout android:orientation="vertical"
+
+		android:layout_width="0dip" android:layout_weight="1"
+		android:layout_height="1000dip">
+
+		<TextView android:id="@+id/network_text1"
+			android:layout_width="fill_parent" android:layout_height="50dip"
+			android:textSize="25px" android:gravity="center_vertical"
+			android:text="Network Toggle" />
+
+		<TextView android:background="@drawable/whiteline"
+			android:layout_width="fill_parent" android:layout_height="2dip" />
+		<TextView android:id="@+id/network_text2"
+			android:layout_width="fill_parent" android:layout_height="250dip"
+			android:textSize="20px" android:maxLines="15" android:scrollbars="vertical"
+			android:singleLine="false" android:textColor="@android:color/secondary_text_dark_nodisable"
+			android:text="If you want to change your network type between 3G and 4G, do the following\n\nStep 1: Click OK button\n\nStep 2: Goto Phone information\n\nStep 3: Select menu of Set Preferred Network Type\n	+ LTE for 4G\n	+ CDMA auto (PRL) for 3G\n\nStep 4: Click GO_BACK button until you are back to 4G Test (if you see dialer, please continue to click GO_BACK button one more time)\n\nStep 5: Hooray, compare how much faster your 4G is than 3G, to do that, you have to run twice though, once under 4G and the other under 3G"/>
+		<Button android:id="@+id/network_btn" android:layout_width="150px"
+			android:layout_height="wrap_content" android:textSize="17px"
+			android:gravity="center" android:text="Switch 4G/3G" />
+	</LinearLayout>
+</LinearLayout>
