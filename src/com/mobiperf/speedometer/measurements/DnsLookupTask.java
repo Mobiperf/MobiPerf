@@ -36,7 +36,7 @@ import java.util.Map;
 /**
  * Measures the DNS lookup time
  * 
- * @author mdw@gogole.com (Matt Welsh)
+ * @author mdw@google.com (Matt Welsh)
  * @author wenjiezeng@google.com (Steve Zeng)
  * 
  */

@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.util.Log;
 
+/**
+ * Miscellaneous functions.
+ */
 public class Utilities {
 
 	public static String genRandomString(int len) {
@@ -373,11 +376,8 @@ public class Utilities {
 			DataOutputStream os = new DataOutputStream(
 					rootProcess.getOutputStream());
 			File dir = context.getFilesDir();
-			// Log.v("LOG", "@@@@@@@@@@@@@@@@@@@@@@@@@ program dir: " +
-			// dir.getAbsolutePath());
 			String cmd = "iptables -L > " + dir.getAbsolutePath()
 					+ "/iptables.test\n";
-			// Log.v("LOG", "((((((((((((( iptables: " + cmd);
 			os.writeBytes(cmd);
 
 			FileInputStream fis = context.openFileInput("iptables.test");
@@ -392,8 +392,6 @@ public class Utilities {
 			}
 
 		} catch (IOException e) {
-			// TODO Code to run in input/output exception
-			// toastMessage("not root");
 		}
 
 		Log.v("LOG", "iptables available: " + iptables_available);
@@ -414,17 +412,16 @@ public class Utilities {
 			try {
 				p.waitFor();
 				if (p.exitValue() != 255) {
-					// TODO Code to run on success
+					// TODO(huangshu): Code to run on success
 					Log.v("MobiPerf", "checkroot: root");
 					return true;
 				}
 			} catch (InterruptedException e) {
-				// TODO Code to run in interrupted exception
+				// TODO(huangshu): Code to run in interrupted exception
 			}
 		} catch (IOException e) {
-			// TODO Code to run in input/output exception
+			// TODO(huangshu): Code to run in input/output exception
 		}
-		Log.v("MobiPerf", "checkroot: no root");
 		return false;
 	}
 
@@ -444,24 +441,6 @@ public class Utilities {
 		}
 		in.close();
 		out.close();
-	}
-
-	// Junxian: does not use local storage for logs, use remote mysql for better
-	// support
-	@Deprecated
-	public static void backupLogFile(Context context) {
-		/*
-		 * File src = context.getFileStreamPath(Service_Thread.LOG_FILE_NAME);
-		 * File dst1 =
-		 * context.getFileStreamPath(Service_Thread.LAST_LOG_FILE_NAME); File
-		 * root = Environment.getExternalStorageDirectory();// /sdcard File dst2
-		 * = new File( root, Service_Thread.LOG_FILE_NAME ); String state =
-		 * Environment.getExternalStorageState(); try { copy(src, dst1); if (
-		 * state.equalsIgnoreCase( Environment.MEDIA_MOUNTED ) &&
-		 * root.canWrite() ) copy(src, dst2); Log.v("MobiPerf",
-		 * "backup log file done"); } catch (IOException e) {
-		 * e.printStackTrace(); }
-		 */
 	}
 
 	public static String getCurrentGMTTime() {
@@ -504,22 +483,6 @@ public class Utilities {
 		return null;
 	}
 
-	/*
-	 * public static void sendudpmessage( String FILENAME, String message,
-	 * Context context ) { try { String line = ""; BufferedReader bufferedReader
-	 * = new BufferedReader (new InputStreamReader
-	 * (context.openFileInput(FILENAME))); line = bufferedReader.readLine(); int
-	 * port = new Integer( line ); InetAddress udpaddress = null; udpaddress =
-	 * InetAddress.getByName( "127.0.0.1" ); byte [] udpmessage =
-	 * message.getBytes(); DatagramPacket packet = new DatagramPacket(
-	 * udpmessage, udpmessage.length, udpaddress, port ); DatagramSocket
-	 * udpSocket = null; udpSocket = new DatagramSocket();
-	 * udpSocket.setSoTimeout( 4000 ); udpSocket.send( packet );
-	 * udpSocket.close(); } catch ( Exception e ) {}
-	 * 
-	 * }
-	 */
-
 	public static String signalServers = "";
 
 	public static boolean checkConnection() {
@@ -561,14 +524,11 @@ public class Utilities {
 			}
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(
 					p.getInputStream()));
-			// BufferedReader stdInput = new BufferedReader(new
-			// InputStreamReader(p.getErrorStream()));
 			String s;
 			String res = "";
 			while ((s = stdInput.readLine()) != null) {
 				res += s + "\n";
 			}
-			// p.waitFor();
 			p.destroy();
 			return res;
 		} catch (Exception e) {
@@ -604,75 +564,6 @@ public class Utilities {
 					e.printStackTrace();
 				}
 			}
-			/*
-			 * TODO while ( true ) { end = time();
-			 * 
-			 * while ( end - start < timeout && line == null ) { end = time();
-			 * line = input.readLine(); } if ( line == null ) { Log.v("LOG",
-			 * "3333333333333333 line is always null"); break; }
-			 * 
-			 * Log.v("LOG", "4444444444 line: " + line);
-			 * 
-			 * line = input.readLine();
-			 * 
-			 * Log.v("LOG", "5555555555 line: " + line);
-			 * 
-			 * 
-			 * if ( line == null ) { Log.v("LOG",
-			 * "66666666666 line still null");
-			 * 
-			 * break; } long timeforresponse = end - start;
-			 * 
-			 * if ( line.indexOf( "From" ) != -1 && tl == 0 ) {
-			 * 
-			 * int i = line.indexOf( "(" );
-			 * 
-			 * if ( i != -1 ) { String temp = ""; int tempcount = 0;
-			 * 
-			 * while ( true ) { if ( line.charAt( i + 1 + tempcount ) == ')' )
-			 * break;
-			 * 
-			 * temp += line.charAt( i + 1 + tempcount );
-			 * 
-			 * tempcount++;
-			 * 
-			 * }
-			 * 
-			 * Log.v( "check", line ); signalServers = temp; //long k =
-			 * pingS(temp,100,1,sl,timeout); return timeforresponse; } else { i
-			 * = 4; String temp = ""; int tempcount = 0; Log.v( "check", line );
-			 * 
-			 * while ( true ) { if ( line.charAt( i + 1 + tempcount ) == 'i' )
-			 * break;
-			 * 
-			 * temp += line.charAt( i + 1 + tempcount );
-			 * 
-			 * tempcount++;
-			 * 
-			 * }
-			 * 
-			 * signalServers = "";
-			 * 
-			 * for ( int k = 0;k < temp.length() - 1;k++ ) { signalServers +=
-			 * temp.charAt( k ); }
-			 * 
-			 * //Log.v("check",signalServers); //long k =
-			 * pingS(temp,100,1,sl,timeout); return timeforresponse; }
-			 * 
-			 * flag = true; } else if ( line.indexOf( "from" ) != -1 && tl == 1
-			 * ) { Log.v( "PR", line );
-			 * 
-			 * if ( line.indexOf( "from" ) != -1 ) { flag = true;
-			 * 
-			 * return timeforresponse; } } else if ( line.indexOf( "from" ) !=
-			 * -1 ) { flag = true; Log.v( "check", line ); return
-			 * timeforresponse; } else {
-			 * 
-			 * Log.v("LOG", "777777777777 weird, line: " + line);
-			 * 
-			 * break; } }//
-			 */
-
 		} catch (Exception e) {
 			e.printStackTrace();
 
@@ -680,78 +571,7 @@ public class Utilities {
 		Log.v("LOG", "FAILED in ping test!!!!!!!!!!!!!!!!");
 		return -1;
 	}
-
-	/*
-	 * public static long getrepeattime(Context context) { try { BufferedReader
-	 * bufferedReader = new BufferedReader (new InputStreamReader
-	 * (context.openFileInput("repeatfile.txt"))); return new Long(
-	 * bufferedReader.readLine() ); } catch ( Exception e ) {}
-	 * 
-	 * return -1; }
-	 * 
-	 * public static void checkifrunning(Context context) { DatagramSocket
-	 * udpSocket = null;
-	 * 
-	 * try { BufferedReader bufferedReader = new BufferedReader (new
-	 * InputStreamReader(context.openFileInput( "killsocket.txt" ))); String
-	 * line = "";
-	 * 
-	 * line = bufferedReader.readLine(); int port = new Integer( line );
-	 * InetAddress udpaddress = null; udpaddress = InetAddress.getByName(
-	 * "127.0.0.1" ); byte [] udpmessage = "isalive".getBytes(); DatagramPacket
-	 * packet = new DatagramPacket( udpmessage, udpmessage.length, udpaddress,
-	 * port ); udpSocket = new DatagramSocket(); udpSocket.setSoTimeout( 200 );
-	 * udpSocket.send( packet ); udpSocket.receive( packet ); udpSocket.close();
-	 * threegtest.isRunning = true; } catch ( Exception e ) {
-	 * threegtest.isRunning = false; }
-	 * 
-	 * try { udpSocket.close(); } catch ( Exception e ) {}
-	 * 
-	 * }
-	 */
-
 	public static boolean checkStop() {
-		/*
-		 * if ( threegtest.stopFlag == true ) { //threegtest.mProgressStatus =
-		 * 0; return true; }return false;
-		 */
-		// return Main.stopFlag;
 		return false;
 	}
 }
-/*
- * public static String Info(Context context) {
- * 
- * //Service_Thread.runID = Utilities.time(); Geocoder gc = new Geocoder(
- * context ); String zipcode = null; String city = null;
- * 
- * if ( GPS.location != null ) { try { List<Address> address =
- * gc.getFromLocation( GPS.latitude, GPS.longitude, 1 );
- * 
- * if ( address != null && address.size() > 0 ) { zipcode = address.get( 0
- * ).getPostalCode(); city = address.get( 0 ).getLocality(); } } catch (
- * Exception e1 ) { e1.printStackTrace(); } }
- * 
- * return "DEVICE:<ID:" + InformationCenter.getDeviceID() + ">:<TYPE:android>" +
- * ":<RID:" + InformationCenter.getRunId() + ">:<ZIPcode:" + zipcode +
- * ">:<City:" + city + ">:<LocationLatitude:" + GPS.latitude +
- * ">:<LocationLongitude:" + GPS.longitude + ">;";
- * 
- * }
- * 
- * public static String getZipcode(Context context) { Geocoder gc = new
- * Geocoder( context ); if ( GPS.location != null ) { try { List<Address>
- * address = gc.getFromLocation( GPS.latitude, GPS.longitude, 1 ); if ( address
- * != null && address.size() > 0 ) { return address.get( 0 ).getPostalCode(); }
- * } catch ( Exception e1 ) { e1.printStackTrace(); } } return null; } public
- * static String getCity(Context context) { Geocoder gc = new Geocoder( context
- * ); if ( GPS.location != null ) { try { List<Address> address =
- * gc.getFromLocation( GPS.latitude, GPS.longitude, 1 ); if ( address != null &&
- * address.size() > 0 ) { return address.get( 0 ).getLocality(); } } catch (
- * Exception e1 ) { e1.printStackTrace(); } } return null; } public static
- * String getCountry(Context context) { Geocoder gc = new Geocoder( context );
- * if ( GPS.location != null ) { try { List<Address> address =
- * gc.getFromLocation( GPS.latitude, GPS.longitude, 1 ); if ( address != null &&
- * address.size() > 0 ) { return address.get( 0 ).getCountryName(); } } catch (
- * Exception e1 ) { e1.printStackTrace(); } } return null; } }
- */

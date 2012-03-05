@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,10 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
+/**
+ * Displays information and gives an option for the user to switch
+ * networks for testing.
+ */
 public class NetworkToggle extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

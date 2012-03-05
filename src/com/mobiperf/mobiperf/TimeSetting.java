@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+/**
+ * Custom seekbar used for periodic testing.
+ */
 public class TimeSetting extends DialogPreference implements
 		SeekBar.OnSeekBarChangeListener {
 

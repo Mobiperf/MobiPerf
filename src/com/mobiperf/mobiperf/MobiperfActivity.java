@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,38 +33,36 @@ import com.mobiperf.speedometer.speed.MeasurementCreationActivity;
 import com.mobiperf.speedometer.speed.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.speed.MeasurementScheduler;
 import com.mobiperf.speedometer.speed.ResultsConsoleActivity;
-import com.mobiperf.speedometer.speed.SpeedometerPreferenceActivity;
 import com.mobiperf.speedometer.speed.SystemConsoleActivity;
 import com.mobiperf.speedometer.speed.UpdateIntent;
 import com.mobiperf.speedometer.speed.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.mobiperf.R;
 
+/**
+ * Home screen for Mobiperf which hosts all the different activities.  
+ * Contains the measurement scheduler for managing measurement tasks.
+ */
 public class MobiperfActivity extends Activity {
 
 	// Define menu ids
 	protected static final int MENU_PERIODIC = Menu.FIRST;
-	// protected static final int MENU_NOTIFICATION = Menu.FIRST + 1;
-	// -------------commented by cc---------
-	// protected static final int MENU_LAST = Menu.FIRST + 2;
-	// protected static final int MENU_HISTORY = Menu.FIRST + 3;
 	protected static final int MENU_EMAIL = Menu.FIRST + 4;
-	// TODO:new menu --------cc
 	protected static final int PAST_RECORD = Menu.FIRST + 5;
-	// protected static final int VOTE = Menu.FIRST +6;
 	protected static final int PERF_ME = Menu.FIRST + 7;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
 	private boolean isBindingToService = false;
 
-	/** Defines callbacks for service binding, passed to bindService() */
+	/** 
+	 * Defines callbacks for service binding, passed to bindService() 
+	 */
 
 	private ServiceConnection serviceConn = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			// We've bound to LocalService, cast the IBinder and get
-			// LocalService
-			// instance
+			// LocalService instance
 			SchedulerBinder binder = (SchedulerBinder) service;
 			scheduler = binder.getService();
 			isBound = true;
@@ -142,7 +140,6 @@ public class MobiperfActivity extends Activity {
 		case R.id.menuSettings:
 			Intent settingsActivity = new Intent(getBaseContext(),
 					com.mobiperf.mobiperf.Preferences.class);
-			// SpeedometerPreferenceActivity.class);
 			startActivity(settingsActivity);
 			return true;
 		case R.id.aboutPage:
@@ -161,7 +158,6 @@ public class MobiperfActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
 

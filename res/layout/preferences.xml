@@ -17,12 +17,18 @@
         		android:text=" Hours"
         		android:max="97"
          		android:dependency="PeriodicPref"/>
-        	 <CheckBoxPreference
-        	    android:id = "@+id/notification"
-        	    android:dependency="PeriodicPref"
-                android:title="Notification"
-                android:summary="enable notification"
-                android:key="NotificationPref" />
+            <EditTextPreference
+    			android:defaultValue="1"
+    			android:summary="The interval (hours) speedometer fetches and pushes measurements"
+    			android:key="checkinIntervalPref" 
+    			android:inputType="number" 
+    			android:title="Checkin Interval (hour)"/>    
+  			<EditTextPreference
+    			android:defaultValue="80"
+    			android:summary="The minimum battery percentage to pause all measurements"
+    			android:key="batteryMinThresPref" 
+    			android:title="Battery Threshold"
+    			android:inputType="number"/>
               
         </PreferenceCategory>
 </PreferenceScreen>

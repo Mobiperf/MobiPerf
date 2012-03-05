@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package com.mobiperf.mobiperf;
 
 import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.speed.Logger;
 
 import android.app.AlarmManager;
 import android.app.AlertDialog;
@@ -27,19 +28,48 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-//import com.mobiperf.lte.ui.TimeSetting;
-
+/*
+ * Preference activity allowing user to enable/disable various settings.
+ */
 public class Preferences extends PreferenceActivity {
 	public static final int NOTIFICATION_ID = 0;
 	private static boolean isNotificationEnabled = true; // Show notification by
 															// default
 
+
+	//
+	// Define dialog ids
+
+	protected static final int DIALOG_PERIODIC = 0;
+	public static final int DIALOG_WARNING = 1;
+	protected static final int DIALOG_NOTIFICATION = 2;
+	protected static final String WARNING = "NAT and firewall tests require root access to open raw socket. "
+			+ "Other tests still run normally if your phone is not rooted.\n\n"
+			+ "A very lightweight test is run periodically every hour by default, giving two benefits:\n"
+			+ "(1) better diagnose your network (we provide you with history of your network performance),\n"
+			+ "(2) enables our research for long-term network improvement.\n\n"
+			+ "We provide the setting to opt out, but we do appreciate you keep this option enabled.\n"
+			+ "Thank you for your help!";
+	// Options for periodical running
+	public static final int PERIODIC_YES = 0;
+	public static final int PERIODIC_NO = 1;
+	final CharSequence[] periodicItems = { "Yes", "No" };
+	final CharSequence[] periodicPrompts = { "Periodic running is enabled",
+			"Periodical running is disabled" };
+	public static final int NOTIFICATION_YES = 0;
+	public static final int NOTIFICATION_NO = 1;
+	final CharSequence[] notificationItems = { "Yes", "No" };
+	final CharSequence[] notificationPrompts = { "Notification is enabled",
+			"Notification is disabled" };
+
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -69,41 +99,60 @@ public class Preferences extends PreferenceActivity {
 						return true;
 					}
 				});
-
-		Preference customPref1 = (Preference) findPreference("NotificationPref");
-
-		customPref1
-				.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-					public boolean onPreferenceClick(Preference preference) {
-						SharedPreferences prefs = PreferenceManager
-								.getDefaultSharedPreferences(getBaseContext());
-						boolean CheckboxPreference = prefs.getBoolean(
-								"NotificationPref", true);
-						if (CheckboxPreference == true) {
-							// test
-							// int a = seekbar.getProgress();
-
-							// Log.w("!!!!!!the number is ",
-							// String.format("%d",a));
-
-							createNotification(Preferences.this);
-
-							Toast.makeText(getApplicationContext(),
-									"enabled the notification",
-									Toast.LENGTH_SHORT).show();
-
+		
+		Preference intervalPref = (Preference) findPreference("checkinIntervalPref");
+		Preference batteryPref = (Preference) findPreference("batteryMinThresPref");
+		
+		OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
+			@Override
+			public boolean onPreferenceChange(Preference preference,
+					Object newValue) {
+				String prefKey = preference.getKey();
+				if (prefKey
+						.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
+					try {
+						Integer val = Integer.parseInt((String) newValue);
+						if (val <= 0 || val > 24) {
+							Toast.makeText(
+									Preferences.this,
+									getString(R.string.invalidCheckinIntervalToast),
+									Toast.LENGTH_LONG).show();
+							return false;
 						}
-						if (CheckboxPreference == false) {
-							clearNotification(Preferences.this);
-							Toast.makeText(getApplicationContext(),
-									"disable the notification",
-									Toast.LENGTH_SHORT).show();
-
-						}
-
 						return true;
+					} catch (ClassCastException e) {
+						Logger.e("Cannot cast checkin interval preference value to Integer");
+						return false;
+					} catch (NumberFormatException e) {
+						Logger.e("Cannot cast checkin interval preference value to Integer");
+						return false;
 					}
-				});
+				} else if (prefKey
+						.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
+					try {
+						Integer val = Integer.parseInt((String) newValue);
+						if (val < 0 || val > 100) {
+							Toast.makeText(Preferences.this,
+									getString(R.string.invalidBatteryToast),
+									Toast.LENGTH_LONG).show();
+							return false;
+						}
+						return true;
+					} catch (ClassCastException e) {
+						Logger.e("Cannot cast battery preference value to Integer");
+						return false;
+					} catch (NumberFormatException e) {
+						Logger.e("Cannot cast battery preference value to Integer");
+						return false;
+					}
+				}
+				return true;
+			}
+		};
+		
+		intervalPref.setOnPreferenceChangeListener(prefChangeListener);
+		batteryPref.setOnPreferenceChangeListener(prefChangeListener);
+		
 	}
 
 	public static boolean getSharedPreferences(Context ctxt) {
@@ -111,31 +160,6 @@ public class Preferences extends PreferenceActivity {
 				.getDefaultSharedPreferences(ctxt);
 		return true;
 	}
-
-	//
-	// Define dialog ids
-
-	protected static final int DIALOG_PERIODIC = 0;
-	public static final int DIALOG_WARNING = 1;
-	protected static final int DIALOG_NOTIFICATION = 2;
-	protected static final String WARNING = "NAT and firewall tests require root access to open raw socket. "
-			+ "Other tests still run normally if your phone is not rooted.\n\n"
-			+ "A very lightweight test is run periodically every hour by default, giving two benefits:\n"
-			+ "(1) better diagnose your network (we provide you with history of your network performance),\n"
-			+ "(2) enables our research for long-term network improvement.\n\n"
-			+ "We provide the setting to opt out, but we do appreciate you keep this option enabled.\n"
-			+ "Thank you for your help!";
-	// Options for periodical running
-	public static final int PERIODIC_YES = 0;
-	public static final int PERIODIC_NO = 1;
-	final CharSequence[] periodicItems = { "Yes", "No" };
-	final CharSequence[] periodicPrompts = { "Periodic running is enabled",
-			"Periodical running is disabled" };
-	public static final int NOTIFICATION_YES = 0;
-	public static final int NOTIFICATION_NO = 1;
-	final CharSequence[] notificationItems = { "Yes", "No" };
-	final CharSequence[] notificationPrompts = { "Notification is enabled",
-			"Notification is disabled" };
 
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog;
@@ -176,7 +200,6 @@ public class Preferences extends PreferenceActivity {
 							case NOTIFICATION_YES:
 								isNotificationEnabled = true;
 								if (isPeriodicalRunEnabled(Preferences.this))
-									createNotification(Preferences.this);
 								break;
 							case NOTIFICATION_NO:
 								clearNotification(Preferences.this);
@@ -213,8 +236,11 @@ public class Preferences extends PreferenceActivity {
 		return dialog;
 	}
 
-	/**** Functions for periodical running by Gary ****/
-
+	/**
+	 * Functions for periodical running.  Legacy code that might be merged.
+	 * 
+	 * @author Gary
+	 */
 	public static final int REQUEST_CODE = 100000;
 	public static final long INTERVAL = 3600 * 1000;
 	public static final String PERIODIC_FILE = "periodic_file";
@@ -227,69 +253,17 @@ public class Preferences extends PreferenceActivity {
 		return true;
 	}
 
+	/**
+	 *  TODO(huangshu): Removed all the old periodic code. Merge with speedometer periodic.
+	 *
+	 */
 	public static void enablePeriodicalRun(Context context) {
-		/*
-		 * //Log.v("LOG", "registering intent with periodc class"); Intent
-		 * intent = new Intent(context, Periodic.class); PendingIntent
-		 * pendingIntent = PendingIntent.getBroadcast(context,
-		 * Definition.PERIODIC_REQUEST_CODE, intent,
-		 * PendingIntent.FLAG_NO_CREATE); //Log.v("LOG",
-		 * "PendingIntent.getBroadcast() returns " + pendingIntent);
-		 * if(pendingIntent != null){ //debug(context,
-		 * "Alarm already registerd"); }else{ //debug(context,
-		 * "Register new alarm"); // Create new pending intent pendingIntent =
-		 * PendingIntent.getBroadcast(context, Definition.PERIODIC_REQUEST_CODE,
-		 * intent, 0); AlarmManager alarmManager = (AlarmManager)
-		 * context.getSystemService(ALARM_SERVICE);
-		 * 
-		 * int interval = TimeSetting.getProgress()+10;
-		 * 
-		 * //If less than 60, this is in minutes if (interval < 60) interval =
-		 * interval * 1000 * 60; else { interval = interval - 59; interval =
-		 * interval * 1000 * 3600; } Log.v("4G Test",
-		 * "interval is "+interval+" milliseconds");
-		 * 
-		 * alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-		 * System.currentTimeMillis() +
-		 * Definition.PERIODIC_FIRST_RUN_STARTING_DELAY, interval,
-		 * pendingIntent); }
-		 * 
-		 * Utilities.writeToFile(Definition.PERIODIC_FILE, Context.MODE_PRIVATE,
-		 * PERIODIC_YES + "", context); if(isNotificationEnabled)
-		 * createNotification(context);
-		 */
 	}
 
 	public static void disablePeriodicalRun(Context context) {
-		/*
-		 * //Log.v("LOG", "registering intent with periodic class"); Intent
-		 * intent = new Intent(context, Periodic.class); PendingIntent
-		 * pendingIntent = PendingIntent.getBroadcast(context,
-		 * Definition.PERIODIC_REQUEST_CODE, intent,
-		 * PendingIntent.FLAG_NO_CREATE); //Log.v("LOG",
-		 * "PendingIntent.getBroadcast() returns " + pendingIntent);
-		 * if(pendingIntent != null){ //debug("Alarm cancelled"); AlarmManager
-		 * alarmManager = (AlarmManager)
-		 * context.getSystemService(ALARM_SERVICE); // Cancel alarm
-		 * alarmManager.cancel(pendingIntent); // Remove the pending intent
-		 * pendingIntent.cancel(); }
-		 * 
-		 * Utilities.writeToFile(Definition.PERIODIC_FILE, Context.MODE_PRIVATE,
-		 * PERIODIC_NO + "", context);
-		 * 
-		 * clearNotification(context);
-		 */
 	}
 
 	public static boolean isPeriodicalRunEnabled(Context context) {
-		/*
-		 * Intent intent = new Intent(context, Periodic.class); PendingIntent
-		 * pendingIntent = PendingIntent.getBroadcast(context,
-		 * Definition.PERIODIC_REQUEST_CODE, intent,
-		 * PendingIntent.FLAG_NO_CREATE); //Log.v("LOG",
-		 * "PendingIntent.getBroadcast() returns " + pendingIntent);
-		 * if(pendingIntent == null) return false;
-		 */
 		return true;
 	}
 
@@ -299,27 +273,5 @@ public class Preferences extends PreferenceActivity {
 		mNotificationManager.cancel(NOTIFICATION_ID);
 	}
 
-	// modified by cc-----told by friends that the notification is annoying
-	public static void createNotification(Context context) {
-		/*
-		 * NotificationManager mNotificationManager = (NotificationManager)
-		 * context.getSystemService(Context.NOTIFICATION_SERVICE); //2.
-		 * Instantiate the Notification: int icon = R.drawable.iconstat;
-		 * CharSequence tickerText = "MobiPerf"; long when =
-		 * System.currentTimeMillis(); Notification notification = new
-		 * Notification(icon, tickerText, when); notification.defaults |=
-		 * Notification.FLAG_NO_CLEAR; // Never get cleared notification.flags
-		 * |= Notification.FLAG_NO_CLEAR; // Never get cleared // 3. Define the
-		 * Notification's expanded message and Intent: CharSequence contentTitle
-		 * = "MobiPerf"; CharSequence contentText =
-		 * "Periodic test is running ..."; Intent notificationIntent = new
-		 * Intent(context, History.class); PendingIntent contentIntent =
-		 * PendingIntent.getActivity(context, 0, notificationIntent, 0);
-		 * notification.setLatestEventInfo(context, contentTitle, contentText,
-		 * contentIntent); // 4. Pass the Notification to the
-		 * NotificationManager: mNotificationManager.notify(NOTIFICATION_ID,
-		 * notification);
-		 */
-	}
 
 }

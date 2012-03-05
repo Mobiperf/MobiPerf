@@ -1,4 +1,4 @@
-/* Copyright 2012 Mobiperf.
+/* Copyright 2012 University of Michigan.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+/**
+ * Display a simple description of this application
+ *
+ */
 public class About extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -32,38 +36,4 @@ public class About extends Activity {
 		TextView textView = (TextView) findViewById(R.id.about2);
 		textView.setMovementMethod(ScrollingMovementMethod.getInstance());
 	}
-
-	/******************** Menu starts here by cc ********************/
-	// Define menu ids
-	protected static final int NEW_TEST = Menu.FIRST;
-	protected static final int PAST_RECORD = Menu.FIRST + 5;
-
-	// Create menu
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-
-		menu.add(0, NEW_TEST, 0, "New Test");
-		// TODO(cc) : new menu
-		menu.add(0, PAST_RECORD, 0, "View past record");
-		return true;
-	}
-
-	// Deal with menu event
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		super.onOptionsItemSelected(item);
-		Log.v("menu", "onOptionsItemSelected " + item.getItemId());
-		switch (item.getItemId()) {
-		/*
-		 * case NEW_TEST: Intent i = new Intent(this,
-		 * com.mobiperf.lte.Main.class); startActivityForResult(i, 0); break;
-		 */
-		}
-		return true;
-
-	}
-
-	/******************** Menu ends here ********************/
-
 }
