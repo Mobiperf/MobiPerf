@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Mobiperf</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="speedometerServerUrl">https://speedometer.googleplex.com</string>
+    <string name="speedometerServerUrl">https://openmobiledata.appspot.com</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="pauseMessage">Mobiperf is paused.</string>
