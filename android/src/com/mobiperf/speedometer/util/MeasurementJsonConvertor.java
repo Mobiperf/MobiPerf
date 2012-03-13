@@ -81,8 +81,8 @@ public class MeasurementJsonConvertor {
 			Class taskClass = MeasurementTask.getTaskClassForMeasurement(type);
 			// if the task type doesn't exist (new unsupported type), taskClass 
 			// will be null so we have to fail fast
-			if (taskClass==null){
-				throw new IllegalArgumentException("Unknown type: "+type);
+			if (taskClass == null) {
+				throw new IllegalArgumentException("Unknown type: " + type);
 			}
 			Method getDescMethod = taskClass.getMethod("getDescClass");
 			// The getDescClassForMeasurement() is static and takes no arguments
