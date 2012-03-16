@@ -42,7 +42,7 @@
             android:scrollbars="vertical" 
              android:singleLine="false"
              android:textColor="@android:color/secondary_text_dark_nodisable"
-            android:text="We are Junxian Huang, Cheng Chen and Yutong Pei, students in the Department of Computer Science, the University of Michigan, Ann Arbor. We work with Prof. Z. Morley Mao in collaboration with Dr. Ming Zhang and Victor Bahl from Microsoft Research. The project is also partially funded by University of Michigan, NSF, and CISCO. And we are actively looking for other sources of funding to improve the tool." 
+            android:text="About text here" 
             /> 
             
             <TextView
