@@ -88,7 +88,8 @@ public class Preferences extends PreferenceActivity {
 						boolean CheckboxPreference = prefs.getBoolean(
 								"PeriodicPref", true);
 						if (CheckboxPreference == true) {
-							//enablePeriodicalRun(Preferences.this);
+							//by default, we run all tests periodically
+							enablePeriodicalRun(Preferences.this, "all"); 
 							Toast.makeText(getApplicationContext(),
 									"enabled periodic running",
 									Toast.LENGTH_SHORT).show();
@@ -132,8 +133,7 @@ public class Preferences extends PreferenceActivity {
 						Logger.e("Cannot cast checkin interval preference value to Integer");
 						return false;
 					}
-				} else if (prefKey
-						.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
+				} else if (prefKey.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
 					try {
 						Integer val = Integer.parseInt((String) newValue);
 						if (val < 0 || val > 100) {
@@ -150,8 +150,9 @@ public class Preferences extends PreferenceActivity {
 						Logger.e("Cannot cast battery preference value to Integer");
 						return false;
 					}
-				} else if (prefKey
-						.compareTo(getString(R.string.periodtestPrefKey)) == 0) {
+				} else if (prefKey.compareTo(getString(R.string.periodtestPrefKey)) == 0) {
+					//when new test is selected, disable first and then enalbe with new selected tests.
+					disablePeriodicalRun(Preferences.this);
 					enablePeriodicalRun(Preferences.this, (String) newValue);
 				}
 				return true;
@@ -261,6 +262,11 @@ public class Preferences extends PreferenceActivity {
 		return true;
 	}
 
+	/**
+	 * This is called when the "Periodic Running" is checked
+	 * @param context
+	 * @param periodtest
+	 */
 	public static void enablePeriodicalRun(Context context, String periodtest) {
 		
 		Intent intent = new Intent(context, PeriodicTest.class);

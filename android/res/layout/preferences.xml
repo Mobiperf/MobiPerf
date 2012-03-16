@@ -11,7 +11,7 @@
             <com.mobiperf.mobiperf.TimeSetting
                 android:key="duration"
         		android:title="Test period "
-        		android:summary="Set specific time for periodic running"
+        		android:summary="Set specific time for periodic running, disable and then re-enable periodic running to make the new setting effective"
         		android:dialogMessage="Period"
         		android:defaultValue="5"
         		android:text=" Hours"
