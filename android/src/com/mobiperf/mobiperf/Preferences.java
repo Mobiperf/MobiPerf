@@ -14,8 +14,11 @@
  */
 package com.mobiperf.mobiperf;
 
+import com.mobiperf.mobiperf.TimeSetting;
 import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.speed.Config;
 import com.mobiperf.speedometer.speed.Logger;
+import com.mobiperf.speedometer.speed.PeriodicTest;
 
 import android.app.AlarmManager;
 import android.app.AlertDialog;
@@ -27,6 +30,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
@@ -84,9 +88,9 @@ public class Preferences extends PreferenceActivity {
 						boolean CheckboxPreference = prefs.getBoolean(
 								"PeriodicPref", true);
 						if (CheckboxPreference == true) {
-							enablePeriodicalRun(Preferences.this);
+							//enablePeriodicalRun(Preferences.this);
 							Toast.makeText(getApplicationContext(),
-									"enabled the periodic running",
+									"enabled periodic running",
 									Toast.LENGTH_SHORT).show();
 						}
 						if (CheckboxPreference == false) {
@@ -102,6 +106,7 @@ public class Preferences extends PreferenceActivity {
 		
 		Preference intervalPref = (Preference) findPreference("checkinIntervalPref");
 		Preference batteryPref = (Preference) findPreference("batteryMinThresPref");
+		Preference periodPref = (Preference) findPreference("periodtestPref");
 		
 		OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
 			@Override
@@ -145,6 +150,9 @@ public class Preferences extends PreferenceActivity {
 						Logger.e("Cannot cast battery preference value to Integer");
 						return false;
 					}
+				} else if (prefKey
+						.compareTo(getString(R.string.periodtestPrefKey)) == 0) {
+					enablePeriodicalRun(Preferences.this, (String) newValue);
 				}
 				return true;
 			}
@@ -152,7 +160,7 @@ public class Preferences extends PreferenceActivity {
 		
 		intervalPref.setOnPreferenceChangeListener(prefChangeListener);
 		batteryPref.setOnPreferenceChangeListener(prefChangeListener);
-		
+		periodPref.setOnPreferenceChangeListener(prefChangeListener);
 	}
 
 	public static boolean getSharedPreferences(Context ctxt) {
@@ -174,7 +182,7 @@ public class Preferences extends PreferenceActivity {
 						public void onClick(DialogInterface dialog, int item) {
 							switch (item) {
 							case PERIODIC_YES:
-								enablePeriodicalRun(Preferences.this);
+								//enablePeriodicalRun(Preferences.this);
 								break;
 							case PERIODIC_NO:
 								disablePeriodicalRun(Preferences.this);
@@ -253,18 +261,58 @@ public class Preferences extends PreferenceActivity {
 		return true;
 	}
 
-	/**
-	 *  TODO(huangshu): Removed all the old periodic code. Merge with speedometer periodic.
-	 *
-	 */
-	public static void enablePeriodicalRun(Context context) {
+	public static void enablePeriodicalRun(Context context, String periodtest) {
+		
+		Intent intent = new Intent(context, PeriodicTest.class);
+    	PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
+    			Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
+    	
+    	if(pendingIntent != null){
+    	}else{
+    		// Create new pending intent
+    		Bundle b = new Bundle();
+    		b.putString("test", periodtest);
+    		intent.putExtras(b);
+    		pendingIntent = PendingIntent.getBroadcast(context, Config.PERIODIC_REQUEST_CODE, intent, 0);
+    		AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+    		
+    		int interval = TimeSetting.getProgress()+10;
+    		
+    		//If less than 60, this is in minutes
+    		if (interval < 60) interval = interval * 1000 * 60;
+    		else {
+    			interval = interval - 59;
+    			interval = interval * 1000 * 3600;
+    		}
+			
+        	alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
+        			System.currentTimeMillis() + Config.PERIODIC_FIRST_RUN_STARTING_DELAY, 
+        			interval, pendingIntent);
+        	
+    	}
+	
 	}
 
 	public static void disablePeriodicalRun(Context context) {
+		Intent intent = new Intent(context, PeriodicTest.class);
+    	PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
+    			Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
+    	if(pendingIntent != null){
+    		AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
+    		// Cancel alarm
+    		alarmManager.cancel(pendingIntent);
+    		// Remove the pending intent
+    		pendingIntent.cancel();
+    	}
 	}
 
 	public static boolean isPeriodicalRunEnabled(Context context) {
-		return true;
+		Intent intent = new Intent(context, PeriodicTest.class);
+    	PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
+    			Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
+    	if(pendingIntent == null)
+    		return false;
+    	return true;
 	}
 
 	private static void clearNotification(Context context) {

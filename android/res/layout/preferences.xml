@@ -17,6 +17,13 @@
         		android:text=" Hours"
         		android:max="97"
          		android:dependency="PeriodicPref"/>
+      		<ListPreference
+      		    android:title="Periodic Test"
+      		    android:summary="Select the test to be run periodically"
+      		    android:key="periodtestPref"
+                android:entries="@array/listArray"
+                android:entryValues="@array/listArray"
+                android:dependency="PeriodicPref" />
             <EditTextPreference
     			android:defaultValue="1"
     			android:summary="The interval (hours) speedometer fetches and pushes measurements"
