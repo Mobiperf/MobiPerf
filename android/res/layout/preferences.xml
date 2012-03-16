@@ -26,7 +26,7 @@
                 android:dependency="PeriodicPref" />
             <EditTextPreference
     			android:defaultValue="1"
-    			android:summary="The interval (hours) speedometer fetches and pushes measurements"
+    			android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
     			android:key="checkinIntervalPref" 
     			android:inputType="number" 
     			android:title="Checkin Interval (hour)"/>    

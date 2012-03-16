@@ -665,7 +665,7 @@ public class PhoneUtils {
 	}
 
 	public String getServerUrl() {
-		return context.getResources().getString(R.string.speedometerServerUrl);
+		return context.getResources().getString(R.string.serverUrl);
 	}
 
 	public boolean isTestingServer(String serverUrl) {
