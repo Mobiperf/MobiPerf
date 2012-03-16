@@ -22,6 +22,10 @@ package com.mobiperf.speedometer.speed;
  * 
  */
 public interface Config {
+	
+	public static final String ALLTASK_TYPE = "all";
+	public static final String DEFAULT_TEST_URL = "google.com";
+	
 	public static final boolean DEFAULT_START_ON_BOOT = true;
 	/** Constants used in various measurement tasks */
 	public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;

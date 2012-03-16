@@ -11,15 +11,22 @@
             <com.mobiperf.mobiperf.TimeSetting
                 android:key="duration"
         		android:title="Test period "
-        		android:summary="Set specific time for periodic running"
+        		android:summary="Set specific time for periodic running, disable and then re-enable periodic running to make the new setting effective"
         		android:dialogMessage="Period"
         		android:defaultValue="5"
         		android:text=" Hours"
         		android:max="97"
          		android:dependency="PeriodicPref"/>
+      		<ListPreference
+      		    android:title="Periodic Test"
+      		    android:summary="Select the test to be run periodically"
+      		    android:key="periodtestPref"
+                android:entries="@array/listArray"
+                android:entryValues="@array/listArray"
+                android:dependency="PeriodicPref" />
             <EditTextPreference
     			android:defaultValue="1"
-    			android:summary="The interval (hours) speedometer fetches and pushes measurements"
+    			android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
     			android:key="checkinIntervalPref" 
     			android:inputType="number" 
     			android:title="Checkin Interval (hour)"/>    
