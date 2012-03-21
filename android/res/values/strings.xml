@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mobiperf</string>
+    <string name="app_name">MobiPerf</string>
     <string name="ping_executable">/system/bin/ping</string>
     <string name="serverUrl">https://openmobiledata.appspot.com</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
-    <string name="pauseMessage">Mobiperf is paused.</string>
+    <string name="pauseMessage">MobiPerf is paused.</string>
     <string name="menuResume">Resume</string>
-    <string name="resumeMessage">Mobiperf is running.</string>
+    <string name="resumeMessage">MobiPerf is running.</string>
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"MobiPerf-1.0 (Linux; Android)"</string>
     <string name="menuSettings">Settings</string>
@@ -30,7 +30,7 @@
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">batteryMinThresPref</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
-    <string name="notificationSchedulerStarted">Mobiperf service has started</string>
+    <string name="notificationSchedulerStarted">MobiPerf service has started</string>
     <string name="notificatioContent">MobiPerf service is running</string>
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
