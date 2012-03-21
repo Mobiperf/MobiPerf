@@ -82,22 +82,18 @@ public class Preferences extends PreferenceActivity {
 					disablePeriodicalRun(Preferences.this);
 					Toast.makeText(getApplicationContext(), R.string.disablePeriodic, Toast.LENGTH_SHORT).show();
 				}
-
 				return true;
 			}
 		});
 
 		Preference intervalPref = (Preference) findPreference("checkinIntervalPref");
 		Preference batteryPref = (Preference) findPreference("batteryMinThresPref");
-		Preference periodPref = (Preference) findPreference("periodtestPref");
 
 		OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
 			@Override
-			public boolean onPreferenceChange(Preference preference,
-					Object newValue) {
+			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String prefKey = preference.getKey();
-				if (prefKey
-						.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
+				if (prefKey.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
 					try {
 						Integer val = Integer.parseInt((String) newValue);
 						if (val <= 0 || val > 24) {
@@ -132,10 +128,6 @@ public class Preferences extends PreferenceActivity {
 						Logger.e("Cannot cast battery preference value to Integer");
 						return false;
 					}
-				} else if (prefKey.compareTo(getString(R.string.periodtestPrefKey)) == 0) {
-					//when new test is selected, disable first and then enalbe with new selected tests.
-					disablePeriodicalRun(Preferences.this);
-					enablePeriodicalRun(Preferences.this, (String) newValue);
 				}
 				return true;
 			}
@@ -143,14 +135,13 @@ public class Preferences extends PreferenceActivity {
 
 		intervalPref.setOnPreferenceChangeListener(prefChangeListener);
 		batteryPref.setOnPreferenceChangeListener(prefChangeListener);
-		periodPref.setOnPreferenceChangeListener(prefChangeListener);
 	}
 
-	public static boolean getSharedPreferences(Context ctxt) {
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(ctxt);
+	//TODO: useless function to be cleared
+	/*public static boolean getSharedPreferences(Context ctxt) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
 		return true;
-	}
+	}*/
 
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog;
@@ -172,9 +163,7 @@ public class Preferences extends PreferenceActivity {
 						break;
 					default:
 					}
-					Toast.makeText(getApplicationContext(),
-							periodicPrompts[item], Toast.LENGTH_SHORT)
-							.show();
+					Toast.makeText(getApplicationContext(), periodicPrompts[item], Toast.LENGTH_SHORT).show();
 					Preferences.this.dismissDialog(DIALOG_PERIODIC);
 				}
 			});
@@ -198,9 +187,7 @@ public class Preferences extends PreferenceActivity {
 						break;
 					default:
 					}
-					Toast.makeText(getApplicationContext(),
-							notificationPrompts[item],
-							Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), notificationPrompts[item], Toast.LENGTH_SHORT).show();
 					Preferences.this.dismissDialog(DIALOG_NOTIFICATION);
 				}
 			});
@@ -211,12 +198,9 @@ public class Preferences extends PreferenceActivity {
 			builder.setTitle("Notice")
 			.setMessage(WARNING)
 			.setCancelable(false)
-			.setPositiveButton("OK",
-					new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog,
-						int id) {
-					Preferences.this
-					.dismissDialog(DIALOG_WARNING);
+			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					Preferences.this.dismissDialog(DIALOG_WARNING);
 				}
 			});
 			dialog = builder.create();
@@ -251,7 +235,7 @@ public class Preferences extends PreferenceActivity {
 	 * @param periodtest
 	 */
 	public static void enablePeriodicalRun(Context context) {
-		
+
 		//TODO, get list of experiments from server and run them in the periodic
 		//We need to check for at the beginning of each cycle what test to run from server.
 		//by default, we run all tests periodically
@@ -312,6 +296,5 @@ public class Preferences extends PreferenceActivity {
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(NOTIFICATION_ID);
 	}
-
 
 }
