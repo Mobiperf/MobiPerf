@@ -567,8 +567,7 @@ public class MeasurementScheduler extends Service {
 	public void updateStatus() {
 		Intent intent = new Intent();
 		intent.setAction(UpdateIntent.SYSTEM_STATUS_UPDATE_ACTION);
-		String statsMsg = completedMeasurementCnt + " completed, "
-				+ failedMeasurementCnt + " failed";
+		String statsMsg = completedMeasurementCnt + " completed, " + failedMeasurementCnt + " failed";
 		intent.putExtra(UpdateIntent.STATS_MSG_PAYLOAD, statsMsg);
 		sendBroadcast(intent);
 	}
@@ -787,8 +786,7 @@ public class MeasurementScheduler extends Service {
 					 */
 					resetCheckin();
 				} else if (checkinRetryIntervalSec < checkinIntervalSec) {
-					Logger.i("Retrying checkin in " + checkinRetryIntervalSec
-							+ " seconds");
+					Logger.i("Retrying checkin in " + checkinRetryIntervalSec + " seconds");
 					/*
 					 * Use checkinRetryIntentSender so that the periodic checkin
 					 * schedule will remain intact
@@ -798,8 +796,7 @@ public class MeasurementScheduler extends Service {
 									UpdateIntent.CHECKIN_RETRY_ACTION),
 							PendingIntent.FLAG_CANCEL_CURRENT);
 					alarmManager.set(AlarmManager.RTC_WAKEUP,
-							System.currentTimeMillis()
-									+ checkinRetryIntervalSec * 1000,
+							System.currentTimeMillis() + checkinRetryIntervalSec * 1000,
 							checkinRetryIntentSender);
 					checkinRetryCnt++;
 					checkinRetryIntervalSec = Math.min(

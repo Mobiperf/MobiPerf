@@ -68,11 +68,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
 
 		taskMap = new HashMap<String, String>();
 		consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
-		this.consoleView = (ListView) this
-				.findViewById(R.id.measurementScheduleConsole);
+		this.consoleView = (ListView) this.findViewById(R.id.measurementScheduleConsole);
 		this.consoleView.setAdapter(consoleContent);
-		lastCheckinTimeText = (TextView) this
-				.findViewById(R.id.lastCheckinTime);
+		lastCheckinTimeText = (TextView) this.findViewById(R.id.lastCheckinTime);
 		Button checkinButton = (Button) this.findViewById(R.id.checkinButton);
 		checkinButton.setOnClickListener(new OnClickListener() {
 			@Override
