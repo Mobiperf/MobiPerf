@@ -1,4 +1,4 @@
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 import java.util.Calendar;
 import java.util.HashMap;

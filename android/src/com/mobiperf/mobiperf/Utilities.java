@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
-import com.mobiperf.speedometer.speed.Config;
+import com.mobiperf.speedometer.Config;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;

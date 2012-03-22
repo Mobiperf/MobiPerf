@@ -13,21 +13,18 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 /**
- * Subclass of MeasurementError that indicates that a measurement was skipped -
- * a non-error result.
+ * POJO class containing static device information. @see{@link DeviceProperty}
  * 
- * @author mdw@google.com (Matt Welsh)
+ * @author wenjiezeng@google.com (Steve Zeng)
+ * 
  */
-public class MeasurementSkippedException extends MeasurementError {
-	public MeasurementSkippedException(String reason) {
-		super(reason);
-	}
-
-	public MeasurementSkippedException(String reason, Throwable e) {
-		super(reason, e);
-	}
-
+public class DeviceInfo {
+	public String deviceId;
+	public String user;
+	public String manufacturer;
+	public String model;
+	public String os;
 }

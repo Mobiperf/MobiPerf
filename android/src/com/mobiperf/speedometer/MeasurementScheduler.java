@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 import com.google.myjson.reflect.TypeToken;
-import com.mobiperf.speedometer.speed.BatteryCapPowerManager.PowerAwareTask;
+import com.mobiperf.speedometer.BatteryCapPowerManager.PowerAwareTask;
 import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
 import com.mobiperf.speedometer.util.PhoneUtils;
 import com.mobiperf.mobiperf.R;

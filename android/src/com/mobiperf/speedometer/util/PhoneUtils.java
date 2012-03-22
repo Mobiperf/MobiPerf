@@ -14,9 +14,9 @@
  */
 package com.mobiperf.speedometer.util;
 
-import com.mobiperf.speedometer.speed.DeviceInfo;
-import com.mobiperf.speedometer.speed.DeviceProperty;
-import com.mobiperf.speedometer.speed.Logger;
+import com.mobiperf.speedometer.DeviceInfo;
+import com.mobiperf.speedometer.DeviceProperty;
+import com.mobiperf.speedometer.Logger;
 import com.mobiperf.mobiperf.R;
 
 import android.content.BroadcastReceiver;
@@ -585,9 +585,9 @@ public class PhoneUtils {
 
 	private synchronized void updateBatteryStat(Intent powerIntent) {
 		int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE,
-				com.mobiperf.speedometer.speed.Config.DEFAULT_BATTERY_SCALE);
+				com.mobiperf.speedometer.Config.DEFAULT_BATTERY_SCALE);
 		int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL,
-				com.mobiperf.speedometer.speed.Config.DEFAULT_BATTERY_LEVEL);
+				com.mobiperf.speedometer.Config.DEFAULT_BATTERY_LEVEL);
 		// change to the unit of percentage
 		this.curBatteryLevel = level * 100 / scale;
 		this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS,

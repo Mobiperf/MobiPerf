@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 import com.mobiperf.speedometer.util.PhoneUtils;
 

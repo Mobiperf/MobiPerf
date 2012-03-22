@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 /**
  * POJO class containing dynamic information about the device

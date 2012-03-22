@@ -22,7 +22,7 @@
         android:screenOrientation="portrait">
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.SplashScreenActivity"
+      android:name="com.mobiperf.speedometer.SplashScreenActivity"
       android:launchMode="singleTask"
       android:theme="@android:style/Theme.Light.NoTitleBar">
       <intent-filter>
@@ -31,17 +31,16 @@
       </intent-filter>  
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.SystemConsoleActivity"
+      android:name="com.mobiperf.speedometer.SystemConsoleActivity"
       android:launchMode="singleTask" 
       android:theme="@android:style/Theme.Light.NoTitleBar">      
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.MeasurementScheduleConsoleActivity"
+      android:name="com.mobiperf.speedometer.MeasurementScheduleConsoleActivity"
       android:launchMode="singleTask">
     </activity>
     <service 
-      android:name="com.mobiperf.speedometer.speed.MeasurementScheduler" 
-      android:exported="false">
+      android:name="com.mobiperf.speedcom.mobiperf.speedometer.MeasurementSchedulerd="false">
     </service>
     <receiver android:name="com.mobiperf.mobiperf.WatchdogBootReceiver">
       <intent-filter>
@@ -53,15 +52,11 @@
     <activity android:name=".Preferences"></activity>
     <activity android:name=".NetworkToggle"></activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.ResultsConsoleActivity"
+      android:name="com.mobiperf.speedometer.ResultsConsoleActivity"
       android:launchMode="singleTask"
       >
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.MeasurementCreationActivity"
-      android:launchMode="singleTask">
+      android:name="com.mobiperf.speedometer.Measucom.mobiperf.speedometer.MeasurementCreationActivitysk">
     </activity>
-    <receiver android:name="com.mobiperf.speedometer.speed.PeriodicTest"></receiver>
-  </application>
-
-</manifest>
+    <receiver android:name="com.mobiperf.speedometer.PeriodicTescom.mobiperf.speedometer.PeriodicTest>

@@ -29,13 +29,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.mobiperf.speedometer.speed.MeasurementCreationActivity;
-import com.mobiperf.speedometer.speed.MeasurementScheduleConsoleActivity;
-import com.mobiperf.speedometer.speed.MeasurementScheduler;
-import com.mobiperf.speedometer.speed.ResultsConsoleActivity;
-import com.mobiperf.speedometer.speed.SystemConsoleActivity;
-import com.mobiperf.speedometer.speed.UpdateIntent;
-import com.mobiperf.speedometer.speed.MeasurementScheduler.SchedulerBinder;
+import com.mobiperf.speedometer.MeasurementCreationActivity;
+import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
+import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.ResultsConsoleActivity;
+import com.mobiperf.speedometer.SystemConsoleActivity;
+import com.mobiperf.speedometer.UpdateIntent;
+import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.mobiperf.R;
 
 /**

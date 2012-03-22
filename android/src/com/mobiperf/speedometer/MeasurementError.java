@@ -12,19 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 /**
- * POJO class containing static device information. @see{@link DeviceProperty}
+ * Error raised when a measurement fails.
  * 
- * @author wenjiezeng@google.com (Steve Zeng)
- * 
+ * @author mdw@google.com (Matt Welsh)
  */
-public class DeviceInfo {
-	public String deviceId;
-	public String user;
-	public String manufacturer;
-	public String model;
-	public String os;
+public class MeasurementError extends Exception {
+	public MeasurementError(String reason) {
+		super(reason);
+	}
+
+	public MeasurementError(String reason, Throwable e) {
+		super(reason, e);
+	}
 }

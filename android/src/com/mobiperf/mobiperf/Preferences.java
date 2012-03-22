@@ -31,9 +31,9 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-import com.mobiperf.speedometer.speed.Config;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.speedometer.speed.PeriodicTest;
+import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.PeriodicTest;
 
 /*
  * Preference activity allowing user to enable/disable various settings.
