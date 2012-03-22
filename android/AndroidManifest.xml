@@ -40,7 +40,8 @@
       android:launchMode="singleTask">
     </activity>
     <service 
-      android:name="com.mobiperf.speedcom.mobiperf.speedometer.MeasurementSchedulerd="false">
+      android:name="com.mobiperf.speedometer.MeasurementScheduler" 
+      android:exported="false">
     </service>
     <receiver android:name="com.mobiperf.mobiperf.WatchdogBootReceiver">
       <intent-filter>
@@ -57,6 +58,10 @@
       >
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.Measucom.mobiperf.speedometer.MeasurementCreationActivitysk">
+      android:name="com.mobiperf.speedometer.MeasurementCreationActivity"
+      android:launchMode="singleTask">
     </activity>
-    <receiver android:name="com.mobiperf.speedometer.PeriodicTescom.mobiperf.speedometer.PeriodicTest>
+    <receiver android:name="com.mobiperf.speedometer.PeriodicTest"></receiver>
+  </application>
+
+</manifest>
