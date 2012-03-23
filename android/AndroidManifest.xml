@@ -63,5 +63,4 @@
     </activity>
     <receiver android:name="com.mobiperf.speedometer.PeriodicTest"></receiver>
   </application>
-
 </manifest>
