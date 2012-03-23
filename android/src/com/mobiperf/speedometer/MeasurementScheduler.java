@@ -75,16 +75,17 @@ public class MeasurementScheduler extends Service {
 	private ExecutorService measurementExecutor;
 	private BroadcastReceiver broadcastReceiver;
 	private Boolean pauseRequested = true;
+	private static boolean periodicenabled = true;
 	private boolean stopRequested = false;
 	private boolean isSchedulerStarted = false;
 	private Checkin checkin;
-	private long checkinIntervalSec;
+	private static long checkinIntervalSec;
 	private long checkinRetryIntervalSec;
 	private int checkinRetryCnt;
 	private CheckinTask checkinTask;
 	private Calendar lastCheckinTime;
 
-	private PendingIntent checkinIntentSender;
+	private static PendingIntent checkinIntentSender;
 	/**
 	 * Intent for checkin retries. Reusing checkinIntentSender for retries will
 	 * cancel any previously configured periodic checkin schedule. Thus we need
@@ -92,7 +93,7 @@ public class MeasurementScheduler extends Service {
 	 */
 	private PendingIntent checkinRetryIntentSender;
 	private PendingIntent measurementIntentSender;
-	private AlarmManager alarmManager;
+	private static AlarmManager alarmManager;
 	private BatteryCapPowerManager powerManager;
 	/*
 	 * Both taskQueue and pendingTasks are thread safe and operations on them
@@ -429,6 +430,23 @@ public class MeasurementScheduler extends Service {
 				checkinIntervalSec * 1000, checkinIntentSender);
 
 		Logger.i("Setting checkin interval to " + interval + " seconds");
+	}
+	
+	public static boolean isPeriodicEnabled() {
+		return periodicenabled;
+	}
+	
+	public static void cancelAlarm() {
+		alarmManager.cancel(checkinIntentSender);
+		periodicenabled = false;
+	}
+	
+	public static void enableAlarm() {
+		alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+				System.currentTimeMillis()
+						+ Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC,
+				checkinIntervalSec * 1000, checkinIntentSender);
+		periodicenabled = true;
 	}
 
 	/** Returns the checkin interval of the scheduler in seconds */
