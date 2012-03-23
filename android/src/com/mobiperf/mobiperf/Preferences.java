@@ -14,14 +14,11 @@
  */
 package com.mobiperf.mobiperf;
 
-import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
@@ -31,9 +28,8 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.PeriodicTest;
+import com.mobiperf.speedometer.MeasurementScheduler;
 
 /*
  * Preference activity allowing user to enable/disable various settings.
@@ -156,7 +152,7 @@ public class Preferences extends PreferenceActivity {
 				public void onClick(DialogInterface dialog, int item) {
 					switch (item) {
 					case PERIODIC_YES:
-						//enablePeriodicalRun(Preferences.this);
+						enablePeriodicalRun(Preferences.this);
 						break;
 					case PERIODIC_NO:
 						disablePeriodicalRun(Preferences.this);
@@ -229,66 +225,21 @@ public class Preferences extends PreferenceActivity {
 	}
 
 	/**
-	 * TODO
 	 * This is called when the "Periodic Running" is checked
 	 * @param context
 	 * @param periodtest
 	 */
 	public static void enablePeriodicalRun(Context context) {
-
-		//TODO, get list of experiments from server and run them in the periodic
-		//We need to check for at the beginning of each cycle what test to run from server.
-		//by default, we run all tests periodically
-		Intent intent = new Intent(context, PeriodicTest.class);
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
-				Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
-
-		if(pendingIntent != null){
-		}else{
-			// Create new pending intent
-			Bundle b = new Bundle();
-			b.putString("test", "all");
-			intent.putExtras(b);
-			pendingIntent = PendingIntent.getBroadcast(context, Config.PERIODIC_REQUEST_CODE, intent, 0);
-			AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-
-			int interval = TimeSetting.getProgress()+10;
-
-			//If less than 60, this is in minutes
-			if (interval < 60) interval = interval * 1000 * 60;
-			else {
-				interval = interval - 59;
-				interval = interval * 1000 * 3600;
-			}
-
-			alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, 
-					System.currentTimeMillis() + Config.PERIODIC_FIRST_RUN_STARTING_DELAY, 
-					interval, pendingIntent);
-
-		}
-
+		MeasurementScheduler.enableAlarm();
 	}
 
 	public static void disablePeriodicalRun(Context context) {
-		Intent intent = new Intent(context, PeriodicTest.class);
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
-				Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
-		if(pendingIntent != null){
-			AlarmManager alarmManager = (AlarmManager) context.getSystemService(ALARM_SERVICE);
-			// Cancel alarm
-			alarmManager.cancel(pendingIntent);
-			// Remove the pending intent
-			pendingIntent.cancel();
-		}
+		MeasurementScheduler.cancelAlarm();
 	}
 
 	public static boolean isPeriodicalRunEnabled(Context context) {
-		Intent intent = new Intent(context, PeriodicTest.class);
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 
-				Config.PERIODIC_REQUEST_CODE, intent, PendingIntent.FLAG_NO_CREATE);
-		if(pendingIntent == null)
-			return false;
-		return true;
+		if (MeasurementScheduler.isPeriodicEnabled()) return true;
+		else return false;
 	}
 
 	private static void clearNotification(Context context) {

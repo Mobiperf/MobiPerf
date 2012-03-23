@@ -75,12 +75,6 @@ public class ResultsConsoleActivity extends Activity {
 		showUserResultButton.setChecked(showUserResults);
 		showSystemResultButton.setChecked(!showUserResults);
 
-		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-		CubicChart chart = new CubicChart(new double[] {}, new double[] {},
-				new double[] {});
-		layout.addView(chart.getGraphView(this), new LayoutParams(
-				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-
 		// We enforce a either-or behavior between the two ToggleButtons
 		OnCheckedChangeListener buttonClickListener = new OnCheckedChangeListener() {
 			@Override
