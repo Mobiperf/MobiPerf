@@ -219,7 +219,8 @@ public class MobiperfActivity extends Activity {
 
 	private void quitApp() {
 		if (isBound) {
-			// unbindService(serviceConn);
+			//TODO Junxian: why comment out the following line?
+			//unbindService(serviceConn);
 			isBound = false;
 		}
 		if (MobiperfActivity.scheduler != null) {
