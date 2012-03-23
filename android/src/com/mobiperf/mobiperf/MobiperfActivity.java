@@ -68,8 +68,7 @@ public class MobiperfActivity extends Activity {
 			isBound = true;
 			isBindingToService = false;
 			// initializeStatusBar();
-			// HomeScreen.this.sendBroadcast(new UpdateIntent("",
-			// UpdateIntent.SCHEDULER_CONNECTED_ACTION));
+			// HomeScreen.this.sendBroadcast(new UpdateIntent("", UpdateIntent.SCHEDULER_CONNECTED_ACTION));
 		}
 
 		@Override
@@ -163,6 +162,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_mtask).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								MeasurementCreationActivity.class));
@@ -171,6 +171,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_results).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								ResultsConsoleActivity.class));
@@ -179,6 +180,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_networktoggle).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								NetworkToggle.class));
@@ -187,7 +189,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_about).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								com.mobiperf.mobiperf.About.class));
@@ -196,7 +198,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_settings).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								Preferences.class));
@@ -205,7 +207,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_taskqueue).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								MeasurementScheduleConsoleActivity.class));
