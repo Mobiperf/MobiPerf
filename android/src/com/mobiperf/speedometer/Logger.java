@@ -25,8 +25,8 @@ import android.util.Log;
  * 
  */
 public class Logger {
-	private final static boolean LOGGING_ENABLED = false;
-	private final static String TAG = "Speedometer";
+	private final static boolean LOGGING_ENABLED = true;
+	private final static String TAG = "MobiPerf";
 
 	public static void d(String msg) {
 		if (LOGGING_ENABLED) {
