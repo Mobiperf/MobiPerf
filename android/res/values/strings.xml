@@ -48,4 +48,5 @@
     <string name="btn_about">About Us</string>
     <string name="btn_network_toggle">Switch 3G/4G</string>
     <string name="periodtest_prompt">Select the test to be run periodically.</string>
+    <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
 </resources>

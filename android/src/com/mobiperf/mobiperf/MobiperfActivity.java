@@ -15,11 +15,16 @@
 package com.mobiperf.mobiperf;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -27,16 +32,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.speedometer.ResultsConsoleActivity;
 import com.mobiperf.speedometer.SystemConsoleActivity;
-import com.mobiperf.speedometer.UpdateIntent;
-import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
-import com.mobiperf.mobiperf.R;
 
 /**
  * Home screen for Mobiperf which hosts all the different activities.  
@@ -49,6 +51,9 @@ public class MobiperfActivity extends Activity {
 	protected static final int MENU_EMAIL = Menu.FIRST + 4;
 	protected static final int PAST_RECORD = Menu.FIRST + 5;
 	protected static final int PERF_ME = Menu.FIRST + 7;
+
+	// Define dialog id
+	protected static final int DIALOG_AGREEMENT = 1;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -91,6 +96,8 @@ public class MobiperfActivity extends Activity {
 		// the activity
 		bindToService();
 		super.onStart();
+		
+		checkFirstTimeRun();
 	}
 
 	protected void onStop() {
@@ -153,6 +160,60 @@ public class MobiperfActivity extends Activity {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	//pop up dialog
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog;
+		AlertDialog.Builder builder;
+		switch(id) {
+		case DIALOG_AGREEMENT:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle("Terms and Agreement")
+			.setMessage(R.string.terms)
+			.setCancelable(false)
+			.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					MobiperfActivity.this.dismissDialog(DIALOG_AGREEMENT);
+					Utilities.writeToFile(getFirstTimeMarkFileName(), Context.MODE_PRIVATE, "ok", MobiperfActivity.this);
+				}
+			}).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					MobiperfActivity.this.quitApp();
+				}
+			});
+			dialog = builder.create();
+			break;
+		default:
+			dialog = null;
+		}
+		return dialog;
+	}
+
+	//check whether this is the first time run
+	private void checkFirstTimeRun() {
+			String fileName = getFirstTimeMarkFileName();
+			String[] fileList = fileList();
+			for(int i = 0; i < fileList.length; i++)
+				if(fileList[i].equals(fileName))
+					// Already shown up
+					return;
+			// The following codes will only be called once after the app is installed and 
+			// opened for the first time
+			showDialog(DIALOG_AGREEMENT);
+	}
+	
+	//get the file name of the first time mark file
+	private String getFirstTimeMarkFileName(){
+		String fileName = "first_time_mark_";
+		try {
+			PackageManager manager = this.getPackageManager();	
+			PackageInfo info = manager.getPackageInfo(this.getPackageName(), 0);
+			fileName += this.getPackageName() + "_" + info.versionCode;
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		return fileName;
 	}
 
 	@Override

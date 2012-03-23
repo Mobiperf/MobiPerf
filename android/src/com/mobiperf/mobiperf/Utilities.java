@@ -454,9 +454,7 @@ public class Utilities {
 		return sdf.format(new Date()).toString();
 	}
 
-	public static void writeToFile(String filename, int mode, String data,
-			Context context) {
-
+	public static void writeToFile(String filename, int mode, String data, Context context) {
 		FileOutputStream fo = null;
 		OutputStreamWriter osw = null;
 		try {
@@ -468,7 +466,6 @@ public class Utilities {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	public static String read_first_line_from_file(String filename, int mode,
