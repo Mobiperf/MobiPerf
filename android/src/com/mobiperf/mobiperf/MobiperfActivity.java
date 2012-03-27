@@ -34,6 +34,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.mobiperf.speedometer.AccountSelector;
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
@@ -191,10 +192,17 @@ public class MobiperfActivity extends Activity {
 		case DIALOG_ACCOUNT_SELECTOR:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle("Select Authentication Account");
-			final CharSequence[] items = {"Red", "Green", "Blue"};
+			final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+			if(items == null){
+				Toast.makeText(getApplicationContext(), "There is no Google account connected for MobiPerf authentication, you may try again once you add your account to this phone.", Toast.LENGTH_SHORT).show();
+				dialog = null;
+				break;
+			}
 			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
 					Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
+					
+					//TODO: pass the selected account to AccountSelector via file/Intent?
 				}
 			});
 			AlertDialog alert = builder.create();

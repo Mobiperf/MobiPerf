@@ -37,8 +37,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.mobiperf.mobiperf.MobiperfActivity;
-
 /**
  * Helper class for google account checkins
  * 
@@ -87,6 +85,19 @@ public class AccountSelector {
 		this.checkinExecutor.shutdownNow();
 	}
 
+	public static String[] getAccountList(Context context) {
+		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
+		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
+		String[] accountNames = null;
+		if (accounts != null && accounts.length > 0) {
+			accountNames = new String[accounts.length];
+			for (int i = 0 ; i < accounts.length ; i++) {
+				accountNames[i] = accounts[i].name;
+			}
+		}
+		return accountNames;
+	}
+
 	/**
 	 * Allows clients of AccountSelector to request an authentication upon the
 	 * next call to authenticate()
@@ -109,7 +120,7 @@ public class AccountSelector {
 
 	/** Starts an authentication request */
 	public void authenticate() throws OperationCanceledException,
-			AuthenticatorException, IOException {
+	AuthenticatorException, IOException {
 		Logger.i("AccountSelector.authenticate() running");
 		/*
 		 * We only need to authenticate every AUTHENTICATE_PERIOD_MILLI
@@ -140,7 +151,7 @@ public class AccountSelector {
 		if (accounts != null && accounts.length > 0) {
 			// TODO(mdw): If multiple accounts, need to pick the correct one
 			Account accountToUse = accounts[0];
-			
+
 			// TODO Junxian: popup a dialog here asking user to select account.
 			for (Account account : accounts) {
 				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
