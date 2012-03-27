@@ -32,6 +32,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
@@ -43,6 +44,8 @@ import com.mobiperf.speedometer.SystemConsoleActivity;
 /**
  * Home screen for Mobiperf which hosts all the different activities.  
  * Contains the measurement scheduler for managing measurement tasks.
+ * 
+ * @author hjx@umich.edu (Junxian Huang)
  */
 public class MobiperfActivity extends Activity {
 
@@ -54,6 +57,7 @@ public class MobiperfActivity extends Activity {
 
 	// Define dialog id
 	protected static final int DIALOG_AGREEMENT = 1;
+	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -96,7 +100,7 @@ public class MobiperfActivity extends Activity {
 		// the activity
 		bindToService();
 		super.onStart();
-		
+
 		checkFirstTimeRun();
 	}
 
@@ -184,6 +188,18 @@ public class MobiperfActivity extends Activity {
 			});
 			dialog = builder.create();
 			break;
+		case DIALOG_ACCOUNT_SELECTOR:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle("Select Authentication Account");
+			final CharSequence[] items = {"Red", "Green", "Blue"};
+			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int item) {
+					Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
+				}
+			});
+			AlertDialog alert = builder.create();
+			dialog = builder.create();
+			break;
 		default:
 			dialog = null;
 		}
@@ -192,17 +208,20 @@ public class MobiperfActivity extends Activity {
 
 	//check whether this is the first time run
 	private void checkFirstTimeRun() {
-			String fileName = getFirstTimeMarkFileName();
-			String[] fileList = fileList();
-			for(int i = 0; i < fileList.length; i++)
-				if(fileList[i].equals(fileName))
-					// Already shown up
-					return;
-			// The following codes will only be called once after the app is installed and 
-			// opened for the first time
-			showDialog(DIALOG_AGREEMENT);
+
+		showDialog(DIALOG_ACCOUNT_SELECTOR);
+
+		String fileName = getFirstTimeMarkFileName();
+		String[] fileList = fileList();
+		for(int i = 0; i < fileList.length; i++)
+			if(fileList[i].equals(fileName))
+				// Already shown up
+				return;
+		// The following codes will only be called once after the app is installed and 
+		// opened for the first time
+		showDialog(DIALOG_AGREEMENT);
 	}
-	
+
 	//get the file name of the first time mark file
 	private String getFirstTimeMarkFileName(){
 		String fileName = "first_time_mark_";
