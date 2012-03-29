@@ -35,6 +35,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.mobiperf.speedometer.AccountSelector;
+import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
@@ -59,6 +60,7 @@ public class MobiperfActivity extends Activity {
 	// Define dialog id
 	protected static final int DIALOG_AGREEMENT = 1;
 	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
+	public static String CHECKIN_ACCOUNT = "";
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -202,7 +204,7 @@ public class MobiperfActivity extends Activity {
 				public void onClick(DialogInterface dialog, int item) {
 					Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
 					
-					//TODO: pass the selected account to AccountSelector via file/Intent?
+					CHECKIN_ACCOUNT = (String) items[item];
 				}
 			});
 			AlertDialog alert = builder.create();

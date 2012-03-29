@@ -27,6 +27,8 @@ import org.apache.http.client.params.ClientPNames;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import com.mobiperf.mobiperf.MobiperfActivity;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -156,7 +158,10 @@ public class AccountSelector {
 			for (Account account : accounts) {
 				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
 				Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
-				//accountToUse = account;
+				
+				//If one of the available accounts is the one selected by user, use that
+				if (account.toString().equals(MobiperfActivity.CHECKIN_ACCOUNT))
+					accountToUse = account;
 			}
 
 			Logger.i("Trying to get auth token for " + accountToUse);
