@@ -60,7 +60,7 @@ public class MobiperfActivity extends Activity {
 	// Define dialog id
 	protected static final int DIALOG_AGREEMENT = 1;
 	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
-	public static String CHECKIN_ACCOUNT = "";
+	public static String CHECKIN_ACCOUNT = null;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -203,7 +203,6 @@ public class MobiperfActivity extends Activity {
 			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
 					Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
-					
 					CHECKIN_ACCOUNT = (String) items[item];
 				}
 			});

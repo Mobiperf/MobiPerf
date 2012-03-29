@@ -87,6 +87,9 @@ public class AccountSelector {
 		this.checkinExecutor.shutdownNow();
 	}
 
+	/**
+	 * Return the list of account names for users to select
+	 */
 	public static String[] getAccountList(Context context) {
 		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
 		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
@@ -137,8 +140,7 @@ public class AccountSelector {
 			return;
 		}
 
-		Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth
-				/ 1000 / 60 + " minutes ago. ");
+		Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
 
 		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
 		if (this.authToken != null) {
@@ -150,10 +152,8 @@ public class AccountSelector {
 		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
 		Logger.i("Got " + accounts.length + " accounts");
 
-		if (accounts != null && accounts.length > 0) {
-			// TODO(mdw): If multiple accounts, need to pick the correct one
-			Account accountToUse = accounts[0];
-
+		if (accounts != null && accounts.length > 0 && MobiperfActivity.CHECKIN_ACCOUNT != null) {
+			Account accountToUse = null;
 			// TODO Junxian: popup a dialog here asking user to select account.
 			for (Account account : accounts) {
 				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
@@ -188,7 +188,7 @@ public class AccountSelector {
 					}, null);
 			Logger.i("AccountManager.getAuthToken returned " + future);
 		} else {
-			throw new RuntimeException("No google account found");
+			throw new RuntimeException("No google account found or no google account selected");
 		}
 	}
 
