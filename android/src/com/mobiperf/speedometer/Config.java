@@ -18,6 +18,7 @@ package com.mobiperf.speedometer;
 /**
  * The system defaults.
  * 
+ * @author hjx@umich.edu (Junxian Huang)
  * @author wenjiezeng@google.com (Steve Zeng)
  * 
  */
@@ -94,6 +95,8 @@ public interface Config {
 	public static final String PREF_KEY_USER_RESULTS = "PREF_KEY_USER_RESULTS";
 	public static final String PREF_KEY_COMPLETED_MEASUREMENTS = "PREF_KEY_COMPLETED_MEASUREMENTS";
 	public static final String PREF_KEY_FAILED_MEASUREMENTS = "PREF_KEY_FAILED_MEASUREMENTS";
+	public static final String PREF_KEY_SELECTED_ACCOUNT = "PREF_KEY_SELECTED_ACCOUNT";
+	public static final String PREF_KEY_USER_CLICKED_AGREE = "PREF_KEY_USER_CLICKED_AGREE";
 
 	/** Constants for the splash screen */
 	public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;

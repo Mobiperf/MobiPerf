@@ -591,8 +591,7 @@ public class MeasurementScheduler extends Service {
 	}
 
 	private void updateFromPreference() {
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
 					getString(R.string.batteryMinThresPrefKey),
@@ -928,11 +927,9 @@ public class MeasurementScheduler extends Service {
 	 * Save measurement statistics to persistent storage.
 	 */
 	private void saveStats() {
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS,
-				completedMeasurementCnt);
+		editor.putInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, completedMeasurementCnt);
 		editor.putInt(Config.PREF_KEY_FAILED_MEASUREMENTS, failedMeasurementCnt);
 		editor.commit();
 	}
@@ -941,12 +938,9 @@ public class MeasurementScheduler extends Service {
 	 * Restore measurement statistics from persistent storage.
 	 */
 	private void restoreStats() {
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
-		completedMeasurementCnt = prefs.getInt(
-				Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
-		failedMeasurementCnt = prefs.getInt(
-				Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		completedMeasurementCnt = prefs.getInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
+		failedMeasurementCnt = prefs.getInt(Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
 	}
 
 	/**
@@ -998,8 +992,7 @@ public class MeasurementScheduler extends Service {
 	 */
 	private void restoreConsole(ArrayAdapter<String> consoleContent,
 			String prefKey) {
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String savedConsole = prefs.getString(prefKey, null);
 		if (savedConsole != null) {
 			Type listType = new TypeToken<ArrayList<String>>() {

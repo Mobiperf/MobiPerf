@@ -37,7 +37,9 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 
 /**
  * Helper class for google account checkins
@@ -152,16 +154,20 @@ public class AccountSelector {
 		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
 		Logger.i("Got " + accounts.length + " accounts");
 
-		if (accounts != null && accounts.length > 0 && MobiperfActivity.CHECKIN_ACCOUNT != null) {
+		//get selected account
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+		
+		if (accounts != null && accounts.length > 0 && selectedAccount != null) {
 			Account accountToUse = null;
-			// TODO Junxian: popup a dialog here asking user to select account.
 			for (Account account : accounts) {
 				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
 				Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
-				
 				//If one of the available accounts is the one selected by user, use that
-				if (account.toString().equals(MobiperfActivity.CHECKIN_ACCOUNT))
+				if (account.name.equals(selectedAccount)){
 					accountToUse = account;
+					Logger.i("selected account: " + account.name + " " + account.type + " " + account.toString());
+				}
 			}
 
 			Logger.i("Trying to get auth token for " + accountToUse);

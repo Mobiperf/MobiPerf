@@ -27,6 +27,7 @@
     <string name="httpUrlLabel">URL Address</string>
     <string name="checkinIntervalPrefKey">checkinIntervalPref</string>
     <string name="periodtestPrefKey">periodtestPref</string>
+    <string name="selectedString">is selected for authenticating with MobiPerf server.</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">batteryMinThresPref</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>

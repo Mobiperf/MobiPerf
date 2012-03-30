@@ -22,11 +22,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -60,7 +62,6 @@ public class MobiperfActivity extends Activity {
 	// Define dialog id
 	protected static final int DIALOG_AGREEMENT = 1;
 	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
-	public static String CHECKIN_ACCOUNT = null;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -104,7 +105,7 @@ public class MobiperfActivity extends Activity {
 		bindToService();
 		super.onStart();
 
-		checkFirstTimeRun();
+		showDialogs();
 	}
 
 	protected void onStop() {
@@ -181,8 +182,11 @@ public class MobiperfActivity extends Activity {
 			.setCancelable(false)
 			.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int id) {
-					MobiperfActivity.this.dismissDialog(DIALOG_AGREEMENT);
-					Utilities.writeToFile(getFirstTimeMarkFileName(), Context.MODE_PRIVATE, "ok", MobiperfActivity.this);
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putString(Config.PREF_KEY_USER_CLICKED_AGREE, "true");
+					editor.commit();
+					dialog.dismiss();					
 				}
 			}).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int id) {
@@ -202,8 +206,14 @@ public class MobiperfActivity extends Activity {
 			}
 			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
-					Toast.makeText(getApplicationContext(), items[item], Toast.LENGTH_SHORT).show();
-					CHECKIN_ACCOUNT = (String) items[item];
+					Toast.makeText(getApplicationContext(), items[item] + " " + getString(R.string.selectedString), 
+							Toast.LENGTH_SHORT).show();
+					
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
+					editor.commit();
+					dialog.dismiss();
 				}
 			});
 			AlertDialog alert = builder.create();
@@ -216,22 +226,24 @@ public class MobiperfActivity extends Activity {
 	}
 
 	//check whether this is the first time run
-	private void checkFirstTimeRun() {
+	private void showDialogs() {
 
-		showDialog(DIALOG_ACCOUNT_SELECTOR);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+		if(selectedAccount == null)
+			showDialog(DIALOG_ACCOUNT_SELECTOR);
+		
+		String userClickedAgree = prefs.getString(Config.PREF_KEY_USER_CLICKED_AGREE, null);
+		if(userClickedAgree == null)
+			showDialog(DIALOG_AGREEMENT);
 
-		String fileName = getFirstTimeMarkFileName();
-		String[] fileList = fileList();
-		for(int i = 0; i < fileList.length; i++)
-			if(fileList[i].equals(fileName))
-				// Already shown up
-				return;
-		// The following codes will only be called once after the app is installed and 
-		// opened for the first time
-		showDialog(DIALOG_AGREEMENT);
 	}
 
-	//get the file name of the first time mark file
+	/**
+	 * get the file name of the first time mark file, now used SharedPreferences
+	 * 
+	 */
+	@Deprecated
 	private String getFirstTimeMarkFileName(){
 		String fileName = "first_time_mark_";
 		try {

@@ -36,8 +36,7 @@ public class WatchdogBootReceiver extends BroadcastReceiver {
 	public final void onReceive(Context context, Intent intent) {
 		Logger.i("Boot intent received.");
 		Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(context);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
 		if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
 				Config.DEFAULT_START_ON_BOOT)) {
