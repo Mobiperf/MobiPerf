@@ -28,12 +28,15 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
+import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.util.Utilities;
 
-/*
+/**
+ * @author hjx@umich.edu (Junxian Huang)
  * Preference activity allowing user to enable/disable various settings.
- */
+ **/
 public class Preferences extends PreferenceActivity {
 	public static final int NOTIFICATION_ID = 0;
 	private static boolean isNotificationEnabled = true; // Show notification by default
@@ -42,6 +45,8 @@ public class Preferences extends PreferenceActivity {
 	protected static final int DIALOG_PERIODIC = 0;
 	public static final int DIALOG_WARNING = 1;
 	protected static final int DIALOG_NOTIFICATION = 2;
+	
+	@Deprecated
 	protected static final String WARNING = "NAT and firewall tests require root access to open raw socket. "
 			+ "Other tests still run normally if your phone is not rooted.\n\n"
 			+ "A very lightweight test is run periodically every hour by default, giving two benefits:\n"
@@ -65,11 +70,11 @@ public class Preferences extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.layout.preferences);
 		// Get the custom preference
-		Preference customPref = (Preference) findPreference("PeriodicPref");
+		Preference customPref = (Preference) findPreference(Config.PREF_KEY_PERIODIC_ONOFF);
 		customPref.setOnPreferenceClickListener(new OnPreferenceClickListener(){
 			public boolean onPreferenceClick(Preference preference){
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-				boolean CheckboxPreference = prefs.getBoolean("PeriodicPref", true);
+				boolean CheckboxPreference = prefs.getBoolean(Config.PREF_KEY_PERIODIC_ONOFF, true);
 				if(CheckboxPreference == true){
 					enablePeriodicalRun(Preferences.this); 
 					Toast.makeText(getApplicationContext(), R.string.enablePeriodic, Toast.LENGTH_SHORT).show();
@@ -82,19 +87,18 @@ public class Preferences extends PreferenceActivity {
 			}
 		});
 
-		Preference intervalPref = (Preference) findPreference("checkinIntervalPref");
-		Preference batteryPref = (Preference) findPreference("batteryMinThresPref");
+		Preference intervalPref = (Preference) findPreference(Config.PREF_KEY_CHECKIN_INTERVAL);
+		Preference batteryPref = (Preference) findPreference(Config.PREF_KEY_BATTERY_THRESHOLD);
 
 		OnPreferenceChangeListener prefChangeListener = new OnPreferenceChangeListener() {
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue) {
 				String prefKey = preference.getKey();
-				if (prefKey.compareTo(getString(R.string.checkinIntervalPrefKey)) == 0) {
+				if (prefKey.compareTo(Config.PREF_KEY_CHECKIN_INTERVAL) == 0) {
 					try {
 						Integer val = Integer.parseInt((String) newValue);
 						if (val <= 0 || val > 24) {
-							Toast.makeText(
-									Preferences.this,
+							Toast.makeText(Preferences.this,
 									getString(R.string.invalidCheckinIntervalToast),
 									Toast.LENGTH_LONG).show();
 							return false;
@@ -107,7 +111,7 @@ public class Preferences extends PreferenceActivity {
 						Logger.e("Cannot cast checkin interval preference value to Integer");
 						return false;
 					}
-				} else if (prefKey.compareTo(getString(R.string.batteryMinThresPrefKey)) == 0) {
+				} else if (prefKey.compareTo(Config.PREF_KEY_BATTERY_THRESHOLD) == 0) {
 					try {
 						Integer val = Integer.parseInt((String) newValue);
 						if (val < 0 || val > 100) {
@@ -215,14 +219,6 @@ public class Preferences extends PreferenceActivity {
 	public static final int REQUEST_CODE = 100000;
 	public static final long INTERVAL = 3600 * 1000;
 	public static final String PERIODIC_FILE = "periodic_file";
-
-	public static boolean isAllowedPeriodicalRun(Context context) {
-		String r = Utilities.read_first_line_from_file(PERIODIC_FILE,
-				Context.MODE_PRIVATE, context);
-		if (r != null && r.equals(PERIODIC_NO + ""))
-			return false;
-		return true;
-	}
 
 	/**
 	 * This is called when the "Periodic Running" is checked

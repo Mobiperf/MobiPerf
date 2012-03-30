@@ -66,8 +66,8 @@ import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.util.Log;
 
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * Handles checkins with the SpeedometerApp server.

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.util;
+package com.mobiperf.util;
 
 import com.google.myjson.FieldNamingPolicy;
 import com.google.myjson.Gson;

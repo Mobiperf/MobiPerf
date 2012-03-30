@@ -26,7 +26,7 @@ import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
-import com.mobiperf.mobiperf.Utilities;
+import com.mobiperf.util.Utilities;
 
 import android.content.Context;
 import android.content.Intent;

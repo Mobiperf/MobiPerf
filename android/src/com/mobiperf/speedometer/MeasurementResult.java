@@ -24,8 +24,8 @@ import com.mobiperf.speedometer.measurements.TracerouteTask;
 import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.speedometer.measurements.UDPBurstTask;
 import com.mobiperf.speedometer.measurements.UDPBurstTask.UDPBurstDesc;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.Util;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.Util;
 
 import android.util.Log;
 import android.util.StringBuilderPrinter;

@@ -5,20 +5,20 @@
             <CheckBoxPreference
                 android:id="@+id/periodic"
                 android:title="Periodic Running"
-                android:defaultValue="false"
                 android:summary="enable periodic running"
-                android:key="PeriodicPref" />
+                android:key="PREF_KEY_PERIODIC_ONOFF"
+                android:defaultValue="false"/>
             <EditTextPreference
-    			android:defaultValue="1"
-    			android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
-    			android:key="checkinIntervalPref" 
-    			android:inputType="number" 
-    			android:title="Checkin Interval (hour)"/>    
+    			android:title="Checkin Interval (hour)"
+            	android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
+    			android:key="PREF_KEY_CHECKIN_INTERVAL"
+    			android:defaultValue="1" 
+    			android:inputType="number"/>
   			<EditTextPreference
-    			android:defaultValue="80"
-    			android:summary="The minimum battery percentage to pause all measurements"
-    			android:key="batteryMinThresPref" 
     			android:title="Battery Threshold"
+    			android:summary="The minimum battery percentage to pause all measurements"
+    			android:key="PREF_KEY_BATTERY_THRESHOLD" 
+    			android:defaultValue="80"
     			android:inputType="number"/>
         </PreferenceCategory>
 </PreferenceScreen>

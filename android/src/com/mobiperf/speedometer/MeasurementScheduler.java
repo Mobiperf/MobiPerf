@@ -17,8 +17,8 @@ package com.mobiperf.speedometer;
 
 import com.google.myjson.reflect.TypeToken;
 import com.mobiperf.speedometer.BatteryCapPowerManager.PowerAwareTask;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.mobiperf.R;
 
 import android.app.AlarmManager;
@@ -594,11 +594,11 @@ public class MeasurementScheduler extends Service {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
-					getString(R.string.batteryMinThresPrefKey),
+					Config.PREF_KEY_BATTERY_THRESHOLD,
 					String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
 
 			this.setCheckinInterval(Integer.parseInt(prefs.getString(
-					getString(R.string.checkinIntervalPrefKey),
+					Config.PREF_KEY_CHECKIN_INTERVAL,
 					String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
 
 			updateStatus();

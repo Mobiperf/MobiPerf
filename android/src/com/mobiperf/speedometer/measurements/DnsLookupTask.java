@@ -20,8 +20,8 @@ import com.mobiperf.speedometer.MeasurementDesc;
 import com.mobiperf.speedometer.MeasurementError;
 import com.mobiperf.speedometer.MeasurementResult;
 import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
 import android.util.Log;
