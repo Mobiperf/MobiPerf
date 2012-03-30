@@ -15,14 +15,13 @@
 
 package com.mobiperf.speedometer;
 
-import com.mobiperf.mobiperf.R;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
+
+import com.mobiperf.mobiperf.R;
 
 /**
  * A broadcast receiver that starts SpeedomterApp upon the BOOT_COMPLETED event.

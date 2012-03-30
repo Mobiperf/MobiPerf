@@ -14,22 +14,14 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.mobiperf.MobiperfActivity;
-import com.mobiperf.speedometer.measurements.DnsLookupTask;
-import com.mobiperf.speedometer.measurements.HttpTask;
-import com.mobiperf.speedometer.measurements.PingTask;
-import com.mobiperf.speedometer.measurements.TracerouteTask;
-import com.mobiperf.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
-import com.mobiperf.speedometer.measurements.HttpTask.HttpDesc;
-import com.mobiperf.speedometer.measurements.PingTask.PingDesc;
-import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
-import com.mobiperf.mobiperf.R;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -40,13 +32,19 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.Toast;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import com.mobiperf.mobiperf.MobiperfActivity;
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.measurements.DnsLookupTask;
+import com.mobiperf.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.speedometer.measurements.HttpTask;
+import com.mobiperf.speedometer.measurements.HttpTask.HttpDesc;
+import com.mobiperf.speedometer.measurements.PingTask;
+import com.mobiperf.speedometer.measurements.PingTask.PingDesc;
+import com.mobiperf.speedometer.measurements.TracerouteTask;
+import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
 
 /**
  * The UI Activity that allows users to create their own measurements

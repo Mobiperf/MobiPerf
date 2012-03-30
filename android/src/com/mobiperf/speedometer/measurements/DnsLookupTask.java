@@ -14,6 +14,15 @@
  */
 package com.mobiperf.speedometer.measurements;
 
+import java.io.InvalidClassException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
+import java.util.Date;
+import java.util.Map;
+
+import android.content.Context;
+
 import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementDesc;
@@ -22,16 +31,6 @@ import com.mobiperf.speedometer.MeasurementResult;
 import com.mobiperf.speedometer.MeasurementTask;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
-
-import android.content.Context;
-import android.util.Log;
-
-import java.io.InvalidClassException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.security.InvalidParameterException;
-import java.util.Date;
-import java.util.Map;
 
 /**
  * Measures the DNS lookup time

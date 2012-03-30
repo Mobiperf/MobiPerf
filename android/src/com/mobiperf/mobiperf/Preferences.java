@@ -31,7 +31,6 @@ import android.widget.Toast;
 import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementScheduler;
-import com.mobiperf.util.Utilities;
 
 /**
  * @author hjx@umich.edu (Junxian Huang)

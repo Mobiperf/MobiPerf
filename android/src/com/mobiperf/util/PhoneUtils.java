@@ -14,10 +14,14 @@
  */
 package com.mobiperf.util;
 
-import com.mobiperf.speedometer.DeviceInfo;
-import com.mobiperf.speedometer.DeviceProperty;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.mobiperf.R;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -47,19 +51,15 @@ import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.DeviceInfo;
+import com.mobiperf.speedometer.DeviceProperty;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.util.PhoneUtils.InterfaceType;
 
 /**
  * Phone related utilities.

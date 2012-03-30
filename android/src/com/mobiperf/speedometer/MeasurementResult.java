@@ -14,6 +14,11 @@
  */
 package com.mobiperf.speedometer;
 
+import java.util.Formatter;
+import java.util.HashMap;
+
+import android.util.StringBuilderPrinter;
+
 import com.mobiperf.speedometer.measurements.DnsLookupTask;
 import com.mobiperf.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
 import com.mobiperf.speedometer.measurements.HttpTask;
@@ -26,12 +31,6 @@ import com.mobiperf.speedometer.measurements.UDPBurstTask;
 import com.mobiperf.speedometer.measurements.UDPBurstTask.UDPBurstDesc;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.Util;
-
-import android.util.Log;
-import android.util.StringBuilderPrinter;
-
-import java.util.Formatter;
-import java.util.HashMap;
 
 /**
  * POJO that represents the result of a measurement

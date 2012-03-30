@@ -21,7 +21,6 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 
-import com.mobiperf.mobiperf.MobiperfActivity;
 import com.mobiperf.mobiperf.R;
 
 /**
