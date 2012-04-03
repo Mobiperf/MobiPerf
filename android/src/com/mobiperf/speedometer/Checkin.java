@@ -144,8 +144,7 @@ public class Checkin {
 			status.put("manufacturer", info.manufacturer);
 			status.put("model", info.model);
 			status.put("os", info.os);
-			status.put("properties", MeasurementJsonConvertor
-					.encodeToJson(phoneUtils.getDeviceProperty()));
+			status.put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
 
 			Logger.d(status.toString());
 			sendStringMsg("Checking in");
