@@ -1,0 +1,10 @@
+
+android/bin/
+
+android/gen/com/mobiperf/mobiperf/R.java
+
+android/images/
+
+android/*/*/.DS_Store
+
+android/gen/

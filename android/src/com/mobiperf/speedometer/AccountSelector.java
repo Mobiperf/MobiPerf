@@ -12,7 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
+
+import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -22,34 +35,24 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import android.preference.PreferenceManager;
 
 /**
  * Helper class for google account checkins
  * 
+ * @author hjx@umich.edu (Junxian Huang)
  * @author mdw@google.com (Matt Welsh)
  * @author wenjiezeng@google.com (Steve Zeng)
  * 
  */
 public class AccountSelector {
-	private static final String ACCOUNT_TYPE = "com.google";
-	private static final String ACCOUNT_NAME = "@google.com";
+	
 	// The authentication period in milliseconds
 	private static final long AUTHENTICATE_PERIOD_MSEC = 24 * 3600 * 1000;
+	private static final String ACCOUNT_TYPE = "com.google";
+	
 	private Context context;
 	private Checkin checkin;
 	private String authToken = null;
@@ -79,11 +82,26 @@ public class AccountSelector {
 
 	/** Shuts down the executor thread */
 	public void shutDown() {
-		// shutdown() removes all previously submitted task and no new tasks are
-		// accepted
+		// shutdown() removes all previously submitted task and no new tasks are accepted
 		this.checkinExecutor.shutdown();
 		// shutdownNow stops all currently executing tasks
 		this.checkinExecutor.shutdownNow();
+	}
+
+	/**
+	 * Return the list of account names for users to select
+	 */
+	public static String[] getAccountList(Context context) {
+		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
+		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
+		String[] accountNames = null;
+		if (accounts != null && accounts.length > 0) {
+			accountNames = new String[accounts.length];
+			for (int i = 0 ; i < accounts.length ; i++) {
+				accountNames[i] = accounts[i].name;
+			}
+		}
+		return accountNames;
 	}
 
 	/**
@@ -108,7 +126,7 @@ public class AccountSelector {
 
 	/** Starts an authentication request */
 	public void authenticate() throws OperationCanceledException,
-			AuthenticatorException, IOException {
+	AuthenticatorException, IOException {
 		Logger.i("AccountSelector.authenticate() running");
 		/*
 		 * We only need to authenticate every AUTHENTICATE_PERIOD_MILLI
@@ -123,11 +141,9 @@ public class AccountSelector {
 			return;
 		}
 
-		Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth
-				/ 1000 / 60 + " minutes ago. ");
+		Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
 
-		AccountManager accountManager = AccountManager.get(context
-				.getApplicationContext());
+		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
 		if (this.authToken != null) {
 			// There will be no effect on the token if it is still valid
 			Logger.i("Invalidating token");
@@ -137,17 +153,19 @@ public class AccountSelector {
 		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
 		Logger.i("Got " + accounts.length + " accounts");
 
-		if (accounts != null && accounts.length > 0) {
-			// TODO(mdw): If multiple accounts, need to pick the correct one
-			Account accountToUse = accounts[0];
-			// We prefer google's corporate account to personal accounts such as
-			// somebody@gmail.com
+		//get selected account
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+		
+		if (accounts != null && accounts.length > 0 && selectedAccount != null) {
+			Account accountToUse = null;
 			for (Account account : accounts) {
-				if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
-					Logger.i("Using the preferred google.com account: "
-							+ account.name);
+				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
+				Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
+				//If one of the available accounts is the one selected by user, use that
+				if (account.name.equals(selectedAccount)) {
 					accountToUse = account;
-					break;
+					Logger.i("selected account: " + account.name + " " + account.type + " " + account.toString());
 				}
 			}
 
@@ -175,7 +193,7 @@ public class AccountSelector {
 					}, null);
 			Logger.i("AccountManager.getAuthToken returned " + future);
 		} else {
-			throw new RuntimeException("No google account found");
+			throw new RuntimeException("No google account found or no google account selected");
 		}
 	}
 

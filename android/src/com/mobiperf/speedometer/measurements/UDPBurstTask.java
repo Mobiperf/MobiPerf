@@ -2,15 +2,12 @@
 
 package com.mobiperf.speedometer.measurements;
 
-import com.mobiperf.speedometer.speed.MeasurementDesc;
-import com.mobiperf.speedometer.speed.MeasurementError;
-import com.mobiperf.speedometer.speed.MeasurementResult;
-import com.mobiperf.speedometer.speed.MeasurementTask;
-import com.mobiperf.speedometer.util.PhoneUtils;
-
-import android.content.Context;
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InvalidClassException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -19,6 +16,14 @@ import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Map;
+
+import android.content.Context;
+
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementError;
+import com.mobiperf.speedometer.MeasurementResult;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * 

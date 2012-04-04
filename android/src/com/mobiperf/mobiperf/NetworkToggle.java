@@ -14,14 +14,11 @@
  */
 package com.mobiperf.mobiperf;
 
-import com.mobiperf.mobiperf.R;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;

@@ -12,11 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.speed;
-
-import com.mobiperf.chart.CubicChart;
-import com.mobiperf.mobiperf.MobiperfActivity;
-import com.mobiperf.mobiperf.R;
+package com.mobiperf.speedometer;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -24,16 +20,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ToggleButton;
+
+import com.mobiperf.mobiperf.MobiperfActivity;
+import com.mobiperf.mobiperf.R;
 
 /**
  * The activity that provides a console and progress bar of the ongoing
@@ -74,12 +70,6 @@ public class ResultsConsoleActivity extends Activity {
 		showSystemResultButton = (ToggleButton) findViewById(R.id.showSystemResults);
 		showUserResultButton.setChecked(showUserResults);
 		showSystemResultButton.setChecked(!showUserResults);
-
-		LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
-		CubicChart chart = new CubicChart(new double[] {}, new double[] {},
-				new double[] {});
-		layout.addView(chart.getGraphView(this), new LayoutParams(
-				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
 		// We enforce a either-or behavior between the two ToggleButtons
 		OnCheckedChangeListener buttonClickListener = new OnCheckedChangeListener() {

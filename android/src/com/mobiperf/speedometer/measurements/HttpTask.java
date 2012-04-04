@@ -15,15 +15,15 @@
 
 package com.mobiperf.speedometer.measurements;
 
-import com.mobiperf.speedometer.speed.Config;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.speedometer.speed.MeasurementDesc;
-import com.mobiperf.speedometer.speed.MeasurementError;
-import com.mobiperf.speedometer.speed.MeasurementResult;
-import com.mobiperf.speedometer.speed.MeasurementTask;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
-import com.mobiperf.speedometer.util.Util;
+import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementError;
+import com.mobiperf.speedometer.MeasurementResult;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.util.Util;
 
 import android.content.Context;
 import android.net.http.AndroidHttpClient;
