@@ -99,6 +99,7 @@ public class MobiperfActivity extends Activity {
 		}
 	}
 
+	@Override
 	protected void onStart() {
 		// Bind to the scheduler service for only once during the lifetime of
 		// the activity
@@ -108,6 +109,7 @@ public class MobiperfActivity extends Activity {
 		showDialogs();
 	}
 
+	@Override
 	protected void onStop() {
 		super.onStop();
 		if (isBound) {
@@ -171,6 +173,7 @@ public class MobiperfActivity extends Activity {
 	}
 
 	//pop up dialog
+	@Override
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog;
 		AlertDialog.Builder builder;
@@ -181,6 +184,7 @@ public class MobiperfActivity extends Activity {
 			.setMessage(R.string.terms)
 			.setCancelable(false)
 			.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int id) {
 					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 					SharedPreferences.Editor editor = prefs.edit();
@@ -189,6 +193,7 @@ public class MobiperfActivity extends Activity {
 					dialog.dismiss();					
 				}
 			}).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int id) {
 					MobiperfActivity.this.quitApp();
 				}
@@ -199,12 +204,13 @@ public class MobiperfActivity extends Activity {
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle("Select Authentication Account");
 			final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
-			if(items == null){
+			if(items == null) {
 				Toast.makeText(getApplicationContext(), "There is no Google account connected for MobiPerf authentication, you may try again once you add your account to this phone.", Toast.LENGTH_SHORT).show();
 				dialog = null;
 				break;
 			}
 			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+				@Override
 				public void onClick(DialogInterface dialog, int item) {
 					Toast.makeText(getApplicationContext(), items[item] + " " + getString(R.string.selectedString), 
 							Toast.LENGTH_SHORT).show();
@@ -244,7 +250,7 @@ public class MobiperfActivity extends Activity {
 	 * 
 	 */
 	@Deprecated
-	private String getFirstTimeMarkFileName(){
+	private String getFirstTimeMarkFileName() {
 		String fileName = "first_time_mark_";
 		try {
 			PackageManager manager = this.getPackageManager();	

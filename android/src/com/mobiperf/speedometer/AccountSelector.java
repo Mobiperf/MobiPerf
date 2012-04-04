@@ -162,7 +162,7 @@ public class AccountSelector {
 				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
 				Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
 				//If one of the available accounts is the one selected by user, use that
-				if (account.name.equals(selectedAccount)){
+				if (account.name.equals(selectedAccount)) {
 					accountToUse = account;
 					Logger.i("selected account: " + account.name + " " + account.type + " " + account.toString());
 				}
