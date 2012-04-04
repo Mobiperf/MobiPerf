@@ -42,7 +42,7 @@
       android:cacheColorHint="#00000000"
       android:textColor="#00FF00"
       android:background="#888888"/>
-<!--             
+<!--  TODO(junxian): need to add back chart later for throughput/rtt (from 4GTest) related tests           
     <LinearLayout android:id="@+id/chart"
 		android:layout_width="wrap_content"
 		android:layout_height="fill_parent"
