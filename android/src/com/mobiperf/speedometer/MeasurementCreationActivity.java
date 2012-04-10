@@ -12,24 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
-import com.mobiperf.mobiperf.MobiperfActivity;
-import com.mobiperf.speedometer.measurements.DnsLookupTask;
-import com.mobiperf.speedometer.measurements.HttpTask;
-import com.mobiperf.speedometer.measurements.PingTask;
-import com.mobiperf.speedometer.measurements.TracerouteTask;
-import com.mobiperf.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
-import com.mobiperf.speedometer.measurements.HttpTask.HttpDesc;
-import com.mobiperf.speedometer.measurements.PingTask.PingDesc;
-import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
-import com.mobiperf.mobiperf.R;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -40,13 +32,19 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.Toast;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import com.mobiperf.mobiperf.MobiperfActivity;
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.measurements.DnsLookupTask;
+import com.mobiperf.speedometer.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.speedometer.measurements.HttpTask;
+import com.mobiperf.speedometer.measurements.HttpTask.HttpDesc;
+import com.mobiperf.speedometer.measurements.PingTask;
+import com.mobiperf.speedometer.measurements.PingTask.PingDesc;
+import com.mobiperf.speedometer.measurements.TracerouteTask;
+import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
 
 /**
  * The UI Activity that allows users to create their own measurements
@@ -145,7 +143,7 @@ public class MeasurementCreationActivity extends Activity {
 			MeasurementTask newTask = null;
 			boolean showLengthWarning = false;
 			try {
-				if (measurementTypeUnderEdit.equals(PingTask.TYPE)) {
+				if (measurementTypeUnderEdit.equals(PingTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
 					EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("target", pingTargetText.getText().toString());
@@ -157,7 +155,9 @@ public class MeasurementCreationActivity extends Activity {
 					newTask = new PingTask(desc,
 							MeasurementCreationActivity.this
 									.getApplicationContext());
-				} else if (measurementTypeUnderEdit.equals(HttpTask.TYPE)) {
+				} 
+
+				if (measurementTypeUnderEdit.equals(HttpTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
 					EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("url", httpUrlText.getText().toString());
@@ -170,7 +170,9 @@ public class MeasurementCreationActivity extends Activity {
 					newTask = new HttpTask(desc,
 							MeasurementCreationActivity.this
 									.getApplicationContext());
-				} else if (measurementTypeUnderEdit.equals(TracerouteTask.TYPE)) {
+				}
+
+				if (measurementTypeUnderEdit.equals(TracerouteTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
 					EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("target", targetText.getText().toString());
@@ -183,7 +185,9 @@ public class MeasurementCreationActivity extends Activity {
 							MeasurementCreationActivity.this
 									.getApplicationContext());
 					showLengthWarning = true;
-				} else if (measurementTypeUnderEdit.equals(DnsLookupTask.TYPE)) {
+				} 
+
+				if (measurementTypeUnderEdit.equals(DnsLookupTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
 					EditText dnsTargetText = (EditText) findViewById(R.id.dnsLookupText);
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("target", dnsTargetText.getText().toString());

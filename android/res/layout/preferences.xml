@@ -5,30 +5,20 @@
             <CheckBoxPreference
                 android:id="@+id/periodic"
                 android:title="Periodic Running"
-                android:defaultValue="false"
                 android:summary="enable periodic running"
-                android:key="PeriodicPref" />
-            <com.mobiperf.mobiperf.TimeSetting
-                android:key="duration"
-        		android:title="Test period "
-        		android:summary="Set specific time for periodic running"
-        		android:dialogMessage="Period"
-        		android:defaultValue="5"
-        		android:text=" Hours"
-        		android:max="97"
-         		android:dependency="PeriodicPref"/>
+                android:key="PREF_KEY_PERIODIC_ONOFF"
+                android:defaultValue="false"/>
             <EditTextPreference
-    			android:defaultValue="1"
-    			android:summary="The interval (hours) speedometer fetches and pushes measurements"
-    			android:key="checkinIntervalPref" 
-    			android:inputType="number" 
-    			android:title="Checkin Interval (hour)"/>    
-  			<EditTextPreference
-    			android:defaultValue="80"
-    			android:summary="The minimum battery percentage to pause all measurements"
-    			android:key="batteryMinThresPref" 
-    			android:title="Battery Threshold"
+    			android:title="Checkin Interval (hour)"
+            	android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
+    			android:key="PREF_KEY_CHECKIN_INTERVAL"
+    			android:defaultValue="1" 
     			android:inputType="number"/>
-              
+  			<EditTextPreference
+    			android:title="Battery Threshold"
+    			android:summary="The minimum battery percentage to pause all measurements"
+    			android:key="PREF_KEY_BATTERY_THRESHOLD" 
+    			android:defaultValue="80"
+    			android:inputType="number"/>
         </PreferenceCategory>
 </PreferenceScreen>
