@@ -65,20 +65,20 @@ public class Preferences extends PreferenceActivity {
 
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState){
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.layout.preferences);
 		// Get the custom preference
 		Preference customPref = (Preference) findPreference(Config.PREF_KEY_PERIODIC_ONOFF);
-		customPref.setOnPreferenceClickListener(new OnPreferenceClickListener(){
-			public boolean onPreferenceClick(Preference preference){
+		customPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			public boolean onPreferenceClick(Preference preference) {
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 				boolean CheckboxPreference = prefs.getBoolean(Config.PREF_KEY_PERIODIC_ONOFF, true);
-				if(CheckboxPreference == true){
+				if(CheckboxPreference == true) {
 					enablePeriodicalRun(Preferences.this); 
 					Toast.makeText(getApplicationContext(), R.string.enablePeriodic, Toast.LENGTH_SHORT).show();
 				}
-				if(CheckboxPreference == false){
+				if(CheckboxPreference == false) {
 					disablePeriodicalRun(Preferences.this);
 					Toast.makeText(getApplicationContext(), R.string.disablePeriodic, Toast.LENGTH_SHORT).show();
 				}
