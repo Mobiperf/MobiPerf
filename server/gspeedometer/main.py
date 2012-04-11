@@ -52,6 +52,14 @@ m.connect('/',
           controller='home:Home',
           action='Dashboard')
 
+m.connect('/help',
+          controller='help:Help',
+          action='Help')
+
+m.connect('/about',
+          controller='about:About',
+          action='About')
+
 m.connect('/checkin',
           controller='checkin:Checkin',
           action='Checkin')
