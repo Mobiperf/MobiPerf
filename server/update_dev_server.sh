@@ -3,9 +3,18 @@
 # Author: mdw@google.com (Matt Welsh)
 
 # This script updates the Speedometer service running on AppEngine.
+# For more information on options try "appcfg.py --help" or
+# https://developers.google.com/appengine/docs/python/tools/uploadinganapp
+
+PYTHON=python
+APPCFG=`which appcfg.py`
 
 VERSION=`./set_version.sh`
 
-appcfg.py -e $USER@google.com -A google.com:speedometer-dev update .
+APP_ID=openmobiledata
+USER_EMAIL=`git config user.email`
+APP_DOMAIN=appspot.com
 
-echo "Try going to http://$VERSION.speedometer-dev.googleplex.com"
+$PYTHON $APPCFG -e $USER_EMAIL -A $APP_ID update .
+
+echo "Try going to http://$VERSION.$APP_ID.$APP_DOMAIN"
