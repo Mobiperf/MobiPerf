@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -21,7 +21,6 @@ import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 
-import com.mobiperf.mobiperf.MobiperfActivity;
 import com.mobiperf.mobiperf.R;
 
 /**

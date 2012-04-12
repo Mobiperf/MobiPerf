@@ -14,24 +14,23 @@
  */
 package com.mobiperf.speedometer.measurements;
 
-import com.mobiperf.speedometer.speed.Config;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.speedometer.speed.MeasurementDesc;
-import com.mobiperf.speedometer.speed.MeasurementError;
-import com.mobiperf.speedometer.speed.MeasurementResult;
-import com.mobiperf.speedometer.speed.MeasurementTask;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
-
-import android.content.Context;
-import android.util.Log;
-
 import java.io.InvalidClassException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Map;
+
+import android.content.Context;
+
+import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementError;
+import com.mobiperf.speedometer.MeasurementResult;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * Measures the DNS lookup time

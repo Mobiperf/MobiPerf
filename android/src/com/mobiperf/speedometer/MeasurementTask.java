@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.speed;
-
-import com.mobiperf.speedometer.measurements.DnsLookupTask;
-import com.mobiperf.speedometer.measurements.HttpTask;
-import com.mobiperf.speedometer.measurements.PingTask;
-import com.mobiperf.speedometer.measurements.TracerouteTask;
-
-import android.content.Context;
-import android.content.Intent;
+package com.mobiperf.speedometer;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import android.content.Context;
+import android.content.Intent;
+
+import com.mobiperf.speedometer.measurements.DnsLookupTask;
+import com.mobiperf.speedometer.measurements.HttpTask;
+import com.mobiperf.speedometer.measurements.PingTask;
+import com.mobiperf.speedometer.measurements.TracerouteTask;
 
 /**
  * Represents a scheduled measurement task. Subclasses implement functionality

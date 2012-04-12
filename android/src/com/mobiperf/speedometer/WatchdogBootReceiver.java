@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
-
-import com.mobiperf.mobiperf.R;
+package com.mobiperf.speedometer;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
+
+import com.mobiperf.mobiperf.R;
 
 /**
  * A broadcast receiver that starts SpeedomterApp upon the BOOT_COMPLETED event.
@@ -36,8 +35,7 @@ public class WatchdogBootReceiver extends BroadcastReceiver {
 	public final void onReceive(Context context, Intent intent) {
 		Logger.i("Boot intent received.");
 		Intent serviceIntent = new Intent(context, MeasurementScheduler.class);
-		SharedPreferences prefs = PreferenceManager
-				.getDefaultSharedPreferences(context);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
 		if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
 				Config.DEFAULT_START_ON_BOOT)) {

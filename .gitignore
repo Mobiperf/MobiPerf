@@ -21,3 +21,4 @@ server/dev_data/
 
 # Random evil files
 *.DS_Store
+android/*/*/.DS_Store

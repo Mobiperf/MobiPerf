@@ -13,15 +13,20 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
 /**
  * The system defaults.
  * 
+ * @author hjx@umich.edu (Junxian Huang)
  * @author wenjiezeng@google.com (Steve Zeng)
  * 
  */
 public interface Config {
+	
+	public static final String ALLTASK_TYPE = "all";
+	public static final String DEFAULT_TEST_URL = "google.com";
+	
 	public static final boolean DEFAULT_START_ON_BOOT = true;
 	/** Constants used in various measurement tasks */
 	public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
@@ -90,6 +95,12 @@ public interface Config {
 	public static final String PREF_KEY_USER_RESULTS = "PREF_KEY_USER_RESULTS";
 	public static final String PREF_KEY_COMPLETED_MEASUREMENTS = "PREF_KEY_COMPLETED_MEASUREMENTS";
 	public static final String PREF_KEY_FAILED_MEASUREMENTS = "PREF_KEY_FAILED_MEASUREMENTS";
+	public static final String PREF_KEY_SELECTED_ACCOUNT = "PREF_KEY_SELECTED_ACCOUNT";
+	public static final String PREF_KEY_USER_CLICKED_AGREE = "PREF_KEY_USER_CLICKED_AGREE";
+	public static final String PREF_KEY_CHECKIN_INTERVAL = "PREF_KEY_CHECKIN_INTERVAL";
+	public static final String PREF_KEY_BATTERY_THRESHOLD = "PREF_KEY_BATTERY_THRESHOLD";
+	public static final String PREF_KEY_PERIODIC_ONOFF = "PREF_KEY_PERIODIC_ONOFF";
+	
 
 	/** Constants for the splash screen */
 	public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;

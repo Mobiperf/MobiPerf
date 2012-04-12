@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.mobiperf;
+package com.mobiperf.util;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -34,22 +34,22 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
-
-import com.mobiperf.speedometer.speed.Config;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
-import android.location.Address;
-import android.location.Geocoder;
 import android.util.Log;
 
+import com.mobiperf.mobiperf.InformationCenter;
+import com.mobiperf.speedometer.Config;
+
 /**
+ * @author hjx@umich.edu (Junxian Huang)
+ * TODO to be merged with Util.java
  * Miscellaneous functions.
  */
 public class Utilities {
@@ -398,6 +398,10 @@ public class Utilities {
 		return iptables_available;
 	}
 
+	@Deprecated
+	/**
+	 * New MobiPerf only runs on normal phones, without using root
+	 */
 	public static boolean checkRootPrivilege() {
 		Process p;
 		try {
@@ -454,9 +458,8 @@ public class Utilities {
 		return sdf.format(new Date()).toString();
 	}
 
-	public static void writeToFile(String filename, int mode, String data,
-			Context context) {
-
+	@Deprecated
+	public static void writeToFile(String filename, int mode, String data, Context context) {
 		FileOutputStream fo = null;
 		OutputStreamWriter osw = null;
 		try {
@@ -468,20 +471,8 @@ public class Utilities {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 
-	public static String read_first_line_from_file(String filename, int mode,
-			Context context) {
-		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					context.openFileInput(filename)), 8 * 1024);
-			return br.readLine();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 
 	public static String signalServers = "";
 
@@ -538,9 +529,11 @@ public class Utilities {
 
 	}
 
+	@Deprecated
+	@SuppressWarnings("unused")
 	public static long pingS(String serverIP, int ttl, int tl, int sl_p,
 			long timeout) {
-
+		
 		String line = null;
 		boolean flag;
 		long start, end;
@@ -571,7 +564,5 @@ public class Utilities {
 		Log.v("LOG", "FAILED in ping test!!!!!!!!!!!!!!!!");
 		return -1;
 	}
-	public static boolean checkStop() {
-		return false;
-	}
+	
 }

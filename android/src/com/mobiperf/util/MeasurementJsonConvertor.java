@@ -13,7 +13,22 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.util;
+package com.mobiperf.util;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
 
 import com.google.myjson.FieldNamingPolicy;
 import com.google.myjson.Gson;
@@ -25,24 +40,9 @@ import com.google.myjson.JsonParseException;
 import com.google.myjson.JsonPrimitive;
 import com.google.myjson.JsonSerializationContext;
 import com.google.myjson.JsonSerializer;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.speedometer.speed.MeasurementDesc;
-import com.mobiperf.speedometer.speed.MeasurementTask;
-
-import android.content.Context;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementTask;
 
 /**
  * Utility class that use the gson library to provide bidirectional conversion

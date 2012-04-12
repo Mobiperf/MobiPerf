@@ -14,15 +14,15 @@
   <uses-permission android:name="android.permission.BATTERY_STATS" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-  <uses-sdk android:targetSdkVersion="9" android:minSdkVersion="9" />
+  <uses-sdk android:targetSdkVersion="10" android:minSdkVersion="8" />
     
-  <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
+  <application android:icon="@drawable/icon" android:label="@string/app_name">
     <activity android:label="@string/app_name" 
         android:name=".MobiperfActivity"
         android:screenOrientation="portrait">
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.SplashScreenActivity"
+      android:name="com.mobiperf.speedometer.SplashScreenActivity"
       android:launchMode="singleTask"
       android:theme="@android:style/Theme.Light.NoTitleBar">
       <intent-filter>
@@ -31,19 +31,19 @@
       </intent-filter>  
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.SystemConsoleActivity"
+      android:name="com.mobiperf.speedometer.SystemConsoleActivity"
       android:launchMode="singleTask" 
       android:theme="@android:style/Theme.Light.NoTitleBar">      
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.MeasurementScheduleConsoleActivity"
+      android:name="com.mobiperf.speedometer.MeasurementScheduleConsoleActivity"
       android:launchMode="singleTask">
     </activity>
     <service 
-      android:name="com.mobiperf.speedometer.speed.MeasurementScheduler" 
+      android:name="com.mobiperf.speedometer.MeasurementScheduler" 
       android:exported="false">
     </service>
-    <receiver android:name="com.mobiperf.mobiperf.WatchdogBootReceiver">
+    <receiver android:name="com.mobiperf.speedometer.WatchdogBootReceiver">
       <intent-filter>
         <action android:name="android.intent.action.BOOT_COMPLETED" />
         <category android:name="android.intent.category.HOME" />
@@ -53,14 +53,13 @@
     <activity android:name=".Preferences"></activity>
     <activity android:name=".NetworkToggle"></activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.ResultsConsoleActivity"
+      android:name="com.mobiperf.speedometer.ResultsConsoleActivity"
       android:launchMode="singleTask"
       >
     </activity>
     <activity 
-      android:name="com.mobiperf.speedometer.speed.MeasurementCreationActivity"
+      android:name="com.mobiperf.speedometer.MeasurementCreationActivity"
       android:launchMode="singleTask">
     </activity>
   </application>
-
 </manifest>

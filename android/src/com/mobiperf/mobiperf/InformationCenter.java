@@ -14,7 +14,7 @@
  */
 package com.mobiperf.mobiperf;
 
-import com.mobiperf.speedometer.speed.Config;
+import com.mobiperf.speedometer.Config;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
