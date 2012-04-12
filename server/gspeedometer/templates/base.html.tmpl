@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Google Speedometer - Measuring your mobile performance</title>
+<title>Mobiperf - Measuring your mobile performance</title>
 <link rel="stylesheet" type="text/css" href="//www.google.com/css/gcs.css"/>
 <link rel="stylesheet" type="text/css" href="/static/kennedy.css"/>
 <link rel="stylesheet" type="text/css" href="/static/speedometer.css"/>
@@ -29,19 +29,11 @@
   <a href="/"><span class="logo"><img src="/static/logo.png" height=70></span></a>
   </div>
   <div id="kd-search">
-  <a href="/"><span class="productname">Speedometer</span></a>
+  <a href="/"><span class="productname">Mobiperf</span></a>
   <div class="linkbox">
   <span class="link">Hi, {{ user }}</span>
   <span class="link"><a href="{{logout_link}}">Logout</a></span>
-  <span class="link"><a href="http://goto.google.com/speedometer">Help</a></span>
-  <span class="link">
-  <a href="http://goto.google.com/velodrome" onclick="
-  try{
-    userfeedback.api.startFeedback(
-      { productId: '70097' },
-      { build: '__BUILDVERSION__'});
-      return false;
-    }catch(e){}">Report an Issue</a></span>
+  <span class="link"><a href="help">Help</a></span>
   <span class="link" id="buildinfo">Version __BUILDVERSION__</span>
   </div>
   </div>
@@ -49,13 +41,12 @@
 
   <div id="applicationContainer">
     <blockquote>
-    <br><b>Speedometer</b> is an Android app for collecting mobile
+    <br><b>Mobiperf</b> is an Android app for collecting mobile
     network measurements in the wild.
-    For more information, see
-    <a href="http://goto.google.com/speedometer">go/speedometer</a>.
-    You can install the Speedometer app on your Android device using
-    <a href="http://goto.google.com/bazaar">Bazaar</a> -- look for
-    <b>Experimental &gt; Speedometer</b> in the Bazaar app list.
+    For more information, click
+    <a href="about">this link</a>.
+    You can install the Mobiperf app on your Android device using
+    Google Play.
    </blockquote>
 
   <div id="main-content">

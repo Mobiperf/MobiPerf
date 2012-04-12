@@ -14,7 +14,7 @@
 #!/usr/bin/python2.4
 #
 
-"""Utility functions for the Speedometer service."""
+"""Utility functions for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
