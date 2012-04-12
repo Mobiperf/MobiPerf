@@ -1,10 +1,24 @@
+# Author: gavaletz@google.com (Eric Gavaletz)
+#
+# Files that we do not want tracked by git.
 
+
+# Binary files
+*.pyc
 android/bin/
-
-android/gen/com/mobiperf/mobiperf/R.java
-
 android/images/
 
-android/*/*/.DS_Store
 
+# These are produced by templates
+server/app.yaml
+server/gspeedometer/templates/base.html
 android/gen/
+
+
+# This is for development data (not to be tracked)
+server/dev_data/
+
+
+# Random evil files
+*.DS_Store
+android/*/*/.DS_Store
