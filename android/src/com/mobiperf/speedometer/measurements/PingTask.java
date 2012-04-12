@@ -15,29 +15,6 @@
 
 package com.mobiperf.speedometer.measurements;
 
-import com.mobiperf.speedometer.speed.Config;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.speedometer.speed.MeasurementDesc;
-import com.mobiperf.speedometer.speed.MeasurementError;
-import com.mobiperf.speedometer.speed.MeasurementResult;
-import com.mobiperf.speedometer.speed.MeasurementTask;
-import com.mobiperf.speedometer.util.MeasurementJsonConvertor;
-import com.mobiperf.speedometer.util.PhoneUtils;
-import com.mobiperf.speedometer.util.Util;
-import com.mobiperf.mobiperf.R;
-
-import android.content.Context;
-import android.net.http.AndroidHttpClient;
-import android.util.Log;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpConnectionParams;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +27,28 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpConnectionParams;
+
+import android.content.Context;
+import android.net.http.AndroidHttpClient;
+
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementError;
+import com.mobiperf.speedometer.MeasurementResult;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.util.Util;
 
 /**
  * A callable that executes a ping task using one of three methods

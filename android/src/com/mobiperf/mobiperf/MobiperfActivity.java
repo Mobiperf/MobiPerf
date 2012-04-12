@@ -15,13 +15,20 @@
 package com.mobiperf.mobiperf;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,18 +36,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.mobiperf.speedometer.speed.MeasurementCreationActivity;
-import com.mobiperf.speedometer.speed.MeasurementScheduleConsoleActivity;
-import com.mobiperf.speedometer.speed.MeasurementScheduler;
-import com.mobiperf.speedometer.speed.ResultsConsoleActivity;
-import com.mobiperf.speedometer.speed.SystemConsoleActivity;
-import com.mobiperf.speedometer.speed.UpdateIntent;
-import com.mobiperf.speedometer.speed.MeasurementScheduler.SchedulerBinder;
-import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.AccountSelector;
+import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.MeasurementCreationActivity;
+import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
+import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
+import com.mobiperf.speedometer.ResultsConsoleActivity;
+import com.mobiperf.speedometer.SystemConsoleActivity;
 
 /**
  * Home screen for Mobiperf which hosts all the different activities.  
  * Contains the measurement scheduler for managing measurement tasks.
+ * 
+ * @author hjx@umich.edu (Junxian Huang)
  */
 public class MobiperfActivity extends Activity {
 
@@ -49,6 +58,10 @@ public class MobiperfActivity extends Activity {
 	protected static final int MENU_EMAIL = Menu.FIRST + 4;
 	protected static final int PAST_RECORD = Menu.FIRST + 5;
 	protected static final int PERF_ME = Menu.FIRST + 7;
+
+	// Define dialog id
+	protected static final int DIALOG_AGREEMENT = 1;
+	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
 
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
@@ -68,8 +81,7 @@ public class MobiperfActivity extends Activity {
 			isBound = true;
 			isBindingToService = false;
 			// initializeStatusBar();
-			// HomeScreen.this.sendBroadcast(new UpdateIntent("",
-			// UpdateIntent.SCHEDULER_CONNECTED_ACTION));
+			// HomeScreen.this.sendBroadcast(new UpdateIntent("", UpdateIntent.SCHEDULER_CONNECTED_ACTION));
 		}
 
 		@Override
@@ -87,13 +99,17 @@ public class MobiperfActivity extends Activity {
 		}
 	}
 
+	@Override
 	protected void onStart() {
 		// Bind to the scheduler service for only once during the lifetime of
 		// the activity
 		bindToService();
 		super.onStart();
+
+		showDialogs();
 	}
 
+	@Override
 	protected void onStop() {
 		super.onStop();
 		if (isBound) {
@@ -156,6 +172,96 @@ public class MobiperfActivity extends Activity {
 		}
 	}
 
+	//pop up dialog
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog;
+		AlertDialog.Builder builder;
+		switch(id) {
+		case DIALOG_AGREEMENT:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle("Terms and Agreement")
+			.setMessage(R.string.terms)
+			.setCancelable(false)
+			.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int id) {
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putString(Config.PREF_KEY_USER_CLICKED_AGREE, "true");
+					editor.commit();
+					dialog.dismiss();					
+				}
+			}).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int id) {
+					MobiperfActivity.this.quitApp();
+				}
+			});
+			dialog = builder.create();
+			break;
+		case DIALOG_ACCOUNT_SELECTOR:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle("Select Authentication Account");
+			final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+			if(items == null) {
+				Toast.makeText(getApplicationContext(), "There is no Google account connected for MobiPerf authentication, you may try again once you add your account to this phone.", Toast.LENGTH_SHORT).show();
+				dialog = null;
+				break;
+			}
+			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int item) {
+					Toast.makeText(getApplicationContext(), items[item] + " " + getString(R.string.selectedString), 
+							Toast.LENGTH_SHORT).show();
+					
+					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
+					editor.commit();
+					dialog.dismiss();
+				}
+			});
+			AlertDialog alert = builder.create();
+			dialog = builder.create();
+			break;
+		default:
+			dialog = null;
+		}
+		return dialog;
+	}
+
+	//check whether this is the first time run
+	private void showDialogs() {
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+		if(selectedAccount == null)
+			showDialog(DIALOG_ACCOUNT_SELECTOR);
+		
+		String userClickedAgree = prefs.getString(Config.PREF_KEY_USER_CLICKED_AGREE, null);
+		if(userClickedAgree == null)
+			showDialog(DIALOG_AGREEMENT);
+
+	}
+
+	/**
+	 * get the file name of the first time mark file, now used SharedPreferences
+	 * 
+	 */
+	@Deprecated
+	private String getFirstTimeMarkFileName() {
+		String fileName = "first_time_mark_";
+		try {
+			PackageManager manager = this.getPackageManager();	
+			PackageInfo info = manager.getPackageInfo(this.getPackageName(), 0);
+			fileName += this.getPackageName() + "_" + info.versionCode;
+		} catch (NameNotFoundException e) {
+			e.printStackTrace();
+		}
+		return fileName;
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -163,6 +269,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_mtask).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								MeasurementCreationActivity.class));
@@ -171,6 +278,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_results).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								ResultsConsoleActivity.class));
@@ -179,6 +287,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_networktoggle).setOnClickListener(
 				new View.OnClickListener() {
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								NetworkToggle.class));
@@ -187,7 +296,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_about).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								com.mobiperf.mobiperf.About.class));
@@ -196,7 +305,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_settings).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								Preferences.class));
@@ -205,7 +314,7 @@ public class MobiperfActivity extends Activity {
 
 		findViewById(R.id.home_btn_taskqueue).setOnClickListener(
 				new View.OnClickListener() {
-					// @Override
+					@Override
 					public void onClick(View v) {
 						startActivity(new Intent(getActivity(),
 								MeasurementScheduleConsoleActivity.class));
@@ -217,7 +326,8 @@ public class MobiperfActivity extends Activity {
 
 	private void quitApp() {
 		if (isBound) {
-			// unbindService(serviceConn);
+			//TODO Junxian: why comment out the following line?
+			//unbindService(serviceConn);
 			isBound = false;
 		}
 		if (MobiperfActivity.scheduler != null) {

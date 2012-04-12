@@ -12,16 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.util;
-
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.mobiperf.R;
-
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.util.Log;
+package com.mobiperf.util;
 
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -29,9 +20,18 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.Logger;
+
 /**
  * Utility class for Speedometer that does not require runtime information
  * 
+ * @author hjx@umich.edu (Junxian Huang)
  * @author mdw@google.com (Matt Welsh)
  * @author wenjiezeng@google.com (Wenjie Zeng)
  */

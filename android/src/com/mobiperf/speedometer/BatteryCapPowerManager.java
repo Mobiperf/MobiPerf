@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.util.PhoneUtils;
+import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -109,21 +109,16 @@ public class BatteryCapPowerManager {
 						(int) realTask.getDescription().priority);
 				// A progress value MEASUREMENT_END_PROGRESS indicates the end
 				// of an measurement
-				intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD,
-						Config.MEASUREMENT_END_PROGRESS);
+				intent.putExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.MEASUREMENT_END_PROGRESS);
 				if (result != null) {
-					intent.putExtra(UpdateIntent.STRING_PAYLOAD,
-							result.toString());
+					intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
 				} else {
-					String errorString = "Measurement " + realTask.toString()
-							+ " failed. ";
-					errorString += "\n\nTimestamp: "
-							+ Calendar.getInstance().getTime();
+					String errorString = "Measurement " + realTask.toString() + " failed. ";
+					errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
 					if (error != null) {
 						errorString += "\n\n" + error.toString();
 					}
-					intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD,
-							errorString);
+					intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD, errorString);
 				}
 				scheduler.sendBroadcast(intent);
 			}
@@ -163,16 +158,14 @@ public class BatteryCapPowerManager {
 					throw e;
 				} catch (Exception e) {
 					Logger.e("Got exception running task", e);
-					MeasurementError err = new MeasurementError(
-							"Got exception running task", e);
+					MeasurementError err = new MeasurementError("Got exception running task", e);
 					broadcastMeasurementEnd(null, err);
 					throw err;
 				}
 			} finally {
 				PhoneUtils.getPhoneUtils().releaseWakeLock();
 				scheduler.setCurrentTask(null);
-				scheduler
-						.sendStringMsg("Done running:\n" + realTask.toString());
+				scheduler.sendStringMsg("Done running:\n" + realTask.toString());
 			}
 		}
 	}

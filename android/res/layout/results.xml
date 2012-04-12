@@ -34,24 +34,19 @@
           android:textOn="Scheduled"
           android:textOff="Scheduled"/>
     </RelativeLayout>
- <!--    <LinearLayout android:layout_width="wrap_content"
-        android:layout_height="100px"
-        android:layout_below="@+id/resultFilter"
-        android:background="#FFFFFF" >   -->
     <ListView
       android:layout_width="wrap_content"
-      android:layout_height="100dp"
+      android:layout_height="fill_parent"
       android:layout_below="@+id/resultFilter"
       android:id="@+id/resultConsole"
-      android:scrollbars="vertical"
       android:cacheColorHint="#00000000"
       android:textColor="#00FF00"
       android:background="#888888"/>
-            
+<!--  TODO(junxian): need to add back chart later for throughput/rtt (from 4GTest) related tests           
     <LinearLayout android:id="@+id/chart"
 		android:layout_width="wrap_content"
 		android:layout_height="fill_parent"
 		android:layout_below="@+id/resultConsole"
-		android:orientation="horizontal"/>
+		android:orientation="horizontal"/>  -->
   </RelativeLayout>
 </FrameLayout>

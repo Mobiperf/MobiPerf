@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.speed.MeasurementScheduler.SchedulerBinder;
+import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.mobiperf.R;
 
 import android.app.Activity;

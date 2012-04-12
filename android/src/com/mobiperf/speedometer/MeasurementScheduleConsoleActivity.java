@@ -13,7 +13,11 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer.speed;
+package com.mobiperf.speedometer;
+
+import java.util.AbstractCollection;
+import java.util.Date;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -21,7 +25,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuInflater;
@@ -35,10 +38,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import java.util.AbstractCollection;
-import java.util.Date;
-import java.util.HashMap;
 
 import com.mobiperf.mobiperf.MobiperfActivity;
 import com.mobiperf.mobiperf.R;
@@ -68,11 +67,9 @@ public class MeasurementScheduleConsoleActivity extends Activity {
 
 		taskMap = new HashMap<String, String>();
 		consoleContent = new ArrayAdapter<String>(this, R.layout.list_item);
-		this.consoleView = (ListView) this
-				.findViewById(R.id.measurementScheduleConsole);
+		this.consoleView = (ListView) this.findViewById(R.id.measurementScheduleConsole);
 		this.consoleView.setAdapter(consoleContent);
-		lastCheckinTimeText = (TextView) this
-				.findViewById(R.id.lastCheckinTime);
+		lastCheckinTimeText = (TextView) this.findViewById(R.id.lastCheckinTime);
 		Button checkinButton = (Button) this.findViewById(R.id.checkinButton);
 		checkinButton.setOnClickListener(new OnClickListener() {
 			@Override

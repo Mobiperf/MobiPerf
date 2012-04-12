@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="listArray">
+        <item>HTTP</item>
+        <item>Traceroute</item>
+        <item>Ping</item>
+        <item>DNS Lookup</item>
+        <item>All</item>
+    </string-array>
+</resources>

@@ -12,12 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer.util;
+package com.mobiperf.util;
 
-import com.mobiperf.speedometer.speed.DeviceInfo;
-import com.mobiperf.speedometer.speed.DeviceProperty;
-import com.mobiperf.speedometer.speed.Logger;
-import com.mobiperf.mobiperf.R;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -47,19 +51,15 @@ import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.speedometer.DeviceInfo;
+import com.mobiperf.speedometer.DeviceProperty;
+import com.mobiperf.speedometer.Logger;
+import com.mobiperf.util.PhoneUtils.InterfaceType;
 
 /**
  * Phone related utilities.
@@ -585,9 +585,9 @@ public class PhoneUtils {
 
 	private synchronized void updateBatteryStat(Intent powerIntent) {
 		int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE,
-				com.mobiperf.speedometer.speed.Config.DEFAULT_BATTERY_SCALE);
+				com.mobiperf.speedometer.Config.DEFAULT_BATTERY_SCALE);
 		int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL,
-				com.mobiperf.speedometer.speed.Config.DEFAULT_BATTERY_LEVEL);
+				com.mobiperf.speedometer.Config.DEFAULT_BATTERY_LEVEL);
 		// change to the unit of percentage
 		this.curBatteryLevel = level * 100 / scale;
 		this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS,
@@ -665,7 +665,7 @@ public class PhoneUtils {
 	}
 
 	public String getServerUrl() {
-		return context.getResources().getString(R.string.speedometerServerUrl);
+		return context.getResources().getString(R.string.serverUrl);
 	}
 
 	public boolean isTestingServer(String serverUrl) {
