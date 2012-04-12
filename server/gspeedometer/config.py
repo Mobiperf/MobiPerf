@@ -14,7 +14,7 @@
 #!/usr/bin/python2.4
 #
 
-"""Configuration options for the Speedometer service."""
+"""Configuration options for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)'
 
