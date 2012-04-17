@@ -14,7 +14,7 @@
 #!/usr/bin/python2.4
 #
 
-"""Data model for the Speedometer service."""
+"""Data model for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
@@ -88,7 +88,7 @@ class DeviceProperties(db.Model):
 
   # Reference to the corresponding DeviceInfo
   device_info = db.ReferenceProperty(DeviceInfo)
-  # Speedometer app version
+  # Mobiperf app version
   app_version = db.StringProperty()
   # Timestamp
   timestamp = db.DateTimeProperty(auto_now_add=True)
