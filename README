@@ -1,0 +1,250 @@
+This is a project to develop a mobile app and service for collecting
+mobile network measurements. This is intended for experimental use
+only.
+
+Home page:
+  https://github.com/Mobiperf/Mobiperf
+
+This code is released under the Apache 2.0 License (see LICENSE for
+details).
+
+How to Contribute to this Codebase
+----------------------------------
+
+This code can be found here:
+  https://github.com/Mobiperf/Mobiperf
+
+This is a github fork of the original Speedometer code found at Google Code:
+  https://code.google.com/p/gspeedometer
+
+If you wish to contribute, please clone the above project on github
+and submit a pull request.
+
+Code Reviews
+------------
+
+All pull requests on github will be subject to code review. Code reviews
+are an excellent way to ensure that any new code is designed well and
+that we can catch bugs early.
+
+All new code should adhere to the Google Style Guides:
+
+Python: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
+
+to maintain consistency with internal code that we are developing and
+contributions from the open source community. Please familiarize
+yourself with this style and use it consistently any new code.
+
+Overview of this code
+---------------------
+
+Mobiperf consists of an Android app that collects mobile network
+measurements, and a data collection server, which runs on AppEngine.
+
+The Android app periodically checks in with the measurement server,
+which sends it a list of measurement tasks to perform. Measurement tasks
+include ping, traceroute, HTTP GET, and DNS lookup. Each task has an
+associated set of measurement parameters (e.g., which host to ping),
+and a schedule (periodicity at which to take the measurement).
+
+The device runs the measurements in the background, and uploads the
+measurement results on its next checkin cycle. By default, devices
+check in with the server every hour. In order to avoid draining the
+battery, the app will not take any measurements if the battery is
+below a given threshold (80% by default).
+
+The protocol spoken between the app and the server is a simple JSON
+REST API, documented below.
+
+The server is implemented using Google AppEngine. It is responsible
+for managing device checkins, handing out measurement tasks, and
+collecting results. It has a simple Web dashboard for presenting
+measurement results to the user. There is also a mechanism for
+querying measurement results.
+
+Protocol Description
+--------------------
+
+The Mobiperf app communicates with the Mobiperf service using
+the following protocol, using JSON-encoded payloads over HTTP POST
+methods.
+
+All strings representing dates and times are represented in ISO8601
+format with a trailing Zindicating UTC, e.g.,
+  2011-06-22T10:27:24.204589Z
+
+/checkin - Used by devices to periodically check in with the service.
+
+Input:
+
+{
+ "id": "device ID",
+ /* Note that the user field is implied */
+ "manufacturer": "device manufacturer",
+ "model": "device model",
+ "os": "device OS",
+ "properties": {
+    "timestamp": "timestamp in ISO8601 format",
+    "os_version": "device OS version",
+    "location": {
+      "latitude": latitude value as floating point decimal degrees,
+      "longitude": longitude value as floating point decimal degrees
+    }
+    "location_type": "location type string",
+    "network_type": "network type string",
+    "carrier": "carrier identifier string",
+  }
+}
+
+Output: A list of JSON objects representing task descriptors for the
+measurements that the device should perform. This schedule overwrites
+any existing schedule on the device. Ongoing measurement tasks not
+included in the new schedule are terminated immediately. If the
+schedule is empty, the device will stop performing measurements.
+
+[
+  { "key": "optional task key",
+    "type": "measurement type",
+    "parameters": [
+      { "paramName1": "paramValue1" },
+      { "paramName2": "paramValue2" },
+      ...
+    ]
+    "start_time": "task start time in ISO8601 format",
+    "end_time": "task end time in ISO8601 format",
+    "interval_sec": interval as an integer,
+    "count": count as an integer,
+    "priority": priority as an integer
+  },
+  { /* Additional Task... */ },
+  { /* Additional Task... */ }
+]
+
+/postmeasurement - Used by the device to post a set of measurement
+results to the service.
+
+Input: JSON representation of a list of Measurement objects, with
+embedded DeviceProperties.
+
+  [ { "device_id": "device ID",
+      "properties": {
+      "timestamp": "timestamp in ISO8601 format",
+      "os_version": "device OS version",
+      "location": {
+        "latitude": latitude value as floating point decimal degrees,
+        "longitude": longitude value as floating point decimal degrees
+       }
+      "location_type": "location type string",
+      "network_type": "network type string",
+      "carrier": "carrier identifier string",
+    }
+    "type": "measurement type",
+    "timestamp": "measurement timestamp in ISO8601 format",
+    "success": true or false,
+    "task_key": "task key associated with this measurement, if any",
+    "parameters": [
+        { "paramName1": "paramValue1" },
+        { "paramName2": "paramValue2" },
+        ...
+    ],
+    "values": [
+        { "valueName1": "valueValue1" },
+        { "valueName2": "valueValue2" },
+        ...
+    ],
+  },
+  { /* Additional Measurement... */ },
+  { /* Additional Measurement... */ },
+]
+
+Output: A JSON-encoded representation of whether the post was
+successful:
+
+  { "success": true or false }
+
+The measurement type may be "ping", "traceroute", "dns", or "http".
+The parameters and measurement values for each measurement type are
+given below. All parameters and values are strings (since this is how
+they are represented in the JSON protocol described above).
+
+Ping parameters
+
+(required) target - the host name or IP address of the server to ping
+(optional) packet_size_byte - the packet per ICMP ping in the unit of
+bytes. Default to 56.
+(optional) ping_timeout_sec - the number of seconds we wait for a ping
+response. Default to 0.5.
+
+Ping values
+
+(required) target_ip - the IP address of the target we ping against
+(required) ping_method - the actual ping method this result represents.
+(ping_cmd, java_ping, http).
+(required) mean_rtt_ms - Mean RTT in milliseconds (e.g.,
+ "20.485" for 20.485 ms)
+(required) min_rtt_ms - Min RTT in milliseconds
+(required) max_rtt_ms - Max RTT in milliseconds
+(required) stddev_rtt_ms - Standard deviation of RTT in milliseconds
+(optional) filtered_mean_rrt_ms - Mean RRT with outlier values filtered
+out. Unit is in milliseconds
+(optional) packet_loss - Fraction of lost packets (e.g., "0.5" for 50% loss)
+
+Traceroute parameters
+
+(required) target - the hostname or IP address to use as the target of
+the traceroute.
+(required) packet_size_byte - the packet per ICMP ping in the unit of
+bytes. Default to 56.
+(optional)  ping_timeout_sec - the number of seconds we wait for a ping
+response. Default to 2.
+optinal ping_interval_sec - the interval between successive pings in
+seconds. Default to 0.5.
+optinal pings_per_hop - the number of pings we use for each ttl value.
+Default to 3.
+(optional) max_hop_count - the total number of hops we ping before we
+declare the traceroute fails. Default to 10.
+
+Traceroute results
+
+(required) num_hops - Number of observed hops in the traceroute
+(required) hop_N_addr_i - The ith IP address of the Nth hop along the
+observed route, where N ranges from 0 to num_hops-1.
+(required) hop_N_rtt_ms - Observed RTT in milliseconds to this hop.
+
+DNS lookup parameters
+
+(required) target - Hostname of the target to resolve
+(optional) server - IP address of a DNS server to use as the resolver.
+If not present, the device's default resolver is used.
+
+DNS lookup values
+
+(required) address - IPv4 address of the target as returned by an A
+record
+(required) real_hostname - True FQDN of the host that has been resolved
+(required) time_ms - Time taken to perform the DNS lookup
+
+HTTP parameters
+
+(required) url - URL to request
+(optional) method - HTTP method to use. Defaults to "GET"
+(optional) headers - String (possibly containing newlines) with
+additional headers to send with the request. Each header and value
+pair is in the form of "headerParam:value", with different
+pairs separated by "\r\n".
+(optional) body - String with the request body to send (if method is
+"POST")
+
+HTTP values
+
+(required) time_ms - Time in milliseconds to perform the complete
+request
+(required) code - Response code (e.g., "200")
+(optional) headers_len - Size in bytes of the original response headers
+(optional) body_len - Size in bytes of the original response body
+(optional) headers - Response headers - may be compressed, truncated, or
+elided in the case of a large response
+(optional) body - Response body - may be compressed, truncated, or
+elided in the case of a large response. It is a JSON encoded byte
+array.
