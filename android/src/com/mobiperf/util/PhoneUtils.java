@@ -59,6 +59,7 @@ import com.mobiperf.mobiperf.R;
 import com.mobiperf.speedometer.DeviceInfo;
 import com.mobiperf.speedometer.DeviceProperty;
 import com.mobiperf.speedometer.Logger;
+import com.mobiperf.speedometer.MeasurementScheduler;
 import com.mobiperf.util.PhoneUtils.InterfaceType;
 
 /**
@@ -364,17 +365,15 @@ public class PhoneUtils {
 			List<String> providers = manager.getAllProviders();
 			for (String providerNameIter : providers) {
 				try {
-					LocationProvider provider = manager
-							.getProvider(providerNameIter);
+					@SuppressWarnings("unused")
+					LocationProvider provider = manager.getProvider(providerNameIter);
 				} catch (SecurityException se) {
 					// Not allowed to use this provider
 					Logger.w("Unable to use provider " + providerNameIter);
 					continue;
 				}
-				Logger.i(providerNameIter
-						+ ": "
-						+ (manager.isProviderEnabled(providerNameIter) ? "enabled"
-								: "disabled"));
+				Logger.i(providerNameIter + ": "
+						+ (manager.isProviderEnabled(providerNameIter) ? "enabled" : "disabled"));
 			}
 
 			/*
@@ -401,11 +400,9 @@ public class PhoneUtils {
 	public Location getLocation() {
 		try {
 			initLocation();
-			Location location = locationManager
-					.getLastKnownLocation(locationProviderName);
+			Location location = locationManager.getLastKnownLocation(locationProviderName);
 			if (location == null) {
-				Logger.e("Cannot obtain location from provider "
-						+ locationProviderName);
+				Logger.e("Cannot obtain location from provider " + locationProviderName);
 				return new Location("unknown");
 			}
 			return location;
@@ -673,7 +670,6 @@ public class PhoneUtils {
 	}
 
 	private String getCellularIp() {
-		String ipAddress = null;
 
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
@@ -751,7 +747,7 @@ public class PhoneUtils {
 	public DeviceProperty getDeviceProperty() {
 		String carrierName = telephonyManager.getNetworkOperatorName();
 		Location location;
-		if (!isTestingServer(getServerUrl())) {
+		if (!isTestingServer(getServerUrl()) && MeasurementScheduler.isGpsEnabled()) {
 			location = getLocation();
 		} else {
 			location = getMockLocation();

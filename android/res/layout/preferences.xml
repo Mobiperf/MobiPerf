@@ -1,24 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-        <PreferenceCategory
-                android:title="Settings">
-            <CheckBoxPreference
-                android:id="@+id/periodic"
-                android:title="Periodic Running"
-                android:summary="enable periodic running"
-                android:key="PREF_KEY_PERIODIC_ONOFF"
-                android:defaultValue="false"/>
-            <EditTextPreference
-    			android:title="Checkin Interval (hour)"
-            	android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
-    			android:key="PREF_KEY_CHECKIN_INTERVAL"
-    			android:defaultValue="1" 
-    			android:inputType="number"/>
-  			<EditTextPreference
-    			android:title="Battery Threshold"
-    			android:summary="The minimum battery percentage to pause all measurements"
-    			android:key="PREF_KEY_BATTERY_THRESHOLD" 
-    			android:defaultValue="80"
-    			android:inputType="number"/>
-        </PreferenceCategory>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Settings" >
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="PREF_KEY_GPS"
+            android:summary="Allow MobiPerf to use your location information anonymously"
+            android:title="Share Location" />
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="PREF_KEY_PERIODIC"
+            android:summary="Enable periodic running"
+            android:title="Periodic Running" />
+
+        <EditTextPreference
+            android:defaultValue="1"
+            android:inputType="number"
+            android:key="PREF_KEY_CHECKIN_INTERVAL"
+            android:summary="The interval (hours) MobiPerf fetches and pushes measurements"
+            android:title="Checkin Interval (hour)" />
+
+        <EditTextPreference
+            android:defaultValue="80"
+            android:inputType="number"
+            android:key="PREF_KEY_BATTERY_THRESHOLD"
+            android:summary="The minimum battery percentage to pause all measurements"
+            android:title="Battery Threshold" />
+    </PreferenceCategory>
+
 </PreferenceScreen>

@@ -32,6 +32,8 @@
     <string name="notificatioContent">MobiPerf service is running</string>
     <string name="enablePeriodic">Enabled periodic measurements</string>
     <string name="disablePeriodic">Disabled periodic measurements</string>
+    <string name="enableGps">Enabled anonymous location sharing</string>
+    <string name="disableGps">Disabled anonymous location sharing</string>
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
     <string name="userMeasurementBusySchedulerToast">The scheduler is busy, your measurement will start shortly</string>

@@ -31,6 +31,7 @@ import android.widget.Toast;
 import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.UpdateIntent;
 
 /**
  * @author hjx@umich.edu (Junxian Huang)
@@ -42,17 +43,8 @@ public class Preferences extends PreferenceActivity {
 
 	// Define dialog ids
 	protected static final int DIALOG_PERIODIC = 0;
-	public static final int DIALOG_WARNING = 1;
 	protected static final int DIALOG_NOTIFICATION = 2;
-	
-	@Deprecated
-	protected static final String WARNING = "NAT and firewall tests require root access to open raw socket. "
-			+ "Other tests still run normally if your phone is not rooted.\n\n"
-			+ "A very lightweight test is run periodically every hour by default, giving two benefits:\n"
-			+ "(1) better diagnose your network (we provide you with history of your network performance),\n"
-			+ "(2) enables our research for long-term network improvement.\n\n"
-			+ "We provide the setting to opt out, but we do appreciate you keep this option enabled.\n"
-			+ "Thank you for your help!";
+
 	// Options for periodical running
 	public static final int PERIODIC_YES = 0;
 	public static final int PERIODIC_NO = 1;
@@ -67,18 +59,33 @@ public class Preferences extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.layout.preferences);
 		// Get the custom preference
-		Preference customPref = (Preference) findPreference(Config.PREF_KEY_PERIODIC_ONOFF);
-		customPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+		addPreferencesFromResource(R.layout.preferences);
+
+		Preference gpsPref = (Preference) findPreference(Config.PREF_KEY_GPS);
+		gpsPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			public boolean onPreferenceClick(Preference preference) {
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-				boolean CheckboxPreference = prefs.getBoolean(Config.PREF_KEY_PERIODIC_ONOFF, true);
-				if(CheckboxPreference == true) {
+				boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_GPS, false);
+				MeasurementScheduler.setGpsEnabled(checkboxPreference);
+				if(checkboxPreference == true) {
+					Toast.makeText(getApplicationContext(), R.string.enableGps, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(getApplicationContext(), R.string.disableGps, Toast.LENGTH_SHORT).show();
+				}
+				return true;
+			}
+		});
+
+		Preference perodicPref = (Preference) findPreference(Config.PREF_KEY_PERIODIC);
+		perodicPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			public boolean onPreferenceClick(Preference preference) {
+				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+				boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_PERIODIC, false);
+				if(checkboxPreference == true) {
 					enablePeriodicalRun(Preferences.this); 
 					Toast.makeText(getApplicationContext(), R.string.enablePeriodic, Toast.LENGTH_SHORT).show();
-				}
-				if(CheckboxPreference == false) {
+				} else {
 					disablePeriodicalRun(Preferences.this);
 					Toast.makeText(getApplicationContext(), R.string.disablePeriodic, Toast.LENGTH_SHORT).show();
 				}
@@ -149,9 +156,8 @@ public class Preferences extends PreferenceActivity {
 		case DIALOG_PERIODIC:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle("Periodic MobiPerf currently running ...");
-			builder.setSingleChoiceItems(periodicItems,
-					isPeriodicalRunEnabled(this) ? 0 : 1,
-							new DialogInterface.OnClickListener() {
+			builder.setSingleChoiceItems(periodicItems, isPeriodicalRunEnabled(this) ? 0 : 1,
+					new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
 					switch (item) {
 					case PERIODIC_YES:
@@ -172,8 +178,7 @@ public class Preferences extends PreferenceActivity {
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle("Enable notification");
 			builder.setSingleChoiceItems(notificationItems,
-					isNotificationEnabled ? 0 : 1,
-							new DialogInterface.OnClickListener() {
+					isNotificationEnabled ? 0 : 1, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
 					switch (item) {
 					case NOTIFICATION_YES:
@@ -192,32 +197,12 @@ public class Preferences extends PreferenceActivity {
 			});
 			dialog = builder.create();
 			break;
-		case DIALOG_WARNING:
-			builder = new AlertDialog.Builder(this);
-			builder.setTitle("Notice")
-			.setMessage(WARNING)
-			.setCancelable(false)
-			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int id) {
-					Preferences.this.dismissDialog(DIALOG_WARNING);
-				}
-			});
-			dialog = builder.create();
-			break;
 		default:
 			dialog = null;
 		}
 		return dialog;
 	}
 
-	/**
-	 * Functions for periodical running.  Legacy code that might be merged.
-	 * 
-	 * @author Gary
-	 */
-	public static final int REQUEST_CODE = 100000;
-	public static final long INTERVAL = 3600 * 1000;
-	public static final String PERIODIC_FILE = "periodic_file";
 
 	/**
 	 * This is called when the "Periodic Running" is checked
@@ -233,14 +218,27 @@ public class Preferences extends PreferenceActivity {
 	}
 
 	public static boolean isPeriodicalRunEnabled(Context context) {
-		if (MeasurementScheduler.isPeriodicEnabled()) return true;
-		else return false;
+		if (MeasurementScheduler.isPeriodicEnabled())
+			return true;
+		else
+			return false;
 	}
 
 	private static void clearNotification(Context context) {
 		NotificationManager mNotificationManager = (NotificationManager) context
 				.getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancel(NOTIFICATION_ID);
+	}
+
+	/** 
+	 * As we leave the settings page, changes should be reflected in various applicable components
+	 * */
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		// The scheduler has a receiver monitoring this intent to get the update
+		// TODO(Wenjie): Only broadcast update intent when there is real change in the settings
+		this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
 	}
 
 }
