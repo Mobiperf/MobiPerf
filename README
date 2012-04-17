@@ -8,19 +8,6 @@ Home page:
 This code is released under the Apache 2.0 License (see LICENSE for
 details).
 
-IMPORTANT NOTE:
-
-This code was originally developed as an internal measurement tool by
-Google. We decided to open source it to support the mobile networking
-research community. As such, in its current form, the code is designed
-to work on Google's internal AppEngine infrastructure, and will need
-some work to remove the Google dependencies before it can be used more
-broadly. In particular the app checks for a "google.com" account on
-the device and the service assumes that devices and users have
-authenticated with a google.com account. These dependencies will need
-to be stripped out to make this useful outside of Google.
-
-
 How to Contribute to this Codebase
 ----------------------------------
 
@@ -42,7 +29,7 @@ that we can catch bugs early.
 
 All new code should adhere to the Google Style Guides:
 
-Python: http://code.google.com/p/google-styleguide/
+Python: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
 
 to maintain consistency with internal code that we are developing and
