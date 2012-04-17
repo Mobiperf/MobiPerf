@@ -20,6 +20,8 @@ Install the Python unittest2 package before you run this script.
 See: http://pypi.python.org/pypi/unittest2
 """
 
+__author__ = 'mdw@google.com (Matt Welsh)'
+
 import optparse
 import os
 import sys
