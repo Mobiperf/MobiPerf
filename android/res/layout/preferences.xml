@@ -6,14 +6,14 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="PREF_KEY_GPS"
-            android:summary="Allow MobiPerf to use your location information anonymously"
+            android:summary="Allow MobiPerf to use your location information"
             android:title="Share Location" />
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="PREF_KEY_PERIODIC"
-            android:summary="Enable periodic running"
-            android:title="Periodic Running" />
+            android:key="PREF_KEY_BACKGROUND"
+            android:summary="Enable lightweight background measurements"
+            android:title="Background Tests" />
 
         <EditTextPreference
             android:defaultValue="1"

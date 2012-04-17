@@ -74,7 +74,7 @@ public class MeasurementScheduler extends Service {
 	private ExecutorService measurementExecutor;
 	private BroadcastReceiver broadcastReceiver;
 	private Boolean pauseRequested = true;
-	private static boolean periodicEnabled = false;
+	private static boolean backgroundEnabled = false;
 	private boolean stopRequested = false;
 	private boolean isSchedulerStarted = false;
 	private Checkin checkin;
@@ -423,20 +423,20 @@ public class MeasurementScheduler extends Service {
 		Logger.i("Setting checkin interval to " + interval + " seconds");
 	}
 	
-	public static boolean isPeriodicEnabled() {
-		return periodicEnabled;
+	public static boolean isBackgroundEnabled() {
+		return backgroundEnabled;
 	}
 	
 	public static void enableAlarm() {
 		alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
 				System.currentTimeMillis() + Config.PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC,
 				checkinIntervalSec * 1000, checkinIntentSender);
-		periodicEnabled = true;
+		backgroundEnabled = true;
 	}
 	
 	public static void cancelAlarm() {
 		alarmManager.cancel(checkinIntentSender);
-		periodicEnabled = false;
+		backgroundEnabled = false;
 	}
 	
 	public static boolean isGpsEnabled() {

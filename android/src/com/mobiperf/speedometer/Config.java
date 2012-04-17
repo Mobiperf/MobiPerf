@@ -100,7 +100,7 @@ public interface Config {
 	
 	//Preference keys for settings tab
 	public static final String PREF_KEY_GPS = "PREF_KEY_GPS";
-	public static final String PREF_KEY_PERIODIC = "PREF_KEY_PERIODIC";
+	public static final String PREF_KEY_BACKGROUND = "PREF_KEY_BACKGROUND";
 	public static final String PREF_KEY_CHECKIN_INTERVAL = "PREF_KEY_CHECKIN_INTERVAL";
 	public static final String PREF_KEY_BATTERY_THRESHOLD = "PREF_KEY_BATTERY_THRESHOLD";
 	

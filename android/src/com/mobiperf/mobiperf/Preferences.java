@@ -77,17 +77,17 @@ public class Preferences extends PreferenceActivity {
 			}
 		});
 
-		Preference perodicPref = (Preference) findPreference(Config.PREF_KEY_PERIODIC);
+		Preference perodicPref = (Preference) findPreference(Config.PREF_KEY_BACKGROUND);
 		perodicPref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			public boolean onPreferenceClick(Preference preference) {
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-				boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_PERIODIC, false);
+				boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_BACKGROUND, false);
 				if(checkboxPreference == true) {
-					enablePeriodicalRun(Preferences.this); 
-					Toast.makeText(getApplicationContext(), R.string.enablePeriodic, Toast.LENGTH_SHORT).show();
+					enableBackground(Preferences.this); 
+					Toast.makeText(getApplicationContext(), R.string.enableBackground, Toast.LENGTH_SHORT).show();
 				} else {
-					disablePeriodicalRun(Preferences.this);
-					Toast.makeText(getApplicationContext(), R.string.disablePeriodic, Toast.LENGTH_SHORT).show();
+					disableBackground(Preferences.this);
+					Toast.makeText(getApplicationContext(), R.string.disableBackground, Toast.LENGTH_SHORT).show();
 				}
 				return true;
 			}
@@ -156,15 +156,15 @@ public class Preferences extends PreferenceActivity {
 		case DIALOG_PERIODIC:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle("Periodic MobiPerf currently running ...");
-			builder.setSingleChoiceItems(periodicItems, isPeriodicalRunEnabled(this) ? 0 : 1,
+			builder.setSingleChoiceItems(periodicItems, isBackgroundEnabled(this) ? 0 : 1,
 					new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int item) {
 					switch (item) {
 					case PERIODIC_YES:
-						enablePeriodicalRun(Preferences.this);
+						enableBackground(Preferences.this);
 						break;
 					case PERIODIC_NO:
-						disablePeriodicalRun(Preferences.this);
+						disableBackground(Preferences.this);
 						break;
 					default:
 					}
@@ -183,7 +183,7 @@ public class Preferences extends PreferenceActivity {
 					switch (item) {
 					case NOTIFICATION_YES:
 						isNotificationEnabled = true;
-						if (isPeriodicalRunEnabled(Preferences.this))
+						if (isBackgroundEnabled(Preferences.this))
 							break;
 					case NOTIFICATION_NO:
 						clearNotification(Preferences.this);
@@ -209,19 +209,16 @@ public class Preferences extends PreferenceActivity {
 	 * @param context
 	 * @param periodtest
 	 */
-	public static void enablePeriodicalRun(Context context) {
+	public static void enableBackground(Context context) {
 		MeasurementScheduler.enableAlarm();
 	}
 
-	public static void disablePeriodicalRun(Context context) {
+	public static void disableBackground(Context context) {
 		MeasurementScheduler.cancelAlarm();
 	}
 
-	public static boolean isPeriodicalRunEnabled(Context context) {
-		if (MeasurementScheduler.isPeriodicEnabled())
-			return true;
-		else
-			return false;
+	public static boolean isBackgroundEnabled(Context context) {
+		return MeasurementScheduler.isBackgroundEnabled();
 	}
 
 	private static void clearNotification(Context context) {
