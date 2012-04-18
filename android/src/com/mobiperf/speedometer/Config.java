@@ -97,9 +97,13 @@ public interface Config {
 	public static final String PREF_KEY_FAILED_MEASUREMENTS = "PREF_KEY_FAILED_MEASUREMENTS";
 	public static final String PREF_KEY_SELECTED_ACCOUNT = "PREF_KEY_SELECTED_ACCOUNT";
 	public static final String PREF_KEY_USER_CLICKED_AGREE = "PREF_KEY_USER_CLICKED_AGREE";
+	
+	//Preference keys for settings tab
+	public static final String PREF_KEY_GPS = "PREF_KEY_GPS";
+	public static final String PREF_KEY_BACKGROUND = "PREF_KEY_BACKGROUND";
 	public static final String PREF_KEY_CHECKIN_INTERVAL = "PREF_KEY_CHECKIN_INTERVAL";
 	public static final String PREF_KEY_BATTERY_THRESHOLD = "PREF_KEY_BATTERY_THRESHOLD";
-	public static final String PREF_KEY_PERIODIC_ONOFF = "PREF_KEY_PERIODIC_ONOFF";
+	
 	
 
 	/** Constants for the splash screen */
