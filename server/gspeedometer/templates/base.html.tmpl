@@ -11,18 +11,8 @@
 
 {% block extra_meta_link %}{% endblock %}
 </head>
-<body onunload="GUnload()">
-{# Google Feedback API #}
-<script type="text/javascript">
-(function() { // Protect global namespace
-  var prefix = ('https:' == document.location.protocol) ?
- 'https://ssl' : 'http://www';
-  var script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = prefix + '.gstatic.com/feedback/api.js';
-  document.body.appendChild(script);
-})();
-</script>
+<body>
+
 
   <div id="kd-googlebar" style="margin-bottom:44px">
   <div id="kd-appswitcher">

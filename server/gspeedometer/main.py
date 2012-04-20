@@ -104,6 +104,11 @@ m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
 
+m.connect('/validation/data',
+          controller='validation:Validation',
+          action='Validate')
+
+
 application = wsgi.WSGIApplication(m, debug=True)
 
 
