@@ -25,4 +25,4 @@ $PYTHON $APPCFG -e $USER_EMAIL -A dev~$APP_ID upload_data \
   --url=http://localhost:8080/_ah/remote_api \
   --log_file=$DATA_PATH/$UL_LOG_FILE \
   --db_filename=$DATA_PATH/$UL_PROGRESS_FILE \
-  --filename=$DATA_PATH
+  --filename=$DOWNLOAD_DATA_PATH
