@@ -2,7 +2,7 @@
 #
 # Author: gavaletz@google.com (Eric Gavaletz)
 
-# This script laods data from the Speedometer service running on AppEngine to
+# This script loads data from the Speedometer service running on AppEngine to
 # dev_appserver.  For more information on options try "appcfg.py --help" or
 # https://developers.google.com/appengine/docs/python/tools/uploadingdata#Downloading_and_Uploading_All_Data
 
@@ -14,8 +14,15 @@
 
 . ./script_config.sh
 
+UL_LOG_FILE=bulkloader-log-up
+UL_PROGRESS_FILE=bulkloader-progress-up.sql3
+
+echo "uploading data from $DOWNLOAD_DATA_PATH into the dev_appserver"
+echo "	--log_file=$DATA_PATH/$UL_LOG_FILE"
+echo "	--db_filename=$DATA_PATH/$UL_PROGRESS_FILE"
+
 $PYTHON $APPCFG -e $USER_EMAIL -A dev~$APP_ID upload_data \
   --url=http://localhost:8080/_ah/remote_api \
-  --log_file=$DATA_PATH/bulkloader-log-up \
-  --db_filename=$DATA_PATH/bulkloader-progress-up.sql3 \
+  --log_file=$DATA_PATH/$UL_LOG_FILE \
+  --db_filename=$DATA_PATH/$UL_PROGRESS_FILE \
   --filename=$DATA_PATH
