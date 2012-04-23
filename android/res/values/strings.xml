@@ -30,8 +30,10 @@
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="notificationSchedulerStarted">MobiPerf service has started</string>
     <string name="notificatioContent">MobiPerf service is running</string>
-    <string name="enablePeriodic">Enabled periodic measurements</string>
-    <string name="disablePeriodic">Disabled periodic measurements</string>
+    <string name="enableBackground">Enabled background measurements</string>
+    <string name="disableBackground">Disabled background measurements</string>
+    <string name="enableGps">Enabled location sharing</string>
+    <string name="disableGps">Disabled location sharing</string>
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
     <string name="userMeasurementBusySchedulerToast">The scheduler is busy, your measurement will start shortly</string>
