@@ -16,12 +16,14 @@
 
 """Controller to manage manipulation of measurement schedules."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = ('mdw@google.com (Matt Welsh), ' 
+              'drchoffnes@gmail.com (David Choffnes)')
 
 import datetime
 import logging
 
 from django import forms
+from django.utils.datastructures import SortedDict
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -31,74 +33,138 @@ from gspeedometer.controllers import measurement
 from gspeedometer.helpers import acl
 
 
-class AddToScheduleForm(forms.Form):
-  """Form to add a task to the schedule."""
-  type = forms.ChoiceField(measurement.MEASUREMENT_TYPES)
-  param1 = forms.CharField(required=False)
-  param2 = forms.CharField(required=False)
-  param3 = forms.CharField(required=False)
-  count = forms.IntegerField(required=False, initial=-1,
-                             min_value=-1, max_value=1000)
-  interval = forms.IntegerField(required=True, label='Interval (sec)',
-                                min_value=1, initial=600)
-  tag = forms.CharField(required=False)
-  filter = forms.CharField(required=False)
-
+class SelectType(forms.Form):
+  """Form to select a measurement type to schedule."""  
+  type = forms.ChoiceField(
+      measurement.MEASUREMENT_TYPES, label='Type',
+      widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
 
 class Schedule(webapp.RequestHandler):
   """Measurement request handler."""
 
   def Add(self, **unused_args):
     """Add a task to the schedule."""
+
     if not acl.UserIsScheduleAdmin():
       self.error(404)
       return
 
-    if not self.request.POST:
-      add_to_schedule_form = AddToScheduleForm()
+    if not self.request.POST or (self.request.POST.has_key('type') 
+                                 and len(self.request.POST['type']) == 0):
+      # show measurement selection form on first load
+      add_to_schedule_form = SelectType()
     else:
-      add_to_schedule_form = AddToScheduleForm(self.request.POST)
-      add_to_schedule_form.full_clean()
-      if add_to_schedule_form.is_valid():
-        thetype = add_to_schedule_form.cleaned_data['type']
-        param1 = add_to_schedule_form.cleaned_data['param1']
-        param2 = add_to_schedule_form.cleaned_data['param2']
-        param3 = add_to_schedule_form.cleaned_data['param3']
-        tag = add_to_schedule_form.cleaned_data['tag']
-        thefilter = add_to_schedule_form.cleaned_data['filter']
-        count = add_to_schedule_form.cleaned_data['count'] or -1
-        interval = add_to_schedule_form.cleaned_data['interval']
+      # measurement has been selected, but we need to check whether 
+      # the user has submitted measurement details
+      thetype = self.request.POST['type']
+      new_type = (not self.request.POST.has_key('selectedType') or 
+          self.request.POST['type'] != self.request.POST['selectedType'])
+      
+      # user selected a new measurement type
+      if new_type:
+        typeForm = SelectType(self.request.POST)
+        typeForm.full_clean()
+        if typeForm.is_valid():
+          thetype = typeForm.cleaned_data['type']
+          
+          # get the fields for the type and display them
+          fields = SortedDict()         
+          fields['type'] = forms.ChoiceField(
+              measurement.MEASUREMENT_TYPES, initial=thetype,
+              widget=forms.Select(
+                  attrs={'onchange': 'this.form.submit();'}))
 
-        logging.info('Got TYPE: ' + thetype)
+          for field in measurement.TYPE_TO_PARAM[thetype]:
+            for pair in measurement.PARAM_TYPES:
+              if pair[0] == field:
+                fields[field] = forms.CharField(required=False, label=pair[1])
+          
+          fields['count'] = forms.IntegerField(
+                                required=False, initial= -1,
+                                min_value= -1, max_value=1000)
+          fields['interval'] = forms.IntegerField(
+                                   required=True, label='Interval (sec)',
+                                   min_value=1, initial=600)
+          fields['tag'] = forms.CharField(required=False)
+          fields['filter'] = forms.CharField(required=False) 
+          fields['selectedType'] = forms.CharField(
+                                       initial=thetype,
+                                       widget=forms.widgets.HiddenInput())
 
-        task = model.Task()
-        task.created = datetime.datetime.utcnow()
-        task.user = users.get_current_user()
-        task.type = thetype
-        if tag:
-          task.tag = tag
-        if thefilter:
-          task.filter = thefilter
-        task.count = count
-        task.interval_sec = float(interval)
+          # dynamically creates a form based on the specified fields
+          add_to_schedule_form = type('AddToScheduleForm', (forms.BaseForm,),
+                                      { 'base_fields': fields})()
+        else:
+          add_to_schedule_form = SelectType()
+      else:
+        # data was submitted for a new measurement schedule item
+        thetype = self.request.POST['type']
+      
+        fields = SortedDict()    
+        fields['type'] = forms.ChoiceField(
+                             measurement.MEASUREMENT_TYPES, initial=thetype,
+                             widget=forms.Select(attrs={'onchange': 
+                                                 'this.form.submit();'}))
+        for field in measurement.TYPE_TO_PARAM[thetype]:
+          for pair in measurement.PARAM_TYPES:
+            if pair[0] == field:
+              fields[field] = forms.CharField(required=False, label=pair[1])
+        
+        fields['count'] = forms.IntegerField(required=False, initial= -1,
+                                             min_value= -1, max_value=1000)
+        fields['interval'] = forms.IntegerField(required=True,
+                                                label='Interval (sec)',
+                                                min_value=1, initial=600)
+        fields['tag'] = forms.CharField(required=False)
+        fields['filter'] = forms.CharField(required=False)
+        
+        # build completed form dynamically from POST and fields
+        add_to_schedule_form = type('AddToScheduleForm', (forms.BaseForm,),
+                                    {'base_fields': fields })(self.request.POST)
 
-        # Set up correct type-specific measurement parameters
-        if task.type == 'ping':
-          task.mparam_target = param1
-          task.mparam_ping_timeout_sec = param2
-          task.mparam_packet_size_byte = param3
-        elif task.type == 'traceroute':
-          task.mparam_target = param1
-          task.mparam_pings_per_hop = param2
-          task.mparam_max_hop_count = param3
-        elif task.type == 'http':
-          task.mparam_url = param1
-          task.mparam_method = param2
-          task.mparam_headers = param3
-        elif task.type == 'dns_lookup':
-          task.mparam_target = param1
-          task.mparam_server = param2
-        task.put()
+        add_to_schedule_form.full_clean()
+        if add_to_schedule_form.is_valid():
+              
+          params = dict()
+          thetype = add_to_schedule_form.cleaned_data['type']
+          
+          # extract supported fields
+          for field in measurement.TYPE_TO_PARAM[thetype]:
+            value = add_to_schedule_form.cleaned_data[field]            
+            if value:
+              params[field] = value
+          tag = add_to_schedule_form.cleaned_data['tag']
+          thefilter = add_to_schedule_form.cleaned_data['filter']
+          count = add_to_schedule_form.cleaned_data['count'] or -1
+          interval = add_to_schedule_form.cleaned_data['interval']
+  
+          logging.info('Got TYPE: ' + thetype)
+  
+          task = model.Task()
+          task.created = datetime.datetime.utcnow()
+          task.user = users.get_current_user()
+          task.type = thetype
+          if tag:
+            task.tag = tag
+          if thefilter:
+            task.filter = thefilter
+          task.count = count
+          task.interval_sec = float(interval)
+  
+          # Set up correct type-specific measurement parameters
+          if task.type == 'ping':
+            for name, value in params.items():
+              setattr(task, 'mparam_' + name, value)
+          elif task.type == 'traceroute':
+            for name, value in params.items():
+              setattr(task, 'mparam_' + name, value)
+          elif task.type == 'http':
+            for name, value in params.items():
+              setattr(task, 'mparam_' + name, value)
+          elif task.type == 'dns_lookup':
+            for name, value in params.items():
+              setattr(task, 'mparam_' + name, value)         
+          task.put()
 
     schedule = model.Task.all()
     schedule.order('-created')
@@ -121,7 +187,7 @@ class Schedule(webapp.RequestHandler):
 
     errormsg = None
     message = None
-    add_to_schedule_form = AddToScheduleForm()
+    add_to_schedule_form = SelectType() #AddToScheduleForm()
 
     task_id = self.request.get('id')
     task = model.Task.get_by_id(int(task_id))
