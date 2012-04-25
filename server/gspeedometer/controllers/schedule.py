@@ -187,7 +187,7 @@ class Schedule(webapp.RequestHandler):
 
     errormsg = None
     message = None
-    add_to_schedule_form = SelectType() #AddToScheduleForm()
+    add_to_schedule_form = SelectType() 
 
     task_id = self.request.get('id')
     task = model.Task.get_by_id(int(task_id))
