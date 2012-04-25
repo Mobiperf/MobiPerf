@@ -16,7 +16,8 @@
 
 """Service to collect and visualize mobile network performance data."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = ('mdw@google.com (Matt Welsh), ' 
+              'drchoffnes@gmail.com (David Choffnes)')
 
 import logging
 
@@ -30,12 +31,38 @@ from gspeedometer.controllers import device
 from gspeedometer.helpers import error
 from gspeedometer.helpers import util
 
-MEASUREMENT_TYPES = [('ping', 'ping'),
+# list of supported measurement types
+MEASUREMENT_TYPES = [('', ''),
+                     ('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get'),
-                     ('ndt', 'NDT measurement')]
+                     ('http', 'HTTP get')]
 
+# map of measurement parameter names to human-readable description
+PARAM_TYPES = [('', ''),
+               ('target', 'Target (IP or hostname)'),
+               ('location_update_distance', 'Location update distance (m)'),
+               ('trigger_location_update', 'Trigger location update (bool)'),
+               ('ping_timeout_sec', 'Ping timeout (seconds)'),
+               ('packet_size_byte', 'Ping packet size (bytes)'),
+               ('headers', 'HTTP headers'),
+               ('method', 'HTTP method'),
+               ('url', 'HTTP URL'),
+               ('max_hop_count', 'Traceroute max hop count'),
+               ('pings_per_hop', 'Traceroute pings per hop'),
+               ('server', 'DNS server')]
+
+# map of measurement type to supported measurement parameters
+TYPE_TO_PARAM = {'ping': ['target', 'location_update_distance',
+                          'trigger_location_update', 'ping_timeout_sec',
+                          'packet_size_byte'],
+                 'http': ['url', 'location_update_distance',
+                          'trigger_location_update', 'headers', 'method' ],
+                 'dns_lookup': ['server', 'location_update_distance',
+                                'trigger_location_update'],
+                 'traceroute': ['target', 'location_update_distance',
+                                'trigger_location_update',
+                                'max_hop_count', 'pings_per_hop']}
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
