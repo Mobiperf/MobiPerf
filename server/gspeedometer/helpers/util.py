@@ -84,6 +84,9 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
      For each property in the model, set a value in the returned dict
      with the property name as its key.
   """
+  #TODO(mdw) deal with ReferencePropertyResolveError
+  # https://developers.google.com/appengine/docs/python/datastore/typesandpropertyclasses#ReferenceProperty
+  # ReferencePropertyResolveError: ReferenceProperty failed to be resolved: [u'Task', 34025L]
   output = {}
   for key, prop in model.properties().iteritems():
     if include_fields is not None and key not in include_fields: continue
@@ -113,6 +116,7 @@ def ConvertToJson(model, include_fields=None, exclude_fields=None):
   return json.dumps(ConvertToDict(model, include_fields, exclude_fields))
 
 
+#TODO(mdw) this is fails to undo the conversion in ConvertToDict
 def ConvertFromDict(model, input_dict, include_fields=None,
                     exclude_fields=None):
   """Fill in Model fields with values from a dict.
