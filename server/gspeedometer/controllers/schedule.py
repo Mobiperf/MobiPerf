@@ -32,13 +32,6 @@ from gspeedometer import model
 from gspeedometer.controllers import measurement
 from gspeedometer.helpers import acl
 
-
-class SelectType(forms.Form):
-  """Form to select a measurement type to schedule."""  
-  type = forms.ChoiceField(
-      measurement.MEASUREMENT_TYPES, label='Type',
-      widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
-
 class Schedule(webapp.RequestHandler):
   """Measurement request handler."""
 
@@ -49,122 +42,62 @@ class Schedule(webapp.RequestHandler):
       self.error(404)
       return
 
-    if not self.request.POST or (self.request.POST.has_key('type') 
-                                 and len(self.request.POST['type']) == 0):
-      # show measurement selection form on first load
-      add_to_schedule_form = SelectType()
+    # new request or type changed, so show a blank form
+    if (not self.request.POST.has_key('selectedType') or 
+        self.request.POST['type'] != self.request.POST['selectedType']):   
+      
+      # assume new request, update type if otherwise
+      thetype = measurement.MEASUREMENT_TYPES[0][0]
+      if self.request.POST.has_key('type'):
+          thetype = self.request.POST['type']
+
+      # dynamically creates a form based on the specified fields
+      add_to_schedule_form = type(
+          'AddToScheduleForm', (forms.BaseForm,),
+          {'base_fields': self._BuildFields(thetype)})()
+
     else:
-      # measurement has been selected, but we need to check whether 
-      # the user has submitted measurement details
+      # data was submitted for a new measurement schedule item
       thetype = self.request.POST['type']
-      new_type = (not self.request.POST.has_key('selectedType') or 
-          self.request.POST['type'] != self.request.POST['selectedType'])
       
-      # user selected a new measurement type
-      if new_type:
-        typeForm = SelectType(self.request.POST)
-        typeForm.full_clean()
-        if typeForm.is_valid():
-          thetype = typeForm.cleaned_data['type']
-          
-          # get the fields for the type and display them
-          fields = SortedDict()         
-          fields['type'] = forms.ChoiceField(
-              measurement.MEASUREMENT_TYPES, initial=thetype,
-              widget=forms.Select(
-                  attrs={'onchange': 'this.form.submit();'}))
-
-          for field in measurement.TYPE_TO_PARAM[thetype]:
-            for pair in measurement.PARAM_TYPES:
-              if pair[0] == field:
-                fields[field] = forms.CharField(required=False, label=pair[1])
-          
-          fields['count'] = forms.IntegerField(
-                                required=False, initial= -1,
-                                min_value= -1, max_value=1000)
-          fields['interval'] = forms.IntegerField(
-                                   required=True, label='Interval (sec)',
-                                   min_value=1, initial=600)
-          fields['tag'] = forms.CharField(required=False)
-          fields['filter'] = forms.CharField(required=False) 
-          fields['selectedType'] = forms.CharField(
-                                       initial=thetype,
-                                       widget=forms.widgets.HiddenInput())
-
-          # dynamically creates a form based on the specified fields
-          add_to_schedule_form = type('AddToScheduleForm', (forms.BaseForm,),
-                                      { 'base_fields': fields})()
-        else:
-          add_to_schedule_form = SelectType()
-      else:
-        # data was submitted for a new measurement schedule item
-        thetype = self.request.POST['type']
-      
-        fields = SortedDict()    
-        fields['type'] = forms.ChoiceField(
-                             measurement.MEASUREMENT_TYPES, initial=thetype,
-                             widget=forms.Select(attrs={'onchange': 
-                                                 'this.form.submit();'}))
+      # build completed form dynamically from POST and fields
+      add_to_schedule_form = type(
+          'AddToScheduleForm', (forms.BaseForm,),
+          {'base_fields': self._BuildFields(thetype) })(self.request.POST)
+  
+      add_to_schedule_form.full_clean()
+      if add_to_schedule_form.is_valid():
+            
+        params = dict()
+        thetype = add_to_schedule_form.cleaned_data['type']
+        
+        # extract supported fields
         for field in measurement.TYPE_TO_PARAM[thetype]:
-          for pair in measurement.PARAM_TYPES:
-            if pair[0] == field:
-              fields[field] = forms.CharField(required=False, label=pair[1])
-        
-        fields['count'] = forms.IntegerField(required=False, initial= -1,
-                                             min_value= -1, max_value=1000)
-        fields['interval'] = forms.IntegerField(required=True,
-                                                label='Interval (sec)',
-                                                min_value=1, initial=600)
-        fields['tag'] = forms.CharField(required=False)
-        fields['filter'] = forms.CharField(required=False)
-        
-        # build completed form dynamically from POST and fields
-        add_to_schedule_form = type('AddToScheduleForm', (forms.BaseForm,),
-                                    {'base_fields': fields })(self.request.POST)
-
-        add_to_schedule_form.full_clean()
-        if add_to_schedule_form.is_valid():
-              
-          params = dict()
-          thetype = add_to_schedule_form.cleaned_data['type']
-          
-          # extract supported fields
-          for field in measurement.TYPE_TO_PARAM[thetype]:
-            value = add_to_schedule_form.cleaned_data[field]            
-            if value:
-              params[field] = value
-          tag = add_to_schedule_form.cleaned_data['tag']
-          thefilter = add_to_schedule_form.cleaned_data['filter']
-          count = add_to_schedule_form.cleaned_data['count'] or -1
-          interval = add_to_schedule_form.cleaned_data['interval']
+          value = add_to_schedule_form.cleaned_data[field]            
+          if value:
+            params[field] = value
+        tag = add_to_schedule_form.cleaned_data['tag']
+        thefilter = add_to_schedule_form.cleaned_data['filter']
+        count = add_to_schedule_form.cleaned_data['count'] or -1
+        interval = add_to_schedule_form.cleaned_data['interval']
   
-          logging.info('Got TYPE: ' + thetype)
+        logging.info('Got TYPE: ' + thetype)
   
-          task = model.Task()
-          task.created = datetime.datetime.utcnow()
-          task.user = users.get_current_user()
-          task.type = thetype
-          if tag:
-            task.tag = tag
-          if thefilter:
-            task.filter = thefilter
-          task.count = count
-          task.interval_sec = float(interval)
+        task = model.Task()
+        task.created = datetime.datetime.utcnow()
+        task.user = users.get_current_user()
+        task.type = thetype
+        if tag:
+          task.tag = tag
+        if thefilter:
+          task.filter = thefilter
+        task.count = count
+        task.interval_sec = float(interval)
   
-          # Set up correct type-specific measurement parameters
-          if task.type == 'ping':
-            for name, value in params.items():
-              setattr(task, 'mparam_' + name, value)
-          elif task.type == 'traceroute':
-            for name, value in params.items():
-              setattr(task, 'mparam_' + name, value)
-          elif task.type == 'http':
-            for name, value in params.items():
-              setattr(task, 'mparam_' + name, value)
-          elif task.type == 'dns_lookup':
-            for name, value in params.items():
-              setattr(task, 'mparam_' + name, value)         
-          task.put()
+        # Set up correct type-specific measurement parameters        
+        for name, value in params.items():
+          setattr(task, 'mparam_' + name, value)         
+        task.put()
 
     schedule = model.Task.all()
     schedule.order('-created')
@@ -187,7 +120,8 @@ class Schedule(webapp.RequestHandler):
 
     errormsg = None
     message = None
-    add_to_schedule_form = SelectType() 
+    add_to_schedule_form = type('AddToScheduleForm', (forms.BaseForm,),
+                                {'base_fields': self._BuildFields()})()
 
     task_id = self.request.get('id')
     task = model.Task.get_by_id(int(task_id))
@@ -219,3 +153,27 @@ class Schedule(webapp.RequestHandler):
     }
     self.response.out.write(template.render(
         'templates/schedule.html', template_args))
+
+  def _BuildFields(self, thetype=measurement.MEASUREMENT_TYPES[0][0]):
+    """Builds the ordered set of fields to display in the form for the 
+       specified measurement type."""
+    fields = SortedDict()         
+    fields['type'] = forms.ChoiceField(
+        measurement.MEASUREMENT_TYPES, initial=thetype,
+        widget=forms.Select(
+            attrs={'onchange': 'this.form.submit();'}))
+
+    for field in measurement.TYPE_TO_PARAM[thetype]:
+      for pair in measurement.PARAM_TYPES:
+        if pair[0] == field:
+          fields[field] = forms.CharField(required=False, label=pair[1])
+    
+    fields['count'] = forms.IntegerField(
+       required=False, initial= -1, min_value= -1, max_value=1000)
+    fields['interval'] = forms.IntegerField(
+        required=True, label='Interval (sec)', min_value=1, initial=600)
+    fields['tag'] = forms.CharField(required=False)
+    fields['filter'] = forms.CharField(required=False) 
+    fields['selectedType'] = forms.CharField(
+        initial=thetype, widget=forms.widgets.HiddenInput())
+    return fields
