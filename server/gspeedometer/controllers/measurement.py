@@ -32,15 +32,13 @@ from gspeedometer.helpers import error
 from gspeedometer.helpers import util
 
 # list of supported measurement types
-MEASUREMENT_TYPES = [('', ''),
-                     ('ping', 'ping'),
+MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
                      ('http', 'HTTP get')]
 
 # map of measurement parameter names to human-readable description
-PARAM_TYPES = [('', ''),
-               ('target', 'Target (IP or hostname)'),
+PARAM_TYPES = [('target', 'Target (IP or hostname)'),
                ('location_update_distance', 'Location update distance (m)'),
                ('trigger_location_update', 'Trigger location update (bool)'),
                ('ping_timeout_sec', 'Ping timeout (seconds)'),
