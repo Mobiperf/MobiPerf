@@ -84,9 +84,6 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
      For each property in the model, set a value in the returned dict
      with the property name as its key.
   """
-  #TODO(mdw) deal with ReferencePropertyResolveError
-  # https://developers.google.com/appengine/docs/python/datastore/typesandpropertyclasses#ReferenceProperty
-  # ReferencePropertyResolveError: ReferenceProperty failed to be resolved: [u'Task', 34025L]
   output = {}
   for key, prop in model.properties().iteritems():
     if include_fields is not None and key not in include_fields: continue
@@ -116,7 +113,6 @@ def ConvertToJson(model, include_fields=None, exclude_fields=None):
   return json.dumps(ConvertToDict(model, include_fields, exclude_fields))
 
 
-#TODO(mdw) this is fails to undo the conversion in ConvertToDict
 def ConvertFromDict(model, input_dict, include_fields=None,
                     exclude_fields=None):
   """Fill in Model fields with values from a dict.
@@ -137,3 +133,59 @@ def ConvertFromDict(model, input_dict, include_fields=None,
       method(v)
     else:
       setattr(model, k, v)
+
+def MeasuermentListToDictList(measurement_list, include_fields=None,
+    exclude_fields=None):
+  """Converts a list of measurement entities into a list of dictionaries.
+
+  Given a list of measuerment model objects from the datastore, this method
+  will convert that list into a list of python dictionaries that can then
+  be serailized.
+
+  Args:
+    measuerment_list: A list of measurement entities from the datastore.
+    include_fields: A list of attributes for the entities that should be
+        included in the serialized form.
+    exclude_fields: A list of attributes for the entities that should be
+        excluded in the serialized form.
+  
+  Returns:
+    A list of dictionaries representing the list of measurement entities.
+
+  Raises:
+    db.ReferencePropertyResolveError: handled for the cases where a device has
+        been deleted and where task has been deleted.
+    No New exceptions generated here.
+  """
+  output = list()
+  for measurement in results:
+    # Need to catch case where device has been deleted
+    try:
+      unused_device_info = measurement.device_properties.device_info
+    except db.ReferencePropertyResolveError:
+      logging.exception('Device deleted for measurement %s',
+          measurement.key().id())
+      # Skip this measurement
+      continue
+
+    # Need to catch case where task has been deleted
+    try:
+      unused_task = measurement.task
+    except db.ReferencePropertyResolveError:
+      measurement.task = None
+      measurement.put()
+
+    mdict = ConvertToDict(measurement, include_fields, exclude_fields,
+        timestamps_in_microseconds=True)
+
+    # Fill in additional fields
+    mdict['id'] = str(measurement.key().id())
+    mdict['parameters'] = measurement.Params()
+    mdict['values'] = measurement.Values()
+
+    if 'task' in mdict and mdict['task'] is not None:
+      mdict['task']['id'] = str(measurement.GetTaskID())
+      mdict['task']['parameters'] = measurement.task.Params()
+
+    output.append(mdict)
+  return output
