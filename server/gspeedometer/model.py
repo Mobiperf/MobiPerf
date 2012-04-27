@@ -27,37 +27,6 @@ from gspeedometer.helpers import acl
 from gspeedometer.helpers import util
 
 
-def GetClassByKind(kind):
-  """Maps the datastore entity kind to a db.Model subclass.
-
-  Used to get a reference to a entity subclass.  If you are given a serialized
-  entity and you wish to recreate the model you could use this mehtod to create
-  an instance.
-
-  Args:
-    kind: A string representing the db.Model subclass.
-  
-  Returns:
-    A reference to the appropriate db.Model subclass.
-
-  Raises:
-    NotImplementedError: Exception indicates the subclass is not implmented.
-  """
-  if kind == 'DeviceInfo':
-    return DeviceInfo
-  elif kind == 'DeviceProperties':
-    return DeviceProperties
-  elif kind == 'Task':
-    return Task
-  elif kind == 'Measurement':
-    return Measurement
-  elif kind == 'DeviceTask':
-    return DeviceTask
-  else:
-    logging.error('Unknown db.Model subclass = %s', kind)
-    raise NotImplementedError
-
-
 class DeviceInfo(db.Model):
   """Represents the static properties of a given device."""
 
