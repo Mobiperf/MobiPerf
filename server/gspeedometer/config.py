@@ -61,3 +61,9 @@ MAX_QUERY_INTERVAL_DAY = 31
 
 # Timespan over which we consider a device to be active
 ACTIVE_DAYS = 5
+
+#Archive Settings
+CONTENT_TYPE = 'application/zip'
+CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
+GS_BUCKET = 'gavaletz_mobiperf'
+GS_ACL = 'project-private'

@@ -158,7 +158,7 @@ def MeasuermentListToDictList(measurement_list, include_fields=None,
     No New exceptions generated here.
   """
   output = list()
-  for measurement in results:
+  for measurement in measurement_list:
     # Need to catch case where device has been deleted
     try:
       unused_device_info = measurement.device_properties.device_info
