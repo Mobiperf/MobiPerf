@@ -134,16 +134,16 @@ def ConvertFromDict(model, input_dict, include_fields=None,
     else:
       setattr(model, k, v)
 
-def MeasuermentListToDictList(measurement_list, include_fields=None,
+def MeasurementListToDictList(measurement_list, include_fields=None,
     exclude_fields=None):
   """Converts a list of measurement entities into a list of dictionaries.
 
   Given a list of measuerment model objects from the datastore, this method
   will convert that list into a list of python dictionaries that can then
-  be serailized.
+  be serialized.
 
   Args:
-    measuerment_list: A list of measurement entities from the datastore.
+    measurement_list: A list of measurement entities from the datastore.
     include_fields: A list of attributes for the entities that should be
         included in the serialized form.
     exclude_fields: A list of attributes for the entities that should be
@@ -157,6 +157,8 @@ def MeasuermentListToDictList(measurement_list, include_fields=None,
         been deleted and where task has been deleted.
     No New exceptions generated here.
   """
+  #TODO(mdw) Unit test needed.
+  #TODO(gavaletz) make this iterate over a query instead of a list.
   output = list()
   for measurement in measurement_list:
     # Need to catch case where device has been deleted

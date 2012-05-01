@@ -106,7 +106,7 @@ class Measurement(webapp.RequestHandler):
     else:
       results = query
 
-    output = util.MeasuermentListToDictList(results)
+    output = util.MeasurementListToDictList(results)
     self.response.out.write(json.dumps(output))
 
   def MeasurementDetail(self, **unused_args):

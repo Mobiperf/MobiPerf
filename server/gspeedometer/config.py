@@ -63,7 +63,7 @@ MAX_QUERY_INTERVAL_DAY = 31
 ACTIVE_DAYS = 5
 
 #Archive Settings
-CONTENT_TYPE = 'application/zip'
-CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
-GS_BUCKET = 'gavaletz_mobiperf'
-GS_ACL = 'project-private'
+ARCHIVE_CONTENT_TYPE = 'application/zip'
+ARCHIVE_CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
+ARCHIVE_GS_BUCKET = 'gavaletz_mobiperf'
+ARCHIVE_GS_ACL = 'project-private'

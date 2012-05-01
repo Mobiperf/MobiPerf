@@ -54,7 +54,7 @@ def ArchiveCompress(file_dict, directory=None):
     archive_file = zipfile.ZipFile(file=archive_stream,
       compression=zipfile.ZIP_DEFLATED, mode='w')
   except RuntimeError, e:
-    logging.exception('likely missing the zlib module: %s', e)
+    logging.exception('likely missing the zlib module: ', e)
     raise e
   for member_name in file_dict:
     if directory is None:
@@ -66,7 +66,7 @@ def ArchiveCompress(file_dict, directory=None):
     try:
       archive_file.writestr(info, file_dict[member_name])
     except RuntimeError, e:
-      logging.exception('likely FakeFile is closed or \'r\': %s', e)
+      logging.exception('likely FakeFile is closed or \'r\': ', e)
       raise e
   archive_file.close()
   archive_stream.seek(0)

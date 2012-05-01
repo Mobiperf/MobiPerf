@@ -27,7 +27,7 @@ that the proper ACL has been established.
 Control for accessing these methods is set in the /server/app.yaml file and
 should be limited to those with administrative access to the datastore.  Since
 these methods will likely result in calls that will exceed the response time
-limitations for frontend instances, these requests should be handeled by
+limitations for frontend instances, these requests should be handled by
 backend instances.
 
   Archive: A webapp.RequestHandler subclass for dealing with archive requests.
@@ -69,7 +69,7 @@ def GetMeasurementDictList(device_id, start=None, end=None):
      No exceptions handled here.
      No new exceptions generated here.
   """
-  # Collect measurements
+  #TODO(mdw) Unit test needed.
   measurement_q = model.Measurement.all()
   if device_id:
     measurement_q.filter('device_id =', device_id)
@@ -79,7 +79,44 @@ def GetMeasurementDictList(device_id, start=None, end=None):
     measurement_q.filter('timestamp <', end)
   measurement_q.order('timestamp')
   measurement_list = measurement_q.fetch(config.QUERY_FETCH_LIMIT)
-  return util.MeasuermentListToDictList(measurement_list)
+  #NOTE: see TODO(gavaletz) in helpers/util.py:MeasurementListToDictList
+  return util.MeasurementListToDictList(measurement_list)
+
+
+def ParametersToFileNameBase(device_id=None, start_time=None, end_time=None):
+    """Builds a file name base based on query parameters.
+
+    This method builds a file name base (laking an extension, timestamp or
+    other things that may be useful to add) that describes the contents of the
+    file of directory of files.
+
+    Args:
+      device_id: A string key for a device in the datastore.
+      start_time: A string with the timestamp for the earliest measurement
+          (microseconds UTC)
+      end_time: A string with the timestamp for the latest measurement
+          (microseconds UTC)
+
+    Returns:
+      A name that is suitable for describing the contents of the file based on
+          the parameters for the request.
+
+    Raises:
+       No exceptions handled here.
+       No new exceptions generated here.
+    """
+  archive_dir = ''
+  if start_time:
+    archive_dir += 'S-%s' % start_time
+  if end_time:
+    if len(archive_dir):
+      archive_dir += '_'
+    archive_dir += 'E-%s' % end_time
+  if device_id:
+    if len(archive_dir):
+      archive_dir += '_'
+    archive_dir += 'I-%s' % device_id
+  return archive_dir
 
 
 class Archive(webapp.RequestHandler):
@@ -89,7 +126,7 @@ class Archive(webapp.RequestHandler):
   that can be returned to the user or stored in BigStore.
   """
 
-  def __Archive(self, **unused_args):
+  def _Archive(self, **unused_args):
     """Processes parameters and packages the data into a file-like object.
 
     This method does the bulk of the heavy lifting.  It makes sense of the
@@ -116,6 +153,7 @@ class Archive(webapp.RequestHandler):
        No exceptions handled here.
        No new exceptions generated here.
     """
+    #TODO(mdw) Unit test needed.
     # Make sense of parameters
     device_id = self.request.get('device_id')
     start_time = self.request.get('start_time')
@@ -136,17 +174,7 @@ class Archive(webapp.RequestHandler):
     data = {'Measurement': json.dumps(model_list)}
 
     # Generate directory/file name based on parameters
-    archive_dir = ''
-    if start_time:
-      archive_dir += 'S-%s' % start_time
-    if end_time:
-      if len(archive_dir):
-        archive_dir += '_'
-      archive_dir += 'E-%s' % end_time
-    if device_id:
-      if len(archive_dir):
-        archive_dir += '_'
-      archive_dir += 'I-%s' % device_id
+    archive_dir = ParametersToFileNameBase(device_id, start_time, end_time)
 
     # For some reason there was a problem with Unicode chars in the request
     archive_dir = archive_dir.encode('ascii', 'ignore')
@@ -159,7 +187,7 @@ class Archive(webapp.RequestHandler):
     """Responds with data in compressed JSON format for download.
     
     Allows a file containing the requested data to be downloaded by the user.
-    Please see __Archive for details on how arguments are handled and data is
+    Please see _Archive for details on how arguments are handled and data is
     packaged.
 
     Raises:
@@ -168,27 +196,31 @@ class Archive(webapp.RequestHandler):
           reporting errors.
        No new exceptions generated here.
     """
+    #TODO(mdw) Unit test needed.
     try:
-      archive_dir, archive_data = self.__Archive()
-      self.response.headers['Content-Type'] = config.CONTENT_TYPE
-      cd = config.CONTENT_DISPOSITION_BASE % archive_dir  # Stupid line length.
-      self.response.headers['Content-Disposition'] = cd  # Stupid line length.
+      archive_dir, archive_data = self._Archive()
+      self.response.headers['Content-Type'] = config.ARCHIVE_CONTENT_TYPE
+      self.response.headers['Content-Disposition'] = (
+          config.ARCHIVE_CONTENT_DISPOSITION_BASE % archive_dir)
       self.response.out.write(archive_data)
     except DeadlineExceededError, e:
       logging.exception(e)
       self.response.clear()
       self.response.set_status(500)
-      self.response.out.write('Try doing this on a backend instance...')
+      #NOTE: if you see this error make sure it is run on a backend instance.
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.out.write(('{\'status\':500,  \'error_name\':\'%s\', '
+          '\'error_value\':\'%s\'}' % ('DeadlineExceededError', e)))
 
     #TODO(gavaletz) log the archive request
     # Consider saving the file to GS too so that it can be returned from there
     # if requested again in the future.
 
-  def ArchiveToGs(self, **unused_args):
+  def ArchiveToGoogleStorage(self, **unused_args):
     """Posts data in compressed JSON format to Google Storage for Developers.
     
     Allows a file containing the requested data to be stored in Google Storage
-    for developers for later download.  Please see __Archive for details on
+    for developers for later download.  Please see _Archive for details on
     how arguments are handled and data is packaged.
 
     In preparation for use of this method it is important that the bucket and
@@ -203,14 +235,17 @@ class Archive(webapp.RequestHandler):
           reporting errors.
        No new exceptions generated here.
     """
+    #TODO(mdw) Unit test needed.
     try:
-      archive_dir, archive_data = self.__Archive()
+      archive_dir, archive_data = self._Archive()
 
       # Create the file
-      gs_archive_name = '/gs/%s/%s.zip' % (config.GS_BUCKET, archive_dir)
+      gs_archive_name = '/gs/%s/%s.zip' % (config.ARCHIVE_GS_BUCKET,
+          archive_dir)
       gs_archive = files.gs.create(gs_archive_name,
-          mime_type=config.CONTENT_TYPE, acl=config.GS_ACL,
-          content_disposition=config.CONTENT_DISPOSITION_BASE % archive_dir)
+          mime_type=config.ARCHIVE_CONTENT_TYPE, acl=config.ARCHIVE_GS_ACL,
+          content_disposition=(
+              config.ARCHIVE_CONTENT_DISPOSITION_BASE % archive_dir))
 
       # Open the file and write the data.
       with files.open(gs_archive, 'a') as f:
@@ -218,12 +253,17 @@ class Archive(webapp.RequestHandler):
 
       # Finalize (a special close) the file.
       files.finalize(gs_archive)
-      self.response.out.write('OK -- %s' % gs_archive_name)
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.out.write('{\'status\':200,  \'archive_name\':\'%s\'}' %
+          gs_archive_name)
     except DeadlineExceededError, e:
       logging.exception(e)
       self.response.clear()
       self.response.set_status(500)
-      self.response.out.write('Try doing this on a backend instance...')
+      #NOTE: if you see this error make sure it is run on a backend instance.
+      self.response.headers['Content-Type'] = 'application/json'
+      self.response.out.write(('{\'status\':500,  \'error_name\':\'%s\', '
+          '\'error_value\':\'%s\'}' % ('DeadlineExceededError', e)))
 
     #TODO(gavaletz) create a datastore entry for the archive params, md5, etc.
     # location might be a gs bucket, someone who downloaded it etc.
