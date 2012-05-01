@@ -21,7 +21,7 @@ import logging
 import ipaddr
 
 class DNSLookup:
-  """ Encapsulates ping data and provides methods for anlyzing it """
+  """ Encapsulates ping data and provides methods for analyzing it """
   vals = dict()
   
   def __init__(self, params, values):

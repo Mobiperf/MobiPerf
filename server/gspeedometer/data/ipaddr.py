@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # Copyright 2007 Google Inc.
 #  Licensed to PSF under a Contributor Agreement.
 #
@@ -19,6 +17,8 @@
 
 This library is used to create/poke/manipulate IPv4 and IPv6 addresses
 and networks.
+
+Source: http://code.google.com/p/ipaddr-py/
 
 """
 
@@ -74,7 +74,7 @@ def IPAddress(address, version=None):
     except (AddressValueError, NetmaskValueError):
         pass
 
-    raise ValueError('%r does not appear to be an IPv4 or IPv6 address' %
+    raise ValueError('%r does not appear to be an IPv4 or IPv6 address' % 
                      address)
 
 
@@ -115,7 +115,7 @@ def IPNetwork(address, version=None, strict=False):
     except (AddressValueError, NetmaskValueError):
         pass
 
-    raise ValueError('%r does not appear to be an IPv4 or IPv6 network' %
+    raise ValueError('%r does not appear to be an IPv4 or IPv6 network' % 
                      address)
 
 
@@ -146,7 +146,7 @@ def v6_int_to_packed(address):
     Returns:
         The binary representation of this address.
     """
-    return Bytes(struct.pack('!QQ', address >> 64, address & (2**64 - 1)))
+    return Bytes(struct.pack('!QQ', address >> 64, address & (2 ** 64 - 1)))
 
 
 def _find_address_range(addresses):
@@ -251,7 +251,7 @@ def summarize_address_range(first, last):
         nbits = _count_righthand_zero_bits(first_int, ip_bits)
         current = None
         while nbits >= 0:
-            addend = 2**nbits - 1
+            addend = 2 ** nbits - 1
             current = first_int + addend
             nbits -= 1
             if current <= last_int:
@@ -642,7 +642,7 @@ class _BaseNet(_IPAddrBase):
                     self.broadcast >= other.broadcast)
         # dealing with another address
         else:
-            return (int(self.network) <= int(other._ip) <=
+            return (int(self.network) <= int(other._ip) <= 
                     int(self.broadcast))
 
     def overlaps(self, other):
@@ -764,7 +764,7 @@ class _BaseNet(_IPAddrBase):
             else:
                 # If we got here, there's a bug somewhere.
                 assert True == False, ('Error performing exclusion: '
-                                       's1: %s s2: %s other: %s' %
+                                       's1: %s s2: %s other: %s' % 
                                        (str(s1), str(s2), str(other)))
         if s1 == other:
             ret_addrs.append(s2)
@@ -773,7 +773,7 @@ class _BaseNet(_IPAddrBase):
         else:
             # If we got here, there's a bug somewhere.
             assert True == False, ('Error performing exclusion: '
-                                   's1: %s s2: %s other: %s' %
+                                   's1: %s s2: %s other: %s' % 
                                    (str(s1), str(s2), str(other)))
 
         return sorted(ret_addrs, key=_BaseNet._get_networks_key)
@@ -991,7 +991,7 @@ class _BaseNet(_IPAddrBase):
 
         if self.prefixlen - prefixlen_diff < 0:
             raise ValueError(
-                'current prefixlen is %d, cannot have a prefixlen_diff of %d' %
+                'current prefixlen is %d, cannot have a prefixlen_diff of %d' % 
                 (self.prefixlen, prefixlen_diff))
         return IPNetwork('%s/%s' % (str(self.network),
                                     str(self.prefixlen - prefixlen_diff)),
@@ -1015,7 +1015,7 @@ class _BaseV4(object):
     """
 
     # Equivalent to 255.255.255.255 or 32 bits of 1's.
-    _ALL_ONES = (2**IPV4LENGTH) - 1
+    _ALL_ONES = (2 ** IPV4LENGTH) - 1
     _DECIMAL_DIGITS = frozenset('0123456789')
 
     def __init__(self, address):
@@ -1319,7 +1319,7 @@ class IPv4Network(_BaseV4, _BaseNet):
                 self._prefixlen))
         if strict:
             if self.ip != self.network:
-                raise ValueError('%s has host bits set' %
+                raise ValueError('%s has host bits set' % 
                                  self.ip)
         if self._prefixlen == (self._max_prefixlen - 1):
             self.iterhosts = self.__iter__
@@ -1387,7 +1387,7 @@ class _BaseV6(object):
 
     """
 
-    _ALL_ONES = (2**IPV6LENGTH) - 1
+    _ALL_ONES = (2 ** IPV6LENGTH) - 1
     _HEXTET_COUNT = 8
     _HEX_DIGITS = frozenset('0123456789ABCDEFabcdef')
 
@@ -1530,7 +1530,7 @@ class _BaseV6(object):
                 doublecolon_start = -1
 
         if best_doublecolon_len > 1:
-            best_doublecolon_end = (best_doublecolon_start +
+            best_doublecolon_end = (best_doublecolon_start + 
                                     best_doublecolon_len)
             # For zeros at the end of the address.
             if best_doublecolon_end == len(hextets):
@@ -1564,7 +1564,7 @@ class _BaseV6(object):
         hex_str = '%032x' % ip_int
         hextets = []
         for x in range(0, 32, 4):
-            hextets.append('%x' % int(hex_str[x:x+4], 16))
+            hextets.append('%x' % int(hex_str[x:x + 4], 16))
 
         hextets = self._compress_hextets(hextets)
         return ':'.join(hextets)
@@ -1870,7 +1870,7 @@ class IPv6Network(_BaseV6, _BaseNet):
 
         if strict:
             if self.ip != self.network:
-                raise ValueError('%s has host bits set' %
+                raise ValueError('%s has host bits set' % 
                                  self.ip)
         if self._prefixlen == (self._max_prefixlen - 1):
             self.iterhosts = self.__iter__
