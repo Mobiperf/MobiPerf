@@ -35,8 +35,7 @@ from gspeedometer.helpers import util
 MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get'),
-                      ('foo', 'foobar')]
+                     ('http', 'HTTP get')]
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
