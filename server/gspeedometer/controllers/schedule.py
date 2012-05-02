@@ -57,7 +57,7 @@ class Schedule(webapp.RequestHandler):
         else:
           measurement = \
               measurement_type.MeasurementType.Get_Default_Measurement()
-      except RuntimeError as error:
+      except RuntimeError, error:
         # occurs if someone specifies an invalid measurement type
         logging.warning('Type in POST is invalid: %s', error)                        
         self.error(501)
