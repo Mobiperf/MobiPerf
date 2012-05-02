@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#!/usr/bin/python2.4
 #
-from gspeedometer.controllers import measurement
 
 """Simple class for mapping measurement types to their fields."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
 from django.utils.datastructures import SortedDict
+from gspeedometer.controllers import measurement
 
 class MeasurementType:
   """Maps datastore entity and field names to human-readable ones."""
