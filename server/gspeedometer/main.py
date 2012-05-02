@@ -22,6 +22,7 @@ __author__ = 'mdw@google.com (Matt Welsh)'
 try:
   # This is expected to fail on the local server.
   from google.appengine.dist import use_library  # pylint: disable-msg=C6204
+  use_library('django', '1.2')
 except ImportError:
   pass
 else:
@@ -103,6 +104,15 @@ m.connect('/timeseries',
 m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
+
+# Control to these handlers is controlled by the app.yaml acl lists.
+m.connect('/admin/archive/gs',
+          controller='archive:Archive',
+          action='ArchiveToGoogleStorage')
+
+m.connect('/admin/archive/file',
+          controller='archive:Archive',
+          action='ArchiveToFile')
 
 application = wsgi.WSGIApplication(m, debug=True)
 
