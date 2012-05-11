@@ -133,3 +133,61 @@ def ConvertFromDict(model, input_dict, include_fields=None,
       method(v)
     else:
       setattr(model, k, v)
+
+def MeasurementListToDictList(measurement_list, include_fields=None,
+    exclude_fields=None):
+  """Converts a list of measurement entities into a list of dictionaries.
+
+  Given a list of measuerment model objects from the datastore, this method
+  will convert that list into a list of python dictionaries that can then
+  be serialized.
+
+  Args:
+    measurement_list: A list of measurement entities from the datastore.
+    include_fields: A list of attributes for the entities that should be
+        included in the serialized form.
+    exclude_fields: A list of attributes for the entities that should be
+        excluded in the serialized form.
+  
+  Returns:
+    A list of dictionaries representing the list of measurement entities.
+
+  Raises:
+    db.ReferencePropertyResolveError: handled for the cases where a device has
+        been deleted and where task has been deleted.
+    No New exceptions generated here.
+  """
+  #TODO(mdw) Unit test needed.
+  #TODO(gavaletz) make this iterate over a query instead of a list.
+  output = list()
+  for measurement in measurement_list:
+    # Need to catch case where device has been deleted
+    try:
+      unused_device_info = measurement.device_properties.device_info
+    except db.ReferencePropertyResolveError:
+      logging.exception('Device deleted for measurement %s',
+          measurement.key().id())
+      # Skip this measurement
+      continue
+
+    # Need to catch case where task has been deleted
+    try:
+      unused_task = measurement.task
+    except db.ReferencePropertyResolveError:
+      measurement.task = None
+      measurement.put()
+
+    mdict = ConvertToDict(measurement, include_fields, exclude_fields,
+        timestamps_in_microseconds=True)
+
+    # Fill in additional fields
+    mdict['id'] = str(measurement.key().id())
+    mdict['parameters'] = measurement.Params()
+    mdict['values'] = measurement.Values()
+
+    if 'task' in mdict and mdict['task'] is not None:
+      mdict['task']['id'] = str(measurement.GetTaskID())
+      mdict['task']['parameters'] = measurement.task.Params()
+
+    output.append(mdict)
+  return output

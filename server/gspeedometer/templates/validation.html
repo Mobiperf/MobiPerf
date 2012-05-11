@@ -1,4 +1,11 @@
 <html>
+{% if iters %}
+<script type="text/javascript">
+<!--
+window.location = "http://"+location.host+"/validation/data?use_webpage=true&iters={{iters}}&start_time={{next_start_time}}&end_time={{next_end_time}}"
+//-->
+</script>
+{% endif %}
 <body>
 	<p>Below are the validation results from {{start_time}} to {{end_time}}:</p>
 	<h2>traceroute</h2>

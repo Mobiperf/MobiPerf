@@ -21,7 +21,7 @@ import logging
 import ipaddr
 
 class Traceroute:
-  """ Encapsulates traceroute data and provides methods for anlyzing it """
+  """ Encapsulates traceroute data and provides methods for analyzing it """
   hops = dict()
   rtts = dict()
   
@@ -38,9 +38,6 @@ class Traceroute:
         else:
           if not self.rtts.has_key(parts[1]):
             self.rtts[int(parts[1])] = value
-      
-    logging.info('Traceroute: Got %d measurements to write',
-                  len(self.hops))
       
   def PrintData(self):
     """ Prints the ordered traceroutes for HTML """
@@ -98,5 +95,4 @@ class Traceroute:
             results["error_types"].append("latency_not_valid")
            
     return results
-    
     

@@ -33,8 +33,7 @@ from gspeedometer.helpers import util
 MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get'),
-                     ('ndt', 'NDT measurement')]
+                     ('http', 'HTTP get')]
 
 
 class Measurement(webapp.RequestHandler):
@@ -106,36 +105,7 @@ class Measurement(webapp.RequestHandler):
     else:
       results = query
 
-    output = []
-    for measurement in results:
-      # Need to catch case where device has been deleted
-      try:
-        unused_device_info = measurement.device_properties.device_info
-      except db.ReferencePropertyResolveError:
-        logging.exception('Device deleted for measurement %s',
-                          measurement.key().id())
-        # Skip this measurement
-        continue
-
-      # Need to catch case where task has been deleted
-      try:
-        unused_task = measurement.task
-      except db.ReferencePropertyResolveError:
-        measurement.task = None
-        measurement.put()
-
-      mdict = util.ConvertToDict(measurement, timestamps_in_microseconds=True)
-
-      # Fill in additional fields
-      mdict['id'] = str(measurement.key().id())
-      mdict['parameters'] = measurement.Params()
-      mdict['values'] = measurement.Values()
-
-      if 'task' in mdict and mdict['task'] is not None:
-        mdict['task']['id'] = str(measurement.GetTaskID())
-        mdict['task']['parameters'] = measurement.task.Params()
-
-      output.append(mdict)
+    output = util.MeasurementListToDictList(results)
     self.response.out.write(json.dumps(output))
 
   def MeasurementDetail(self, **unused_args):

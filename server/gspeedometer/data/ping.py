@@ -21,15 +21,15 @@ import logging
 import ipaddr
 
 class Ping:
-  """ Encapsulates ping data and provides methods for anlyzing it """
+  """ Encapsulates ping data and provides methods for analyzing it """
   vals = dict()
   
   def __init__(self, params, values):
-    """ Initializes the traceroute object with hops and latencies """
+    """ Initializes the ping object with hops and latencies """
     self.vals = values
       
   def PrintData(self):
-    """ Prints the ordered traceroutes for HTML """
+    """ Prints the ping data for HTML """
     output = ""
     for key, value in sorted(self.vals.items()):      
       output += str(key) + ": " + str(value) + " <br>\n"
@@ -54,9 +54,9 @@ class Ping:
         results["valid"] = False
         results["error_types"].append("missing_field_" + field)
     try:
-    # 1) Target is an IP 
+      # 1) Target is an IP 
       try:
-        foo = ipaddr.IPAddress(self.vals['target_ip'].strip('"'))
+        not_used = ipaddr.IPAddress(self.vals['target_ip'].strip('"'))
       except:
         results["valid"] = False
         results["error_types"].append("address_not_valid")

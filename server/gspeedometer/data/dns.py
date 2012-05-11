@@ -21,7 +21,7 @@ import logging
 import ipaddr
 
 class DNSLookup:
-  """ Encapsulates ping data and provides methods for analyzing it """
+  """ Encapsulates dns data and provides methods for analyzing it """
   vals = dict()
   
   def __init__(self, params, values):
@@ -55,18 +55,18 @@ class DNSLookup:
     try:
     # 1) Target is an IP 
       try:
-        foo = ipaddr.IPAddress(self.vals['address'].strip('"'))
+        not_used = ipaddr.IPAddress(self.vals['address'].strip('"'))
       except:
         results["valid"] = False
         results["error_types"].append("address_not_valid")
          
       # 2) lookup time is valid
-      # TODO what is the default DNS timeout?
+      # TODO(drc)  what is the default DNS timeout?
       if float(self.vals['time_ms']) < 0 or float(self.vals['time_ms']) > 15000:
         results["valid"] = False
         results["error_types"].append("lookup_duration_invalid")
          
-      # Can't think of a good test for real_hostname    
+      # Note: No test for real_hostname    
     except KeyError:
       logging.info("Missing key for dns!")
       
