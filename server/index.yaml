@@ -61,5 +61,5 @@ indexes:
 
 - kind: Measurement
   properties:
-  - name: device_id
+  - name: type
   - name: timestamp

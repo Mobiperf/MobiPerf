@@ -33,8 +33,7 @@ from gspeedometer.helpers import util
 MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get'),
-                     ('ndt', 'NDT measurement')]
+                     ('http', 'HTTP get')]
 
 
 class Measurement(webapp.RequestHandler):

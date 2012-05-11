@@ -22,3 +22,7 @@ handlers:
 - url: /.*
   script: gspeedometer/main.py
   login: required
+  
+- url: /validation/data
+  script: gspeedometer/controller/validation.py
+  login: admin

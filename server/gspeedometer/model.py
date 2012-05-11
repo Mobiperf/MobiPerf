@@ -293,3 +293,42 @@ class DeviceTask(db.Model):
   """Represents a task currently assigned to a given device."""
   task = db.ReferenceProperty(Task)
   device_info = db.ReferenceProperty(DeviceInfo)
+  
+class ValidationSummary(db.Model):
+  # measurement type (ping, traceroute, ...)
+  measurement_type = db.StringProperty()
+  # timestamp representing the end of the observation interval
+  timestamp_start = db.DateTimeProperty()
+  # timestamp representing the end of the observation interval
+  timestamp_end = db.DateTimeProperty(auto_now_add=True)
+  # number of total records
+  record_count = db.IntegerProperty()
+  # number of errors
+  error_count = db.IntegerProperty()
+  # list of errors and counts
+  per_error_count = db.StringListProperty()
+  
+  def SetErrorByType(self, error_count_dict):
+    """Takes a dict of error names to count of those 
+    errors, and sets the per_error_count string list 
+    property to those values"""
+    self.per_error_count = []
+    for error, count in error_count_dict.items():
+      self.per_error_count.append(('%s:%s' % (error, count)))
+      
+  def GetErrorByType(self):
+    """Takes the string list property representation of error
+    counts and returns the dict representation."""
+    error_count_dict = dict()
+    for entry in self.per_error_count.items():
+      error, count = entry.split(":")
+      dict[error] = int(count)
+    return error_count_dict
+
+class ValidationEntry(db.Model):
+  # reference to the summary it represents
+  summary = db.ReferenceProperty(ValidationSummary)
+  # reference to the measurement this came from
+  measurement = db.ReferenceProperty(Measurement)
+  # error types
+  error_types = db.StringListProperty()
