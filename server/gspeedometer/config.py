@@ -30,7 +30,7 @@ NUM_DEVICES_IN_LIST = 20
 
 GOOGLE_MAP_ZOOM = 15
 DEFAULT_GOOGLEMAP_ICON_IMAGE = '/static/green_location_pin.png'
-GOOGLEMAP_KEY=('AIzaSyBGcqV5HgIdC-EXeO_pQOEBLrhz4bpRwZM')
+GOOGLEMAP_KEY = ('AIzaSyBGcqV5HgIdC-EXeO_pQOEBLrhz4bpRwZM')
 
 # Default viewport of map is Google's PKV office building in Seattle
 DEFAULT_MAP_CENTER = (47.6508, -122.3515)
@@ -60,4 +60,4 @@ BATTERY_INFO_INTERVAL_HOUR = 2
 MAX_QUERY_INTERVAL_DAY = 31
 
 # Timespan over which we consider a device to be active
-ACTIVE_DAYS = 5
+ACTIVE_DAYS = 50
