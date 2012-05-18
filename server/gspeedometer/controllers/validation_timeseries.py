@@ -57,8 +57,7 @@ class Timeseries(webapp.RequestHandler):
     sample_type = self.request.get('type')
 
     summaries = model.ValidationSummary.all()
-    logging.log(logging.INFO, "Found %s records" % 
-                model.ValidationSummary.all().count(10000))
+
     if start_time:
       start_time = util.MicrosecondsSinceEpochToTime(int(start_time))
       summaries.filter('timestamp_start > ', start_time)
@@ -67,7 +66,8 @@ class Timeseries(webapp.RequestHandler):
       summaries.filter('timestamp_end < ', end_time)
     if limit:
       limit = int(limit)
-    else: limit = 1000
+    else: 
+      limit = 1000
       
     summaries.filter('timestamp_start > ', 0)
     summaries.order('timestamp_start')
