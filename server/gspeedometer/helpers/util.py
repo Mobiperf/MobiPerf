@@ -13,6 +13,8 @@
 # limitations under the License.
 #!/usr/bin/python2.4
 #
+import os
+import calendar
 
 """Utility functions for the Mobiperf service."""
 
@@ -133,6 +135,46 @@ def ConvertFromDict(model, input_dict, include_fields=None,
       method(v)
     else:
       setattr(model, k, v)
+
+class PstTzinfo(datetime.tzinfo):
+  def utcoffset(self, dt): return datetime.timedelta(hours= -7)
+  def dst(self, dt): return datetime.timedelta(0)
+  def tzname(self, dt): return 'PST+07PDT'
+  def olsen_name(self): return 'US/Pacific'
+  
+class UtcTzinfo(datetime.tzinfo):
+  def utcoffset(self, dt): return datetime.timedelta(hours=0)
+  def dst(self, dt): return datetime.timedelta(0)
+  def tzname(self, dt): return 'UTC'
+  def olsen_name(self): return 'UTC'
+
+TZINFOS = {
+  'pst': PstTzinfo(),
+  'utc': UtcTzinfo()
+}
+
+def translate(self, timestamp):
+    """Translates a UTC datetime to the env_tz query parameter's time zone.
+
+    Args:
+      timestamp: A datetime instance.
+
+    Returns:
+      A (str, datetime) tuple. The string is the code snippet used to
+      translate the timestamp, and the datetime is the result.
+    """
+    translate_to = self.request.get('translate_to', 'nothing')
+    translate_with = self.request.get('translate_with', 'astimezone()')
+    utc = TZINFOS['utc']
+
+    if translate_to == 'nothing':
+      return ('no translation', 'N/A')
+    elif translate_with == 'astimezone':
+      timestamp = timestamp.replace(tzinfo=utc)
+      return ('timestamp.astimezone(to_tzinfo)',
+              timestamp.astimezone(TZINFOS[translate_to]))   
+    else:
+      return ('invalid translation', 'invalid translation')
 
 def MeasurementListToDictList(measurement_list, include_fields=None,
     exclude_fields=None):
