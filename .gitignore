@@ -27,3 +27,7 @@ android/*/*/.DS_Store
 
 
 
+# Currently under development
+android/src/mlab/Mlab.java
+mlab
+android/src/com/mobiperf/speedometer/measurements/UplinkTask.java
