@@ -949,7 +949,7 @@ public class MeasurementScheduler extends Service {
 		// Since we use insertToConsole later on to restore the content, we have
 		// to store them
 		// in the reverse order to maintain the same look
-		for (int i = length - 1; i >= 0; i--) {
+		for (int i = length - 1; i > 0; i--) {
 			items.add(consoleContent.getItem(i));
 		}
 		Type listType = new TypeToken<ArrayList<String>>() {

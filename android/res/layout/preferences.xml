@@ -4,16 +4,16 @@
     <PreferenceCategory android:title="Settings" >
 
         <CheckBoxPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="PREF_KEY_GPS"
             android:summary="Allow MobiPerf to use your location information"
             android:title="Share Location" />
 
         <CheckBoxPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="PREF_KEY_BACKGROUND"
             android:summary="Enable lightweight background measurements"
-            android:title="Background Tests" />
+            android:title="Background Measurements" />
 
         <EditTextPreference
             android:defaultValue="1"
@@ -23,7 +23,7 @@
             android:title="Checkin Interval (hour)" />
 
         <EditTextPreference
-            android:defaultValue="80"
+            android:defaultValue="75"
             android:inputType="number"
             android:key="PREF_KEY_BATTERY_THRESHOLD"
             android:summary="The minimum battery percentage to pause all measurements"
