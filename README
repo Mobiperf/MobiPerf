@@ -14,27 +14,12 @@ How to Contribute to this Codebase
 This code can be found here:
   https://github.com/Mobiperf/Mobiperf
 
-This is a github fork of the original Speedometer code found at Google Code:
-  https://code.google.com/p/gspeedometer
+If you wish to contribute, please read the instructions in
 
-If you wish to contribute, please clone the above project on github
-and submit a pull request.
+  docs/code-review.txt
 
-Code Reviews
-------------
-
-All pull requests on github will be subject to code review. Code reviews
-are an excellent way to ensure that any new code is designed well and
-that we can catch bugs early.
-
-All new code should adhere to the Google Style Guides:
-
-Python: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
-Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
-
-to maintain consistency with internal code that we are developing and
-contributions from the open source community. Please familiarize
-yourself with this style and use it consistently any new code.
+Note that simply issuing pull requests to the Mobiperf repository
+on github will not suffice.
 
 Overview of this code
 ---------------------
