@@ -60,7 +60,6 @@ import com.mobiperf.speedometer.DeviceInfo;
 import com.mobiperf.speedometer.DeviceProperty;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementScheduler;
-import com.mobiperf.util.PhoneUtils.InterfaceType;
 
 /**
  * Phone related utilities.

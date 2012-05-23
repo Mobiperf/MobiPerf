@@ -134,10 +134,8 @@ public interface Config {
 	public static final int PORT_BT_RAND = 5005;
 	public static final int PORT_HTTP = 80;
 
-	public static final int TP_DURATION_IN_MILLI = 16000; // 16 seconds for
-															// throughput tests
-	public static final int TCP_TIMEOUT_IN_MILLI = 10000; // 5 seconds for
-															// timeout
+	public static final int TP_DURATION_IN_MILLI = 16000; // 16 seconds for throughput tests
+	public static final int TCP_TIMEOUT_IN_MILLI = 10000; // 5 seconds for timeout
 	public static final int UDP_TIMEOUT_IN_MILLI = 10000;
 
 	public static final int IP_HEADER_LENGTH = 20;
@@ -149,10 +147,7 @@ public interface Config {
 	public static final int THROUGHPUT_UP_SEGMENT_SIZE = 1300;
 	public static final int THROUGHPUT_DOWN_SEGMENT_SIZE = 2600;
 
-	public static final int GPS_UPDATE_WAITING_TIME = 10000; // wait for 10
-																// seconds for
-																// GPS to
-																// updated
+	public static final int GPS_UPDATE_WAITING_TIME = 10000; // wait for 10 seconds for GPS to updated
 
 	public static final String TYPE = "android";
 	public static final String RESULT_DELIMITER = "-_hjx-_";

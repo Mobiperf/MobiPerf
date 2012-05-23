@@ -68,7 +68,7 @@ public class Preferences extends PreferenceActivity {
 				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 				boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_GPS, false);
 				MeasurementScheduler.setGpsEnabled(checkboxPreference);
-				if(checkboxPreference == true) {
+				if (checkboxPreference == true) {
 					Toast.makeText(getApplicationContext(), R.string.enableGps, Toast.LENGTH_SHORT).show();
 				} else {
 					Toast.makeText(getApplicationContext(), R.string.disableGps, Toast.LENGTH_SHORT).show();
