@@ -32,8 +32,7 @@
     </activity>
     <activity 
       android:name="com.mobiperf.speedometer.SystemConsoleActivity"
-      android:launchMode="singleTask" 
-      android:theme="@android:style/Theme.Light.NoTitleBar">      
+      android:launchMode="singleTask">      
     </activity>
     <activity 
       android:name="com.mobiperf.speedometer.MeasurementScheduleConsoleActivity"

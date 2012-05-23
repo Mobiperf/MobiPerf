@@ -83,7 +83,8 @@ public class MeasurementScheduler extends Service {
 	private int checkinRetryCnt;
 	private CheckinTask checkinTask;
 	private Calendar lastCheckinTime;
-	private static boolean gpsEnabled = false;
+	private static boolean gpsEnabled = true;
+	private boolean consolerestored = false;
 
 	private static PendingIntent checkinIntentSender;
 	/**
@@ -167,6 +168,10 @@ public class MeasurementScheduler extends Service {
 		this.taskQueue = new PriorityBlockingQueue<MeasurementTask>(
 				Config.MAX_TASK_QUEUE_SIZE, new TaskComparator());
 		this.pendingTasks = new ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>>();
+		
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		boolean checkboxPreference = prefs.getBoolean(Config.PREF_KEY_GPS, false);
+		MeasurementScheduler.setGpsEnabled(checkboxPreference);
 
 		this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
@@ -949,7 +954,7 @@ public class MeasurementScheduler extends Service {
 		// Since we use insertToConsole later on to restore the content, we have
 		// to store them
 		// in the reverse order to maintain the same look
-		for (int i = length - 1; i > 0; i--) {
+		for (int i = length - 1; i >= 0; i--) {
 			items.add(consoleContent.getItem(i));
 		}
 		Type listType = new TypeToken<ArrayList<String>>() {
@@ -971,12 +976,13 @@ public class MeasurementScheduler extends Service {
 		restoreConsole(userResults, Config.PREF_KEY_USER_RESULTS);
 		restoreConsole(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
 
-		insertStringToConsole(systemResults,
+		if (consolerestored == false) {
+			insertStringToConsole(systemResults,
 				"Automatically-scheduled measurement results will "
 						+ "appear here.");
-		insertStringToConsole(userResults,
+			insertStringToConsole(userResults,
 				"Your measurement results will appear here.");
-
+		}
 	}
 
 	/**
@@ -992,6 +998,7 @@ public class MeasurementScheduler extends Service {
 			ArrayList<String> items = MeasurementJsonConvertor
 					.getGsonInstance().fromJson(savedConsole, listType);
 			if (items != null) {
+				consolerestored = true;
 				for (String item : items) {
 					insertStringToConsole(consoleContent, item);
 				}
