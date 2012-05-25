@@ -7,7 +7,6 @@
 *.pyc
 android/bin/
 android/images/
-mlab/bin/
 
 
 # These are produced by templates
@@ -18,16 +17,8 @@ android/gen/
 
 # This is for development data (not to be tracked)
 server/dev_data/
-mlab/run/
-mlab/mlab
+
 
 # Random evil files
 *.DS_Store
 android/*/*/.DS_Store
-
-
-
-# Currently under development
-android/src/mlab/Mlab.java
-mlab
-android/src/com/mobiperf/speedometer/measurements/UplinkTask.java
