@@ -16,7 +16,7 @@
 
 """Data model for the Mobiperf service."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = 'mdw@google.com (Matt Welsh), gavaletz@google.com (Eric Gavaletz)'
 
 import logging
 

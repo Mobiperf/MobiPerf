@@ -107,7 +107,6 @@ m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
 
-
 m.connect('/validation/data',
           controller='validation:Validation',
           action='Validate')
@@ -136,7 +135,6 @@ m.connect('/admin/archive/gs',
 m.connect('/admin/archive/file',
           controller='archive:Archive',
           action='ArchiveToFile')
-
 
 application = wsgi.WSGIApplication(m, debug=True)
 
