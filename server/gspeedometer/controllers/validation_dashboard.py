@@ -58,15 +58,15 @@ class Dashboard(webapp.RequestHandler):
     limit = self.request.get('limit')
 
     entries = model.ValidationEntry.all()
-    logging.log(logging.INFO, "Found %s records" % 
-                model.ValidationEntry.all().count(10000))
+
     if start_time:
       start_time = util.MicrosecondsSinceEpochToTime(int(start_time))
     if end_time:
       end_time = util.MicrosecondsSinceEpochToTime(int(end_time))
     if limit:
       limit = int(limit)
-    else: limit = 1000
+    else: 
+      limit = 1000
       
     # TODO(drc): Incorporate date limits
     time_to_type_to_cnt = SortedDict()    
@@ -75,12 +75,10 @@ class Dashboard(webapp.RequestHandler):
     for ent in entries.fetch(limit):
       ms_time = ent.summary.timestamp_start
       meas_type = ent.summary.measurement_type
-      if not time_to_type_to_cnt.has_key(ms_time):
-        time_to_type_to_cnt[ms_time] = dict()        
-      if not time_to_type_to_cnt[ms_time].has_key(meas_type):
-        time_to_type_to_cnt[ms_time][meas_type] = {'details': []}
-
+      time_to_type_to_cnt.setdefault(ms_time, dict()).setdefault(
+          meas_type, {'details': []})
       time_to_type_to_cnt[ms_time][meas_type]['count'] = ent.summary.error_count
+      # links to ids for eventually showing more detail
       time_to_type_to_cnt[ms_time][meas_type]['details'].append(
         [ent.measurement.key().id(),
          ent.measurement.device_properties.device_info.id])      
@@ -95,19 +93,19 @@ class Dashboard(webapp.RequestHandler):
   def ErrorDetail(self, **unused_args):
     """Returns JSON encoded measurement details that are displayed when the user
     clicks on a measurement ID."""
-    result_id = self.request.get('result_id') # measurement id
-    parent = self.request.get('parent') # required parent (deviceinfo) id
+    result_id = self.request.get('result_id') #  measurement id
+    parent = self.request.get('parent') #  required parent (deviceinfo) id
     
     k = db.Key.from_path('DeviceInfo', parent, 'Measurement', int(result_id))
     
     m = model.Measurement.get(k)
     validator = MeasurementValidatorFactory.CreateValidator(m)
     self.response.out.write(json.dumps(
-        {'hash':m.timestamp.strftime("%Y%m%d"),
-         'type':m.type,
-         'success':m.success,
-         'validation_results':validator.Validate(),
-         'details':validator.PrintData()}))
+        {'hash': m.timestamp.strftime("%Y%m%d"),
+         'type': m.type,
+         'success': m.success,
+         'validation_results': validator.Validate(),
+         'details': validator.PrintData()}))
     
   def CommonExceptions(self, **unused_args):
     """Returns a list containing the most common 10 exceptions and the number 
@@ -135,11 +133,13 @@ class Dashboard(webapp.RequestHandler):
       if entry.measurement.success == False:
         # Only grab first portion of stack trace if there was an error
         if not (entry.measurement.GetValue('error') is None):
-          error = "<br>".join(entry.measurement.GetValue('error').split("\n")[0:5])
+          error = "<br>".join(
+              entry.measurement.GetValue('error').split("\n")[0:5])
           if not error_to_count.has_key(error):
             error_to_count[error] = 1
           else: error_to_count[error] += 1
        
-    sorted_errors = sorted(error_to_count.iteritems(), key=operator.itemgetter(1), reverse=True)
+    sorted_errors = sorted(error_to_count.iteritems(),
+                           key=operator.itemgetter(1), reverse=True)
     return sorted_errors[0:10]
     
