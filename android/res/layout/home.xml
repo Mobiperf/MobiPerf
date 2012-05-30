@@ -34,7 +34,7 @@
 	
 	<Button android:id="@+id/home_btn_about" 
 		style="@style/DashboardButton"
-		android:text="@string/btn_about" 
+		android:text="@string/aboutTitle" 
 		android:drawableTop="@drawable/home_btn_performance" />		
 		
 

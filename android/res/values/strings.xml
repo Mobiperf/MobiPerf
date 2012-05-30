@@ -45,7 +45,9 @@
     <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
     <string name="btn_network_test">Measure\nNetwork Speed</string>
     <string name="btn_settings">Settings</string>
-    <string name="btn_about">About Us</string>
+    <string name="aboutTitle">About</string>
+    <string name="aboutText">MobiPerf is open source software for measuring network performance on mobile platforms. You can measure network throughput and latency, as well as other useful network metrics. The collected data are used anonymously in research projects in universities and user credentials are never collected or leaked via this software.</string>
+    <string name="aboutContact">Homepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
     <string name="btn_network_toggle">Switch 3G/4G</string>
     <string name="periodtest_prompt">Select the measurement to be run periodically.</string>
     <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
