@@ -44,6 +44,8 @@ from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
+from gspeedometer.controllers import validation
+from gspeedometer.controllers import validation_timeseries
 
 import routes
 
@@ -104,7 +106,6 @@ m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
 
-<<<<<<< HEAD
 m.connect('/validation/data',
           controller='validation:Validation',
           action='Validate')
@@ -134,8 +135,6 @@ m.connect('/admin/archive/file',
           controller='archive:Archive',
           action='ArchiveToFile')
 
-=======
->>>>>>> parent of 26defdb... Config for enabling (and securing) data validation.
 application = wsgi.WSGIApplication(m, debug=True)
 
 
