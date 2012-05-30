@@ -21,7 +21,7 @@
             android:layout_width="fill_parent"
             android:layout_height="50dip"
             android:gravity="center_vertical"
-            android:text="About Us"
+            android:text="@string/aboutTitle"
             android:textSize="25px" />
 
         <TextView
@@ -32,11 +32,11 @@
         <TextView
             android:id="@+id/about2"
             android:layout_width="fill_parent"
-            android:layout_height="350dip"
+            android:layout_height="250dip"
             android:maxLines="15"
             android:scrollbars="vertical"
             android:singleLine="false"
-            android:text="TODO(junxian)"
+            android:text="@string/aboutText"
             android:textColor="@android:color/secondary_text_dark_nodisable"
             android:textSize="20px" />
 
@@ -44,8 +44,8 @@
             android:id="@+id/link1_view"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:autoLink="web"
-            android:text="http://mobiperf.com"
+            android:autoLink="all"
+            android:text="@string/aboutContact"
             android:textSize="18px" />
     </LinearLayout>
 
