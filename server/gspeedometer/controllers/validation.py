@@ -75,14 +75,13 @@ class Validation(webapp.RequestHandler):
     
     # if iterating, set up and enqueue validation tasks
     while iters and int(iters) > 1:
-     
-      start_time = 24 * 60 * 60 * 1000 * 1000 + 
+      start_time = 24 * 60 * 60 * 1000 * 1000 + \
           util.TimeToMicrosecondsSinceEpoch(util.StringToTime(start_time))
       start_time = util.MicrosecondsSinceEpochToTime(start_time)
-      start_time = util.TimeToString(start_time)
-      
-      end_time = 24 * 60 * 60 * 1000 * 1000 + 
+      start_time = util.TimeToString(start_time)     
+      end_time = 24 * 60 * 60 * 1000 * 1000 + \
           util.TimeToMicrosecondsSinceEpoch(util.StringToTime(end_time))
+
       end_time = util.MicrosecondsSinceEpochToTime(end_time)
       end_time = util.TimeToString(end_time)
       # Add the task to the 'validation' queue.
@@ -95,7 +94,7 @@ class Validation(webapp.RequestHandler):
     if iters:
       self.response.out.write("{Success:true}")
       return
-        
+
     # contains validation results for printing
     self.validation_results = dict()
     
@@ -174,7 +173,7 @@ class Validation(webapp.RequestHandler):
       dt_start = util.TimeToMicrosecondsSinceEpoch(
           datetime.datetime.utcfromtimestamp(time.time()) - 
           datetime.timedelta(days=1)) 
-    self.validation_results['start_time'] = 
+    self.validation_results['start_time'] = \
        util.MicrosecondsSinceEpochToTime(dt_start)
     query.filter('timestamp >=', dt_start)
     
@@ -213,9 +212,9 @@ class Validation(webapp.RequestHandler):
       
       # set initial data for validation summary
       if not self.type_to_summary[measurement.type].timestamp_start:      
-        self.type_to_summary[measurement.type].timestamp_start = 
+        self.type_to_summary[measurement.type].timestamp_start = \
             util.MicrosecondsSinceEpochToTime(dt_start)
-        self.type_to_summary[measurement.type].timestamp_end = 
+        self.type_to_summary[measurement.type].timestamp_end = \
             util.MicrosecondsSinceEpochToTime(dt)
         self.type_to_summary[measurement.type].record_count = 1
         self.type_to_summary[measurement.type].error_count = 0
