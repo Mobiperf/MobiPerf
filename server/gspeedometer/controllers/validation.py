@@ -27,6 +27,7 @@ from google.appengine.ext import db
 from google.appengine.api import taskqueue
 
 from gspeedometer import model
+from gspeedometer import config
 from gspeedometer.helpers import util
 from gspeedometer.data import traceroute
 from gspeedometer.data import ping
@@ -37,14 +38,14 @@ from gspeedometer.controllers import measurement
 class Validation(webapp.RequestHandler):
   """Controller for the validation view."""
 
-  PRINT_INVALID = True # if true, print details of erroneous data
-  TESTING = False # if true, pint testing data
-  PRINT_VALUES = False # if 
-  USE_WEBPAGE = True # if true, renders for webpage; otherwise, sends email
+  PRINT_INVALID = True  # if true, print details of erroneous data
+  TESTING = False  # if true, print testing data
+  PRINT_VALUES = False  # if 
+  USE_WEBPAGE = True  # if true, renders for webpage; otherwise, sends email
 
-  validation_results = dict() # stores the results to render
-  type_to_summary = dict() # map of measurement type to summary object
-  type_to_details = dict() # map of measurement type to details object
+  validation_results = dict()  # stores the results to render
+  type_to_summary = dict()  # map of measurement type to summary object
+  type_to_details = dict()  # map of measurement type to details object
 
   def Validate(self, **unused_args):
     """Main handler for the validation view.
@@ -75,11 +76,13 @@ class Validation(webapp.RequestHandler):
     # if iterating, set up and enqueue validation tasks
     while iters and int(iters) > 1:
      
-      start_time = 24 * 60 * 60 * 1000 * 1000 + util.TimeToMicrosecondsSinceEpoch(util.StringToTime(start_time))
+      start_time = 24 * 60 * 60 * 1000 * 1000 + 
+          util.TimeToMicrosecondsSinceEpoch(util.StringToTime(start_time))
       start_time = util.MicrosecondsSinceEpochToTime(start_time)
       start_time = util.TimeToString(start_time)
       
-      end_time = 24 * 60 * 60 * 1000 * 1000 + util.TimeToMicrosecondsSinceEpoch(util.StringToTime(end_time))
+      end_time = 24 * 60 * 60 * 1000 * 1000 + 
+          util.TimeToMicrosecondsSinceEpoch(util.StringToTime(end_time))
       end_time = util.MicrosecondsSinceEpochToTime(end_time)
       end_time = util.TimeToString(end_time)
       # Add the task to the 'validation' queue.
@@ -92,8 +95,7 @@ class Validation(webapp.RequestHandler):
     if iters:
       self.response.out.write("{Success:true}")
       return
-    
-    
+        
     # contains validation results for printing
     self.validation_results = dict()
     
@@ -108,7 +110,7 @@ class Validation(webapp.RequestHandler):
     
     # validation results are in type_to_details, now write them to datastore
     for mtype, data in self.type_to_summary.items():
-      data.put() # must put summary before putting details that reference them
+      data.put()  # must put summary before putting details that reference them
       if self.type_to_details.has_key(mtype):
         for detail in self.type_to_details[mtype]:
           detail.summary = data
@@ -128,9 +130,9 @@ class Validation(webapp.RequestHandler):
       self.response.out.write(html)
     else:
       message = mail.EmailMessage(
-        sender="David Choffnes <drchoffnes@gmail.com>",
+        sender=config.VALIDATION_EMAIL_SENDER,
         subject="Daily validation results")
-      message.to = "David Choffnes <drchoffnes@gmail.com>"
+      message.to = config.VALIDATION_EMAIL_RECIPIENT
       message.body = html
       message.html = html
       message.send()
@@ -157,23 +159,30 @@ class Validation(webapp.RequestHandler):
     # manually specified parameters for testing
     if self.TESTING:
       limit = 100
-      start_time = util.TimeToMicrosecondsSinceEpoch(util.StringToTime("2012-03-20T00:00:00Z"))
-      end_time = util.TimeToMicrosecondsSinceEpoch(util.StringToTime("2012-03-21T00:00:00Z"))
+      start_time = util.TimeToMicrosecondsSinceEpoch(
+          util.StringToTime("2012-03-20T00:00:00Z"))
+      end_time = util.TimeToMicrosecondsSinceEpoch(
+          util.StringToTime("2012-03-21T00:00:00Z"))
 
     # set up query filters according to parameters
     query = model.Measurement.all()
     
     if start_time:
-      dt_start = util.TimeToMicrosecondsSinceEpoch(util.StringToTime(start_time))
+      dt_start = util.TimeToMicrosecondsSinceEpoch(
+          util.StringToTime(start_time))
     else:
-      dt_start = util.TimeToMicrosecondsSinceEpoch(datetime.datetime.utcfromtimestamp(time.time()) - datetime.timedelta(days=1)) 
-    self.validation_results['start_time'] = util.MicrosecondsSinceEpochToTime(dt_start)
+      dt_start = util.TimeToMicrosecondsSinceEpoch(
+          datetime.datetime.utcfromtimestamp(time.time()) - 
+          datetime.timedelta(days=1)) 
+    self.validation_results['start_time'] = 
+       util.MicrosecondsSinceEpochToTime(dt_start)
     query.filter('timestamp >=', dt_start)
     
     if end_time:
       dt = util.TimeToMicrosecondsSinceEpoch(util.StringToTime(end_time))
     else: 
-      dt = util.TimeToMicrosecondsSinceEpoch(datetime.datetime.utcfromtimestamp(time.time()))
+      dt = util.TimeToMicrosecondsSinceEpoch(
+          datetime.datetime.utcfromtimestamp(time.time()))
     self.validation_results['end_time'] = util.MicrosecondsSinceEpochToTime(dt)
     
     query.filter('timestamp <', dt)
@@ -183,8 +192,8 @@ class Validation(webapp.RequestHandler):
     else:
       results = query
       
-    error_type_to_count = dict() # map of error type to count  
-    num_invalid = dict() # map of measurement type to count of invalid
+    error_type_to_count = dict()  # map of error type to count  
+    num_invalid = dict()  # map of measurement type to count of invalid
     
     for measurement in results:
       # Need to catch case where device has been deleted
@@ -204,8 +213,10 @@ class Validation(webapp.RequestHandler):
       
       # set initial data for validation summary
       if not self.type_to_summary[measurement.type].timestamp_start:      
-        self.type_to_summary[measurement.type].timestamp_start = util.MicrosecondsSinceEpochToTime(dt_start)
-        self.type_to_summary[measurement.type].timestamp_end = util.MicrosecondsSinceEpochToTime(dt)
+        self.type_to_summary[measurement.type].timestamp_start = 
+            util.MicrosecondsSinceEpochToTime(dt_start)
+        self.type_to_summary[measurement.type].timestamp_end = 
+            util.MicrosecondsSinceEpochToTime(dt)
         self.type_to_summary[measurement.type].record_count = 1
         self.type_to_summary[measurement.type].error_count = 0
         num_invalid[measurement.type] = 0
@@ -215,7 +226,7 @@ class Validation(webapp.RequestHandler):
       try: 
         validator = MeasurementValidatorFactory.CreateValidator(measurement)
       except RuntimeError:
-        continue # no validator defined, continue
+        continue  # no validator defined, continue
             
       valid = validator.Validate()
       if not valid['valid']:
@@ -225,12 +236,14 @@ class Validation(webapp.RequestHandler):
 
       # print the error details
       if self.PRINT_VALUES or (self.PRINT_INVALID and not valid['valid']):
-        if not self.validation_results.has_key('%s_invalid_detail' % measurement.type):
+        if not self.validation_results.has_key('%s_invalid_detail' 
+                                               % measurement.type):
           self.validation_results['%s_invalid_detail' % measurement.type] = []
         self.validation_results['%s_invalid_detail' % measurement.type].append(
               'Errors: %s <br>\nTime: %s<br>\nDevice: %s<br>\nDetails: %s' % 
               (", ".join(valid['error_types']), str(measurement.timestamp),
-               measurement.device_properties.device_info.id, validator.PrintData()))
+               measurement.device_properties.device_info.id,
+               validator.PrintData()))
 
         # update error counters
         for error in valid['error_types']:
@@ -257,7 +270,8 @@ class Validation(webapp.RequestHandler):
       if num_invalid.has_key(data_type):
         self.type_to_summary[data_type].error_count = num_invalid[data_type]
       if error_type_to_count.has_key(data_type):
-        self.type_to_summary[data_type].SetErrorByType(error_type_to_count[data_type])
+        self.type_to_summary[data_type].SetErrorByType(
+            error_type_to_count[data_type])
   
       self.validation_results[data_type + "_count"] = \
         self.type_to_summary[data_type].record_count
