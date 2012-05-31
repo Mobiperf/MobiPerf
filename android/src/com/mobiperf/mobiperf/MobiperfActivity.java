@@ -14,13 +14,18 @@
  */
 package com.mobiperf.mobiperf;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -34,13 +39,16 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mobiperf.speedometer.AccountSelector;
 import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.UpdateIntent;
 import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.speedometer.ResultsConsoleActivity;
 import com.mobiperf.speedometer.SystemConsoleActivity;
@@ -66,6 +74,11 @@ public class MobiperfActivity extends Activity {
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
 	private boolean isBindingToService = false;
+	private BroadcastReceiver receiver;
+	
+	private String measurementStatus = "No measurements running\n";
+	private String batteryStatus = "";
+	
 
 	/** 
 	 * Defines callbacks for service binding, passed to bindService() 
@@ -107,6 +120,24 @@ public class MobiperfActivity extends Activity {
 		super.onStart();
 
 		showDialogs();
+	}
+	
+	
+	protected void onResume() {
+		super.onResume();
+		
+		if (scheduler != null) {
+		
+			if (scheduler.hasBatteryToScheduleExperiment() == true) 
+				batteryStatus = "battery above threshold";
+			else batteryStatus = "battery below threshold";
+		}
+		updateStatus();
+	}
+	
+	protected void updateStatus() {
+		TextView statusView = (TextView) findViewById(R.id.main_status);
+		statusView.setText(measurementStatus+batteryStatus);
 	}
 
 	@Override
@@ -266,6 +297,32 @@ public class MobiperfActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
+		
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
+		filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+		receiver = new BroadcastReceiver() {
+			// Handles various broadcast intents.
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
+					//measurement started
+					if (scheduler != null) {
+						String taskDescriptor = scheduler.prevTask;
+						measurementStatus = "currently running "+taskDescriptor+"\n";
+					}
+					updateStatus();
+				} else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
+					if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == Config.MEASUREMENT_END_PROGRESS) {
+						//measurement done
+						measurementStatus = "no measurements running\n";
+						updateStatus();
+					}
+				}
+			}
+		};
+		
+		this.registerReceiver(receiver, filter);
 
 		findViewById(R.id.home_btn_mtask).setOnClickListener(
 				new View.OnClickListener() {
