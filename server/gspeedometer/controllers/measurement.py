@@ -16,7 +16,8 @@
 
 """Service to collect and visualize mobile network performance data."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = ('mdw@google.com (Matt Welsh), ' 
+              'drchoffnes@gmail.com (David Choffnes)')
 
 import logging
 
@@ -30,12 +31,11 @@ from gspeedometer.controllers import device
 from gspeedometer.helpers import error
 from gspeedometer.helpers import util
 
+# list of supported measurement types
 MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get'),
-                     ('ndt', 'NDT measurement')]
-
+                     ('http', 'HTTP get')]
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
