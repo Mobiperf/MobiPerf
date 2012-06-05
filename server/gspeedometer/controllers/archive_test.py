@@ -36,7 +36,7 @@ class ArchiveTest(unittest2.TestCase):
   FN_BASE_SD = '%s_%s' % (FN_BASE_S, FN_BASE_D)
   FN_BASE_ED = '%s_%s' % (FN_BASE_E, FN_BASE_D)
   FN_BASE_SE = '%s_%s' % (FN_BASE_S, FN_BASE_E)
-  FN_BASE_SED  = '%s_%s_%s' % (FN_BASE_S, FN_BASE_E, FN_BASE_D)
+  FN_BASE_SED = '%s_%s_%s' % (FN_BASE_S, FN_BASE_E, FN_BASE_D)
 
   def testParametersToFileNameBase(self):
     """Test the file name base creation based on parameters.

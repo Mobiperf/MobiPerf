@@ -44,9 +44,6 @@ from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
-from gspeedometer.controllers import validation
-from gspeedometer.controllers import validation_timeseries
-
 import routes
 
 m = routes.Mapper()
@@ -134,6 +131,10 @@ m.connect('/admin/archive/gs',
 m.connect('/admin/archive/file',
           controller='archive:Archive',
           action='ArchiveToFile')
+
+m.connect('/archive/list',
+          controller='archive:Archive',
+          action='ListArchives')
 
 application = wsgi.WSGIApplication(m, debug=True)
 

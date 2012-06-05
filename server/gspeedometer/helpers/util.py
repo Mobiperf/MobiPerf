@@ -80,11 +80,16 @@ _SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
 
 def ConvertToDict(model, include_fields=None, exclude_fields=None,
-                  timestamps_in_microseconds=False):
+                  timestamps_in_microseconds=False, location_precision=None):
   """Convert an AppEngine Model object to a Python dict ready for json dump.
 
      For each property in the model, set a value in the returned dict
      with the property name as its key.
+     
+     location_precision: if not None, it specifies how location precision. The 
+     code will multiply by this value, take the integer value and divide by 
+     this value. In other words, we're giving precision to the 
+     'location_precision'ths. If it's ten, we're giving tenths of a degree.
   """
   output = {}
   for key, prop in model.properties().iteritems():
@@ -99,10 +104,16 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
       else:
         output[key] = TimeToString(value)
     elif isinstance(value, db.GeoPt):
-      output[key] = {'latitude': value.lat, 'longitude': value.lon}
+      if location_precision is None:
+        output[key] = {'latitude': value.lat, 'longitude': value.lon}
+      else:
+        lat = int(value.lat * location_precision) / float(location_precision)
+        lon = int(value.lon * location_precision) / float(location_precision)
+        output[key] = {'latitude': lat, 'longitude': lon}
     elif isinstance(value, db.Model):
       output[key] = ConvertToDict(value, include_fields, exclude_fields,
-                                  timestamps_in_microseconds)
+                                  timestamps_in_microseconds,
+                                  location_precision)
     elif isinstance(value, users.User):
       output[key] = value.email()
     else:
@@ -177,7 +188,7 @@ def translate(self, timestamp):
       return ('invalid translation', 'invalid translation')
 
 def MeasurementListToDictList(measurement_list, include_fields=None,
-    exclude_fields=None):
+    exclude_fields=None, location_precision=None):
   """Converts a list of measurement entities into a list of dictionaries.
 
   Given a list of measuerment model objects from the datastore, this method
@@ -190,6 +201,8 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
         included in the serialized form.
     exclude_fields: A list of attributes for the entities that should be
         excluded in the serialized form.
+    location_precision: Precision for location measurements. If you want 
+        n significant figures, specify 10^n for this value.
   
   Returns:
     A list of dictionaries representing the list of measurement entities.
@@ -220,7 +233,7 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
       measurement.put()
 
     mdict = ConvertToDict(measurement, include_fields, exclude_fields,
-        timestamps_in_microseconds=True)
+        True, location_precision)
 
     # Fill in additional fields
     mdict['id'] = str(measurement.key().id())
