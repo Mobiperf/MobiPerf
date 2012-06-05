@@ -46,6 +46,8 @@ GOOGLEMAP_MARKER_LIMIT = 500
 TIMESERIES_POINT_LIMIT = 100
 # The total number of elements to fetch for a given query
 QUERY_FETCH_LIMIT = 500
+# The total number of elements to fetch for a large query
+QUERY_FETCH_LIMIT_LARGE = 100000
 # The minimum ping delay in ms that we consider 'slow'
 SLOW_PING_THRESHOLD_MS = 150
 # The minimum dns lookup delay in ms that we consider 'slow'
@@ -65,5 +67,11 @@ ACTIVE_DAYS = 5
 # Archive Settings
 ARCHIVE_CONTENT_TYPE = 'application/zip'
 ARCHIVE_CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
-ARCHIVE_GS_BUCKET = 'gavaletz_mobiperf'
+ARCHIVE_GS_BUCKET = 'openmobiledata'
 ARCHIVE_GS_ACL = 'project-private'
+ARCHIVE_GS_BUCKET_PUBLIC = 'openmobiledata_public'
+ARCHIVE_GS_ACL_PUBLIC = 'public-read'
+
+# Archive sanitization settings
+SANITIZE_FIELDS = ["user", "ip_address", "id"] # fields to remove from data
+SANITIZE_LOCATION_PRECISION = 1000 # number of sig figs is log(this)
