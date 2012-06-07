@@ -85,7 +85,9 @@ public class MeasurementScheduler extends Service {
 	private Calendar lastCheckinTime;
 	private static boolean gpsEnabled = true;
 	private boolean consolerestored = false;
-
+	
+	public String prevTask;
+	
 	private static PendingIntent checkinIntentSender;
 	/**
 	 * Intent for checkin retries. Reusing checkinIntentSender for retries will
@@ -534,6 +536,7 @@ public class MeasurementScheduler extends Service {
 		try {
 			// Immediately handles measurements created by user
 			if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
+				prevTask = task.getType();
 				return this.taskQueue.add(task);
 			}
 
@@ -542,6 +545,7 @@ public class MeasurementScheduler extends Service {
 				return false;
 			}
 			// Automatically notifies the scheduler waiting on taskQueue.take()
+			prevTask = task.getType();
 			return this.taskQueue.add(task);
 		} catch (NullPointerException e) {
 			Logger.e("The task to be added is null");
