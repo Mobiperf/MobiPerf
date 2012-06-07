@@ -14,13 +14,19 @@
  */
 package com.mobiperf.mobiperf;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -34,13 +40,16 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mobiperf.speedometer.AccountSelector;
 import com.mobiperf.speedometer.Config;
+import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.UpdateIntent;
 import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.speedometer.ResultsConsoleActivity;
 import com.mobiperf.speedometer.SystemConsoleActivity;
@@ -66,6 +75,12 @@ public class MobiperfActivity extends Activity {
 	public static MeasurementScheduler scheduler;
 	private boolean isBound = false;
 	private boolean isBindingToService = false;
+	private BroadcastReceiver receiver;
+	
+  private String measurementStatus;
+  private String batteryStatus;
+  private String lastCheckin;
+	
 
 	/** 
 	 * Defines callbacks for service binding, passed to bindService() 
@@ -107,6 +122,37 @@ public class MobiperfActivity extends Activity {
 		super.onStart();
 
 		showDialogs();
+		
+		measurementStatus = getString(R.string.status_noMeasurements);
+	}
+	
+	
+	protected void onResume() {
+		super.onResume();
+		
+    if (scheduler != null) {		
+      if (scheduler.hasBatteryToScheduleExperiment() == true) {
+        batteryStatus = getString(R.string.status_batteryAbove);
+      }  else {
+         batteryStatus = getString(R.string.status_batteryBelow);
+      }
+      
+      SimpleDateFormat form = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss'.'");
+      
+      if (scheduler.getLastCheckinTime() != null) {
+        lastCheckin = getString(R.string.status_lastCheckin) + 
+                      form.format(scheduler.getLastCheckinTime());
+        }
+      } else {
+      	batteryStatus = "";
+      	lastCheckin = "";
+      }
+    updateStatus();
+	}
+	
+	protected void updateStatus() {
+		TextView statusView = (TextView) findViewById(R.id.main_status);
+		statusView.setText(measurementStatus + batteryStatus + lastCheckin);
 	}
 
 	@Override
@@ -266,6 +312,32 @@ public class MobiperfActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.home);
+		
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
+		filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+		receiver = new BroadcastReceiver() {
+			// Handles various broadcast intents.
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
+					// measurement started
+					if (scheduler != null) {
+						String taskDescriptor = scheduler.prevTask + "\n";
+						measurementStatus = getString(R.string.status_runningMeasurement) + taskDescriptor;
+					}
+					updateStatus();
+				} else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
+					if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == Config.MEASUREMENT_END_PROGRESS) {
+						// measurement done
+						measurementStatus = getString(R.string.status_noMeasurements);
+						updateStatus();
+					}
+				}
+			}
+		};
+		
+		this.registerReceiver(receiver, filter);
 
 		findViewById(R.id.home_btn_mtask).setOnClickListener(
 				new View.OnClickListener() {
