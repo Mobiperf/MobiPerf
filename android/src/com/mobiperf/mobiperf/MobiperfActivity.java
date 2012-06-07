@@ -144,6 +144,9 @@ public class MobiperfActivity extends Activity {
         lastCheckin = getString(R.string.status_lastCheckin) + 
                       form.format(scheduler.getLastCheckinTime());
         }
+      } else {
+      	batteryStatus = "";
+      	lastCheckin = "";
       }
     updateStatus();
 	}
