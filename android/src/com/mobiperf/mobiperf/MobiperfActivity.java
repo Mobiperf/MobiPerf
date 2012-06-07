@@ -77,9 +77,9 @@ public class MobiperfActivity extends Activity {
 	private boolean isBindingToService = false;
 	private BroadcastReceiver receiver;
 	
-	private String measurementStatus = "";
-	private String batteryStatus = "";
-	private String lastCheckin = "";
+  private String measurementStatus;
+  private String batteryStatus;
+  private String lastCheckin;
 	
 
 	/** 
@@ -130,28 +130,27 @@ public class MobiperfActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		
-		if (scheduler != null) {
+    if (scheduler != null) {
 		
-			if (scheduler.hasBatteryToScheduleExperiment() == true) {
-				batteryStatus = getString(R.string.status_batteryAbove);
-			}
-			else {
-				batteryStatus = getString(R.string.status_batteryBelow);
-			}
-			
-			SimpleDateFormat form = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss'.'");
-			
-			if (scheduler.getLastCheckinTime() != null) {
-				lastCheckin = getString(R.string.status_lastCheckin)+
-						form.format(scheduler.getLastCheckinTime());
-			}
-		}
-		updateStatus();
+      if (scheduler.hasBatteryToScheduleExperiment() == true) {
+        batteryStatus = getString(R.string.status_batteryAbove);
+      }  else {
+         batteryStatus = getString(R.string.status_batteryBelow);
+      }
+      
+      SimpleDateFormat form = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss'.'");
+      
+      if (scheduler.getLastCheckinTime() != null) {
+        lastCheckin = getString(R.string.status_lastCheckin) + 
+                      form.format(scheduler.getLastCheckinTime());
+        }
+      }
+    updateStatus();
 	}
 	
 	protected void updateStatus() {
 		TextView statusView = (TextView) findViewById(R.id.main_status);
-		statusView.setText(measurementStatus+batteryStatus+lastCheckin);
+		statusView.setText(measurementStatus + batteryStatus + lastCheckin);
 	}
 
 	@Override
@@ -320,15 +319,15 @@ public class MobiperfActivity extends Activity {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
-					//measurement started
+					// measurement started
 					if (scheduler != null) {
-						String taskDescriptor = scheduler.prevTask+"\n";
-						measurementStatus = getString(R.string.status_runningMeasurement)+taskDescriptor;
+						String taskDescriptor = scheduler.prevTask + "\n";
+						measurementStatus = getString(R.string.status_runningMeasurement) + taskDescriptor;
 					}
 					updateStatus();
 				} else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
 					if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == Config.MEASUREMENT_END_PROGRESS) {
-						//measurement done
+						// measurement done
 						measurementStatus = getString(R.string.status_noMeasurements);
 						updateStatus();
 					}
