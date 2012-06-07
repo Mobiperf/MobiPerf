@@ -130,8 +130,7 @@ public class MobiperfActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		
-    if (scheduler != null) {
-		
+    if (scheduler != null) {		
       if (scheduler.hasBatteryToScheduleExperiment() == true) {
         batteryStatus = getString(R.string.status_batteryAbove);
       }  else {
