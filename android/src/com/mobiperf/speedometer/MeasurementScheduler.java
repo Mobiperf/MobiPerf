@@ -85,6 +85,7 @@ public class MeasurementScheduler extends Service {
 	private Calendar lastCheckinTime;
 	private static boolean gpsEnabled = true;
 	private boolean consolerestored = false;
+	
 	public String prevTask;
 	
 	private static PendingIntent checkinIntentSender;
