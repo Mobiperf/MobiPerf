@@ -75,344 +75,331 @@ import com.mobiperf.util.PhoneUtils;
  * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Checkin {
-	private static final int POST_TIMEOUT_MILLISEC = 20 * 1000;
-	private Context context;
-	private String serverUrl;
-	private Date lastCheckin;
-	private volatile Cookie authCookie = null;
-	private AccountSelector accountSelector = null;
-	PhoneUtils phoneUtils;
+  private static final int POST_TIMEOUT_MILLISEC = 20 * 1000;
+  private Context context;
+  private String serverUrl;
+  private Date lastCheckin;
+  private volatile Cookie authCookie = null;
+  private AccountSelector accountSelector = null;
+  PhoneUtils phoneUtils;
 
-	public Checkin(Context context, String serverUrl) {
-		phoneUtils = PhoneUtils.getPhoneUtils();
-		this.context = context;
-		this.serverUrl = serverUrl;
-		sendStringMsg("Using server " + this.serverUrl);
-	}
+  public Checkin(Context context, String serverUrl) {
+    phoneUtils = PhoneUtils.getPhoneUtils();
+    this.context = context;
+    this.serverUrl = serverUrl;
+    sendStringMsg("Using server " + this.serverUrl);
+  }
 
-	public Checkin(Context context) {
-		phoneUtils = PhoneUtils.getPhoneUtils();
-		this.context = context;
-		this.serverUrl = phoneUtils.getServerUrl();
-		sendStringMsg("Using server " + this.serverUrl);
-	}
+  public Checkin(Context context) {
+    phoneUtils = PhoneUtils.getPhoneUtils();
+    this.context = context;
+    this.serverUrl = phoneUtils.getServerUrl();
+    sendStringMsg("Using server " + this.serverUrl);
+  }
 
-	/** Returns whether the service is running on a testing server. */
-	public boolean isTestingServer() {
-		if (phoneUtils.isTestingServer(serverUrl)) {
-			accountSelector = new AccountSelector(context, this);
-			return true;
-		} else {
-			return false;
-		}
-	}
+  /** Returns whether the service is running on a testing server. */
+  public boolean isTestingServer() {
+    if (phoneUtils.isTestingServer(serverUrl)) {
+      accountSelector = new AccountSelector(context, this);
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-	/** Shuts down the checkin thread */
-	public void shutDown() {
-		if (this.accountSelector != null) {
-			this.accountSelector.shutDown();
-		}
-	}
+  /** Shuts down the checkin thread */
+  public void shutDown() {
+    if (this.accountSelector != null) {
+      this.accountSelector.shutDown();
+    }
+  }
 
-	/** Return a fake authentication cookie for a test server instance */
-	private Cookie getFakeAuthCookie() {
-		BasicClientCookie cookie = new BasicClientCookie("dev_appserver_login",
-				"test@nobody.com:False:185804764220139124118");
-		cookie.setDomain(".google.com");
-		cookie.setVersion(1);
-		cookie.setPath("/");
-		cookie.setSecure(false);
-		return cookie;
-	}
+  /** Return a fake authentication cookie for a test server instance */
+  private Cookie getFakeAuthCookie() {
+    BasicClientCookie cookie = new BasicClientCookie("dev_appserver_login",
+        "test@nobody.com:False:185804764220139124118");
+    cookie.setDomain(".google.com");
+    cookie.setVersion(1);
+    cookie.setPath("/");
+    cookie.setSecure(false);
+    return cookie;
+  }
 
-	public Date lastCheckinTime() {
-		return this.lastCheckin;
-	}
+  public Date lastCheckinTime() {
+    return this.lastCheckin;
+  }
 
-	public String getServerUrl() {
-		return serverUrl;
-	}
+  public String getServerUrl() {
+    return serverUrl;
+  }
 
-	public List<MeasurementTask> checkin() throws IOException {
-		Logger.i("Checkin.checkin() called");
-		boolean checkinSuccess = false;
-		try {
-			JSONObject status = new JSONObject();
-			DeviceInfo info = phoneUtils.getDeviceInfo();
-			// TODO(Wenjie): There is duplicated info here, such as device ID.
-			status.put("id", info.deviceId);
-			status.put("manufacturer", info.manufacturer);
-			status.put("model", info.model);
-			status.put("os", info.os);
-			status.put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
+  public List<MeasurementTask> checkin() throws IOException {
+    Logger.i("Checkin.checkin() called");
+    boolean checkinSuccess = false;
+    try {
+      JSONObject status = new JSONObject();
+      DeviceInfo info = phoneUtils.getDeviceInfo();
+      // TODO(Wenjie): There is duplicated info here, such as device ID.
+      status.put("id", info.deviceId);
+      status.put("manufacturer", info.manufacturer);
+      status.put("model", info.model);
+      status.put("os", info.os);
+      status.put("properties",
+          MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
 
-			Logger.d(status.toString());
-			sendStringMsg("Checking in");
+      Logger.d(status.toString());
+      sendStringMsg("Checking in");
 
-			String result = speedometerServiceRequest("checkin",
-					status.toString());
-			Logger.d("Checkin result: " + result);
+      String result = speedometerServiceRequest("checkin", status.toString());
+      Logger.d("Checkin result: " + result);
 
-			// Parse the result
-			Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
-			JSONArray jsonArray = new JSONArray(result);
-			sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
+      // Parse the result
+      Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
+      JSONArray jsonArray = new JSONArray(result);
+      sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
 
-			for (int i = 0; i < jsonArray.length(); i++) {
-				Logger.d("Parsing index " + i);
-				JSONObject json = jsonArray.optJSONObject(i);
-				Logger.d("Value is " + json);
-				if (json != null) {
-					try {
-						MeasurementTask task = MeasurementJsonConvertor
-								.makeMeasurementTaskFromJson(json, this.context);
-						Logger.i(MeasurementJsonConvertor
-								.toJsonString(task.measurementDesc));
-						schedule.add(task);
-					} catch (IllegalArgumentException e) {
-						Logger.w("Could not create task from JSON: " + e);
-						// Just skip it, and try the next one
-					}
-				}
-			}
+      for (int i = 0; i < jsonArray.length(); i++) {
+        Logger.d("Parsing index " + i);
+        JSONObject json = jsonArray.optJSONObject(i);
+        Logger.d("Value is " + json);
+        if (json != null) {
+          try {
+            MeasurementTask task = MeasurementJsonConvertor.makeMeasurementTaskFromJson(json,
+                this.context);
+            Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
+            schedule.add(task);
+          } catch (IllegalArgumentException e) {
+            Logger.w("Could not create task from JSON: " + e);
+            // Just skip it, and try the next one
+          }
+        }
+      }
 
-			this.lastCheckin = new Date();
-			Logger.i("Checkin complete, got " + schedule.size() + " new tasks");
-			checkinSuccess = true;
-			return schedule;
-		} catch (JSONException e) {
-			Logger.e("Got exception during checkin", e);
-			throw new IOException("There is exception during checkin()");
-		} catch (IOException e) {
-			Logger.e("Got exception during checkin", e);
-			throw e;
-		} finally {
-			if (!checkinSuccess) {
-				// Failure probably due to authToken expiration. Will
-				// authenticate upon next checkin.
-				this.accountSelector.setAuthImmediately(true);
-				this.authCookie = null;
-			}
-		}
-	}
+      this.lastCheckin = new Date();
+      Logger.i("Checkin complete, got " + schedule.size() + " new tasks");
+      checkinSuccess = true;
+      return schedule;
+    } catch (JSONException e) {
+      Logger.e("Got exception during checkin", e);
+      throw new IOException("There is exception during checkin()");
+    } catch (IOException e) {
+      Logger.e("Got exception during checkin", e);
+      throw e;
+    } finally {
+      if (!checkinSuccess) {
+        // Failure probably due to authToken expiration. Will
+        // authenticate upon next checkin.
+        this.accountSelector.setAuthImmediately(true);
+        this.authCookie = null;
+      }
+    }
+  }
 
-	public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
-			throws IOException {
-		JSONArray resultArray = new JSONArray();
-		for (MeasurementResult result : finishedTasks) {
-			try {
-				resultArray.put(MeasurementJsonConvertor.encodeToJson(result));
-			} catch (JSONException e1) {
-				Logger.e("Error when adding " + result);
-			}
-		}
+  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks) throws IOException {
+    JSONArray resultArray = new JSONArray();
+    for (MeasurementResult result : finishedTasks) {
+      try {
+        resultArray.put(MeasurementJsonConvertor.encodeToJson(result));
+      } catch (JSONException e1) {
+        Logger.e("Error when adding " + result);
+      }
+    }
 
-		sendStringMsg("Uploading " + resultArray.length()
-				+ " measurement results.");
-		Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
-				+ resultArray.toString());
-		String response = speedometerServiceRequest("postmeasurement",
-				resultArray.toString());
-		try {
-			JSONObject responseJson = new JSONObject(response);
-			if (!responseJson.getBoolean("success")) {
-				throw new IOException("Failure posting measurement result");
-			}
-		} catch (JSONException e) {
-			throw new IOException(e.getMessage());
-		}
-		Logger.i("TaskSchedule.uploadMeasurementResult() complete");
-		sendStringMsg("Result upload complete.");
-	}
+    sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
+    Logger.i("TaskSchedule.uploadMeasurementResult() uploading: " + resultArray.toString());
+    String response = speedometerServiceRequest("postmeasurement", resultArray.toString());
+    try {
+      JSONObject responseJson = new JSONObject(response);
+      if (!responseJson.getBoolean("success")) {
+        throw new IOException("Failure posting measurement result");
+      }
+    } catch (JSONException e) {
+      throw new IOException(e.getMessage());
+    }
+    Logger.i("TaskSchedule.uploadMeasurementResult() complete");
+    sendStringMsg("Result upload complete.");
+  }
 
-	/**
-	 * Used to generate SSL sockets.
-	 */
-	class MySSLSocketFactory extends SSLSocketFactory {
-		SSLContext sslContext = SSLContext.getInstance("TLS");
+  /**
+   * Used to generate SSL sockets.
+   */
+  class MySSLSocketFactory extends SSLSocketFactory {
+    SSLContext sslContext = SSLContext.getInstance("TLS");
 
-		public MySSLSocketFactory(KeyStore truststore)
-				throws NoSuchAlgorithmException, KeyManagementException,
-				KeyStoreException, UnrecoverableKeyException {
-			super(truststore);
+    public MySSLSocketFactory(KeyStore truststore) throws NoSuchAlgorithmException,
+        KeyManagementException, KeyStoreException, UnrecoverableKeyException {
+      super(truststore);
 
-			X509TrustManager tm = new X509TrustManager() {
-				public X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
+      X509TrustManager tm = new X509TrustManager() {
+        public X509Certificate[] getAcceptedIssuers() {
+          return null;
+        }
 
-				@Override
-				public void checkClientTrusted(X509Certificate[] chain,
-						String authType) throws CertificateException {
-					// Do nothing
-				}
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+          // Do nothing
+        }
 
-				@Override
-				public void checkServerTrusted(X509Certificate[] chain,
-						String authType) throws CertificateException {
-					// Do nothing
-				}
-			};
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
+            throws CertificateException {
+          // Do nothing
+        }
+      };
 
-			sslContext.init(null, new TrustManager[] { tm }, null);
-		}
+      sslContext.init(null, new TrustManager[] { tm }, null);
+    }
 
-		@Override
-		public Socket createSocket(Socket socket, String host, int port,
-				boolean autoClose) throws IOException, UnknownHostException {
-			return sslContext.getSocketFactory().createSocket(socket, host,
-					port, autoClose);
-		}
+    @Override
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
+        throws IOException, UnknownHostException {
+      return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
+    }
 
-		@Override
-		public Socket createSocket() throws IOException {
-			return sslContext.getSocketFactory().createSocket();
-		}
-	}
+    @Override
+    public Socket createSocket() throws IOException {
+      return sslContext.getSocketFactory().createSocket();
+    }
+  }
 
-	/**
-	 * Return an appropriately-configured HTTP client.
-	 */
-	private HttpClient getNewHttpClient() {
-		DefaultHttpClient client;
-		try {
-			KeyStore trustStore = KeyStore.getInstance(KeyStore
-					.getDefaultType());
-			trustStore.load(null, null);
+  /**
+   * Return an appropriately-configured HTTP client.
+   */
+  private HttpClient getNewHttpClient() {
+    DefaultHttpClient client;
+    try {
+      KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      trustStore.load(null, null);
 
-			SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
-			sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+      SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
+      sf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 
-			HttpParams params = new BasicHttpParams();
-			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-			HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+      HttpParams params = new BasicHttpParams();
+      HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+      HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
 
-			HttpConnectionParams.setConnectionTimeout(params,
-					POST_TIMEOUT_MILLISEC);
-			HttpConnectionParams.setSoTimeout(params, POST_TIMEOUT_MILLISEC);
+      HttpConnectionParams.setConnectionTimeout(params, POST_TIMEOUT_MILLISEC);
+      HttpConnectionParams.setSoTimeout(params, POST_TIMEOUT_MILLISEC);
 
-			SchemeRegistry registry = new SchemeRegistry();
-			registry.register(new Scheme("http", PlainSocketFactory
-					.getSocketFactory(), 80));
-			registry.register(new Scheme("https", sf, 443));
+      SchemeRegistry registry = new SchemeRegistry();
+      registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+      registry.register(new Scheme("https", sf, 443));
 
-			ClientConnectionManager ccm = new ThreadSafeClientConnManager(
-					params, registry);
-			client = new DefaultHttpClient(ccm, params);
-		} catch (Exception e) {
-			Logger.w("Unable to create SSL HTTP client", e);
-			client = new DefaultHttpClient();
-		}
+      ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
+      client = new DefaultHttpClient(ccm, params);
+    } catch (Exception e) {
+      Logger.w("Unable to create SSL HTTP client", e);
+      client = new DefaultHttpClient();
+    }
 
-		// TODO(mdw): For some reason this is not sending the cookie to the
-		// test server, probably because the cookie itself is not properly
-		// initialized. Below I manually set the Cookie header instead.
-		CookieStore store = new BasicCookieStore();
-		store.addCookie(authCookie);
-		client.setCookieStore(store);
-		return client;
-	}
+    // TODO(mdw): For some reason this is not sending the cookie to the
+    // test server, probably because the cookie itself is not properly
+    // initialized. Below I manually set the Cookie header instead.
+    CookieStore store = new BasicCookieStore();
+    store.addCookie(authCookie);
+    client.setCookieStore(store);
+    return client;
+  }
 
-	private String speedometerServiceRequest(String url, String jsonString)
-			throws IOException {
+  private String speedometerServiceRequest(String url, String jsonString) throws IOException {
 
-		synchronized (this) {
-			if (authCookie == null) {
-				if (!checkGetCookie()) {
-					throw new IOException("No authCookie yet");
-				}
-			}
-		}
+    synchronized (this) {
+      if (authCookie == null) {
+        if (!checkGetCookie()) {
+          throw new IOException("No authCookie yet");
+        }
+      }
+    }
 
-		HttpClient client = getNewHttpClient();
-		String fullurl = serverUrl + "/" + url;
-		HttpPost postMethod = new HttpPost(fullurl);
+    HttpClient client = getNewHttpClient();
+    String fullurl = serverUrl + "/" + url;
+    HttpPost postMethod = new HttpPost(fullurl);
 
-		StringEntity se;
-		try {
-			se = new StringEntity(jsonString);
-		} catch (UnsupportedEncodingException e) {
-			throw new IOException(e.getMessage());
-		}
-		postMethod.setEntity(se);
-		postMethod.setHeader("Accept", "application/json");
-		postMethod.setHeader("Content-type", "application/json");
-		// TODO(mdw): This should not be needed
-		postMethod.setHeader("Cookie",
-				authCookie.getName() + "=" + authCookie.getValue());
+    StringEntity se;
+    try {
+      se = new StringEntity(jsonString);
+    } catch (UnsupportedEncodingException e) {
+      throw new IOException(e.getMessage());
+    }
+    postMethod.setEntity(se);
+    postMethod.setHeader("Accept", "application/json");
+    postMethod.setHeader("Content-type", "application/json");
+    // TODO(mdw): This should not be needed
+    postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
 
-		ResponseHandler<String> responseHandler = new BasicResponseHandler();
-		Logger.i("Sending request: " + fullurl);
-		String result = client.execute(postMethod, responseHandler);
-		return result;
-	}
+    ResponseHandler<String> responseHandler = new BasicResponseHandler();
+    Logger.i("Sending request: " + fullurl);
+    String result = client.execute(postMethod, responseHandler);
+    return result;
+  }
 
-	/**
-	 * Initiates the process to get the authentication cookie for the user
-	 * account. Returns immediately.
-	 */
-	public synchronized void getCookie() {
-		if (isTestingServer()) {
-			Logger.i("Setting fakeAuthCookie");
-			authCookie = getFakeAuthCookie();
-			return;
-		}
-		if (this.accountSelector == null) {
-			accountSelector = new AccountSelector(context, this);
-		}
+  /**
+   * Initiates the process to get the authentication cookie for the user account. Returns
+   * immediately.
+   */
+  public synchronized void getCookie() {
+    if (isTestingServer()) {
+      Logger.i("Setting fakeAuthCookie");
+      authCookie = getFakeAuthCookie();
+      return;
+    }
+    if (this.accountSelector == null) {
+      accountSelector = new AccountSelector(context, this);
+    }
 
-		try {
-			// Authenticates if there are no ongoing ones
-			if (accountSelector.getCheckinFuture() == null) {
-				accountSelector.authenticate();
-			}
-		} catch (OperationCanceledException e) {
-			Logger.e("Unable to get auth cookie", e);
-		} catch (AuthenticatorException e) {
-			Logger.e("Unable to get auth cookie", e);
-		} catch (IOException e) {
-			Logger.e("Unable to get auth cookie", e);
-		}
-	}
+    try {
+      // Authenticates if there are no ongoing ones
+      if (accountSelector.getCheckinFuture() == null) {
+        accountSelector.authenticate();
+      }
+    } catch (OperationCanceledException e) {
+      Logger.e("Unable to get auth cookie", e);
+    } catch (AuthenticatorException e) {
+      Logger.e("Unable to get auth cookie", e);
+    } catch (IOException e) {
+      Logger.e("Unable to get auth cookie", e);
+    }
+  }
 
-	/**
-	 * Resets the checkin variables in AccountSelector
-	 * */
-	public void initializeAccountSelector() {
-		accountSelector.resetCheckinFuture();
-		accountSelector.setAuthImmediately(false);
-	}
+  /**
+   * Resets the checkin variables in AccountSelector
+   * */
+  public void initializeAccountSelector() {
+    accountSelector.resetCheckinFuture();
+    accountSelector.setAuthImmediately(false);
+  }
 
-	private synchronized boolean checkGetCookie() {
-		if (isTestingServer()) {
-			authCookie = getFakeAuthCookie();
-			return true;
-		}
-		Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
-		if (getCookieFuture == null) {
-			Logger.i("checkGetCookie called too early");
-			return false;
-		}
-		if (getCookieFuture.isDone()) {
-			try {
-				authCookie = getCookieFuture.get();
-				Logger.i("Got authCookie: " + authCookie);
-				return true;
-			} catch (InterruptedException e) {
-				Logger.e("Unable to get auth cookie", e);
-				return false;
-			} catch (ExecutionException e) {
-				Logger.e("Unable to get auth cookie", e);
-				return false;
-			}
-		} else {
-			Logger.i("getCookieFuture is not yet finished");
-			return false;
-		}
-	}
+  private synchronized boolean checkGetCookie() {
+    if (isTestingServer()) {
+      authCookie = getFakeAuthCookie();
+      return true;
+    }
+    Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
+    if (getCookieFuture == null) {
+      Logger.i("checkGetCookie called too early");
+      return false;
+    }
+    if (getCookieFuture.isDone()) {
+      try {
+        authCookie = getCookieFuture.get();
+        Logger.i("Got authCookie: " + authCookie);
+        return true;
+      } catch (InterruptedException e) {
+        Logger.e("Unable to get auth cookie", e);
+        return false;
+      } catch (ExecutionException e) {
+        Logger.e("Unable to get auth cookie", e);
+        return false;
+      }
+    } else {
+      Logger.i("getCookieFuture is not yet finished");
+      return false;
+    }
+  }
 
-	private void sendStringMsg(String str) {
-		UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
-		context.sendBroadcast(intent);
-	}
+  private void sendStringMsg(String str) {
+    UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
+    context.sendBroadcast(intent);
+  }
 }
