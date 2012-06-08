@@ -21,13 +21,13 @@ import android.widget.TextView;
 
 /**
  * Display a simple description of this application
- *
+ * 
  */
 public class About extends Activity {
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.about);
-		TextView textView = (TextView) findViewById(R.id.about2);
-		textView.setMovementMethod(ScrollingMovementMethod.getInstance());
-	}
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.about);
+    TextView textView = (TextView) findViewById(R.id.about2);
+    textView.setMovementMethod(ScrollingMovementMethod.getInstance());
+  }
 }

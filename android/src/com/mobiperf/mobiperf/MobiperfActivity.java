@@ -55,362 +55,351 @@ import com.mobiperf.speedometer.ResultsConsoleActivity;
 import com.mobiperf.speedometer.SystemConsoleActivity;
 
 /**
- * Home screen for Mobiperf which hosts all the different activities.  
- * Contains the measurement scheduler for managing measurement tasks.
+ * Home screen for Mobiperf which hosts all the different activities. Contains the measurement
+ * scheduler for managing measurement tasks.
  * 
  * @author hjx@umich.edu (Junxian Huang)
  */
 public class MobiperfActivity extends Activity {
 
-	// Define menu ids
-	protected static final int MENU_PERIODIC = Menu.FIRST;
-	protected static final int MENU_EMAIL = Menu.FIRST + 4;
-	protected static final int PAST_RECORD = Menu.FIRST + 5;
-	protected static final int PERF_ME = Menu.FIRST + 7;
+  // Define menu ids
+  protected static final int MENU_PERIODIC = Menu.FIRST;
+  protected static final int MENU_EMAIL = Menu.FIRST + 4;
+  protected static final int PAST_RECORD = Menu.FIRST + 5;
+  protected static final int PERF_ME = Menu.FIRST + 7;
 
-	// Define dialog id
-	protected static final int DIALOG_AGREEMENT = 1;
-	protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
+  // Define dialog id
+  protected static final int DIALOG_AGREEMENT = 1;
+  protected static final int DIALOG_ACCOUNT_SELECTOR = 2;
 
-	public static MeasurementScheduler scheduler;
-	private boolean isBound = false;
-	private boolean isBindingToService = false;
-	private BroadcastReceiver receiver;
-	
+  public static MeasurementScheduler scheduler;
+  private boolean isBound = false;
+  private boolean isBindingToService = false;
+  private BroadcastReceiver receiver;
+
   private String measurementStatus;
   private String batteryStatus;
   private String lastCheckin;
-	
 
-	/** 
-	 * Defines callbacks for service binding, passed to bindService() 
-	 */
+  /**
+   * Defines callbacks for service binding, passed to bindService()
+   */
 
-	private ServiceConnection serviceConn = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			// We've bound to LocalService, cast the IBinder and get
-			// LocalService instance
-			SchedulerBinder binder = (SchedulerBinder) service;
-			scheduler = binder.getService();
-			isBound = true;
-			isBindingToService = false;
-			// initializeStatusBar();
-			// HomeScreen.this.sendBroadcast(new UpdateIntent("", UpdateIntent.SCHEDULER_CONNECTED_ACTION));
-		}
+  private ServiceConnection serviceConn = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName className, IBinder service) {
+      // We've bound to LocalService, cast the IBinder and get
+      // LocalService instance
+      SchedulerBinder binder = (SchedulerBinder) service;
+      scheduler = binder.getService();
+      isBound = true;
+      isBindingToService = false;
+      // initializeStatusBar();
+      // HomeScreen.this.sendBroadcast(new UpdateIntent("",
+      // UpdateIntent.SCHEDULER_CONNECTED_ACTION));
+    }
 
-		@Override
-		public void onServiceDisconnected(ComponentName arg0) {
-			isBound = false;
-		}
-	};
+    @Override
+    public void onServiceDisconnected(ComponentName arg0) {
+      isBound = false;
+    }
+  };
 
-	private void bindToService() {
-		if (!isBindingToService && !isBound) {
-			// Bind to the scheduler service if it is not bounded
-			Intent intent = new Intent(this, MeasurementScheduler.class);
-			bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
-			isBindingToService = true;
-		}
-	}
+  private void bindToService() {
+    if (!isBindingToService && !isBound) {
+      // Bind to the scheduler service if it is not bounded
+      Intent intent = new Intent(this, MeasurementScheduler.class);
+      bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
+      isBindingToService = true;
+    }
+  }
 
-	@Override
-	protected void onStart() {
-		// Bind to the scheduler service for only once during the lifetime of
-		// the activity
-		bindToService();
-		super.onStart();
+  @Override
+  protected void onStart() {
+    // Bind to the scheduler service for only once during the lifetime of
+    // the activity
+    bindToService();
+    super.onStart();
 
-		showDialogs();
-		
-		measurementStatus = getString(R.string.status_noMeasurements);
-	}
-	
-	
-	protected void onResume() {
-		super.onResume();
-		
-    if (scheduler != null) {		
+    showDialogs();
+
+    measurementStatus = getString(R.string.status_noMeasurements);
+  }
+
+  protected void onResume() {
+    super.onResume();
+
+    if (scheduler != null) {
       if (scheduler.hasBatteryToScheduleExperiment() == true) {
         batteryStatus = getString(R.string.status_batteryAbove);
-      }  else {
-         batteryStatus = getString(R.string.status_batteryBelow);
-      }
-      
-      SimpleDateFormat form = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss'.'");
-      
-      if (scheduler.getLastCheckinTime() != null) {
-        lastCheckin = getString(R.string.status_lastCheckin) + 
-                      form.format(scheduler.getLastCheckinTime());
-        }
       } else {
-      	batteryStatus = "";
-      	lastCheckin = "";
+        batteryStatus = getString(R.string.status_batteryBelow);
       }
+
+      SimpleDateFormat form = new SimpleDateFormat("yyyy.MM.dd 'at' HH:mm:ss'.'");
+
+      if (scheduler.getLastCheckinTime() != null) {
+        lastCheckin = getString(R.string.status_lastCheckin)
+            + form.format(scheduler.getLastCheckinTime());
+      }
+    } else {
+      batteryStatus = "";
+      lastCheckin = "";
+    }
     updateStatus();
-	}
-	
-	protected void updateStatus() {
-		TextView statusView = (TextView) findViewById(R.id.main_status);
-		statusView.setText(measurementStatus + batteryStatus + lastCheckin);
-	}
+  }
 
-	@Override
-	protected void onStop() {
-		super.onStop();
-		if (isBound) {
-			unbindService(serviceConn);
-			isBound = false;
-		}
-	}
+  protected void updateStatus() {
+    TextView statusView = (TextView) findViewById(R.id.main_status);
+    statusView.setText(measurementStatus + batteryStatus + lastCheckin);
+  }
 
-	public MeasurementScheduler getScheduler() {
-		if (isBound) {
-			return MobiperfActivity.scheduler;
-		} else {
-			bindToService();
-			return null;
-		}
-	}
+  @Override
+  protected void onStop() {
+    super.onStop();
+    if (isBound) {
+      unbindService(serviceConn);
+      isBound = false;
+    }
+  }
 
-	// Create menu
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.main_menu, menu);
-		return true;
-	}
+  public MeasurementScheduler getScheduler() {
+    if (isBound) {
+      return MobiperfActivity.scheduler;
+    } else {
+      bindToService();
+      return null;
+    }
+  }
 
-	// Deal with menu event
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		Log.v("menu", "onOptionsItemSelected " + item.getItemId());
+  // Create menu
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater inflater = getMenuInflater();
+    inflater.inflate(R.menu.main_menu, menu);
+    return true;
+  }
 
-		switch (item.getItemId()) {
-		case R.id.menuPauseResume:
-			if (MobiperfActivity.scheduler != null) {
-				if (MobiperfActivity.scheduler.isPauseRequested()) {
-					MobiperfActivity.scheduler.resume();
-				} else {
-					MobiperfActivity.scheduler.pause();
-				}
-			}
-			return true;
-		case R.id.menuQuit:
-			quitApp();
-			return true;
-		case R.id.menuSettings:
-			Intent settingsActivity = new Intent(getBaseContext(),
-					com.mobiperf.mobiperf.Preferences.class);
-			startActivity(settingsActivity);
-			return true;
-		case R.id.aboutPage:
-			Intent intent = new Intent(getBaseContext(),
-					com.mobiperf.mobiperf.About.class);
-			startActivity(intent);
-			return true;
-		case R.id.menuLog:
-			intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
-			startActivity(intent);
-			return true;
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-	}
+  // Deal with menu event
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    Log.v("menu", "onOptionsItemSelected " + item.getItemId());
 
-	//pop up dialog
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		Dialog dialog;
-		AlertDialog.Builder builder;
-		switch(id) {
-		case DIALOG_AGREEMENT:
-			builder = new AlertDialog.Builder(this);
-			builder.setTitle("Terms and Agreement")
-			.setMessage(R.string.terms)
-			.setCancelable(false)
-			.setPositiveButton("Agree", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int id) {
-					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-					SharedPreferences.Editor editor = prefs.edit();
-					editor.putString(Config.PREF_KEY_USER_CLICKED_AGREE, "true");
-					editor.commit();
-					dialog.dismiss();					
-				}
-			}).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int id) {
-					MobiperfActivity.this.quitApp();
-				}
-			});
-			dialog = builder.create();
-			break;
-		case DIALOG_ACCOUNT_SELECTOR:
-			builder = new AlertDialog.Builder(this);
-			builder.setTitle("Select Authentication Account");
-			final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
-			if(items == null) {
-				Toast.makeText(getApplicationContext(), "There is no Google account connected for MobiPerf authentication, you may try again once you add your account to this phone.", Toast.LENGTH_SHORT).show();
-				dialog = null;
-				break;
-			}
-			builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int item) {
-					Toast.makeText(getApplicationContext(), items[item] + " " + getString(R.string.selectedString), 
-							Toast.LENGTH_SHORT).show();
-					
-					SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-					SharedPreferences.Editor editor = prefs.edit();
-					editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
-					editor.commit();
-					dialog.dismiss();
-				}
-			});
-			AlertDialog alert = builder.create();
-			dialog = builder.create();
-			break;
-		default:
-			dialog = null;
-		}
-		return dialog;
-	}
+    switch (item.getItemId()) {
+    case R.id.menuPauseResume:
+      if (MobiperfActivity.scheduler != null) {
+        if (MobiperfActivity.scheduler.isPauseRequested()) {
+          MobiperfActivity.scheduler.resume();
+        } else {
+          MobiperfActivity.scheduler.pause();
+        }
+      }
+      return true;
+    case R.id.menuQuit:
+      quitApp();
+      return true;
+    case R.id.menuSettings:
+      Intent settingsActivity = new Intent(getBaseContext(),
+          com.mobiperf.mobiperf.Preferences.class);
+      startActivity(settingsActivity);
+      return true;
+    case R.id.aboutPage:
+      Intent intent = new Intent(getBaseContext(), com.mobiperf.mobiperf.About.class);
+      startActivity(intent);
+      return true;
+    case R.id.menuLog:
+      intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
+      startActivity(intent);
+      return true;
+    default:
+      return super.onOptionsItemSelected(item);
+    }
+  }
 
-	//check whether this is the first time run
-	private void showDialogs() {
+  // pop up dialog
+  @Override
+  protected Dialog onCreateDialog(int id) {
+    Dialog dialog;
+    AlertDialog.Builder builder;
+    switch (id) {
+    case DIALOG_AGREEMENT:
+      builder = new AlertDialog.Builder(this);
+      builder.setTitle("Terms and Agreement").setMessage(R.string.terms).setCancelable(false)
+          .setPositiveButton("Agree", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+              SharedPreferences prefs = PreferenceManager
+                  .getDefaultSharedPreferences(getBaseContext());
+              SharedPreferences.Editor editor = prefs.edit();
+              editor.putString(Config.PREF_KEY_USER_CLICKED_AGREE, "true");
+              editor.commit();
+              dialog.dismiss();
+            }
+          }).setNegativeButton("Quit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int id) {
+              MobiperfActivity.this.quitApp();
+            }
+          });
+      dialog = builder.create();
+      break;
+    case DIALOG_ACCOUNT_SELECTOR:
+      builder = new AlertDialog.Builder(this);
+      builder.setTitle("Select Authentication Account");
+      final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+      if (items == null) {
+        Toast
+            .makeText(
+                getApplicationContext(),
+                "There is no Google account connected for MobiPerf authentication, you may try again once you add your account to this phone.",
+                Toast.LENGTH_SHORT).show();
+        dialog = null;
+        break;
+      }
+      builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int item) {
+          Toast.makeText(getApplicationContext(),
+              items[item] + " " + getString(R.string.selectedString), Toast.LENGTH_SHORT).show();
 
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
-		if(selectedAccount == null)
-			showDialog(DIALOG_ACCOUNT_SELECTOR);
-		
-		String userClickedAgree = prefs.getString(Config.PREF_KEY_USER_CLICKED_AGREE, null);
-		if(userClickedAgree == null)
-			showDialog(DIALOG_AGREEMENT);
+          SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+          SharedPreferences.Editor editor = prefs.edit();
+          editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
+          editor.commit();
+          dialog.dismiss();
+        }
+      });
+      AlertDialog alert = builder.create();
+      dialog = builder.create();
+      break;
+    default:
+      dialog = null;
+    }
+    return dialog;
+  }
 
-	}
+  // check whether this is the first time run
+  private void showDialogs() {
 
-	/**
-	 * get the file name of the first time mark file, now used SharedPreferences
-	 * 
-	 */
-	@Deprecated
-	private String getFirstTimeMarkFileName() {
-		String fileName = "first_time_mark_";
-		try {
-			PackageManager manager = this.getPackageManager();	
-			PackageInfo info = manager.getPackageInfo(this.getPackageName(), 0);
-			fileName += this.getPackageName() + "_" + info.versionCode;
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-		}
-		return fileName;
-	}
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (selectedAccount == null)
+      showDialog(DIALOG_ACCOUNT_SELECTOR);
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.home);
-		
-		IntentFilter filter = new IntentFilter();
-		filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
-		filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-		receiver = new BroadcastReceiver() {
-			// Handles various broadcast intents.
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
-					// measurement started
-					if (scheduler != null) {
-						String taskDescriptor = scheduler.prevTask + "\n";
-						measurementStatus = getString(R.string.status_runningMeasurement) + taskDescriptor;
-					}
-					updateStatus();
-				} else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
-					if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == Config.MEASUREMENT_END_PROGRESS) {
-						// measurement done
-						measurementStatus = getString(R.string.status_noMeasurements);
-						updateStatus();
-					}
-				}
-			}
-		};
-		
-		this.registerReceiver(receiver, filter);
+    String userClickedAgree = prefs.getString(Config.PREF_KEY_USER_CLICKED_AGREE, null);
+    if (userClickedAgree == null)
+      showDialog(DIALOG_AGREEMENT);
 
-		findViewById(R.id.home_btn_mtask).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								MeasurementCreationActivity.class));
-					}
-				});
+  }
 
-		findViewById(R.id.home_btn_results).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								ResultsConsoleActivity.class));
-					}
-				});
+  /**
+   * get the file name of the first time mark file, now used SharedPreferences
+   * 
+   */
+  @Deprecated
+  private String getFirstTimeMarkFileName() {
+    String fileName = "first_time_mark_";
+    try {
+      PackageManager manager = this.getPackageManager();
+      PackageInfo info = manager.getPackageInfo(this.getPackageName(), 0);
+      fileName += this.getPackageName() + "_" + info.versionCode;
+    } catch (NameNotFoundException e) {
+      e.printStackTrace();
+    }
+    return fileName;
+  }
 
-		findViewById(R.id.home_btn_networktoggle).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								NetworkToggle.class));
-					}
-				});
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.home);
 
-		findViewById(R.id.home_btn_about).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								com.mobiperf.mobiperf.About.class));
-					}
-				});
+    IntentFilter filter = new IntentFilter();
+    filter.addAction(UpdateIntent.MEASUREMENT_ACTION);
+    filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+    receiver = new BroadcastReceiver() {
+      // Handles various broadcast intents.
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        if (intent.getAction().equals(UpdateIntent.MEASUREMENT_ACTION)) {
+          // measurement started
+          if (scheduler != null) {
+            String taskDescriptor = scheduler.prevTask + "\n";
+            measurementStatus = getString(R.string.status_runningMeasurement) + taskDescriptor;
+          }
+          updateStatus();
+        } else if (intent.getAction().equals(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION)) {
+          if (intent.getIntExtra(UpdateIntent.PROGRESS_PAYLOAD, Config.INVALID_PROGRESS) == Config.MEASUREMENT_END_PROGRESS) {
+            // measurement done
+            measurementStatus = getString(R.string.status_noMeasurements);
+            updateStatus();
+          }
+        }
+      }
+    };
 
-		findViewById(R.id.home_btn_settings).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								Preferences.class));
-					}
-				});
+    this.registerReceiver(receiver, filter);
 
-		findViewById(R.id.home_btn_taskqueue).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						startActivity(new Intent(getActivity(),
-								MeasurementScheduleConsoleActivity.class));
-					}
-				});
+    findViewById(R.id.home_btn_mtask).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), MeasurementCreationActivity.class));
+      }
+    });
 
-		this.startService(new Intent(this, MeasurementScheduler.class));
-	}
+    findViewById(R.id.home_btn_results).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), ResultsConsoleActivity.class));
+      }
+    });
 
-	private void quitApp() {
-		if (isBound) {
-			//TODO Junxian: why comment out the following line?
-			//unbindService(serviceConn);
-			isBound = false;
-		}
-		if (MobiperfActivity.scheduler != null) {
-			scheduler.requestStop();
-		}
-		this.finish();
-		System.exit(0);
-	}
+    findViewById(R.id.home_btn_networktoggle).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), NetworkToggle.class));
+      }
+    });
 
-	protected Activity getActivity() {
-		return this;
-	}
+    findViewById(R.id.home_btn_about).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), com.mobiperf.mobiperf.About.class));
+      }
+    });
+
+    findViewById(R.id.home_btn_settings).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), Preferences.class));
+      }
+    });
+
+    findViewById(R.id.home_btn_taskqueue).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        startActivity(new Intent(getActivity(), MeasurementScheduleConsoleActivity.class));
+      }
+    });
+
+    this.startService(new Intent(this, MeasurementScheduler.class));
+  }
+
+  private void quitApp() {
+    if (isBound) {
+      // TODO Junxian: why comment out the following line?
+      // unbindService(serviceConn);
+      isBound = false;
+    }
+    if (MobiperfActivity.scheduler != null) {
+      scheduler.requestStop();
+    }
+    this.finish();
+    System.exit(0);
+  }
+
+  protected Activity getActivity() {
+    return this;
+  }
 
 }
