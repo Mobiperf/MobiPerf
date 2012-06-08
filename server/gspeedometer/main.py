@@ -132,9 +132,9 @@ m.connect('/admin/archive/file',
           controller='archive:Archive',
           action='ArchiveToFile')
 
-m.connect('/archive/list',
+m.connect('/admin/archive/cron',
           controller='archive:Archive',
-          action='ListArchives')
+          action='ArchiveToGoogleStorage')
 
 application = wsgi.WSGIApplication(m, debug=True)
 
