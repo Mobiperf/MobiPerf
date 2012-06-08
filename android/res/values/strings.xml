@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">MobiPerf</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="serverUrl">https://openmobiledata.appspot.com</string>
+    <string name="serverUrl">https://anonymous-reporting-test.openmobiledata.appspot.com/anonymous</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="pauseMessage">MobiPerf is paused.</string>
