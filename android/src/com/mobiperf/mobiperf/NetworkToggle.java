@@ -25,29 +25,28 @@ import android.widget.Button;
 import android.widget.TextView;
 
 /**
- * Displays information and gives an option for the user to switch
- * networks for testing.
+ * Displays information and gives an option for the user to switch networks for testing.
  */
 public class NetworkToggle extends Activity {
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.network);
-		TextView textView = (TextView) findViewById(R.id.network_text2);
-		textView.setMovementMethod(ScrollingMovementMethod.getInstance());
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.network);
+    TextView textView = (TextView) findViewById(R.id.network_text2);
+    textView.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-		Button button = (Button) findViewById(R.id.network_btn);
-		button.setOnClickListener(new OnClickListener() {
+    Button button = (Button) findViewById(R.id.network_btn);
+    button.setOnClickListener(new OnClickListener() {
 
-			// When the button is clicked, call up android test menu
-			// @Override
-			public void onClick(View v) {
-				String url = "tel:*#*#4636#*#*";
-				Intent callint = new Intent();
-				callint.setAction(Intent.ACTION_DIAL);
-				callint.setData(Uri.parse("tel:" + Uri.encode(url)));
-				startActivity(callint);
-				finish();
-			}
-		});
-	}
+      // When the button is clicked, call up android test menu
+      // @Override
+      public void onClick(View v) {
+        String url = "tel:*#*#4636#*#*";
+        Intent callint = new Intent();
+        callint.setAction(Intent.ACTION_DIAL);
+        callint.setData(Uri.parse("tel:" + Uri.encode(url)));
+        startActivity(callint);
+        finish();
+      }
+    });
+  }
 }
