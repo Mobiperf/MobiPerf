@@ -115,7 +115,8 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
                                   timestamps_in_microseconds,
                                   location_precision)
     elif isinstance(value, users.User):
-      output[key] = value.email()
+      # we do not need nor want to store user info in the archive
+      pass       
     else:
       raise ValueError('cannot encode ' + repr(prop))
   return output
