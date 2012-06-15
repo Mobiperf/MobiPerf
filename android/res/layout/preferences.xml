@@ -28,6 +28,12 @@
             android:key="PREF_KEY_BATTERY_THRESHOLD"
             android:summary="The minimum battery percentage to pause all measurements"
             android:title="Battery Threshold" />
+        
+        <ListPreference
+            android:title="Select Authentication Account"
+            android:summary="Account used for checkin authentication."
+            android:key="PREF_KEY_ACCOUNT" />
+            
     </PreferenceCategory>
 
 </PreferenceScreen>
