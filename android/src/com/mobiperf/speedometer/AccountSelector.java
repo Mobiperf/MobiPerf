@@ -155,13 +155,9 @@ public class AccountSelector {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
     
-    if (selectedAccount == "anonymous") {
-      return;
-    }
-    
     Logger.i("selectedaccount "+selectedAccount);
     
-    if (accounts != null && accounts.length > 0 && selectedAccount != "anonymous") {
+    if (accounts != null && accounts.length > 0 && selectedAccount != "") {
       Account accountToUse = null;
       for (Account account : accounts) {
         // if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {

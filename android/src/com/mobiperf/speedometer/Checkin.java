@@ -64,6 +64,8 @@ import org.json.JSONObject;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
@@ -307,7 +309,7 @@ public class Checkin {
     synchronized (this) {
       if (authCookie == null) {
         if (!checkGetCookie()) {
-          //throw new IOException("No authCookie yet");
+          throw new IOException("No authCookie yet");
         }
       }
     }
@@ -325,9 +327,14 @@ public class Checkin {
     postMethod.setEntity(se);
     postMethod.setHeader("Accept", "application/json");
     postMethod.setHeader("Content-type", "application/json");
-    // TODO(mdw): This should not be needed
-    //postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
-
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (!selectedAccount.equals("anonymous")) {
+      // TODO(mdw): This should not be needed
+      postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+    }
+    
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
     Logger.i("Sending request: " + fullurl);
     String result = client.execute(postMethod, responseHandler);
@@ -373,9 +380,15 @@ public class Checkin {
   private synchronized boolean checkGetCookie() {
     if (isTestingServer()) {
       authCookie = getFakeAuthCookie();
-      //Unsure if this is an acceptable change but it works for now.
       return true;
     }
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (selectedAccount.equals("anonymous")) {
+      return true;
+    }
+    
     Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
     if (getCookieFuture == null) {
       Logger.i("checkGetCookie called too early");
