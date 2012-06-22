@@ -15,8 +15,6 @@
 package com.mobiperf.mobiperf;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -49,10 +47,11 @@ import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementCreationActivity;
 import com.mobiperf.speedometer.MeasurementScheduleConsoleActivity;
 import com.mobiperf.speedometer.MeasurementScheduler;
-import com.mobiperf.speedometer.UpdateIntent;
 import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 import com.mobiperf.speedometer.ResultsConsoleActivity;
 import com.mobiperf.speedometer.SystemConsoleActivity;
+import com.mobiperf.speedometer.UpdateIntent;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * Home screen for Mobiperf which hosts all the different activities. Contains the measurement
@@ -113,22 +112,24 @@ public class MobiperfActivity extends Activity {
       isBindingToService = true;
     }
   }
+  
+  
 
   @Override
   protected void onStart() {
     // Bind to the scheduler service for only once during the lifetime of
     // the activity
+	Logger.v("onStart in MobiperfActivity");
     bindToService();
     super.onStart();
 
     showDialogs();
-
     measurementStatus = getString(R.string.status_noMeasurements);
   }
 
   protected void onResume() {
     super.onResume();
-
+    Logger.v("onResume in MobiperfActivity");
     if (scheduler != null) {
       if (scheduler.hasBatteryToScheduleExperiment() == true) {
         batteryStatus = getString(R.string.status_batteryAbove);
@@ -156,16 +157,25 @@ public class MobiperfActivity extends Activity {
 
   @Override
   protected void onStop() {
+	Logger.v("onStop in MobiperfActivity");
     super.onStop();
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
     }
   }
-
+  
+  @Override
+  protected void onDestroy() {
+	Logger.v("onDestroy in MobiperfActivity");
+    super.onDestroy();
+    this.unregisterReceiver(this.receiver);
+  }
+  
+  /** Returns the scheduler singleton instance. Should only be called from the UI thread. */
   public MeasurementScheduler getScheduler() {
     if (isBound) {
-      return MobiperfActivity.scheduler;
+      return scheduler;
     } else {
       bindToService();
       return null;
@@ -292,25 +302,9 @@ public class MobiperfActivity extends Activity {
 
   }
 
-  /**
-   * get the file name of the first time mark file, now used SharedPreferences
-   * 
-   */
-  @Deprecated
-  private String getFirstTimeMarkFileName() {
-    String fileName = "first_time_mark_";
-    try {
-      PackageManager manager = this.getPackageManager();
-      PackageInfo info = manager.getPackageInfo(this.getPackageName(), 0);
-      fileName += this.getPackageName() + "_" + info.versionCode;
-    } catch (NameNotFoundException e) {
-      e.printStackTrace();
-    }
-    return fileName;
-  }
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+	Logger.v("onCreate in MobiperfActivity");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.home);
 
@@ -383,12 +377,12 @@ public class MobiperfActivity extends Activity {
     });
 
     this.startService(new Intent(this, MeasurementScheduler.class));
+    PhoneUtils.setGlobalContext(this.getApplicationContext());
   }
 
   private void quitApp() {
     if (isBound) {
-      // TODO Junxian: why comment out the following line?
-      // unbindService(serviceConn);
+      unbindService(serviceConn);
       isBound = false;
     }
     if (MobiperfActivity.scheduler != null) {
