@@ -38,6 +38,7 @@ class DeviceInfo(db.Model):
   manufacturer = db.StringProperty()
   model = db.StringProperty()
   os = db.StringProperty()
+  tac = db.StringProperty()
 
   def last_update(self):
     query = self.deviceproperties_set

@@ -43,7 +43,7 @@ from google.appengine.api import files
 from google.appengine.ext import webapp
 from google.appengine.runtime import DeadlineExceededError
 
-from gspeedometer import config
+from gspeedometer import config, config_private
 from gspeedometer import model
 from gspeedometer.helpers import archive_util
 from gspeedometer.helpers import util
@@ -63,6 +63,7 @@ def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
     start: A dataetime object for the earliest measurement.
     end: A dataetime object for the latest measurement.
     sanitize: A boolean, will sanitize data if set to True
+    limit: An int specifying number of records to fetch
 
   Returns:
     A list of dictionary items representing the measurement entities from the
@@ -183,11 +184,9 @@ class Archive(webapp.RequestHandler):
     else:
       d0 = datetime.datetime.today() - datetime.timedelta(days=1)
       end = datetime.datetime(d0.year, d0.month, d0.day, 23, 59, 59, 999999)
-    if sanitize:
-      sanitize = True
-    else:
-      sanitize = False
-    if limit:
+    sanitize = not not sanitize
+    # use limit if specified, otherwise use default limit
+    if limit is None:
       limit = int(limit)
     else:
       limit = config.QUERY_FETCH_LIMIT_LARGE
@@ -265,15 +264,12 @@ class Archive(webapp.RequestHandler):
       archive_dir, archive_data = self._Archive()
 
       sanitize = self.request.get('sanitize')
-      if sanitize:
-        sanitize = True
-      else:
-        sanitize = False
+      sanitize = not not sanitize
       
       # Create the file
       if not sanitize:
-        bucket = config.ARCHIVE_GS_BUCKET
-        acl = config.ARCHIVE_GS_ACL
+        bucket = config_private.ARCHIVE_GS_BUCKET
+        acl = config_private.ARCHIVE_GS_ACL
       else:
         bucket = config.ARCHIVE_GS_BUCKET_PUBLIC
         acl = config.ARCHIVE_GS_ACL_PUBLIC

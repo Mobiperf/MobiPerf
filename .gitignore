@@ -12,6 +12,7 @@ android/.settings/
 
 # These are produced by templates
 server/app.yaml
+server/gspeedomenter/config_private.py
 server/gspeedometer/templates/base.html
 android/gen/
 

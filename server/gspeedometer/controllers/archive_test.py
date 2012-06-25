@@ -11,11 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from gspeedometer import config, model
+from sets import Set
 
 
 """Tests for controllers/archive.py."""
 
-__author__ = 'gavaletz@google.com (Eric Gavaletz)'
+__author__ = ['gavaletz@google.com (Eric Gavaletz)',
+              'drchoffnes@gmail.com (David Choffnes)']
 
 import unittest2
 
@@ -61,3 +64,54 @@ class ArchiveTest(unittest2.TestCase):
     gen_base = archive.ParametersToFileNameBase(start_time=ArchiveTest.START,
         end_time=ArchiveTest.END, device_id=ArchiveTest.DEVICE)
     self.assertEqual(gen_base, ArchiveTest.FN_BASE_SED)
+
+  def testSanitizeFieldsRespected(self):
+    """ Test whether data sanitization is happening properly """
+    # Tests:
+    # 1) fields to sanitize haven't changed
+    sanitize_fields = ["user", "ip_address", "id"]
+    self.assertEqual(sanitize_fields, config.SANITIZE_FIELDS,
+                     'Sanitize fields do not match')
+    
+    # 2) fields to sanitize don't appear in output
+    # get data to find range of time to test
+    query = model.Measurement.all()
+    results = query.fetch(100)
+    self.assertTrue(len(results) > 0, 'Empty dataset')
+    start_time = None
+    end_time = None
+    for measurement in results:
+      if not start_time or start_time > measurement.timestamp:
+        start_time = measurement.timestamp
+      if not end_time or end_time < measurement.timestamp:
+        end_time = measurement.timestamp
+        
+    dictlist = archive.GetMeasurementDictList(None, start_time, end_time, True)
+    self.assertTrue(len(results) > 0, 'Empty dictlist')
+    # check for fields being stripped
+    for m in dictlist:
+      self._CheckForKeyNotPresent(m, Set(sanitize_fields))
+        
+    # 3) location precision is chopped properly
+    for m in dictlist:
+      self._CheckForGeoResolution(m, Set(['latitude', 'longitude']))
+    
+  def _CheckForKeyNotPresent(self, dict_to_check, keys, parent=None):
+    """ Fails assertion check if dict_to_check has a key specified in keys """
+    for key, value in dict_to_check.iteritems():
+      if parent and parent != 'task':
+        self.assertFalse(key in keys,
+            'Key %s found in dict (value: %s)' % (key, value))
+      if isinstance(value , dict):
+        self._CheckForKeyNotPresent(value, keys, key) 
+      
+  def _CheckForGeoResolution(self, dict_to_check, keys):
+    """ Fails assertion check if dict_to_check has a key specified in keys """
+    for key, value in dict_to_check.iteritems():
+      if key in keys:
+        self.assertAlmostEqual(float(value),
+            int(config.SANITIZE_LOCATION_PRECISION * float(value)) / 
+            float(config.SANITIZE_LOCATION_PRECISION), 5,
+            'Location precision off %d' % float(value))
+      if isinstance(value , dict):
+        self._CheckForGeoResolution(value, keys) 

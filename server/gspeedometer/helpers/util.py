@@ -26,12 +26,14 @@ import logging
 import random
 import sys
 import time
+import hashlib
+import base64
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
 from django.utils import simplejson as json
-
+from gspeedometer import config_private
 
 def StringToTime(thestr):
   """Convert an ISO8601 timestring into a datetime object."""
@@ -104,7 +106,7 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
       else:
         output[key] = TimeToString(value)
     elif isinstance(value, db.GeoPt):
-      if location_precision is None:
+      if not location_precision:
         output[key] = {'latitude': value.lat, 'longitude': value.lon}
       else:
         lat = int(value.lat * location_precision) / float(location_precision)
@@ -213,7 +215,6 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
         been deleted and where task has been deleted.
     No New exceptions generated here.
   """
-  #TODO(mdw) Unit test needed.
   #TODO(gavaletz) make this iterate over a query instead of a list.
   output = list()
   for measurement in measurement_list:
@@ -247,3 +248,14 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
 
     output.append(mdict)
   return output
+
+def HashDeviceId(measurement_dict, id_field):
+  """ Convert an IMEI to a TAC + salted hash of ID """
+  measurement_dict['tac'] = measurement_dict[id_field][0:8]
+  rest = measurement_dict[id_field][8:] 
+  # add salt, get hash
+  salted = config_private.IMEI_SALT[0:16] + rest + config_private.IMEI_SALT[16:]
+  m = hashlib.md5()
+  m.update(salted)
+  # base64 encoding to save space
+  measurement_dict[id_field] = base64.b64encode(m.digest(), '._').strip('=')

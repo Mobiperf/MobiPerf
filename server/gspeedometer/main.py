@@ -63,6 +63,14 @@ m.connect('/checkin',
           controller='checkin:Checkin',
           action='Checkin')
 
+m.connect('/anonymous/checkin',
+          controller='checkin:Checkin',
+          action='Checkin')
+
+m.connect('anonymous/postmeasurement',
+          controller='measurement:Measurement',
+          action='PostMeasurement')
+
 m.connect('/device/view',
           controller='device:Device',
           action='DeviceDetail')

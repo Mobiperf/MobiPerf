@@ -26,13 +26,22 @@ import optparse
 import os
 import sys
 import unittest2
+from google.appengine.ext import testbed
 
+TEST_DATASTORE = './dev_data/test.sql3'
 
 def main(sdk_path, test_path):
   # Get the appserver on the path
   sys.path.insert(0, sdk_path)
   import dev_appserver
   dev_appserver.fix_sys_path()
+  
+  # set up datastore so we can test on meaningful data
+  t = testbed.Testbed()
+  t.setup_env(True, application_id='dev~openmobiledata')
+  t.activate()
+  t.init_datastore_v3_stub(True, TEST_DATASTORE, True)
+  t.init_memcache_stub()
 
   # Get correct Django version
   from google.appengine.dist import use_library
@@ -42,6 +51,7 @@ def main(sdk_path, test_path):
                                                  pattern='*_test.py')
   unittest2.TextTestRunner(verbosity=2).run(suite)
 
+  t.deactivate()
 
 if __name__ == '__main__':
   devapp_server_path = None
@@ -52,7 +62,7 @@ if __name__ == '__main__':
       dev_appserver_path = os.path.dirname(os.path.realpath(dev_appserver_path))
       break
   if not dev_appserver_path:
-    print >>sys.stderr, 'Can\'t find dev_appserver.py on your PATH.'
+    print >> sys.stderr, 'Can\'t find dev_appserver.py on your PATH.'
     sys.exit(1)
   print 'Using appserver path ' + dev_appserver_path
   main(dev_appserver_path, 'gspeedometer')
