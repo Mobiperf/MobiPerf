@@ -20,6 +20,8 @@ __author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)
 
 # Set of users with admin privileges
 ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']
+ADMIN_ANONYMOUS_USERS = ADMIN_USERS
+ADMIN_ANONYMOUS_USERS.append('huangshu91@gmail.com')
 
 # Set of users with rights to administer tasks
 SCHEDULE_ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']

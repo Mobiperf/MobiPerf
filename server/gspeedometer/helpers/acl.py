@@ -42,6 +42,14 @@ def UserIsAdmin():
     return True
   return False
 
+def UserIsAnonymousAdmin():
+  """Whether current user is an admin."""
+  user = users.get_current_user()
+  if user and user.email() and user.email() in config.ADMIN_ANONYMOUS_USERS:
+    return True
+  return False
+
+
 
 def UserIsScheduleAdmin():
   """Whether current user is a schedule admin."""
