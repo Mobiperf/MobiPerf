@@ -16,7 +16,7 @@
 
 """Controller to manage manipulation of measurement schedules."""
 
-__author__ = ('mdw@google.com (Matt Welsh), ' 
+__author__ = ('mdw@google.com (Matt Welsh), '
               'drchoffnes@gmail.com (David Choffnes)')
 
 import datetime
@@ -44,22 +44,22 @@ class Schedule(webapp.RequestHandler):
       return
 
     # new request or type changed, so show a blank form
-    if (not self.request.POST.has_key('selectedType') or 
-        self.request.POST['type'] != self.request.POST['selectedType']):   
-      
+    if (not self.request.POST.has_key('selectedType') or
+        self.request.POST['type'] != self.request.POST['selectedType']):
+
       # assume new request, update type if otherwise      
       try:
         if self.request.POST.has_key('type'):
           thetype = self.request.POST['type']
-          measurement = MeasurementType.Get_Measurement(thetype)
+          measurement = MeasurementType.GetMeasurement(thetype)
         else:
-          measurement = MeasurementType.Get_Default_Measurement()
+          measurement = MeasurementType.GetDefaultMeasurement()
       except RuntimeError, error:
         # occurs if someone specifies an invalid measurement type
-        logging.warning('Type in POST is invalid: %s', error)                        
+        logging.warning('Type in POST is invalid: %s', error)
         self.error(501)
         return
-      
+
       # dynamically creates a form based on the specified fields
       add_to_schedule_form = type(
           'AddToScheduleForm', (forms.BaseForm,),
@@ -67,39 +67,39 @@ class Schedule(webapp.RequestHandler):
 
     else:
       # data was submitted for a new measurement schedule item
-      try:   
+      try:
         thetype = self.request.POST['type']
-        measurement = MeasurementType.Get_Measurement(thetype) 
+        measurement = MeasurementType.GetMeasurement(thetype)
       except:
         # occurs if someone specifies an invalid measurement type
-        logging.warning('Type in POST is invalid: %s', error)    
+        logging.warning('Type in POST is invalid: %s', error)
         self.error(501)
         return
-      
+
       # build completed form dynamically from POST and fields
       add_to_schedule_form = type(
           'AddToScheduleForm',
           (forms.BaseForm,),
           {'base_fields': self._BuildFields(measurement)})(self.request.POST)
-  
+
       add_to_schedule_form.full_clean()
       if add_to_schedule_form.is_valid():
-            
+
         params = dict()
         thetype = add_to_schedule_form.cleaned_data['type']
-        
+
         # extract supported fields
         for field in measurement.field_to_description.keys():
-          value = add_to_schedule_form.cleaned_data[field]            
+          value = add_to_schedule_form.cleaned_data[field]
           if value:
             params[field] = value
         tag = add_to_schedule_form.cleaned_data['tag']
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count'] or -1
         interval = add_to_schedule_form.cleaned_data['interval']
-  
+
         logging.info('Got TYPE: ' + thetype)
-  
+
         task = model.Task()
         task.created = datetime.datetime.utcnow()
         task.user = users.get_current_user()
@@ -110,10 +110,10 @@ class Schedule(webapp.RequestHandler):
           task.filter = thefilter
         task.count = count
         task.interval_sec = float(interval)
-  
+
         # Set up correct type-specific measurement parameters        
         for name, value in params.items():
-          setattr(task, 'mparam_' + name, value)         
+          setattr(task, 'mparam_' + name, value)
         task.put()
 
     schedule = model.Task.all()
@@ -172,7 +172,7 @@ class Schedule(webapp.RequestHandler):
         'templates/schedule.html', template_args))
 
   def _BuildFields(self, mymeasurement=
-                   MeasurementType.Get_Default_Measurement()):
+                   MeasurementType.GetDefaultMeasurement()):
     """Builds the ordered set of fields to display in the form for the 
     specified measurement type.
        
@@ -182,21 +182,21 @@ class Schedule(webapp.RequestHandler):
     Returns:
       A sorted dict of field name to form field.
     """
-    fields = SortedDict()         
+    fields = SortedDict()
     fields['type'] = forms.ChoiceField(
         measurement.MEASUREMENT_TYPES,
         initial=mymeasurement.kind,
         widget=forms.Select(attrs={'onchange': 'this.form.submit();'}))
 
-    for field, text in mymeasurement.field_to_description.iteritems():     
+    for field, text in mymeasurement.field_to_description.iteritems():
       fields[field] = forms.CharField(required=False, label=text)
-    
+
     fields['count'] = forms.IntegerField(
        required=False, initial= -1, min_value= -1, max_value=1000)
     fields['interval'] = forms.IntegerField(
         required=True, label='Interval (sec)', min_value=1, initial=600)
     fields['tag'] = forms.CharField(required=False)
-    fields['filter'] = forms.CharField(required=False) 
+    fields['filter'] = forms.CharField(required=False)
     fields['selectedType'] = forms.CharField(
         initial=mymeasurement.kind, widget=forms.widgets.HiddenInput())
     return fields

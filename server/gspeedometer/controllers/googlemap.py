@@ -100,8 +100,6 @@ class MapView(webapp.RequestHandler):
     timelimit = datetime.datetime.utcnow() + datetime.timedelta(seconds=10)
     measurements = self._GetMeasurements(device_ids, start_date, end_date,
                                          timelimit)
-    for m in measurements:
-      m.timestamp = m.timestamp.replace(tzinfo=util.TZINFOS['utc']).astimezone(util.TZINFOS['pst'])
 
     template_args = {
         'filter_form': form,
@@ -125,7 +123,7 @@ class MapView(webapp.RequestHandler):
       A list of measurement objects.
     """
     results = []
-    per_device_limit = max(1, int(config.GOOGLEMAP_MARKER_LIMIT / 
+    per_device_limit = max(1, int(config.GOOGLEMAP_MARKER_LIMIT /
                                   len(device_ids)))
     for device_id in device_ids:
       if timelimit and datetime.datetime.utcnow() > timelimit:
@@ -181,7 +179,7 @@ class MapView(webapp.RequestHandler):
                     'min rtt': meas.mval_min_rtt_ms,
                     'rtt stddev': meas.mval_stddev_rtt_ms,
                     'packet loss': meas.mval_packet_loss}
-          if (float(meas.mval_mean_rtt_ms) < 
+          if (float(meas.mval_mean_rtt_ms) <
               config.SLOW_PING_THRESHOLD_MS):
             icon_to_use = green_icon
 
@@ -205,7 +203,7 @@ class MapView(webapp.RequestHandler):
         elif meas.type == 'traceroute':
           values = {'target': meas.mparam_target,
                     '# of hops': meas.mval_num_hops}
-          if (float(meas.mval_num_hops) < 
+          if (float(meas.mval_num_hops) <
               config.LONG_TRACEROUTE_HOP_COUNT_THRESHOLD):
             icon_to_use = green_icon
 

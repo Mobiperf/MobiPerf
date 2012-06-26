@@ -16,7 +16,7 @@
 
 """Service to collect and visualize mobile network performance data."""
 
-__author__ = ('mdw@google.com (Matt Welsh), ' 
+__author__ = ('mdw@google.com (Matt Welsh), '
               'drchoffnes@gmail.com (David Choffnes)')
 
 import logging
@@ -137,6 +137,7 @@ class Measurement(webapp.RequestHandler):
       self.response.out.write(template.render(
           'templates/measurementdetail.html', template_args))
 
+
 class MeasurementType:
   """Maps datastore entity and field names to human-readable ones."""
 
@@ -147,19 +148,19 @@ class MeasurementType:
   # dictionary of field names (as stored in datastore) to human-readable 
   # descriptions of those fields (for printing in a form)
   field_to_description = SortedDict()
-  
+
   def __init__(self, kind, description, field_to_description):
     self.kind = kind
     self.description = description
     self.field_to_description = field_to_description
-    
+
   @staticmethod
-  def Get_Default_Measurement():
+  def GetDefaultMeasurement():
     """Utility method for getting the default type to show in the scheduler."""
-    return MeasurementType.Get_Measurement(MEASUREMENT_TYPES[0][0])
-  
+    return MeasurementType.GetMeasurement(MEASUREMENT_TYPES[0][0])
+
   @staticmethod
-  def Get_Measurement(measurement_type):
+  def GetMeasurement(measurement_type):
     """Factory method for getting measurement objects for display in 
     measurement scheduler. 
     
@@ -178,14 +179,14 @@ class MeasurementType:
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
           ('ping_timeout_sec', 'Ping timeout (seconds)'),
-          ('packet_size_byte', 'Ping packet size (bytes)')]))   
+          ('packet_size_byte', 'Ping packet size (bytes)')]))
     elif measurement_type == 'dns_lookup':
       return MeasurementType(
           'dns_lookup', 'DNS lookup',
           SortedDict([('target', 'Target (IP or hostname)'),
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
-           ('server', 'DNS server')]))  
+           ('server', 'DNS server')]))
     elif measurement_type == 'traceroute':
       return MeasurementType(
           'traceroute', 'traceroute',
@@ -193,12 +194,12 @@ class MeasurementType:
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
           ('max_hop_count', 'Traceroute max hop count'),
-          ('pings_per_hop', 'Traceroute pings per hop')]))  
+          ('pings_per_hop', 'Traceroute pings per hop')]))
     elif measurement_type == 'http':
       return MeasurementType(
           'http', 'HTTP get', SortedDict([('url', 'HTTP URL'),
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
-          ('headers', 'HTTP headers'), ('method', 'HTTP method')]))  
+          ('headers', 'HTTP headers'), ('method', 'HTTP method')]))
     else:
       raise RuntimeError('Invalid measurement type: %s' % measurement_type)

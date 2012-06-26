@@ -89,8 +89,6 @@ class Device(webapp.RequestHandler):
         query.with_cursor(cursor)
 
       measurements = query.fetch(config.NUM_MEASUREMENTS_IN_LIST)
-      for m in measurements:
-        m.timestamp = m.timestamp.replace(tzinfo=util.TZINFOS['utc']).astimezone(util.TZINFOS['pst'])
       # If there are more measurements to show, give the user a cursor
       if len(measurements) == config.NUM_MEASUREMENTS_IN_LIST:
         cursor = query.cursor()
