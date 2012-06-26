@@ -30,9 +30,8 @@ from google.appengine.ext.webapp import template
 
 from gspeedometer import model
 from gspeedometer.controllers import measurement
+from gspeedometer.controllers.measurement import MeasurementType
 from gspeedometer.helpers import acl
-
-from gspeedometer.helpers import measurement_type
 
 class Schedule(webapp.RequestHandler):
   """Measurement request handler."""
@@ -52,11 +51,9 @@ class Schedule(webapp.RequestHandler):
       try:
         if self.request.POST.has_key('type'):
           thetype = self.request.POST['type']
-          measurement = \
-              measurement_type.MeasurementType.Get_Measurement(thetype)
+          measurement = MeasurementType.Get_Measurement(thetype)
         else:
-          measurement = \
-              measurement_type.MeasurementType.Get_Default_Measurement()
+          measurement = MeasurementType.Get_Default_Measurement()
       except RuntimeError, error:
         # occurs if someone specifies an invalid measurement type
         logging.warning('Type in POST is invalid: %s', error)                        
@@ -72,7 +69,7 @@ class Schedule(webapp.RequestHandler):
       # data was submitted for a new measurement schedule item
       try:   
         thetype = self.request.POST['type']
-        measurement = measurement_type.MeasurementType.Get_Measurement(thetype) 
+        measurement = MeasurementType.Get_Measurement(thetype) 
       except:
         # occurs if someone specifies an invalid measurement type
         logging.warning('Type in POST is invalid: %s', error)    
@@ -175,7 +172,7 @@ class Schedule(webapp.RequestHandler):
         'templates/schedule.html', template_args))
 
   def _BuildFields(self, mymeasurement=
-                   measurement_type.MeasurementType.Get_Default_Measurement()):
+                   MeasurementType.Get_Default_Measurement()):
     """Builds the ordered set of fields to display in the form for the 
     specified measurement type.
        
