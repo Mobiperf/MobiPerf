@@ -78,7 +78,7 @@ class DeviceInfo(db.Model):
   def GetDeviceWithAcl(cls, device_id):
     device = cls.get_by_key_name(device_id)
     if device and (acl.UserIsAdmin() or
-                   (acl.UserIsAnonymousAdmin() and device.user is None) or
+                  (acl.UserIsAnonymousAdmin() and device.user is None) or
                    device.user == users.get_current_user()):
       return device
     else:
@@ -94,8 +94,6 @@ class DeviceProperties(db.Model):
   app_version = db.StringProperty()
   # Timestamp
   timestamp = db.DateTimeProperty(auto_now_add=True)
-  # IP address
-  # ip_address = db.StringProperty() # removed for sanitization
   # OS version
   os_version = db.StringProperty()
   # Location
