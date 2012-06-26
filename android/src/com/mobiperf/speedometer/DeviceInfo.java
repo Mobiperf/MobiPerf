@@ -22,9 +22,9 @@ package com.mobiperf.speedometer;
  * 
  */
 public class DeviceInfo {
-	public String deviceId;
-	public String user;
-	public String manufacturer;
-	public String model;
-	public String os;
+  public String deviceId;
+  public String user;
+  public String manufacturer;
+  public String model;
+  public String os;
 }

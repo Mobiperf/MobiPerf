@@ -48,250 +48,234 @@ import android.preference.PreferenceManager;
  * 
  */
 public class AccountSelector {
-	
-	// The authentication period in milliseconds
-	private static final long AUTHENTICATE_PERIOD_MSEC = 24 * 3600 * 1000;
-	private static final String ACCOUNT_TYPE = "com.google";
-	
-	private Context context;
-	private Checkin checkin;
-	private String authToken = null;
-	private ExecutorService checkinExecutor = null;
-	private Future<Cookie> checkinFuture = null;
-	private long lastAuthTime = 0;
-	private boolean authImmediately = false;
 
-	public AccountSelector(Context context, Checkin checkin) {
-		this.context = context;
-		this.checkin = checkin;
-		this.checkinExecutor = Executors.newFixedThreadPool(1);
-	}
+  // The authentication period in milliseconds
+  private static final long AUTHENTICATE_PERIOD_MSEC = 24 * 3600 * 1000;
+  private static final String ACCOUNT_TYPE = "com.google";
 
-	/** Returns the Future to monitor the checkin progress */
-	public synchronized Future<Cookie> getCheckinFuture() {
-		return this.checkinFuture;
-	}
+  private Context context;
+  private Checkin checkin;
+  private String authToken = null;
+  private ExecutorService checkinExecutor = null;
+  private Future<Cookie> checkinFuture = null;
+  private long lastAuthTime = 0;
+  private boolean authImmediately = false;
 
-	/**
-	 * After checkin finishes, the client of AccountSelector SHOULD reset
-	 * checkinFuture
-	 */
-	public synchronized void resetCheckinFuture() {
-		this.checkinFuture = null;
-	}
+  public AccountSelector(Context context, Checkin checkin) {
+    this.context = context;
+    this.checkin = checkin;
+    this.checkinExecutor = Executors.newFixedThreadPool(1);
+  }
 
-	/** Shuts down the executor thread */
-	public void shutDown() {
-		// shutdown() removes all previously submitted task and no new tasks are accepted
-		this.checkinExecutor.shutdown();
-		// shutdownNow stops all currently executing tasks
-		this.checkinExecutor.shutdownNow();
-	}
+  /** Returns the Future to monitor the checkin progress */
+  public synchronized Future<Cookie> getCheckinFuture() {
+    return this.checkinFuture;
+  }
 
-	/**
-	 * Return the list of account names for users to select
-	 */
-	public static String[] getAccountList(Context context) {
-		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
-		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-		String[] accountNames = null;
-		if (accounts != null && accounts.length > 0) {
-			accountNames = new String[accounts.length];
-			for (int i = 0 ; i < accounts.length ; i++) {
-				accountNames[i] = accounts[i].name;
-			}
-		}
-		return accountNames;
-	}
+  /**
+   * After checkin finishes, the client of AccountSelector SHOULD reset checkinFuture
+   */
+  public synchronized void resetCheckinFuture() {
+    this.checkinFuture = null;
+  }
 
-	/**
-	 * Allows clients of AccountSelector to request an authentication upon the
-	 * next call to authenticate()
-	 */
-	public synchronized void setAuthImmediately(boolean val) {
-		this.authImmediately = val;
-	}
+  /** Shuts down the executor thread */
+  public void shutDown() {
+    // shutdown() removes all previously submitted task and no new tasks are accepted
+    this.checkinExecutor.shutdown();
+    // shutdownNow stops all currently executing tasks
+    this.checkinExecutor.shutdownNow();
+  }
 
-	private synchronized boolean shouldAuthImmediately() {
-		return this.authImmediately;
-	}
+  /**
+   * Return the list of account names for users to select
+   */
+  public static String[] getAccountList(Context context) {
+    AccountManager accountManager = AccountManager.get(context.getApplicationContext());
+    Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
+    String[] accountNames = null;
+    if (accounts != null && accounts.length > 0) {
+      accountNames = new String[accounts.length];
+      for (int i = 0; i < accounts.length; i++) {
+        accountNames[i] = accounts[i].name;
+      }
+    }
+    return accountNames;
+  }
 
-	private synchronized void setLastAuthTime(long lastTime) {
-		this.lastAuthTime = lastTime;
-	}
+  /**
+   * Allows clients of AccountSelector to request an authentication upon the next call to
+   * authenticate()
+   */
+  public synchronized void setAuthImmediately(boolean val) {
+    this.authImmediately = val;
+  }
 
-	private synchronized long getLastAuthTime() {
-		return this.lastAuthTime;
-	}
+  private synchronized boolean shouldAuthImmediately() {
+    return this.authImmediately;
+  }
 
-	/** Starts an authentication request */
-	public void authenticate() throws OperationCanceledException,
-	AuthenticatorException, IOException {
-		Logger.i("AccountSelector.authenticate() running");
-		/*
-		 * We only need to authenticate every AUTHENTICATE_PERIOD_MILLI
-		 * milliseconds, during which we can reuse the cookie. If authentication
-		 * fails due to expired authToken, the client of AccountSelector can
-		 * call authImmedately() to request authenticate() upon the next checkin
-		 */
-		long authTimeLast = this.getLastAuthTime();
-		long timeSinceLastAuth = System.currentTimeMillis() - authTimeLast;
-		if (!this.shouldAuthImmediately() && authTimeLast != 0
-				&& (timeSinceLastAuth < AUTHENTICATE_PERIOD_MSEC)) {
-			return;
-		}
+  private synchronized void setLastAuthTime(long lastTime) {
+    this.lastAuthTime = lastTime;
+  }
 
-		Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
+  private synchronized long getLastAuthTime() {
+    return this.lastAuthTime;
+  }
 
-		AccountManager accountManager = AccountManager.get(context.getApplicationContext());
-		if (this.authToken != null) {
-			// There will be no effect on the token if it is still valid
-			Logger.i("Invalidating token");
-			accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
-		}
+  /** Starts an authentication request */
+  public void authenticate() throws OperationCanceledException, AuthenticatorException, IOException {
+    Logger.i("AccountSelector.authenticate() running");
+    /*
+     * We only need to authenticate every AUTHENTICATE_PERIOD_MILLI milliseconds, during which we
+     * can reuse the cookie. If authentication fails due to expired authToken, the client of
+     * AccountSelector can call authImmedately() to request authenticate() upon the next checkin
+     */
+    long authTimeLast = this.getLastAuthTime();
+    long timeSinceLastAuth = System.currentTimeMillis() - authTimeLast;
+    if (!this.shouldAuthImmediately() && authTimeLast != 0
+        && (timeSinceLastAuth < AUTHENTICATE_PERIOD_MSEC)) {
+      return;
+    }
 
-		Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-		Logger.i("Got " + accounts.length + " accounts");
+    Logger.i("Authenticating. Last authentication is " + timeSinceLastAuth / 1000 / 60
+        + " minutes ago. ");
 
-		//get selected account
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
-		String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
-		
-		if (accounts != null && accounts.length > 0 && selectedAccount != null) {
-			Account accountToUse = null;
-			for (Account account : accounts) {
-				//if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
-				Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
-				//If one of the available accounts is the one selected by user, use that
-				if (account.name.equals(selectedAccount)) {
-					accountToUse = account;
-					Logger.i("selected account: " + account.name + " " + account.type + " " + account.toString());
-				}
-			}
+    AccountManager accountManager = AccountManager.get(context.getApplicationContext());
+    if (this.authToken != null) {
+      // There will be no effect on the token if it is still valid
+      Logger.i("Invalidating token");
+      accountManager.invalidateAuthToken(ACCOUNT_TYPE, this.authToken);
+    }
 
-			Logger.i("Trying to get auth token for " + accountToUse);
+    Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
+    Logger.i("Got " + accounts.length + " accounts");
 
-			AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
-					accountToUse, "ah", false,
-					new AccountManagerCallback<Bundle>() {
-						@Override
-						public void run(AccountManagerFuture<Bundle> result) {
-							Logger.i("AccountManagerCallback invoked");
-							try {
-								getAuthToken(result);
-							} catch (RuntimeException e) {
-								Logger.e("Failed to get authToken", e);
-								/*
-								 * TODO(Wenjie): May ask the user whether to
-								 * quit the app nicely here if a number of
-								 * trials have been made and failed. Since
-								 * Speedometer is basically useless without
-								 * checkin
-								 */
-							}
-						}
-					}, null);
-			Logger.i("AccountManager.getAuthToken returned " + future);
-		} else {
-			throw new RuntimeException("No google account found or no google account selected");
-		}
-	}
+    // get selected account
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
 
-	private void getAuthToken(AccountManagerFuture<Bundle> result) {
-		Logger.i("getAuthToken() called, result " + result);
-		String errMsg = "Failed to get login cookie. ";
-		Bundle bundle;
-		try {
-			bundle = result.getResult();
-			Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
-			if (intent != null) {
-				// User input required. (A UI will pop up for user's consent to
-				// allow
-				// this app access account information.)
-				Logger.i("Starting account manager activity");
-				intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				context.startActivity(intent);
-			} else {
-				Logger.i("Executing getCookie task");
-				synchronized (this) {
-					this.authToken = bundle
-							.getString(AccountManager.KEY_AUTHTOKEN);
-					this.checkinFuture = checkinExecutor
-							.submit(new GetCookieTask());
-				}
-			}
-		} catch (OperationCanceledException e) {
-			Logger.e(errMsg, e);
-			throw new RuntimeException("Can't get login cookie", e);
-		} catch (AuthenticatorException e) {
-			Logger.e(errMsg, e);
-			throw new RuntimeException("Can't get login cookie", e);
-		} catch (IOException e) {
-			Logger.e(errMsg, e);
-			throw new RuntimeException("Can't get login cookie", e);
-		}
-	}
+    if (accounts != null && accounts.length > 0 && selectedAccount != null) {
+      Account accountToUse = null;
+      for (Account account : accounts) {
+        // if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
+        Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
+        // If one of the available accounts is the one selected by user, use that
+        if (account.name.equals(selectedAccount)) {
+          accountToUse = account;
+          Logger.i("selected account: " + account.name + " " + account.type + " "
+              + account.toString());
+        }
+      }
 
-	private class GetCookieTask implements Callable<Cookie> {
-		@Override
-		public Cookie call() {
-			Logger.i("GetCookieTask running: " + authToken);
-			DefaultHttpClient httpClient = new DefaultHttpClient();
-			boolean success = false;
-			try {
-				String loginUrlPrefix = checkin.getServerUrl()
-						+ "/_ah/login?continue=" + checkin.getServerUrl()
-						+ "&action=Login&auth=";
-				// Don't follow redirects
-				httpClient.getParams().setBooleanParameter(
-						ClientPNames.HANDLE_REDIRECTS, false);
-				HttpGet httpGet = new HttpGet(loginUrlPrefix + authToken);
-				HttpResponse response;
-				Logger.i("Accessing: " + loginUrlPrefix + authToken);
-				response = httpClient.execute(httpGet);
-				if (response.getStatusLine().getStatusCode() != 302) {
-					// Response should be a redirect to the "continue" URL.
-					Logger.e("Failed to get login cookie: " + loginUrlPrefix
-							+ " returned unexpected error code "
-							+ response.getStatusLine().getStatusCode());
-					throw new RuntimeException("Failed to get login cookie: "
-							+ loginUrlPrefix
-							+ " returned unexpected error code "
-							+ response.getStatusLine().getStatusCode());
-				}
+      Logger.i("Trying to get auth token for " + accountToUse);
 
-				Logger.i("Got "
-						+ httpClient.getCookieStore().getCookies().size()
-						+ " cookies back");
+      AccountManagerFuture<Bundle> future = accountManager.getAuthToken(accountToUse, "ah", false,
+          new AccountManagerCallback<Bundle>() {
+            @Override
+            public void run(AccountManagerFuture<Bundle> result) {
+              Logger.i("AccountManagerCallback invoked");
+              try {
+                getAuthToken(result);
+              } catch (RuntimeException e) {
+                Logger.e("Failed to get authToken", e);
+                /*
+                 * TODO(Wenjie): May ask the user whether to quit the app nicely here if a number of
+                 * trials have been made and failed. Since Speedometer is basically useless without
+                 * checkin
+                 */
+              }
+            }
+          }, null);
+      Logger.i("AccountManager.getAuthToken returned " + future);
+    } else {
+      throw new RuntimeException("No google account found or no google account selected");
+    }
+  }
 
-				for (Cookie cookie : httpClient.getCookieStore().getCookies()) {
-					Logger.i("Checking cookie " + cookie);
-					if (cookie.getName().equals("SACSID")
-							|| cookie.getName().equals("ACSID")) {
-						Logger.i("Got cookie " + cookie);
-						setLastAuthTime(System.currentTimeMillis());
-						success = true;
-						return cookie;
-					}
-				}
-				Logger.e("No (S)ASCID cookies returned");
-				throw new RuntimeException("Failed to get login cookie: "
-						+ loginUrlPrefix
-						+ " did not return any (S)ACSID cookie");
-			} catch (ClientProtocolException e) {
-				Logger.e("Failed to get login cookie", e);
-				throw new RuntimeException("Failed to get login cookie", e);
-			} catch (IOException e) {
-				Logger.e("Failed to get login cookie", e);
-				throw new RuntimeException("Failed to get login cookie", e);
-			} finally {
-				httpClient.getParams().setBooleanParameter(
-						ClientPNames.HANDLE_REDIRECTS, true);
-				if (!success) {
-					resetCheckinFuture();
-				}
-			}
-		}
-	}
+  private void getAuthToken(AccountManagerFuture<Bundle> result) {
+    Logger.i("getAuthToken() called, result " + result);
+    String errMsg = "Failed to get login cookie. ";
+    Bundle bundle;
+    try {
+      bundle = result.getResult();
+      Intent intent = (Intent) bundle.get(AccountManager.KEY_INTENT);
+      if (intent != null) {
+        // User input required. (A UI will pop up for user's consent to
+        // allow
+        // this app access account information.)
+        Logger.i("Starting account manager activity");
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+      } else {
+        Logger.i("Executing getCookie task");
+        synchronized (this) {
+          this.authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+          this.checkinFuture = checkinExecutor.submit(new GetCookieTask());
+        }
+      }
+    } catch (OperationCanceledException e) {
+      Logger.e(errMsg, e);
+      throw new RuntimeException("Can't get login cookie", e);
+    } catch (AuthenticatorException e) {
+      Logger.e(errMsg, e);
+      throw new RuntimeException("Can't get login cookie", e);
+    } catch (IOException e) {
+      Logger.e(errMsg, e);
+      throw new RuntimeException("Can't get login cookie", e);
+    }
+  }
+
+  private class GetCookieTask implements Callable<Cookie> {
+    @Override
+    public Cookie call() {
+      Logger.i("GetCookieTask running: " + authToken);
+      DefaultHttpClient httpClient = new DefaultHttpClient();
+      boolean success = false;
+      try {
+        String loginUrlPrefix = checkin.getServerUrl() + "/_ah/login?continue="
+            + checkin.getServerUrl() + "&action=Login&auth=";
+        // Don't follow redirects
+        httpClient.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
+        HttpGet httpGet = new HttpGet(loginUrlPrefix + authToken);
+        HttpResponse response;
+        Logger.i("Accessing: " + loginUrlPrefix + authToken);
+        response = httpClient.execute(httpGet);
+        if (response.getStatusLine().getStatusCode() != 302) {
+          // Response should be a redirect to the "continue" URL.
+          Logger.e("Failed to get login cookie: " + loginUrlPrefix
+              + " returned unexpected error code " + response.getStatusLine().getStatusCode());
+          throw new RuntimeException("Failed to get login cookie: " + loginUrlPrefix
+              + " returned unexpected error code " + response.getStatusLine().getStatusCode());
+        }
+
+        Logger.i("Got " + httpClient.getCookieStore().getCookies().size() + " cookies back");
+
+        for (Cookie cookie : httpClient.getCookieStore().getCookies()) {
+          Logger.i("Checking cookie " + cookie);
+          if (cookie.getName().equals("SACSID") || cookie.getName().equals("ACSID")) {
+            Logger.i("Got cookie " + cookie);
+            setLastAuthTime(System.currentTimeMillis());
+            success = true;
+            return cookie;
+          }
+        }
+        Logger.e("No (S)ASCID cookies returned");
+        throw new RuntimeException("Failed to get login cookie: " + loginUrlPrefix
+            + " did not return any (S)ACSID cookie");
+      } catch (ClientProtocolException e) {
+        Logger.e("Failed to get login cookie", e);
+        throw new RuntimeException("Failed to get login cookie", e);
+      } catch (IOException e) {
+        Logger.e("Failed to get login cookie", e);
+        throw new RuntimeException("Failed to get login cookie", e);
+      } finally {
+        httpClient.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
+        if (!success) {
+          resetCheckinFuture();
+        }
+      }
+    }
+  }
 
 }

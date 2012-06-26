@@ -54,250 +54,230 @@ import com.mobiperf.speedometer.measurements.TracerouteTask.TracerouteDesc;
  */
 public class MeasurementCreationActivity extends Activity {
 
-	private static final int NUMBER_OF_COMMON_VIEWS = 1;
-	public static final String TAB_TAG = "MEASUREMENT_CREATION";
+  private static final int NUMBER_OF_COMMON_VIEWS = 1;
+  public static final String TAB_TAG = "MEASUREMENT_CREATION";
 
-	// private SpeedometerApp parent;
-	private String measurementTypeUnderEdit;
-	private ArrayAdapter<String> spinnerValues;
+  // private SpeedometerApp parent;
+  private String measurementTypeUnderEdit;
+  private ArrayAdapter<String> spinnerValues;
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		this.setContentView(R.layout.measurement_creation_main);
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.setContentView(R.layout.measurement_creation_main);
 
-		// assert(this.getParent().getClass().getName().compareTo("SpeedometerApp")
-		// == 0);
-		// this.parent = (SpeedometerApp) this.getParent();
+    // assert(this.getParent().getClass().getName().compareTo("SpeedometerApp")
+    // == 0);
+    // this.parent = (SpeedometerApp) this.getParent();
 
-		/* Initialize the measurement type spinner */
-		Spinner spinner = (Spinner) findViewById(R.id.measurementTypeSpinner);
-		spinnerValues = new ArrayAdapter<String>(this.getApplicationContext(),
-				R.layout.spinner_layout);
-		for (String name : MeasurementTask.getMeasurementNames()) {
-			spinnerValues.add(name);
-		}
-		spinnerValues
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		spinner.setAdapter(spinnerValues);
-		spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
-		spinner.requestFocus();
-		/* Setup the 'run' button */
-		Button runButton = (Button) this.findViewById(R.id.runTaskButton);
-		runButton.setOnClickListener(new ButtonOnClickListener());
+    /* Initialize the measurement type spinner */
+    Spinner spinner = (Spinner) findViewById(R.id.measurementTypeSpinner);
+    spinnerValues = new ArrayAdapter<String>(this.getApplicationContext(), R.layout.spinner_layout);
+    for (String name : MeasurementTask.getMeasurementNames()) {
+      spinnerValues.add(name);
+    }
+    spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    spinner.setAdapter(spinnerValues);
+    spinner.setOnItemSelectedListener(new MeasurementTypeOnItemSelectedListener());
+    spinner.requestFocus();
+    /* Setup the 'run' button */
+    Button runButton = (Button) this.findViewById(R.id.runTaskButton);
+    runButton.setOnClickListener(new ButtonOnClickListener());
 
-		this.measurementTypeUnderEdit = PingTask.TYPE;
-		setupEditTextFocusChangeListener();
-	}
+    this.measurementTypeUnderEdit = PingTask.TYPE;
+    setupEditTextFocusChangeListener();
+  }
 
-	private void setupEditTextFocusChangeListener() {
-		EditBoxFocusChangeListener textFocusChangeListener = new EditBoxFocusChangeListener();
-		EditText text = (EditText) findViewById(R.id.pingTargetText);
-		text.setOnFocusChangeListener(textFocusChangeListener);
-		text = (EditText) findViewById(R.id.tracerouteTargetText);
-		text.setOnFocusChangeListener(textFocusChangeListener);
-		text = (EditText) findViewById(R.id.httpUrlText);
-		text.setOnFocusChangeListener(textFocusChangeListener);
-		text = (EditText) findViewById(R.id.dnsLookupText);
-		text.setOnFocusChangeListener(textFocusChangeListener);
-	}
+  private void setupEditTextFocusChangeListener() {
+    EditBoxFocusChangeListener textFocusChangeListener = new EditBoxFocusChangeListener();
+    EditText text = (EditText) findViewById(R.id.pingTargetText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.tracerouteTargetText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.httpUrlText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.dnsLookupText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+  }
 
-	@Override
-	protected void onStart() {
-		super.onStart();
-		this.populateMeasurementSpecificArea();
-	}
+  @Override
+  protected void onStart() {
+    super.onStart();
+    this.populateMeasurementSpecificArea();
+  }
 
-	private void clearMeasurementSpecificViews(TableLayout table) {
-		for (int i = NUMBER_OF_COMMON_VIEWS; i < table.getChildCount(); i++) {
-			View v = table.getChildAt(i);
-			v.setVisibility(View.GONE);
-		}
-	}
+  private void clearMeasurementSpecificViews(TableLayout table) {
+    for (int i = NUMBER_OF_COMMON_VIEWS; i < table.getChildCount(); i++) {
+      View v = table.getChildAt(i);
+      v.setVisibility(View.GONE);
+    }
+  }
 
-	private void populateMeasurementSpecificArea() {
-		TableLayout table = (TableLayout) this
-				.findViewById(R.id.measurementCreationLayout);
-		this.clearMeasurementSpecificViews(table);
-		if (this.measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
-			this.findViewById(R.id.pingView).setVisibility(View.VISIBLE);
-		} else if (this.measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
-			this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
-		} else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
-			this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
-		} else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
-			this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
-		}
-	}
+  private void populateMeasurementSpecificArea() {
+    TableLayout table = (TableLayout) this.findViewById(R.id.measurementCreationLayout);
+    this.clearMeasurementSpecificViews(table);
+    if (this.measurementTypeUnderEdit.compareTo(PingTask.TYPE) == 0) {
+      this.findViewById(R.id.pingView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(HttpTask.TYPE) == 0) {
+      this.findViewById(R.id.httpUrlView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(TracerouteTask.TYPE) == 0) {
+      this.findViewById(R.id.tracerouteView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
+      this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
+    }
+  }
 
-	private void hideKyeboard(EditText textBox) {
-		if (textBox != null) {
-			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-			imm.hideSoftInputFromWindow(textBox.getWindowToken(), 0);
-		}
-	}
+  private void hideKyeboard(EditText textBox) {
+    if (textBox != null) {
+      InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+      imm.hideSoftInputFromWindow(textBox.getWindowToken(), 0);
+    }
+  }
 
-	private class ButtonOnClickListener implements OnClickListener {
-		@Override
-		public void onClick(View v) {
-			MeasurementTask newTask = null;
-			boolean showLengthWarning = false;
-			try {
-				if (measurementTypeUnderEdit.equals(PingTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
-					EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
-					Map<String, String> params = new HashMap<String, String>();
-					params.put("target", pingTargetText.getText().toString());
-					PingDesc desc = new PingDesc(null, Calendar.getInstance()
-							.getTime(), null,
-							Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
-							Config.DEFAULT_USER_MEASUREMENT_COUNT,
-							MeasurementTask.USER_PRIORITY, params);
-					newTask = new PingTask(desc,
-							MeasurementCreationActivity.this
-									.getApplicationContext());
-				} 
+  private class ButtonOnClickListener implements OnClickListener {
+    @Override
+    public void onClick(View v) {
+      MeasurementTask newTask = null;
+      boolean showLengthWarning = false;
+      try {
+        if (measurementTypeUnderEdit.equals(PingTask.TYPE)
+            || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
+          EditText pingTargetText = (EditText) findViewById(R.id.pingTargetText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", pingTargetText.getText().toString());
+          PingDesc desc = new PingDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new PingTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+        }
 
-				if (measurementTypeUnderEdit.equals(HttpTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
-					EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
-					Map<String, String> params = new HashMap<String, String>();
-					params.put("url", httpUrlText.getText().toString());
-					params.put("method", "get");
-					HttpDesc desc = new HttpDesc(null, Calendar.getInstance()
-							.getTime(), null,
-							Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
-							Config.DEFAULT_USER_MEASUREMENT_COUNT,
-							MeasurementTask.USER_PRIORITY, params);
-					newTask = new HttpTask(desc,
-							MeasurementCreationActivity.this
-									.getApplicationContext());
-				}
+        if (measurementTypeUnderEdit.equals(HttpTask.TYPE)
+            || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
+          EditText httpUrlText = (EditText) findViewById(R.id.httpUrlText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("url", httpUrlText.getText().toString());
+          params.put("method", "get");
+          HttpDesc desc = new HttpDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new HttpTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+        }
 
-				if (measurementTypeUnderEdit.equals(TracerouteTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
-					EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
-					Map<String, String> params = new HashMap<String, String>();
-					params.put("target", targetText.getText().toString());
-					TracerouteDesc desc = new TracerouteDesc(null, Calendar
-							.getInstance().getTime(), null,
-							Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
-							Config.DEFAULT_USER_MEASUREMENT_COUNT,
-							MeasurementTask.USER_PRIORITY, params);
-					newTask = new TracerouteTask(desc,
-							MeasurementCreationActivity.this
-									.getApplicationContext());
-					showLengthWarning = true;
-				} 
+        if (measurementTypeUnderEdit.equals(TracerouteTask.TYPE)
+            || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
+          EditText targetText = (EditText) findViewById(R.id.tracerouteTargetText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", targetText.getText().toString());
+          TracerouteDesc desc = new TracerouteDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new TracerouteTask(desc,
+              MeasurementCreationActivity.this.getApplicationContext());
+          showLengthWarning = true;
+        }
 
-				if (measurementTypeUnderEdit.equals(DnsLookupTask.TYPE) || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
-					EditText dnsTargetText = (EditText) findViewById(R.id.dnsLookupText);
-					Map<String, String> params = new HashMap<String, String>();
-					params.put("target", dnsTargetText.getText().toString());
-					DnsLookupDesc desc = new DnsLookupDesc(null, Calendar
-							.getInstance().getTime(), null,
-							Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
-							Config.DEFAULT_USER_MEASUREMENT_COUNT,
-							MeasurementTask.USER_PRIORITY, params);
-					newTask = new DnsLookupTask(desc,
-							MeasurementCreationActivity.this
-									.getApplicationContext());
-				}
+        if (measurementTypeUnderEdit.equals(DnsLookupTask.TYPE)
+            || measurementTypeUnderEdit.equals(Config.ALLTASK_TYPE)) {
+          EditText dnsTargetText = (EditText) findViewById(R.id.dnsLookupText);
+          Map<String, String> params = new HashMap<String, String>();
+          params.put("target", dnsTargetText.getText().toString());
+          DnsLookupDesc desc = new DnsLookupDesc(null, Calendar.getInstance().getTime(), null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC, Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY, params);
+          newTask = new DnsLookupTask(desc,
+              MeasurementCreationActivity.this.getApplicationContext());
+        }
 
-				if (newTask != null) {
-					MeasurementScheduler scheduler = MobiperfActivity.scheduler;
-					if (scheduler != null && scheduler.submitTask(newTask)) {
-						// Broadcast an intent with MEASUREMENT_ACTION so that
-						// the scheduler will immediately
-						// handles the user measurement
+        if (newTask != null) {
+          MeasurementScheduler scheduler = MobiperfActivity.scheduler;
+          if (scheduler != null && scheduler.submitTask(newTask)) {
+            // Broadcast an intent with MEASUREMENT_ACTION so that
+            // the scheduler will immediately
+            // handles the user measurement
 
-						MeasurementCreationActivity.this
-								.sendBroadcast(new UpdateIntent("",
-										UpdateIntent.MEASUREMENT_ACTION));
+            MeasurementCreationActivity.this.sendBroadcast(new UpdateIntent("",
+                UpdateIntent.MEASUREMENT_ACTION));
 
-						// startActivity(new Intent(this,
-						// ResultsConsole.class).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
-						// | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            // startActivity(new Intent(this,
+            // ResultsConsole.class).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP
+            // | Intent.FLAG_ACTIVITY_CLEAR_TOP));
 
-						String toastStr = MeasurementCreationActivity.this
-								.getString(R.string.userMeasurementSuccessToast);
-						if (showLengthWarning) {
-							toastStr += newTask.getDescriptor()
-									+ " measurements can be long. Please be patient.";
-						}
-						Toast.makeText(MeasurementCreationActivity.this,
-								toastStr, Toast.LENGTH_LONG).show();
+            String toastStr = MeasurementCreationActivity.this
+                .getString(R.string.userMeasurementSuccessToast);
+            if (showLengthWarning) {
+              toastStr += newTask.getDescriptor() + " measurements can be long. Please be patient.";
+            }
+            Toast.makeText(MeasurementCreationActivity.this, toastStr, Toast.LENGTH_LONG).show();
 
-						if (scheduler.getCurrentTask() != null) {
-							showBusySchedulerStatus();
-						}
-					} else {
-						Toast.makeText(MeasurementCreationActivity.this,
-								R.string.userMeasurementFailureToast,
-								Toast.LENGTH_LONG).show();
-					}
-				}
+            if (scheduler.getCurrentTask() != null) {
+              showBusySchedulerStatus();
+            }
+          } else {
+            Toast.makeText(MeasurementCreationActivity.this, R.string.userMeasurementFailureToast,
+                Toast.LENGTH_LONG).show();
+          }
+        }
 
-			} catch (Exception e) {
-				Logger.e("Exception when creating user measurements", e);
-				Toast.makeText(MeasurementCreationActivity.this,
-						R.string.invalidUserMeasurementInputToast,
-						Toast.LENGTH_LONG).show();
-			}
-		}
+      } catch (Exception e) {
+        Logger.e("Exception when creating user measurements", e);
+        Toast.makeText(MeasurementCreationActivity.this, R.string.invalidUserMeasurementInputToast,
+            Toast.LENGTH_LONG).show();
+      }
+    }
 
-	}
+  }
 
-	private void showBusySchedulerStatus() {
-		Intent intent = new Intent();
-		intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
-		intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
-				getString(R.string.userMeasurementBusySchedulerToast));
-		sendBroadcast(intent);
-	}
+  private void showBusySchedulerStatus() {
+    Intent intent = new Intent();
+    intent.setAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
+    intent.putExtra(UpdateIntent.STATUS_MSG_PAYLOAD,
+        getString(R.string.userMeasurementBusySchedulerToast));
+    sendBroadcast(intent);
+  }
 
-	private class EditBoxFocusChangeListener implements OnFocusChangeListener {
+  private class EditBoxFocusChangeListener implements OnFocusChangeListener {
 
-		@Override
-		public void onFocusChange(View v, boolean hasFocus) {
-			switch (v.getId()) {
-			case R.id.pingTargetText:
-				/*
-				 * TODO(Wenjie): Verify user input
-				 */
-				break;
-			case R.id.httpUrlText:
-				/*
-				 * TODO(Wenjie): Verify user input
-				 */
-				break;
-			default:
-				break;
-			}
-			if (!hasFocus) {
-				hideKyeboard((EditText) v);
-			}
-		}
-	}
+    @Override
+    public void onFocusChange(View v, boolean hasFocus) {
+      switch (v.getId()) {
+      case R.id.pingTargetText:
+        /*
+         * TODO(Wenjie): Verify user input
+         */
+        break;
+      case R.id.httpUrlText:
+        /*
+         * TODO(Wenjie): Verify user input
+         */
+        break;
+      default:
+        break;
+      }
+      if (!hasFocus) {
+        hideKyeboard((EditText) v);
+      }
+    }
+  }
 
-	private class MeasurementTypeOnItemSelectedListener implements
-			OnItemSelectedListener {
+  private class MeasurementTypeOnItemSelectedListener implements OnItemSelectedListener {
 
-		/*
-		 * Handles the ItemSelected event in the MeasurementType spinner.
-		 * Populate the measurement specific area based on user input
-		 */
-		@Override
-		public void onItemSelected(AdapterView<?> parent, View view, int pos,
-				long id) {
-			measurementTypeUnderEdit = MeasurementTask
-					.getTypeForMeasurementName(spinnerValues.getItem((int) id));
-			if (measurementTypeUnderEdit != null) {
-				populateMeasurementSpecificArea();
-			}
-		}
+    /*
+     * Handles the ItemSelected event in the MeasurementType spinner. Populate the measurement
+     * specific area based on user input
+     */
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+      measurementTypeUnderEdit = MeasurementTask.getTypeForMeasurementName(spinnerValues
+          .getItem((int) id));
+      if (measurementTypeUnderEdit != null) {
+        populateMeasurementSpecificArea();
+      }
+    }
 
-		@Override
-		public void onNothingSelected(AdapterView<?> parent) {
-			// TODO(Wenjie): at the moment there is nothing we need to do here
-		}
-	}
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+      // TODO(Wenjie): at the moment there is nothing we need to do here
+    }
+  }
 
 }
