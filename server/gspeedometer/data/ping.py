@@ -62,7 +62,8 @@ class Ping:
         results["error_types"].append("address_not_valid")
          
       # 2) Min <= avg <= max RTT
-      if float(self.vals['mean_rtt_ms']) < 0 or float(self.vals['mean_rtt_ms']) > 3000:
+      if float(self.vals['mean_rtt_ms']) < 0 or \
+        float(self.vals['mean_rtt_ms']) > 3000:
         results["valid"] = False
         results["error_types"].append("mean_rtt_value_invalid")
          
@@ -72,7 +73,8 @@ class Ping:
         results["error_types"].append("rtt_range_invalid")
          
       # 3) 0 <= loss <= 1
-      if float(self.vals['packet_loss']) < 0 or float(self.vals['packet_loss']) > 1:
+      if float(self.vals['packet_loss']) < 0 or \
+        float(self.vals['packet_loss']) > 1:
         results["valid"] = False
         results["error_types"].append("pkt_loss_invalid")
          
