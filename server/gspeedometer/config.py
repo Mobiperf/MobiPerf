@@ -24,6 +24,9 @@ ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']
 # Set of users with rights to administer tasks
 SCHEDULE_ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']
 
+VALIDATION_EMAIL_SENDER = 'David Choffnes <drchoffnes@gmail.com>'
+VALIDATION_EMAIL_RECIPIENT = 'David Choffnes <drchoffnes@gmail.com>'
+
 NUM_PROPERTIES_IN_LIST = 5
 NUM_MEASUREMENTS_IN_LIST = 20
 NUM_DEVICES_IN_LIST = 20
