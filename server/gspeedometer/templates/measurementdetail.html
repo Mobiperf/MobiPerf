@@ -16,7 +16,7 @@
         </tr><tr>
         <td class="measurement-detail-prop-name">Type</td><td>{{measurement.type}}</td>
         </tr><tr>
-          <td class="measurement-detail-prop-name">Timestamp (UTC)</td><td>{{measurement.timestamp}}</td>
+          <td class="measurement-detail-prop-name">Timestamp</td><td>{{measurement.GetTimestampInZone}}</td>
         </tr>
         {% if measurement.GetTaskID %}
         <tr>

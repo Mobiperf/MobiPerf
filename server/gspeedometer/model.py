@@ -288,12 +288,18 @@ class Measurement(db.Expando):
     return 'Measurement <device %s, type %s>' % (
         self.device_properties, self.type)
 
+  def GetTimestampInZone(self, zone=config.DEFAULT_TIMEZONE):
+    if zone and util.TZINFOS[zone]:
+      return self.timestamp.replace(
+            tzinfo=util.TZINFOS['utc']).astimezone(util.TZINFOS[zone])
+    else:
+      return self.timestamp
 
 class DeviceTask(db.Model):
   """Represents a task currently assigned to a given device."""
   task = db.ReferenceProperty(Task)
   device_info = db.ReferenceProperty(DeviceInfo)
-  
+
 class ValidationSummary(db.Model):
   """Represents the summary of validation results for a specific 
   measurement type during a specific time interval."""
@@ -309,7 +315,7 @@ class ValidationSummary(db.Model):
   error_count = db.IntegerProperty()
   # list of errors and counts
   per_error_count = db.StringListProperty()
-  
+
   def SetErrorByType(self, error_count_dict):
     """Takes a dict of error names to count of those 
     errors, and sets the per_error_count string list 
@@ -317,7 +323,7 @@ class ValidationSummary(db.Model):
     self.per_error_count = []
     for error, count in error_count_dict.items():
       self.per_error_count.append(('%s:%s' % (error, count)))
-      
+
   def GetErrorByType(self):
     """Takes the string list property representation of error
     counts and returns the dict representation."""
