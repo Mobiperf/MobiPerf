@@ -40,6 +40,9 @@ DEFAULT_MAP_CENTER = (47.6508, -122.3515)
 
 DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
 
+# default timezone set to PST (values are stored as UTC)
+DEFAULT_TIMEZONE = 'pst'
+
 # Amount to randomize lat/long of locations on the map
 LOCATION_FUZZ_FACTOR = 0.001
 
