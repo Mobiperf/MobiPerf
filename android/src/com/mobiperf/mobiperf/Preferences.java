@@ -107,7 +107,6 @@ public class Preferences extends PreferenceActivity {
       @Override
       public boolean onPreferenceChange(Preference preference, Object newValue) {
         final String account = newValue.toString();
-        Logger.i("account selected is: "+account);
         
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         SharedPreferences.Editor editor = prefs.edit();

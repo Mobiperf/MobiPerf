@@ -67,6 +67,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.mobiperf.mobiperf.R;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
@@ -330,7 +331,7 @@ public class Checkin {
     
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
-    if (!selectedAccount.equals("anonymous")) {
+    if (!selectedAccount.equals(context.getString(R.string.account_anon))) {
       // TODO(mdw): This should not be needed
       postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
     }
@@ -385,7 +386,7 @@ public class Checkin {
     
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
-    if (selectedAccount.equals("anonymous")) {
+    if (selectedAccount.equals(context.getString(R.string.account_anon))) {
       return true;
     }
     

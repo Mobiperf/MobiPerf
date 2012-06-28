@@ -30,8 +30,8 @@
             android:title="Battery Threshold" />
         
         <ListPreference
-            android:title="Select Authentication Account"
-            android:summary="Account used for checkin authentication."
+            android:title="Select account"
+            android:summary="Account used to authenticate to the Mobiperf server."
             android:key="PREF_KEY_ACCOUNT" />
             
     </PreferenceCategory>

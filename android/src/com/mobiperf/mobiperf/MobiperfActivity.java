@@ -244,7 +244,7 @@ public class MobiperfActivity extends Activity {
       builder = new AlertDialog.Builder(this);
       builder.setTitle("Select Authentication Account");
       final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
-      //this might not be necessary anymore because anonymous collection is always a choice
+      // TODO(huangshu): This should be unnecessary now since anonymous is always an option
       if (items == null) {
         Toast
             .makeText(
