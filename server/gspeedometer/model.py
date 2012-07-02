@@ -38,6 +38,7 @@ class DeviceInfo(db.Model):
   manufacturer = db.StringProperty()
   model = db.StringProperty()
   os = db.StringProperty()
+  # The type allocation code (TAC) that identifies the device model
   tac = db.StringProperty()
 
   def last_update(self):

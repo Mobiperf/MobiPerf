@@ -118,7 +118,7 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
                                   location_precision)
     elif isinstance(value, users.User):
       # we do not need nor want to store user info in the archive
-      pass       
+      pass
     else:
       raise ValueError('cannot encode ' + repr(prop))
   return output
@@ -155,7 +155,7 @@ class PstTzinfo(datetime.tzinfo):
   def dst(self, dt): return datetime.timedelta(0)
   def tzname(self, dt): return 'PST+07PDT'
   def olsen_name(self): return 'US/Pacific'
-  
+
 class UtcTzinfo(datetime.tzinfo):
   def utcoffset(self, dt): return datetime.timedelta(hours=0)
   def dst(self, dt): return datetime.timedelta(0)
@@ -186,7 +186,7 @@ def translate(self, timestamp):
     elif translate_with == 'astimezone':
       timestamp = timestamp.replace(tzinfo=utc)
       return ('timestamp.astimezone(to_tzinfo)',
-              timestamp.astimezone(TZINFOS[translate_to]))   
+              timestamp.astimezone(TZINFOS[translate_to]))
     else:
       return ('invalid translation', 'invalid translation')
 
@@ -249,13 +249,17 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
     output.append(mdict)
   return output
 
-def HashDeviceId(measurement_dict, id_field):
-  """ Convert an IMEI to a TAC + salted hash of ID """
-  measurement_dict['tac'] = measurement_dict[id_field][0:8]
-  rest = measurement_dict[id_field][8:] 
+def GetTac(imei):
+  """ Returns the 'type allocation code' (TAC) from the IMEI."""
+  return imei[0:8]
+
+def HashDeviceId(imei):
+  """ Returns a salted hash of the unique portion of IMEI """
+  # unique portion of IMEI starts at index 8
+  rest = imei[8:]
   # add salt, get hash
   salted = config_private.IMEI_SALT[0:16] + rest + config_private.IMEI_SALT[16:]
   m = hashlib.md5()
   m.update(salted)
   # base64 encoding to save space
-  measurement_dict[id_field] = base64.b64encode(m.digest(), '._').strip('=')
+  return base64.b64encode(m.digest(), '._').strip('=')

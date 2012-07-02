@@ -45,7 +45,8 @@ def UserIsAdmin():
 def UserIsAnonymousAdmin():
   """Whether current user is an admin."""
   user = users.get_current_user()
-  if user and user.email() and user.email() in config_private.ADMIN_ANONYMOUS_USERS:
+  if user and user.email() and \
+      user.email() in config_private.ADMIN_ANONYMOUS_USERS:
     return True
   return False
 
@@ -54,6 +55,7 @@ def UserIsAnonymousAdmin():
 def UserIsScheduleAdmin():
   """Whether current user is a schedule admin."""
   user = users.get_current_user()
-  if user and user.email() and user.email() in config_private.SCHEDULE_ADMIN_USERS:
+  if user and user.email() and \
+      user.email() in config_private.SCHEDULE_ADMIN_USERS:
     return True
   return False

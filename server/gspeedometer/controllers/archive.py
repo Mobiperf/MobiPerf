@@ -73,15 +73,14 @@ def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
      No exceptions handled here.
      No new exceptions generated here.
   """
-  #TODO(mdw) Unit test needed.
   exclude_fields = None
   include_fields = None
   location_precision = None
   if sanitize:
     # set up include/exclude fields for sanitization
-    exclude_fields = config.SANITIZE_FIELDS 
+    exclude_fields = config.SANITIZE_FIELDS
     location_precision = config.SANITIZE_LOCATION_PRECISION
-  
+
   measurement_q = model.Measurement.all()
   if device_id:
     measurement_q.filter('device_id =', device_id)
@@ -117,11 +116,11 @@ def ParametersToFileNameBase(device_id=None, start_time=None, end_time=None):
     Raises:
        No exceptions handled here.
        No new exceptions generated here.
-  """ 
+  """
   archive_dir = ''
   if start_time:
     archive_dir += 'S-%s' % str(start_time).split(" ")[0]
-                             
+
   if end_time:
     if len(archive_dir):
       archive_dir += '_'
@@ -202,7 +201,7 @@ class Archive(webapp.RequestHandler):
 
     # For some reason there was a problem with Unicode chars in the request
     archive_dir = archive_dir.encode('ascii', 'ignore')
-    
+
     #NOTE: This is a multiple return.
     return archive_dir, archive_util.ArchiveCompress(data,
         directory=archive_dir)
@@ -265,7 +264,7 @@ class Archive(webapp.RequestHandler):
 
       sanitize = self.request.get('sanitize')
       sanitize = not not sanitize
-      
+
       # Create the file
       if not sanitize:
         bucket = config_private.ARCHIVE_GS_BUCKET
@@ -273,7 +272,7 @@ class Archive(webapp.RequestHandler):
       else:
         bucket = config.ARCHIVE_GS_BUCKET_PUBLIC
         acl = config.ARCHIVE_GS_ACL_PUBLIC
-       
+
       gs_archive_name = '/gs/%s/%s.zip' % (bucket, archive_dir)
       gs_archive = files.gs.create(gs_archive_name,
           mime_type=config.ARCHIVE_CONTENT_TYPE, acl=acl,
@@ -287,7 +286,7 @@ class Archive(webapp.RequestHandler):
       # Finalize (a special close) the file.
       files.finalize(gs_archive)
       self.response.headers['Content-Type'] = 'application/json'
-      self.response.out.write('{\'status\':200,  \'archive_name\':\'%s\'}' % 
+      self.response.out.write('{\'status\':200,  \'archive_name\':\'%s\'}' %
           gs_archive_name)
     except DeadlineExceededError, e:
       logging.exception(e)

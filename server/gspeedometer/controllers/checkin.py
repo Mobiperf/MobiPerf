@@ -42,8 +42,9 @@ class Checkin(webapp.RequestHandler):
     logging.info('Got checkin: %s', self.request.body)
 
     try:
-      # change device id such that it is anonymized
-      util.HashDeviceId(checkin, 'id')
+      # change device id such that it is anonymized, but preserve TAC
+      checkin['tac'] = util.GetTac(checkin['id'])
+      checkin['id'] = util.HashDeviceId(checkin['id'])
       # Extract DeviceInfo
       device_id = checkin['id']
       logging.info('Checkin from device %s', device_id)
