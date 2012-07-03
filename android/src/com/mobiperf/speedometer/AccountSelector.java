@@ -27,6 +27,8 @@ import org.apache.http.client.params.ClientPNames;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import com.mobiperf.mobiperf.R;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -79,14 +81,6 @@ public class AccountSelector {
     this.checkinFuture = null;
   }
 
-  /** Shuts down the executor thread */
-  public void shutDown() {
-    // shutdown() removes all previously submitted task and no new tasks are accepted
-    this.checkinExecutor.shutdown();
-    // shutdownNow stops all currently executing tasks
-    this.checkinExecutor.shutdownNow();
-  }
-
   /**
    * Return the list of account names for users to select
    */
@@ -95,12 +89,21 @@ public class AccountSelector {
     Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
     String[] accountNames = null;
     if (accounts != null && accounts.length > 0) {
-      accountNames = new String[accounts.length];
+      accountNames = new String[accounts.length + 1];
       for (int i = 0; i < accounts.length; i++) {
         accountNames[i] = accounts[i].name;
       }
+      accountNames[accounts.length] = context.getString(R.string.account_anon);
     }
     return accountNames;
+  }
+
+  /** Shuts down the executor thread */
+  public void shutDown() {
+    // shutdown() removes all previously submitted task and no new tasks are accepted
+    this.checkinExecutor.shutdown();
+    // shutdownNow stops all currently executing tasks
+    this.checkinExecutor.shutdownNow();
   }
 
   /**
@@ -155,20 +158,19 @@ public class AccountSelector {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
 
-    if (accounts != null && accounts.length > 0 && selectedAccount != null) {
+    if (accounts != null && accounts.length > 0 && selectedAccount != "") {
       Account accountToUse = null;
       for (Account account : accounts) {
-        // if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
-        Logger.i("account list: " + account.name + " " + account.type + " " + account.toString());
         // If one of the available accounts is the one selected by user, use that
         if (account.name.equals(selectedAccount)) {
           accountToUse = account;
-          Logger.i("selected account: " + account.name + " " + account.type + " "
-              + account.toString());
         }
       }
 
       Logger.i("Trying to get auth token for " + accountToUse);
+      if (accountToUse == null) {
+        return;
+      }
 
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(accountToUse, "ah", false,
           new AccountManagerCallback<Bundle>() {
