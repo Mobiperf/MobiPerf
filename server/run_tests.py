@@ -28,19 +28,19 @@ import sys
 import unittest2
 from google.appengine.ext import testbed
 
-TEST_DATASTORE = './dev_data/test.sql3'
+TEST_DATASTORE = './dev_data/test.datastore'
 
 def main(sdk_path, test_path):
   # Get the appserver on the path
   sys.path.insert(0, sdk_path)
   import dev_appserver
   dev_appserver.fix_sys_path()
-  
+
   # set up datastore so we can test on meaningful data
   t = testbed.Testbed()
   t.setup_env(True, application_id='dev~openmobiledata')
   t.activate()
-  t.init_datastore_v3_stub(True, TEST_DATASTORE, True)
+  t.init_datastore_v3_stub(True, TEST_DATASTORE, False)
   t.init_memcache_stub()
 
   # Get correct Django version

@@ -249,7 +249,7 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
     output.append(mdict)
   return output
 
-def GetTac(imei):
+def GetTypeAllocationCode(imei):
   """ Returns the 'type allocation code' (TAC) from the IMEI."""
   return imei[0:8]
 
