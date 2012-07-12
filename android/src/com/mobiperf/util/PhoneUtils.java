@@ -215,7 +215,8 @@ public class PhoneUtils {
       for (NetworkInfo networkInfo : infos) {
         Logger.i("Network: " + networkInfo);
       }
-      Logger.i("Phone type: " + getTelephonyPhoneType() + ", Carrier: " + getTelephonyCarrierName());
+      Logger.i("Phone type: " + getTelephonyPhoneType() + 
+          ", Carrier: " + getTelephonyCarrierName());
     }
     assert connectivityManager != null;
     assert telephonyManager != null;
