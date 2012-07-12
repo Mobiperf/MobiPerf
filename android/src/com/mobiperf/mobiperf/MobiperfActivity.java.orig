@@ -117,7 +117,7 @@ public class MobiperfActivity extends Activity {
   protected void onStart() {
     // Bind to the scheduler service for only once during the lifetime of
     // the activity
-	Logger.v("onStart in MobiperfActivity");
+    Logger.v("onStart in MobiperfActivity");
     bindToService();
     super.onStart();
 
@@ -155,7 +155,7 @@ public class MobiperfActivity extends Activity {
 
   @Override
   protected void onStop() {
-	Logger.v("onStop in MobiperfActivity");
+    Logger.v("onStop in MobiperfActivity");
     super.onStop();
     if (isBound) {
       unbindService(serviceConn);
@@ -165,7 +165,7 @@ public class MobiperfActivity extends Activity {
   
   @Override
   protected void onDestroy() {
-	Logger.v("onDestroy in MobiperfActivity");
+    Logger.v("onDestroy in MobiperfActivity");
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
   }
@@ -302,7 +302,7 @@ public class MobiperfActivity extends Activity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-	Logger.v("onCreate in MobiperfActivity");
+    Logger.v("onCreate in MobiperfActivity");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.home);
 
