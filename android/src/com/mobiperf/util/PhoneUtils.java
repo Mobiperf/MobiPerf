@@ -119,7 +119,6 @@ public class PhoneUtils {
     this.context = context;
     broadcastReceiver = new PowerStateChangeReceiver();
     // Registers a receiver for battery change events.
-    
     Intent powerIntent = globalContext.registerReceiver(broadcastReceiver, new IntentFilter(
         Intent.ACTION_BATTERY_CHANGED));
     updateBatteryStat(powerIntent);
@@ -216,7 +215,8 @@ public class PhoneUtils {
       for (NetworkInfo networkInfo : infos) {
         Logger.i("Network: " + networkInfo);
       }
-      Logger.i("Phone type: " + getTelephonyPhoneType() + ", Carrier: " + getTelephonyCarrierName());
+      Logger.i("Phone type: " + getTelephonyPhoneType() + 
+          ", Carrier: " + getTelephonyCarrierName());
     }
     assert connectivityManager != null;
     assert telephonyManager != null;
