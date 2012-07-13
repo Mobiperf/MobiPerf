@@ -149,7 +149,6 @@ public class MeasurementScheduler extends Service {
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
-    PhoneUtils.setGlobalContext(this.getApplicationContext());
     phoneUtils = PhoneUtils.getPhoneUtils();
     phoneUtils.registerSignalStrengthListener();
     this.checkin = new Checkin(this);
