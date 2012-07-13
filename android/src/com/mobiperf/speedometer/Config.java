@@ -103,6 +103,7 @@ public interface Config {
   public static final String PREF_KEY_BACKGROUND = "PREF_KEY_BACKGROUND";
   public static final String PREF_KEY_CHECKIN_INTERVAL = "PREF_KEY_CHECKIN_INTERVAL";
   public static final String PREF_KEY_BATTERY_THRESHOLD = "PREF_KEY_BATTERY_THRESHOLD";
+  public static final String PREF_KEY_ACCOUNT = "PREF_KEY_ACCOUNT";
 
   /** Constants for the splash screen */
   public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;

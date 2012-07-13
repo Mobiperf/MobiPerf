@@ -15,9 +15,6 @@
 package com.mobiperf.mobiperf;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -247,6 +244,7 @@ public class MobiperfActivity extends Activity {
       builder = new AlertDialog.Builder(this);
       builder.setTitle("Select Authentication Account");
       final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+      // TODO(huangshu): This should be unnecessary now since anonymous is always an option
       if (items == null) {
         Toast
             .makeText(

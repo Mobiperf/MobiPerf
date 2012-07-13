@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
@@ -28,6 +29,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
+import com.mobiperf.speedometer.AccountSelector;
 import com.mobiperf.speedometer.Config;
 import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementScheduler;
@@ -96,6 +98,24 @@ public class Preferences extends PreferenceActivity {
       }
     });
 
+    ListPreference lp = (ListPreference)findPreference(Config.PREF_KEY_ACCOUNT);
+    final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+    lp.setEntries(items);
+    lp.setEntryValues(items);
+    
+    lp.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+      @Override
+      public boolean onPreferenceChange(Preference preference, Object newValue) {
+        final String account = newValue.toString();
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, account);
+        editor.commit();
+        return true;
+      }
+    });
+    
     Preference intervalPref = (Preference) findPreference(Config.PREF_KEY_CHECKIN_INTERVAL);
     Preference batteryPref = (Preference) findPreference(Config.PREF_KEY_BATTERY_THRESHOLD);
 

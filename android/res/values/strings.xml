@@ -56,4 +56,5 @@
     <string name="status_batteryBelow">Battery below threshold.\n</string>
     <string name="status_runningMeasurement">Currently running </string>
     <string name="status_lastCheckin">Last Checkin: </string>
+    <string name="account_anon">anonymous</string>
 </resources>
