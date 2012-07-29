@@ -18,8 +18,11 @@ package com.mobiperf.speedometer;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.TextView;
 
 import com.mobiperf.mobiperf.R;
 
@@ -37,6 +40,16 @@ public class SplashScreenActivity extends Activity {
     // Make sure the splash screen is shown in portrait orientation
     this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+    TextView version = (TextView)findViewById(R.id.splash_version);
+    
+    try {
+      PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+      version.setText(pInfo.versionName);
+    } catch (NameNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    
 
     new Handler().postDelayed(new Runnable() {
       @Override

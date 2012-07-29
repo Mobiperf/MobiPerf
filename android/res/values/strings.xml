@@ -50,7 +50,8 @@
                              \thttp://mobiperf.com \n\nfor more information about this project and for information on how you can contribute. \nMobiperf is licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
                              License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
                              CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</string>
-    <string name="aboutContact">Version: 1.0\n\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
+    <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
+
     <string name="btn_network_toggle">Switch 3G/4G</string>
     <string name="periodtest_prompt">Select the measurement to be run periodically.</string>
     <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>

@@ -15,6 +15,8 @@
 package com.mobiperf.mobiperf;
 
 import android.app.Activity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
@@ -29,5 +31,15 @@ public class About extends Activity {
     setContentView(R.layout.about);
     TextView textView = (TextView) findViewById(R.id.about2);
     textView.setMovementMethod(ScrollingMovementMethod.getInstance());
+    
+    TextView version = (TextView)findViewById(R.id.about_version);
+    
+    try {
+      PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+      version.setText("Version: "+pInfo.versionName);
+    } catch (NameNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 }
