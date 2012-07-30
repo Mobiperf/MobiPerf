@@ -23,9 +23,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-"""
-Tests for utility functions in util.py
-"""
+"""Tests for utility functions in util.py."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
@@ -38,9 +36,8 @@ from gspeedometer.helpers import util
 class UtilTest(unittest2.TestCase):
   """Tests for helpers/util.py."""
 
-
   def testIMEIHash(self):
-    """Test the hashing of device ID.
+    """Test the hashing of device ID and extraction of type allocation code.
     
     This test will fail if the the type allocation code is not preserved or 
     two different IMEIs produce the same hash.

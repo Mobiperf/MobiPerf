@@ -52,7 +52,8 @@ class Measurement(webapp.RequestHandler):
                    len(measurement_list))
       for measurement_dict in measurement_list:
         # change device id such that it is anonymized, but preserve the TAC
-        measurement_dict['tac'] = util.GetTypeAllocationCode(measurement_dict['device_id'])
+        measurement_dict['tac'] = util.GetTypeAllocationCode(
+            measurement_dict['device_id'])
         measurement_dict['device_id'] = \
             util.HashDeviceId(measurement_dict['device_id'])
 
@@ -143,6 +144,8 @@ class Measurement(webapp.RequestHandler):
           'templates/measurementdetail.html', template_args))
 
 
+# TODO(drc): Move this to generic measurement class when code from related 
+# branch gets merged into master.
 class MeasurementType:
   """Maps datastore entity and field names to human-readable ones."""
 
