@@ -1,17 +1,28 @@
-# Copyright 2012 University of Washington.
+# Copyright (c) 2011-2012  University of Washington
+# All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Redistribution and use in source and binary forms, with or without 
+# modification, are permitted provided that the following conditions are met:
+# *       Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+# *       Redistributions in binary form must reproduce the above copyright 
+# notice, this list of conditions and the following disclaimer in the 
+# documentation and/or other materials provided with the distribution.
+# *       Neither the name of the University of Washington nor the names of its 
+# contributors may be used to endorse or promote products derived from this 
+# software without specific prior written permission.
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY OF WASHINGTON AND CONTRIBUTORS "AS 
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# DISCLAIMED. IN NO EVENT SHALL THE UNIVERSITY OF WASHINGTON OR CONTRIBUTORS BE 
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# POSSIBILITY OF SUCH DAMAGE.
 from django.utils.datastructures import SortedDict
 from gspeedometer.controllers.validation import MeasurementValidatorFactory
 
@@ -43,7 +54,7 @@ class Dashboard(webapp.RequestHandler):
     tscolumns = []
     for meas, name in measurement.MEASUREMENT_TYPES:
       tscolumns.append('%s' % meas)
-      
+
     template_args = {
         'error_details': self.DashboardDetail(),
         'top_errors': self.CommonExceptions()
@@ -65,12 +76,12 @@ class Dashboard(webapp.RequestHandler):
       end_time = util.MicrosecondsSinceEpochToTime(int(end_time))
     if limit:
       limit = int(limit)
-    else: 
+    else:
       limit = 1000
-      
+
     # TODO(drc): Incorporate date limits
-    time_to_type_to_cnt = SortedDict()    
-    
+    time_to_type_to_cnt = SortedDict()
+
     # group by time
     for ent in entries.fetch(limit):
       ms_time = ent.summary.timestamp_start
@@ -81,23 +92,23 @@ class Dashboard(webapp.RequestHandler):
       # links to ids for eventually showing more detail
       time_to_type_to_cnt[ms_time][meas_type]['details'].append(
         [ent.measurement.key().id(),
-         ent.measurement.device_properties.device_info.id])      
+         ent.measurement.device_properties.device_info.id])
 
     # now sort by time
     sorted_results = SortedDict()
     for k in sorted(time_to_type_to_cnt.iterkeys()):
       sorted_results[k] = time_to_type_to_cnt[k]
-      
+
     return sorted_results
-      
+
   def ErrorDetail(self, **unused_args):
     """Returns JSON encoded measurement details that are displayed when the user
     clicks on a measurement ID."""
     result_id = self.request.get('result_id') #  measurement id
     parent = self.request.get('parent') #  required parent (deviceinfo) id
-    
+
     k = db.Key.from_path('DeviceInfo', parent, 'Measurement', int(result_id))
-    
+
     m = model.Measurement.get(k)
     validator = MeasurementValidatorFactory.CreateValidator(m)
     self.response.out.write(json.dumps(
@@ -106,7 +117,7 @@ class Dashboard(webapp.RequestHandler):
          'success': m.success,
          'validation_results': validator.Validate(),
          'details': validator.PrintData()}))
-    
+
   def CommonExceptions(self, **unused_args):
     """Returns a list containing the most common 10 exceptions and the number 
     of times they have been reported."""
@@ -115,9 +126,9 @@ class Dashboard(webapp.RequestHandler):
     limit = self.request.get('limit')
 
     entries = model.ValidationEntry.all()
-    logging.log(logging.INFO, "Found %s records" % 
+    logging.log(logging.INFO, "Found %s records" %
                 model.ValidationEntry.all().count(10000))
-    
+
     # TODO(drc): support date queries
     if start_time:
       start_time = util.MicrosecondsSinceEpochToTime(int(start_time))
@@ -126,9 +137,9 @@ class Dashboard(webapp.RequestHandler):
     if limit:
       limit = int(limit)
     else: limit = 1000
-      
+
     error_to_count = dict()
-          
+
     for entry in entries.fetch(limit):
       if entry.measurement.success == False:
         # Only grab first portion of stack trace if there was an error
@@ -138,8 +149,8 @@ class Dashboard(webapp.RequestHandler):
           if not error_to_count.has_key(error):
             error_to_count[error] = 1
           else: error_to_count[error] += 1
-       
+
     sorted_errors = sorted(error_to_count.iteritems(),
                            key=operator.itemgetter(1), reverse=True)
     return sorted_errors[0:10]
-    
+

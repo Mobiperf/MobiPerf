@@ -52,7 +52,7 @@ class Measurement(webapp.RequestHandler):
                    len(measurement_list))
       for measurement_dict in measurement_list:
         # change device id such that it is anonymized, but preserve the TAC
-        measurement_dict['tac'] = util.GetTac(measurement_dict['device_id'])
+        measurement_dict['tac'] = util.GetTypeAllocationCode(measurement_dict['device_id'])
         measurement_dict['device_id'] = \
             util.HashDeviceId(measurement_dict['device_id'])
 

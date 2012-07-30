@@ -43,7 +43,7 @@ class Checkin(webapp.RequestHandler):
 
     try:
       # change device id such that it is anonymized, but preserve TAC
-      checkin['tac'] = util.GetTac(checkin['id'])
+      checkin['tac'] = util.GetTypeAllocationCode(checkin['id'])
       checkin['id'] = util.HashDeviceId(checkin['id'])
       # Extract DeviceInfo
       device_id = checkin['id']
