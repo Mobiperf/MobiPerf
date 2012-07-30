@@ -25,10 +25,12 @@ __author__ = 'mdw@google.com (Matt Welsh)'
 import optparse
 import os
 import sys
+import shutil
 import unittest2
 from google.appengine.ext import testbed
 
-TEST_DATASTORE = './dev_data/test.datastore'
+BASE_DIR = '/Users/choffnes2/workspace/Mobiperf/Mobiperf/server'
+TEST_DATASTORE = '%s/dev_data/test.datastore' % BASE_DIR
 
 def main(sdk_path, test_path):
   # Get the appserver on the path
@@ -36,11 +38,14 @@ def main(sdk_path, test_path):
   import dev_appserver
   dev_appserver.fix_sys_path()
 
+  # copy datastore to new file
+  shutil.copyfile(TEST_DATASTORE, TEST_DATASTORE + "_tmp")
+
   # set up datastore so we can test on meaningful data
   t = testbed.Testbed()
   t.setup_env(True, application_id='dev~openmobiledata')
   t.activate()
-  t.init_datastore_v3_stub(True, TEST_DATASTORE, False)
+  t.init_datastore_v3_stub(True, TEST_DATASTORE + "_tmp", False)
   t.init_memcache_stub()
 
   # Get correct Django version
@@ -50,7 +55,6 @@ def main(sdk_path, test_path):
   suite = unittest2.loader.TestLoader().discover(test_path,
                                                  pattern='*_test.py')
   unittest2.TextTestRunner(verbosity=2).run(suite)
-
 
 if __name__ == '__main__':
   devapp_server_path = None

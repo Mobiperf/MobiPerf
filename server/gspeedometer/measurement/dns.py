@@ -32,15 +32,15 @@ import ipaddr
 from gspeedometer.measurement.measurement_wrapper import MeasurementWrapper
 
 class DNSLookup(MeasurementWrapper):
-  """ Encapsulates dns data and provides methods for analyzing it """
+  """Encapsulates dns data and provides methods for analyzing it. """
   vals = dict()
 
   def __init__(self, params, values):
-    """ Initializes the dns lookup object with data """
+    """Initializes the dns lookup object with data."""
     self.vals = values
 
-  def PrintHTMLData(self):
-    """ Prints the dns data for HTML """
+  def GetHTML(self):
+    """Returns an HTML representation of this measurement."""
     output = ""
     for key, value in sorted(self.vals.items()):
       output += str(key) + ": " + str(value) + " <br>\n"
@@ -48,7 +48,7 @@ class DNSLookup(MeasurementWrapper):
 
   def Validate(self):
     """ 
-      Parses data and returns a dict with validation results 
+      Parses data and returns a dict with validation results.
         valid -> boolean: true if data is good
         error_types -> list: list of errors found
     """
@@ -82,5 +82,3 @@ class DNSLookup(MeasurementWrapper):
       logging.info("Missing key for dns!")
 
     return results
-
-

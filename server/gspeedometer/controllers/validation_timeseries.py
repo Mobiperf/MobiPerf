@@ -1,17 +1,27 @@
-# Copyright 2012 University of Washington.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+'''
+Copyright (c) 2012, University of Washington
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, 
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this 
+list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this 
+list of conditions and the following disclaimer in the documentation and/or 
+other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+'''
 
 """ Supports printing of validation time series data."""
 
@@ -40,11 +50,11 @@ class Timeseries(webapp.RequestHandler):
     tscolumns = []
     for meas, name in measurement.MEASUREMENT_TYPES:
       tscolumns.append('%s' % meas)
-      
+
     template_args = {
         'limit': config.TIMESERIES_POINT_LIMIT,
         'timeseries_columns': tscolumns,
-        'types': {'record_count': 'Record count', 'error_count': 'Error count'} 
+        'types': {'record_count': 'Record count', 'error_count': 'Error count'}
     }
     self.response.out.write(template.render(
         'templates/validation_timeseries.html', template_args))
@@ -66,20 +76,20 @@ class Timeseries(webapp.RequestHandler):
       summaries.filter('timestamp_end < ', end_time)
     if limit:
       limit = int(limit)
-    else: 
+    else:
       limit = 1000
-      
+
     summaries.filter('timestamp_start > ', 0)
     summaries.order('timestamp_start')
-    time_to_type_to_count = dict()    
+    time_to_type_to_count = dict()
     tsdata = []
-    
+
     # group data by timestamp for timeline printing
     for summary in summaries.fetch(limit):
       ms_time = util.TimeToMicrosecondsSinceEpoch(summary.timestamp_start) / 1e3
       if not time_to_type_to_count.has_key(ms_time):
-        time_to_type_to_count[ms_time] = dict()        
-      
+        time_to_type_to_count[ms_time] = dict()
+
       if sample_type:
         time_to_type_to_count[ms_time][summary.measurement_type] = \
           getattr(summary, sample_type)

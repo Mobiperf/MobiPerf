@@ -31,12 +31,12 @@ from gspeedometer.measurement.measurement_wrapper import MeasurementWrapper
 import ipaddr
 
 class Traceroute(MeasurementWrapper):
-  """ Encapsulates traceroute data and provides methods for analyzing it """
+  """Encapsulates traceroute data and provides methods for analyzing it."""
   hops = dict()
   rtts = dict()
 
   def __init__(self, params, values):
-    """ Initializes the traceroute object with hops and latencies """
+    """Initializes the traceroute object with hops and latencies."""
     for key, value in values.items():
       if 'addr' in key or 'rtt' in key:
         parts = key.split("_")
@@ -49,8 +49,8 @@ class Traceroute(MeasurementWrapper):
           if not self.rtts.has_key(parts[1]):
             self.rtts[int(parts[1])] = value
 
-  def PrintData(self):
-    """ Prints the ordered traceroutes for HTML """
+  def GetHTML(self):
+    """Returns an HTML representation of this measurement."""
     output = ""
     for key, value in sorted(self.hops.items()):
       output += "Hop " + str(key) + ": "
@@ -61,7 +61,7 @@ class Traceroute(MeasurementWrapper):
 
   def Validate(self):
     """ 
-      Parses data and returns a dict with validation results 
+      Parses data and returns a dict with validation results.
         valid -> boolean: true if data is good
         error_types -> list: list of errors found
     """
@@ -105,4 +105,3 @@ class Traceroute(MeasurementWrapper):
             results["error_types"].append("latency_not_valid")
 
     return results
-

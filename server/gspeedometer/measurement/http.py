@@ -23,7 +23,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-""" Contains HTTP-validation logic."""
+"""Contains HTTP-validation logic."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
@@ -31,18 +31,18 @@ import logging
 from gspeedometer.measurement.measurement_wrapper import MeasurementWrapper
 
 class HTTP(MeasurementWrapper):
-  """ Encapsulates HTTP data and provides methods for analyzing it """
+  """Encapsulates HTTP data and provides methods for analyzing it."""
   vals = dict()
   params = dict()
 
   def __init__(self, params, values):
-    """ Initializes the HTTP lookup object with data """
+    """Initializes the HTTP lookup object with data."""
     self.vals = values
 
     self.vals['url'] = params['url']
 
-  def PrintHTMLData(self):
-    """ Prints the HTTP data for HTML """
+  def GetHTML(self):
+    """Returns an HTML representation of this measurement."""
     output = ""
     for key, value in sorted(self.vals.items()):
       output += str(key) + ": " + str(value) + " <br>\n"
@@ -51,7 +51,7 @@ class HTTP(MeasurementWrapper):
 
   def Validate(self):
     """ 
-      Parses data and returns a dict with validation results 
+      Parses data and returns a dict with validation results.
         valid -> boolean: true if data is good
         error_types -> list: list of errors found
     """
@@ -110,5 +110,3 @@ class HTTP(MeasurementWrapper):
       logging.debug("Missing key for http!")
 
     return results
-
-

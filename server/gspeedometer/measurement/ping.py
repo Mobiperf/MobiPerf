@@ -23,7 +23,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-""" Contains ping-validation logic."""
+"""Contains ping-validation logic."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
@@ -32,15 +32,15 @@ import ipaddr
 from gspeedometer.measurement.measurement_wrapper import MeasurementWrapper
 
 class Ping(MeasurementWrapper):
-  """ Encapsulates ping data and provides methods for analyzing it """
+  """Encapsulates ping data and provides methods for analyzing it."""
   vals = dict()
 
   def __init__(self, params, values):
     """ Initializes the ping object with hops and latencies """
     self.vals = values
 
-  def PrintData(self):
-    """ Prints the ping data for HTML """
+  def GetHTML(self):
+    """Returns an HTML representation of this measurement."""
     output = ""
     for key, value in sorted(self.vals.items()):
       output += str(key) + ": " + str(value) + " <br>\n"
@@ -48,7 +48,7 @@ class Ping(MeasurementWrapper):
 
   def Validate(self):
     """ 
-      Parses data and returns a dict with validation results 
+      Parses data and returns a dict with validation results.
         valid -> boolean: true if data is good
         error_types -> list: list of errors found
     """
@@ -107,5 +107,3 @@ class Ping(MeasurementWrapper):
       logging.info("Missing key for ping!")
 
     return results
-
-

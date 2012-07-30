@@ -26,22 +26,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
 class MeasurementWrapper(object):
-  '''
+  """
   This generic class represents the function and fields that a measurement-
   specific wrapper needs to implement. Note this is due to the fact that the 
   Measurement object in model.py is generic and intentionally does not 
   know how to manage operations such as validation and human-readable 
   descriptions.
-  '''
+  """
   vals = dict() # the data for this measurement
 
-  def PrintHTMLData(self):
-    """ Prints the data for HTML """
+  def GetHTML(self):
+    """Returns an HTML representation of this measurement."""
     raise NotImplementedError()
 
   def Validate(self):
     """ 
-      Parses data and returns a dict with validation results 
+      Parses data and returns a dict with validation results.
         valid -> boolean: true if data is good
         error_types -> list: list of errors found
     """
