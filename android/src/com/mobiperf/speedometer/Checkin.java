@@ -64,7 +64,10 @@ import org.json.JSONObject;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
+import com.mobiperf.mobiperf.R;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
@@ -325,9 +328,14 @@ public class Checkin {
     postMethod.setEntity(se);
     postMethod.setHeader("Accept", "application/json");
     postMethod.setHeader("Content-type", "application/json");
-    // TODO(mdw): This should not be needed
-    postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
-
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (!selectedAccount.equals(context.getString(R.string.account_anon))) {
+      // TODO(mdw): This should not be needed
+      postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+    }
+    
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
     Logger.i("Sending request: " + fullurl);
     String result = client.execute(postMethod, responseHandler);
@@ -375,6 +383,13 @@ public class Checkin {
       authCookie = getFakeAuthCookie();
       return true;
     }
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (selectedAccount.equals(context.getString(R.string.account_anon))) {
+      return true;
+    }
+    
     Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
     if (getCookieFuture == null) {
       Logger.i("checkGetCookie called too early");

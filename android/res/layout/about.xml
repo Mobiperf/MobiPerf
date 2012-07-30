@@ -36,6 +36,7 @@
             android:maxLines="15"
             android:scrollbars="vertical"
             android:singleLine="false"
+            android:autoLink="all"
             android:text="@string/aboutText"
             android:textColor="@android:color/secondary_text_dark_nodisable"
             android:textSize="20px" />
