@@ -26,10 +26,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,7 +50,7 @@ public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
   
-  private boolean consentDialogShown = false;
+  private boolean userConsented = false;
   
   private static final int DIALOG_CONSENT = 0;
   private MeasurementScheduler scheduler;
@@ -57,13 +59,6 @@ public class SpeedometerApp extends TabActivity {
   private boolean isBindingToService = false;
   private BroadcastReceiver receiver;
   TextView statusBar, statsBar;
-  
-  @Override
-  protected void onSaveInstanceState(Bundle savedInstanceState) {
-    savedInstanceState.putBoolean("consentDialogShown", consentDialogShown);
-    super.onSaveInstanceState(savedInstanceState);
-  }
-  
   
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
@@ -170,15 +165,12 @@ public class SpeedometerApp extends TabActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    if (savedInstanceState != null) {
-      consentDialogShown = savedInstanceState.getBoolean("consentDialogShown");
-    }
     
-    if (!consentDialogShown) {
+    restoreConsentState();
+    if (!userConsented) {
       /* Before doing anything, show the consent dialog. */
       showDialog(DIALOG_CONSENT);
-      consentDialogShown = true;
-    } 
+    }
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
@@ -296,7 +288,13 @@ public class SpeedometerApp extends TabActivity {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setMessage(getString(R.string.consentDialogMsg))
            .setCancelable(false)
-           .setPositiveButton("Okay, got it", null)
+           .setPositiveButton("Okay, got it", new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                recordUserConsent();
+                // Force a checkin now since the one initiated by the scheduler was likely skipped.
+                doCheckin();
+              }
+          })
            .setNegativeButton("No thanks", new DialogInterface.OnClickListener() {
                public void onClick(DialogInterface dialog, int id) {
                  quitApp();
@@ -328,7 +326,6 @@ public class SpeedometerApp extends TabActivity {
     this.unregisterReceiver(this.receiver);
   }
 
-  
   private void quitApp() {
     if (isBound) {
       unbindService(serviceConn);
@@ -337,7 +334,40 @@ public class SpeedometerApp extends TabActivity {
     if (this.scheduler != null) {
       scheduler.requestStop();
     }
+    // Force consent on next restart.
+    userConsented = false;
+    saveConsentState();
+    
     this.finish();
     System.exit(0);
+  }
+  
+  private void doCheckin() {
+    if (scheduler != null) {
+      scheduler.handleCheckin(true);
+    }
+  }
+  
+  private void recordUserConsent() {
+    userConsented = true;
+    saveConsentState();
+  }
+  
+  /** Save consent state persistent storage. */
+  private void saveConsentState() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putBoolean(Config.PREF_KEY_CONSENTED, userConsented);
+    editor.commit();
+  }
+  
+  /**
+   * Restore measurement statistics from persistent storage.
+   */
+  private void restoreConsentState() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    userConsented = prefs.getBoolean(Config.PREF_KEY_CONSENTED, false);
   }
 }
