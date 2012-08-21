@@ -51,6 +51,7 @@ public class ResultsConsoleActivity extends Activity {
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    Logger.d("ResultsConsoleActivity.onCreate called");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.results);
     IntentFilter filter = new IntentFilter();
@@ -118,8 +119,10 @@ public class ResultsConsoleActivity extends Activity {
     // No need to update if the old and new values are the same
     if (oldShowUserResults != newShowUserResults) {
       if (newShowUserResults) {
+        Logger.d("switchBetweenResults: showing " + userResults.getCount() + " user results");
         this.consoleView.setAdapter(userResults);
       } else {
+        Logger.d("switchBetweenResults: showing " + systemResults.getCount() + " system results");
         this.consoleView.setAdapter(systemResults);
       }
     }
@@ -129,7 +132,7 @@ public class ResultsConsoleActivity extends Activity {
    *  Upgrades the progress bar in the UI.
    *  */
   private void upgradeProgress(int progress, int max) {
-    Logger.i("Progress is " + progress);
+    Logger.d("Progress is " + progress);
     if (progress >= 0 && progress <= max) {
       progressBar.setProgress(progress);
       this.progressBar.setVisibility(View.VISIBLE);
@@ -143,22 +146,28 @@ public class ResultsConsoleActivity extends Activity {
   
   @Override
   protected void onDestroy() {
+    Logger.d("ResultsConsoleActivity.onDestroy called");
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
   }
   
   private void getConsoleContentFromScheduler() {
+    Logger.d("ResultsConsoleActivity.getConsoleContentFromScheduler called");
     if (scheduler == null) {
       SpeedometerApp parent = (SpeedometerApp) getParent();
       scheduler = parent.getScheduler();
-      if (scheduler != null) {
-        userResults = scheduler.userResults;
-        systemResults = scheduler.systemResults;
-        if (showUserResults) {
-          consoleView.setAdapter(userResults);
-        } else {
-          consoleView.setAdapter(systemResults);
-        }
+    }
+    if (scheduler != null) {
+      userResults = scheduler.userResults;
+      systemResults = scheduler.systemResults;
+      if (showUserResults) {
+        Logger.d("getConsoleContentFromScheduler: showing " + userResults.getCount() +
+            " user results");
+        consoleView.setAdapter(userResults);
+      } else {
+        Logger.d("getConsoleContentFromScheduler: showing " + systemResults.getCount() +
+            " system results");
+        consoleView.setAdapter(systemResults);
       }
     }
   }
