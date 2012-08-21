@@ -291,6 +291,8 @@ public class SpeedometerApp extends TabActivity {
            .setPositiveButton("Okay, got it", new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
                 recordUserConsent();
+                // Enable auto start on boot.
+                setStartOnBoot(true);
                 // Force a checkin now since the one initiated by the scheduler was likely skipped.
                 doCheckin();
               }
@@ -337,6 +339,8 @@ public class SpeedometerApp extends TabActivity {
     // Force consent on next restart.
     userConsented = false;
     saveConsentState();
+    // Disable auto start on boot.
+    setStartOnBoot(false);
     
     this.finish();
     System.exit(0);
@@ -346,6 +350,15 @@ public class SpeedometerApp extends TabActivity {
     if (scheduler != null) {
       scheduler.handleCheckin(true);
     }
+  }
+  
+  /** Set preference to indicate whether start on boot is enabled. */
+  private void setStartOnBoot(boolean startOnBoot) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putBoolean(getString(R.string.startOnBootPrefKey), startOnBoot);
+    editor.commit();
   }
   
   private void recordUserConsent() {

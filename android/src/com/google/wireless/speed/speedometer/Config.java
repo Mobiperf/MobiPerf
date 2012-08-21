@@ -22,7 +22,7 @@ package com.google.wireless.speed.speedometer;
  *
  */
 public interface Config {
-  public static final boolean DEFAULT_START_ON_BOOT = true;
+  public static final boolean DEFAULT_START_ON_BOOT = false;
   /** Constants used in various measurement tasks */
   public static final float RESOURCE_UNREACHABLE = Float.MAX_VALUE;
   public static final int PING_COUNT_PER_MEASUREMENT = 10;
@@ -86,6 +86,7 @@ public interface Config {
   public static final String PREF_KEY_COMPLETED_MEASUREMENTS = "PREF_KEY_COMPLETED_MEASUREMENTS";
   public static final String PREF_KEY_FAILED_MEASUREMENTS = "PREF_KEY_FAILED_MEASUREMENTS";
   public static final String PREF_KEY_CONSENTED = "PREF_KEY_CONSENTED";
+  public static final String PREF_KEY_STARTONBOOT = "PREF_KEY_STARTONBOOT";
   
   /** Constants for the splash screen */
   public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;

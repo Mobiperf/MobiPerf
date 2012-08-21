@@ -258,6 +258,7 @@ public class MeasurementScheduler extends Service {
   private void handleMeasurement() {
     if (!userConsented()) {
       Logger.i("Skipping measurement - User has not consented");
+      return;
     }
     
     try {
