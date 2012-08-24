@@ -44,7 +44,6 @@ public class ResultsConsoleActivity extends Activity {
   private ArrayAdapter<String> systemResults;
   BroadcastReceiver receiver;
   ProgressBar progressBar;
-  boolean showUserResults = true;
   ToggleButton showUserResultButton;
   ToggleButton showSystemResultButton;
   MeasurementScheduler scheduler = null;
@@ -59,23 +58,22 @@ public class ResultsConsoleActivity extends Activity {
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
 
     this.consoleView = (ListView) this.findViewById(R.id.resultConsole);
-    getConsoleContentFromScheduler();
     this.progressBar = (ProgressBar) this.findViewById(R.id.progress_bar);
     this.progressBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);
     this.progressBar.setProgress(Config.MAX_PROGRESS_BAR_VALUE);
     showUserResultButton = (ToggleButton) findViewById(R.id.showUserResults);
     showSystemResultButton = (ToggleButton) findViewById(R.id.showSystemResults);
-    showUserResultButton.setChecked(showUserResults);
-    showSystemResultButton.setChecked(!showUserResults);
+    showUserResultButton.setChecked(true);
+    showSystemResultButton.setChecked(false);
     
     // We enforce a either-or behavior between the two ToggleButtons
     OnCheckedChangeListener buttonClickListener = new OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (buttonView == showUserResultButton) {
-          switchBewteenResults(showUserResults, isChecked);
+          switchBetweenResults(isChecked);
         } else {
-          switchBewteenResults(showUserResults, !isChecked);
+          switchBetweenResults(!isChecked);
         }
       }};
     showUserResultButton.setOnCheckedChangeListener(buttonClickListener);
@@ -92,7 +90,7 @@ public class ResultsConsoleActivity extends Activity {
               MeasurementTask.INVALID_PRIORITY);
           // Show user results if we there is currently a user measurement running
           if (priority == MeasurementTask.USER_PRIORITY) {
-            switchBewteenResults(showUserResults, true);
+            switchBetweenResults(true);
           }
           upgradeProgress(progress, Config.MAX_PROGRESS_BAR_VALUE);
         }
@@ -100,31 +98,25 @@ public class ResultsConsoleActivity extends Activity {
       }
     };
     this.registerReceiver(this.receiver, filter);
+    
+    getConsoleContentFromScheduler();
   }
   
   /**
-   * Change the underlying adapter for the ListView depending on the old and new value 
-   * of showUserResults. userResults is the ArraytAdapter that stores user measurement results and
-   * systemResults is the ArrayAdapter that stores system results. Depending on which one
-   * is the underlying ArrayAdapter of consoleView, we see either user or system results.
+   * Change the underlying adapter for the ListView.
    * 
-   * @param oldShowUserResults the old value of showUserResults
-   * @param newShowUserResults the new value of showUserResults
+   * @param showUserResults If true, show user results; otherwise, show system results.
    */
-  private void switchBewteenResults(boolean oldShowUserResults, boolean newShowUserResults) {
+  private void switchBetweenResults(boolean showUserResults) {
     getConsoleContentFromScheduler();
-    showUserResults = newShowUserResults;
     showUserResultButton.setChecked(showUserResults);
     showSystemResultButton.setChecked(!showUserResults);
-    // No need to update if the old and new values are the same
-    if (oldShowUserResults != newShowUserResults) {
-      if (newShowUserResults) {
-        Logger.d("switchBetweenResults: showing " + userResults.getCount() + " user results");
-        this.consoleView.setAdapter(userResults);
-      } else {
-        Logger.d("switchBetweenResults: showing " + systemResults.getCount() + " system results");
-        this.consoleView.setAdapter(systemResults);
-      }
+    if (showUserResults) {
+      Logger.d("switchBetweenResults: showing " + userResults.getCount() + " user results");
+      this.consoleView.setAdapter(userResults);
+    } else {
+      Logger.d("switchBetweenResults: showing " + systemResults.getCount() + " system results");
+      this.consoleView.setAdapter(systemResults);
     }
   }
   
@@ -151,24 +143,18 @@ public class ResultsConsoleActivity extends Activity {
     this.unregisterReceiver(this.receiver);
   }
   
-  private void getConsoleContentFromScheduler() {
+  private synchronized void getConsoleContentFromScheduler() {
     Logger.d("ResultsConsoleActivity.getConsoleContentFromScheduler called");
     if (scheduler == null) {
       SpeedometerApp parent = (SpeedometerApp) getParent();
       scheduler = parent.getScheduler();
     }
     if (scheduler != null) {
-      userResults = scheduler.userResults;
-      systemResults = scheduler.systemResults;
-      if (showUserResults) {
-        Logger.d("getConsoleContentFromScheduler: showing " + userResults.getCount() +
-            " user results");
-        consoleView.setAdapter(userResults);
-      } else {
-        Logger.d("getConsoleContentFromScheduler: showing " + systemResults.getCount() +
-            " system results");
-        consoleView.setAdapter(systemResults);
-      }
+      // In case scheduler has not started yet.
+      userResults = new ArrayAdapter<String>(this, R.layout.list_item,
+          scheduler.getUserResults());
+      systemResults = new ArrayAdapter<String>(this, R.layout.list_item,
+          scheduler.getSystemResults());
     }
   }
 }
