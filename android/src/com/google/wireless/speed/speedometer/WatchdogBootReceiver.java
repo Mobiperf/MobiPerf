@@ -23,7 +23,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 /**
- * A broadcast receiver that starts SpeedomterApp upon the BOOT_COMPLETED event.
+ * A broadcast receiver that starts the Speedometer service upon the BOOT_COMPLETED event.
  *
  * @author wenjiezeng@google.com (Wenjie Zeng)
  *
@@ -38,7 +38,7 @@ public class WatchdogBootReceiver extends BroadcastReceiver {
     
     if (prefs.getBoolean(context.getString(R.string.startOnBootPrefKey),
         Config.DEFAULT_START_ON_BOOT)) {
-      Logger.i("Starting MeasurementScheduler from watch dog");
+      Logger.i("Starting MeasurementScheduler from watchdog");
       context.startService(serviceIntent);
     }
   }

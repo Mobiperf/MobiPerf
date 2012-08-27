@@ -235,6 +235,11 @@ public class MeasurementScheduler extends Service {
    * Perform a checkin operation.
    */
   public void handleCheckin(boolean force) {
+    if (!userConsented()) {
+      Logger.i("Skipping checkin - User has not consented");
+      return;
+    }
+    
     if (!force && isPauseRequested()) {
       sendStringMsg("Skipping checkin - app is paused");
       return;
@@ -251,6 +256,11 @@ public class MeasurementScheduler extends Service {
   }
   
   private void handleMeasurement() {
+    if (!userConsented()) {
+      Logger.i("Skipping measurement - User has not consented");
+      return;
+    }
+    
     try {
       MeasurementTask task = taskQueue.peek();
       // Process the head of the queue.
@@ -524,7 +534,8 @@ public class MeasurementScheduler extends Service {
   }
   
   private void updateFromPreference() {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     try {
       powerManager.setBatteryThresh(Integer.parseInt(
           prefs.getString(getString(R.string.batteryMinThresPrefKey),
@@ -829,7 +840,8 @@ public class MeasurementScheduler extends Service {
    * Save measurement statistics to persistent storage.
    */
   private void saveStats() {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     SharedPreferences.Editor editor = prefs.edit();
     editor.putInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, completedMeasurementCnt);
     editor.putInt(Config.PREF_KEY_FAILED_MEASUREMENTS, failedMeasurementCnt);
@@ -840,16 +852,26 @@ public class MeasurementScheduler extends Service {
    * Restore measurement statistics from persistent storage.
    */
   private void restoreStats() {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     completedMeasurementCnt = prefs.getInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
     failedMeasurementCnt = prefs.getInt(Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
+  }
+  
+  private boolean userConsented() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    boolean consented = prefs.getBoolean(Config.PREF_KEY_CONSENTED, false);
+    Logger.i("userConsented returning " + consented);
+    return consented;
   }
   
   /**
    * Persists the content of the console as a JSON string
    */
   private void saveConsoleContent(ArrayAdapter<String> consoleContent, String prefKey) {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     SharedPreferences.Editor editor = prefs.edit();
 
     int length = consoleContent.getCount();
@@ -886,7 +908,8 @@ public class MeasurementScheduler extends Service {
    * Restores content for consoleContent with the key prefKey
    */
   private void restoreConsole(ArrayAdapter<String> consoleContent, String prefKey) {
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     String savedConsole = prefs.getString(prefKey, null);
     if (savedConsole != null) {
       Type listType = new TypeToken<ArrayList<String>>(){}.getType();
