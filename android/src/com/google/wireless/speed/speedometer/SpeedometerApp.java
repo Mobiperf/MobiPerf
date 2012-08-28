@@ -48,7 +48,7 @@ import java.security.Security;
  */
 public class SpeedometerApp extends TabActivity {
   
-  public static final String TAG = "Speedometer";
+  public static final String TAG = "MobiPerf";
   
   private boolean userConsented = false;
   
