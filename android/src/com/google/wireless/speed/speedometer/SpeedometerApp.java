@@ -64,6 +64,7 @@ public class SpeedometerApp extends TabActivity {
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName className, IBinder service) {
+      Logger.d("onServiceConnected called");
       // We've bound to LocalService, cast the IBinder and get LocalService
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
@@ -71,12 +72,13 @@ public class SpeedometerApp extends TabActivity {
       isBound = true;
       isBindingToService = false;
       initializeStatusBar();
-      SpeedometerApp.this.sendBroadcast(new UpdateIntent("", 
+      SpeedometerApp.this.sendBroadcast(new UpdateIntent("",
           UpdateIntent.SCHEDULER_CONNECTED_ACTION));
     }
 
     @Override
     public void onServiceDisconnected(ComponentName arg0) {
+      Logger.d("onServiceDisconnected called");
       isBound = false;
     }
   };
@@ -116,7 +118,7 @@ public class SpeedometerApp extends TabActivity {
     return true;
   }
   
-  /** Adjust menu items depending on system state. Called every time the 
+  /** Adjust menu items depending on system state. Called every time the
    *  menu pops up */
   @Override
   public boolean onPrepareOptionsMenu (Menu menu) {
@@ -139,7 +141,7 @@ public class SpeedometerApp extends TabActivity {
         }
         return true;
       case R.id.menuQuit:
-        Logger.i("User requests exit. Quiting the app");
+        Logger.i("User requests exit. Quitting the app");
         quitApp();
         return true;
       case R.id.menuSettings:
@@ -163,6 +165,7 @@ public class SpeedometerApp extends TabActivity {
     
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    Logger.d("onCreate called");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     
@@ -179,7 +182,7 @@ public class SpeedometerApp extends TabActivity {
     System.setProperty("networkaddress.cache.ttl", "0");
     System.setProperty("networkaddress.cache.negative.ttl", "0");
     Security.setProperty("networkaddress.cache.ttl", "0");
-    Security.setProperty("networkaddress.cache.negative.ttl", "0"); 
+    Security.setProperty("networkaddress.cache.negative.ttl", "0");
 
     Resources res = getResources(); // Resource object to get Drawables
     tabHost = getTabHost();  // The activity TabHost
@@ -236,6 +239,7 @@ public class SpeedometerApp extends TabActivity {
   }
   
   protected Dialog onCreateDialog(int id) {
+    Logger.d("onCreateDialog called");
     switch(id) {
     case DIALOG_CONSENT:
       return showConsentDialog();
@@ -308,6 +312,7 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStart() {
+    Logger.d("onStart called");
     // Bind to the scheduler service for only once during the lifetime of the activity
     bindToService();
     super.onStart();
@@ -315,6 +320,7 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStop() {
+    Logger.d("onStop called");
     super.onStop();
     if (isBound) {
       unbindService(serviceConn);
@@ -324,11 +330,13 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onDestroy() {
+    Logger.d("onDestroy called");
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
   }
 
   private void quitApp() {
+    Logger.d("quitApp called");
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;

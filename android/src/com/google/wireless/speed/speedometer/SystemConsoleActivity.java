@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 /**
@@ -87,7 +88,8 @@ public class SystemConsoleActivity extends Activity {
   
   private void updateConsole() {
     if (scheduler != null) {
-      consoleView.setAdapter(scheduler.systemConsole);
+      consoleView.setAdapter(new ArrayAdapter<String>(
+          this, R.layout.list_item, scheduler.getSystemConsole()));
     }
   }
 }

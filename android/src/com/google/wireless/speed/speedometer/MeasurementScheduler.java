@@ -43,6 +43,7 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
@@ -106,12 +107,9 @@ public class MeasurementScheduler extends Service {
   private int completedMeasurementCnt = 0;
   private int failedMeasurementCnt = 0;
   
-  /** The ArrayAdapter that stores the results of user measurements. Persisted upon app exit. */
-  public ArrayAdapter<String> userResults;
-  /** The ArrayAdapter that stores the results of system measurements. Persisted upon app exit. */
-  public ArrayAdapter<String> systemResults;
-  /** The ArrayAdapter that stores the content of the system console. Persisted upon app exit. */
-  public ArrayAdapter<String> systemConsole;
+  private ArrayList<String> userResults;
+  private ArrayList<String> systemResults;
+  private ArrayList<String> systemConsole;
   
   private PhoneUtils phoneUtils;
   /**
@@ -128,12 +126,14 @@ public class MeasurementScheduler extends Service {
    */
   @Override
   public IBinder onBind(Intent intent) {
+    Logger.d("Service onBind called");
     return this.binder;
   }
   
   // Service objects are by nature singletons enforced by Android
   @Override
   public void onCreate() {
+    Logger.d("Service onCreate called");
     PhoneUtils.setGlobalContext(this.getApplicationContext());
     phoneUtils = PhoneUtils.getPhoneUtils();
     phoneUtils.registerSignalStrengthListener();
@@ -155,6 +155,9 @@ public class MeasurementScheduler extends Service {
     this.notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     this.alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
     this.powerManager = new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
+    
+    restoreState();
+    
     // Register activity specific BroadcastReceiver here    
     IntentFilter filter = new IntentFilter();
     filter.addAction(UpdateIntent.PREFERENCE_ACTION);
@@ -196,10 +199,6 @@ public class MeasurementScheduler extends Service {
       }
     };
     this.registerReceiver(broadcastReceiver, filter);
-    
-    restoreStats();
-    initializeConsoles();
-    
     // TODO(mdw): Make this a user-selectable option
     //startSpeedomterInForeGround();
   }
@@ -213,7 +212,8 @@ public class MeasurementScheduler extends Service {
    * in the foreground, preventing it from being killed in low-memory situations.
    */
   @SuppressWarnings("unused")
-  private void startSpeedomterInForeGround() {
+  private void startSpeedometerInForeGround() {
+    Logger.d("Service startSpeedometerInForeGround called");
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
     PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
@@ -316,6 +316,7 @@ public class MeasurementScheduler extends Service {
       Logger.e("Exception when handling measurements", e);
       sendStringMsg("Exception running task: " + e);
     }
+    persistState();
   }
   
   /** Sets the current task being run. In the current implementation, the
@@ -357,11 +358,12 @@ public class MeasurementScheduler extends Service {
   
   @Override 
   public int onStartCommand(Intent intent, int flags, int startId)  {
+    Logger.d("Service onStartCommand called, isSchedulerStarted = " + isSchedulerStarted);
     // Start up the thread running the service. Using one single thread for all requests
     Logger.i("starting scheduler");
     sendStringMsg("Scheduler starting");
     if (!isSchedulerStarted) {
-      restoreStats();
+      restoreState();
       updateFromPreference();
       this.resume();
       /* There is no onStop() for services. The service is only stopped when the user exits the
@@ -373,6 +375,7 @@ public class MeasurementScheduler extends Service {
   
   @Override
   public void onDestroy() {
+    Logger.d("Service onDestroy called");
     super.onDestroy();
     cleanUp();
   }
@@ -426,6 +429,7 @@ public class MeasurementScheduler extends Service {
    * Prevents new tasks from being scheduled. Started task will still run to finish. 
    */
   public synchronized void pause() {
+    Logger.d("Service pause called");
     sendStringMsg("Scheduler pausing");
     this.pauseRequested = true;
     updateStatus();
@@ -433,6 +437,7 @@ public class MeasurementScheduler extends Service {
   
   /** Enables new tasks to be scheduled */
   public synchronized void resume() {
+    Logger.d("Service resume called");
     sendStringMsg("Scheduler resuming");
     this.pauseRequested = false;
     updateStatus(); 
@@ -534,6 +539,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private void updateFromPreference() {
+    Logger.d("Service updateFromPreference called");
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
         getApplicationContext());
     try {
@@ -564,6 +570,7 @@ public class MeasurementScheduler extends Service {
   }
   
   private synchronized void cleanUp() {
+    Logger.d("Service cleanUp called");
     this.taskQueue.clear();
     
     if (this.currentTask != null) {
@@ -576,7 +583,7 @@ public class MeasurementScheduler extends Service {
     this.checkin.shutDown();
 
     this.unregisterReceiver(broadcastReceiver);
-    Logger.i("canceling pending intents");
+    Logger.d("canceling pending intents");
 
     if (checkinIntentSender != null) {
       checkinIntentSender.cancel();
@@ -590,15 +597,9 @@ public class MeasurementScheduler extends Service {
       measurementIntentSender.cancel();
       alarmManager.cancel(measurementIntentSender);
     }
-    
+    persistState();
     this.notifyAll();
     phoneUtils.shutDown();
-    
-    saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
-    saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
-    saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
-    saveStats();
-    
     Logger.i("Shut down all executors and stopping service");
   }
   
@@ -708,6 +709,7 @@ public class MeasurementScheduler extends Service {
       Logger.i("checking Speedometer service for new tasks");
       lastCheckinTime = Calendar.getInstance();
       try {
+        persistState();
         uploadResults();
         getTasksFromServer();
         // Also reset checkin if we get a success
@@ -831,10 +833,32 @@ public class MeasurementScheduler extends Service {
         broadcastMeasurementEnd(result);
         PhoneUtils.getPhoneUtils().releaseWakeLock();
         sendStringMsg("Done running:\n" + realTask.toString());
+        persistState();
       }
       return result;
     }
   }
+  
+  /**
+   * Persist service state to prefs.
+   */
+  private synchronized void persistState() {
+    Logger.d("Service persistState called");
+    saveConsoleContent(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    saveConsoleContent(userResults, Config.PREF_KEY_USER_RESULTS);
+    saveConsoleContent(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
+    saveStats();
+  }
+  
+  /**
+   * Restore service state from prefs.
+   */
+  private void restoreState() {
+    Logger.d("Service restoreState called");
+    initializeConsoles();
+    restoreStats();
+  }
+  
   
   /**
    * Save measurement statistics to persistent storage.
@@ -857,7 +881,7 @@ public class MeasurementScheduler extends Service {
     completedMeasurementCnt = prefs.getInt(Config.PREF_KEY_COMPLETED_MEASUREMENTS, 0);
     failedMeasurementCnt = prefs.getInt(Config.PREF_KEY_FAILED_MEASUREMENTS, 0);
   }
-  
+
   private boolean userConsented() {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
         getApplicationContext());
@@ -865,21 +889,23 @@ public class MeasurementScheduler extends Service {
     Logger.i("userConsented returning " + consented);
     return consented;
   }
-  
+
   /**
    * Persists the content of the console as a JSON string
    */
-  private void saveConsoleContent(ArrayAdapter<String> consoleContent, String prefKey) {
+  private void saveConsoleContent(List<String> consoleContent, String prefKey) {
+    Logger.d("Service saveConsoleContent for key " + prefKey);
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
         getApplicationContext());
     SharedPreferences.Editor editor = prefs.edit();
 
-    int length = consoleContent.getCount();
+    int length = consoleContent.size();
+    Logger.d("Saving " + length + " entries to prefKey " + prefKey);
     ArrayList<String> items = new ArrayList<String>();
     // Since we use insertToConsole later on to restore the content, we have to store them
     // in the reverse order to maintain the same look
     for (int i = length - 1; i >= 0; i--) {
-      items.add(consoleContent.getItem(i));
+      items.add(consoleContent.get(i));
     }
     Type listType = new TypeToken<ArrayList<String>>(){}.getType();
     editor.putString(prefKey, MeasurementJsonConvertor.getGsonInstance().toJson(items, listType));
@@ -890,24 +916,30 @@ public class MeasurementScheduler extends Service {
    * Restores the console content from the saved JSON string
    */
   private void initializeConsoles() {
-    userResults = new ArrayAdapter<String>(this, R.layout.list_item);
-    systemResults = new ArrayAdapter<String>(this, R.layout.list_item);
-    systemConsole = new ArrayAdapter<String>(this, R.layout.list_item);
+    Logger.d("Service initializeConsoles called");
     
+    systemResults = new ArrayList<String>();
     restoreConsole(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
+    if (systemResults.size() == 0) {
+      insertStringToConsole(systemResults, "Automatically-scheduled measurement results will " +
+      		"appear here.");
+    }
+    
+    userResults = new ArrayList<String>();
     restoreConsole(userResults, Config.PREF_KEY_USER_RESULTS);
+    if (userResults.size() == 0) {
+      insertStringToConsole(userResults, "Your measurement results will appear here.");
+    }
+    
+    systemConsole = new ArrayList<String>();
     restoreConsole(systemConsole, Config.PREF_KEY_SYSTEM_CONSOLE);
-    
-    insertStringToConsole(systemResults, "Automatically-scheduled measurement results will " +
-    		"appear here.");
-    insertStringToConsole(userResults, "Your measurement results will appear here.");
-    
   }
   
   /**
-   * Restores content for consoleContent with the key prefKey
+   * Restores content for consoleContent with the key prefKey.
    */
-  private void restoreConsole(ArrayAdapter<String> consoleContent, String prefKey) {
+  private void restoreConsole(List<String> consoleContent, String prefKey) {
+    Logger.d("Service restoreConsole for " + prefKey);
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
         getApplicationContext());
     String savedConsole = prefs.getString(prefKey, null);
@@ -916,21 +948,23 @@ public class MeasurementScheduler extends Service {
       ArrayList<String> items = MeasurementJsonConvertor.getGsonInstance().fromJson(savedConsole, 
           listType);
       if (items != null) {
+        Logger.d("Read " + items.size() + " items from prefkey " + prefKey);
         for (String item : items) {
           insertStringToConsole(consoleContent, item);
         }
+        Logger.d("Restored " + consoleContent.size() + " entries to console " + prefKey);
       }
     }
   }
 
   /**
-   * Inserts a string into the console with the latest message on top
+   * Inserts a string into the console with the latest message on top.
    */
-  private void insertStringToConsole(ArrayAdapter<String> adapter, String msg) {
+  private void insertStringToConsole(List<String> console, String msg) {
     if (msg != null) {
-      adapter.insert(msg, 0);
-      if (adapter.getCount() > Config.MAX_LIST_ITEMS) {
-        adapter.remove(adapter.getItem(adapter.getCount() - 1));
+      console.add(0, msg);
+      if (console.size() > Config.MAX_LIST_ITEMS) {
+        console.remove(console.size() - 1);
       }
     }
   }
@@ -954,5 +988,26 @@ public class MeasurementScheduler extends Service {
         insertStringToConsole(systemResults, msg);
       }
     }
+  }
+  
+  /**
+   * Return a read-only list of the user results.
+   */
+  public synchronized List<String> getUserResults() {
+    return Collections.unmodifiableList(userResults);
+  }
+  
+  /**
+   * Return a read-only list of the system results.
+   */
+  public synchronized List<String> getSystemResults() {
+    return Collections.unmodifiableList(systemResults);
+  }
+  
+  /**
+   * Return a read-only list of the system console messages.
+   */
+  public synchronized List<String> getSystemConsole() {
+    return Collections.unmodifiableList(systemConsole);
   }
 }
