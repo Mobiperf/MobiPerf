@@ -39,12 +39,6 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
-    <activity
-      android:name=".AboutActivity" 
-      android:label="@string/app_name"
-      android:launchMode="singleTask"
-      android:theme="@android:style/Theme.NoTitleBar">
-    </activity>
     <activity 
       android:name=".SystemConsoleActivity"
       android:launchMode="singleTask" 
@@ -80,5 +74,6 @@
         <category android:name="android.intent.category.HOME" />
       </intent-filter>
     </receiver>
+    <activity android:name="com.mobiperf.mobiperf.About"></activity>
   </application>
 </manifest>
