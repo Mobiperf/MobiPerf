@@ -14,7 +14,7 @@
  */
 package com.mobiperf.mobiperf;
 
-import com.google.wireless.speed.speedometer.R;
+import com.mobiperf.speedometer.R;
 
 import android.app.Activity;
 import android.content.pm.PackageInfo;
