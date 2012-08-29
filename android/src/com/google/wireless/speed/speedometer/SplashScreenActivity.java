@@ -45,8 +45,6 @@ public class SplashScreenActivity extends Activity {
       PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
       version.setText(pInfo.versionName);
     } catch (NameNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     }
     
     new Handler().postDelayed(new Runnable() {
