@@ -26,10 +26,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,7 +50,7 @@ public class SpeedometerApp extends TabActivity {
   
   public static final String TAG = "Speedometer";
   
-  private boolean consentDialogShown = false;
+  private boolean userConsented = false;
   
   private static final int DIALOG_CONSENT = 0;
   private MeasurementScheduler scheduler;
@@ -58,17 +60,11 @@ public class SpeedometerApp extends TabActivity {
   private BroadcastReceiver receiver;
   TextView statusBar, statsBar;
   
-  @Override
-  protected void onSaveInstanceState(Bundle savedInstanceState) {
-    savedInstanceState.putBoolean("consentDialogShown", consentDialogShown);
-    super.onSaveInstanceState(savedInstanceState);
-  }
-  
-  
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName className, IBinder service) {
+      Logger.d("onServiceConnected called");
       // We've bound to LocalService, cast the IBinder and get LocalService
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
@@ -76,12 +72,13 @@ public class SpeedometerApp extends TabActivity {
       isBound = true;
       isBindingToService = false;
       initializeStatusBar();
-      SpeedometerApp.this.sendBroadcast(new UpdateIntent("", 
+      SpeedometerApp.this.sendBroadcast(new UpdateIntent("",
           UpdateIntent.SCHEDULER_CONNECTED_ACTION));
     }
 
     @Override
     public void onServiceDisconnected(ComponentName arg0) {
+      Logger.d("onServiceDisconnected called");
       isBound = false;
     }
   };
@@ -121,7 +118,7 @@ public class SpeedometerApp extends TabActivity {
     return true;
   }
   
-  /** Adjust menu items depending on system state. Called every time the 
+  /** Adjust menu items depending on system state. Called every time the
    *  menu pops up */
   @Override
   public boolean onPrepareOptionsMenu (Menu menu) {
@@ -144,7 +141,7 @@ public class SpeedometerApp extends TabActivity {
         }
         return true;
       case R.id.menuQuit:
-        Logger.i("User requests exit. Quiting the app");
+        Logger.i("User requests exit. Quitting the app");
         quitApp();
         return true;
       case R.id.menuSettings:
@@ -168,17 +165,15 @@ public class SpeedometerApp extends TabActivity {
     
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    Logger.d("onCreate called");
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
-    if (savedInstanceState != null) {
-      consentDialogShown = savedInstanceState.getBoolean("consentDialogShown");
-    }
     
-    if (!consentDialogShown) {
+    restoreConsentState();
+    if (!userConsented) {
       /* Before doing anything, show the consent dialog. */
       showDialog(DIALOG_CONSENT);
-      consentDialogShown = true;
-    } 
+    }
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
@@ -187,7 +182,7 @@ public class SpeedometerApp extends TabActivity {
     System.setProperty("networkaddress.cache.ttl", "0");
     System.setProperty("networkaddress.cache.negative.ttl", "0");
     Security.setProperty("networkaddress.cache.ttl", "0");
-    Security.setProperty("networkaddress.cache.negative.ttl", "0"); 
+    Security.setProperty("networkaddress.cache.negative.ttl", "0");
 
     Resources res = getResources(); // Resource object to get Drawables
     tabHost = getTabHost();  // The activity TabHost
@@ -244,6 +239,7 @@ public class SpeedometerApp extends TabActivity {
   }
   
   protected Dialog onCreateDialog(int id) {
+    Logger.d("onCreateDialog called");
     switch(id) {
     case DIALOG_CONSENT:
       return showConsentDialog();
@@ -296,7 +292,15 @@ public class SpeedometerApp extends TabActivity {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setMessage(getString(R.string.consentDialogMsg))
            .setCancelable(false)
-           .setPositiveButton("Okay, got it", null)
+           .setPositiveButton("Okay, got it", new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                recordUserConsent();
+                // Enable auto start on boot.
+                setStartOnBoot(true);
+                // Force a checkin now since the one initiated by the scheduler was likely skipped.
+                doCheckin();
+              }
+          })
            .setNegativeButton("No thanks", new DialogInterface.OnClickListener() {
                public void onClick(DialogInterface dialog, int id) {
                  quitApp();
@@ -308,6 +312,7 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStart() {
+    Logger.d("onStart called");
     // Bind to the scheduler service for only once during the lifetime of the activity
     bindToService();
     super.onStart();
@@ -315,6 +320,7 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onStop() {
+    Logger.d("onStop called");
     super.onStop();
     if (isBound) {
       unbindService(serviceConn);
@@ -324,12 +330,13 @@ public class SpeedometerApp extends TabActivity {
   
   @Override
   protected void onDestroy() {
+    Logger.d("onDestroy called");
     super.onDestroy();
     this.unregisterReceiver(this.receiver);
   }
 
-  
   private void quitApp() {
+    Logger.d("quitApp called");
     if (isBound) {
       unbindService(serviceConn);
       isBound = false;
@@ -337,7 +344,51 @@ public class SpeedometerApp extends TabActivity {
     if (this.scheduler != null) {
       scheduler.requestStop();
     }
+    // Force consent on next restart.
+    userConsented = false;
+    saveConsentState();
+    // Disable auto start on boot.
+    setStartOnBoot(false);
+    
     this.finish();
     System.exit(0);
+  }
+  
+  private void doCheckin() {
+    if (scheduler != null) {
+      scheduler.handleCheckin(true);
+    }
+  }
+  
+  /** Set preference to indicate whether start on boot is enabled. */
+  private void setStartOnBoot(boolean startOnBoot) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putBoolean(getString(R.string.startOnBootPrefKey), startOnBoot);
+    editor.commit();
+  }
+  
+  private void recordUserConsent() {
+    userConsented = true;
+    saveConsentState();
+  }
+  
+  /** Save consent state persistent storage. */
+  private void saveConsentState() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putBoolean(Config.PREF_KEY_CONSENTED, userConsented);
+    editor.commit();
+  }
+  
+  /**
+   * Restore measurement statistics from persistent storage.
+   */
+  private void restoreConsentState() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
+    userConsented = prefs.getBoolean(Config.PREF_KEY_CONSENTED, false);
   }
 }

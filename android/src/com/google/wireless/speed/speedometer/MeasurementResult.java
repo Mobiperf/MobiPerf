@@ -116,22 +116,26 @@ public class MeasurementResult {
     printer.println("IP address: " + removeQuotes(values.get("target_ip")));
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
-    float packetLoss = Float.parseFloat(values.get("packet_loss"));
-    int count = Integer.parseInt(values.get("packets_sent"));
-    printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
-        " received, " + (packetLoss * 100) + "% packet loss");
+    if (success) {
+      float packetLoss = Float.parseFloat(values.get("packet_loss"));
+      int count = Integer.parseInt(values.get("packets_sent"));
+      printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
+          " received, " + (packetLoss * 100) + "% packet loss");
     
-    float value = Float.parseFloat(values.get("mean_rtt_ms"));
-    printer.println("Mean RTT: " + String.format("%.1f", value) + " ms");
+      float value = Float.parseFloat(values.get("mean_rtt_ms"));
+      printer.println("Mean RTT: " + String.format("%.1f", value) + " ms");
     
-    value = Float.parseFloat(values.get("min_rtt_ms"));
-    printer.println("Min RTT: " + String.format("%.1f", value) + " ms");
+      value = Float.parseFloat(values.get("min_rtt_ms"));
+      printer.println("Min RTT: " + String.format("%.1f", value) + " ms");
     
-    value = Float.parseFloat(values.get("max_rtt_ms"));
-    printer.println("Max RTT: " + String.format("%.1f", value) + " ms");
+      value = Float.parseFloat(values.get("max_rtt_ms"));
+      printer.println("Max RTT: " + String.format("%.1f", value) + " ms");
     
-    value = Float.parseFloat(values.get("stddev_rtt_ms"));
-    printer.println("Std dev: " + String.format("%.1f", value) + " ms");
+      value = Float.parseFloat(values.get("stddev_rtt_ms"));
+      printer.println("Std dev: " + String.format("%.1f", value) + " ms");
+    } else {
+      printer.println("Failed");
+    }
   }
   
   private void getHttpResult(StringBuilderPrinter printer, HashMap<String, String> values) {
@@ -140,12 +144,15 @@ public class MeasurementResult {
     printer.println("URL: " + desc.url);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
-    int headerLen = Integer.parseInt(values.get("headers_len"));
-    int bodyLen = Integer.parseInt(values.get("body_len"));
-    int time = Integer.parseInt(values.get("time_ms"));
-    
-    printer.println("\nDownloaded " + (headerLen + bodyLen) + " bytes in " + time + " ms");
-    printer.println("Bandwidth: " + (headerLen + bodyLen) * 8 / time + " Kbps");
+    if (success) {
+      int headerLen = Integer.parseInt(values.get("headers_len"));
+      int bodyLen = Integer.parseInt(values.get("body_len"));
+      int time = Integer.parseInt(values.get("time_ms"));
+      printer.println("\nDownloaded " + (headerLen + bodyLen) + " bytes in " + time + " ms");
+      printer.println("Bandwidth: " + (headerLen + bodyLen) * 8 / time + " Kbps");
+    } else {
+      printer.println("Download failed, status code " + values.get("code"));
+    }
   }
   
   private void getDnsResult(StringBuilderPrinter printer, HashMap<String, String> values) {
@@ -154,13 +161,17 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
-    String ipAddress = removeQuotes(values.get("address"));
-    if (ipAddress == null) {
-      ipAddress = "Unknown";
+    if (success) {
+      String ipAddress = removeQuotes(values.get("address"));
+      if (ipAddress == null) {
+        ipAddress = "Unknown";
+      }
+      printer.println("\nAddress: " + ipAddress);
+      int time = Integer.parseInt(values.get("time_ms"));
+      printer.println("Lookup time: " + time + " ms");
+    } else {
+      printer.println("Failed");
     }
-    printer.println("\nAddress: " + ipAddress);
-    int time = Integer.parseInt(values.get("time_ms"));
-    printer.println("Lookup time: " + time + " ms");
   }
   
   private void getTracerouteResult(StringBuilderPrinter printer, HashMap<String, String> values) {
@@ -168,27 +179,32 @@ public class MeasurementResult {
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    // Manually inject a new line
-    printer.println(" ");
     
-    int hops = Integer.parseInt(values.get("num_hops"));
-    for (int i = 0; i < hops; i++) {
-      String key = "hop_" + i + "_addr_1";
-      String ipAddress = removeQuotes(values.get(key));
-      if (ipAddress == null) {
-        ipAddress = "Unknown";
-      }
-      String hopInfo = (i + 1) + " " + ipAddress;
+    if (success) {
+      // Manually inject a new line
+      printer.println(" ");
+    
+      int hops = Integer.parseInt(values.get("num_hops"));
+      for (int i = 0; i < hops; i++) {
+        String key = "hop_" + i + "_addr_1";
+        String ipAddress = removeQuotes(values.get(key));
+        if (ipAddress == null) {
+          ipAddress = "Unknown";
+        }
+        String hopInfo = (i + 1) + " " + ipAddress;
       
-      key = "hop_" + i + "_rtt_ms";
-      // The first and last character of this string are double quotes.
-      String timeStr = removeQuotes(values.get(key));
-      if (timeStr == null) {
-        timeStr = "Unknown";
-      }
+        key = "hop_" + i + "_rtt_ms";
+        // The first and last character of this string are double quotes.
+        String timeStr = removeQuotes(values.get(key));
+        if (timeStr == null) {
+          timeStr = "Unknown";
+        }
       
-      float time = Float.parseFloat(timeStr);
-      printer.println(hopInfo + "\t\t" + String.format("%.1f", time) + " ms");
+        float time = Float.parseFloat(timeStr);
+        printer.println(hopInfo + "\t\t" + String.format("%.1f", time) + " ms");
+      }
+    } else {
+      printer.println("Failed");
     }
   }
   
@@ -201,11 +217,14 @@ public class MeasurementResult {
     }
     printer.println("Target: " + desc.target);
     printer.println("IP addr: " + values.get("target_ip"));
-    printer.println("PRR: " + values.get("PRR"));
-    printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    if (success) {
+      printer.println("PRR: " + values.get("PRR"));
+      printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    } else {
+      printer.println("Failed");
+    }
   }
 
-  
   /**
    * Removes the quotes surrounding the string. If the string is less than 2 in length,
    * we returns null

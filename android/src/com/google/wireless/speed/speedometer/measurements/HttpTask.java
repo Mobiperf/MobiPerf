@@ -111,10 +111,11 @@ public class HttpTask extends MeasurementTask {
       if (!this.url.startsWith("http://") && !this.url.startsWith("https://")) {
         this.url = "http://" + this.url;
       }
-      if ((this.method = params.get("method")) == null) { 
+      
+      this.method = params.get("method");
+      if (this.method == null || this.method.isEmpty()) {
         this.method = "get";
       }
-      
       this.headers = params.get("headers");      
       this.body = params.get("body");
     }

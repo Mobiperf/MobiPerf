@@ -37,7 +37,8 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     super.onCreate(savedInstanceState);
     addPreferencesFromResource(R.xml.preference);
     
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+        getApplicationContext());
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
     
