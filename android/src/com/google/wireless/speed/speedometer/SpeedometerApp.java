@@ -48,7 +48,7 @@ import java.security.Security;
  */
 public class SpeedometerApp extends TabActivity {
   
-  public static final String TAG = "Speedometer";
+  public static final String TAG = "MobiPerf";
   
   private boolean userConsented = false;
   
@@ -151,7 +151,7 @@ public class SpeedometerApp extends TabActivity {
         return true;
       case R.id.aboutPage:
         Intent intent = new Intent(getBaseContext(),
-            AboutActivity.class);
+            com.mobiperf.mobiperf.About.class);
         startActivity(intent);
         return true;
       case R.id.menuLog:
@@ -290,7 +290,7 @@ public class SpeedometerApp extends TabActivity {
   
   private Dialog showConsentDialog() {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage(getString(R.string.consentDialogMsg))
+    builder.setMessage(getString(R.string.terms))
            .setCancelable(false)
            .setPositiveButton("Okay, got it", new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
