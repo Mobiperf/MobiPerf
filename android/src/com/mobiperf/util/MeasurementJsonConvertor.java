@@ -71,7 +71,6 @@ public class MeasurementJsonConvertor {
     dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
   }
   
-  @SuppressWarnings("unchecked")
   public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, Context context) 
       throws IllegalArgumentException {  
     try {
@@ -80,7 +79,7 @@ public class MeasurementJsonConvertor {
       Method getDescMethod = taskClass.getMethod("getDescClass");
       // The getDescClassForMeasurement() is static and takes no arguments
       Class descClass = (Class) getDescMethod.invoke(null, (Object[]) null);
-      MeasurementDesc measurementDesc = gson.fromJson(json.toString(), descClass);
+      MeasurementDesc measurementDesc = (MeasurementDesc) gson.fromJson(json.toString(), descClass);
       Object[] cstParams = {measurementDesc, context};
       Constructor<MeasurementTask> constructor = 
           taskClass.getConstructor(MeasurementDesc.class, Context.class);
