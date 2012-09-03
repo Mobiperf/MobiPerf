@@ -29,7 +29,7 @@ import shutil
 import unittest2
 from google.appengine.ext import testbed
 
-BASE_DIR = '/Users/choffnes2/workspace/Mobiperf/Mobiperf/server'
+BASE_DIR = os.path.abspath('./server')
 TEST_DATASTORE = '%s/dev_data/test.datastore' % BASE_DIR
 
 def main(sdk_path, test_path):
