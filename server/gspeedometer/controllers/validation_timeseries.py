@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Supports printing of validation time series data."""
+"""Supports printing of validation time series data."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
