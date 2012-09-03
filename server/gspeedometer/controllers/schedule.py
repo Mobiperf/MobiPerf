@@ -97,7 +97,7 @@ class Schedule(webapp.RequestHandler):
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count'] or -1
         interval = add_to_schedule_form.cleaned_data['interval']
-        thepriority = add_to_schedule_form.cleaned_data['priority']
+        priority = add_to_schedule_form.cleaned_data['priority']
 
         logging.info('Got TYPE: ' + thetype)
 
@@ -111,7 +111,7 @@ class Schedule(webapp.RequestHandler):
           task.filter = thefilter
         task.count = count
         task.interval_sec = float(interval)
-        task.priority = thepriority
+        task.priority = priority
 
         # Set up correct type-specific measurement parameters        
         for name, value in params.items():

@@ -51,11 +51,11 @@ class Measurement(webapp.RequestHandler):
       logging.info('PostMeasurement: Got %d measurements to write',
                    len(measurement_list))
       for measurement_dict in measurement_list:
-        # change device id such that it is anonymized, but preserve the TAC
+        # Change device id such that it is anonymized, but preserve the TAC.
         measurement_dict['tac'] = util.GetTypeAllocationCode(
             measurement_dict['device_id'])
-        measurement_dict['device_id'] = \
-            util.HashDeviceId(measurement_dict['device_id'])
+        measurement_dict['device_id'] = util.HashDeviceId(
+            measurement_dict['device_id'])
 
         device_info = model.DeviceInfo.get_or_insert(
             measurement_dict['device_id'])

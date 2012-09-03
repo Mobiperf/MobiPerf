@@ -42,22 +42,22 @@ class Checkin(webapp.RequestHandler):
     logging.info('Got checkin: %s', self.request.body)
 
     try:
-      # change device id such that it is anonymized, but preserve TAC
+      # Change device id such that it is anonymized, but preserve TAC.
       checkin['tac'] = util.GetTypeAllocationCode(checkin['id'])
       checkin['id'] = util.HashDeviceId(checkin['id'])
-      # Extract DeviceInfo
+      # Extract DeviceInfo.
       device_id = checkin['id']
       logging.info('Checkin from device %s', device_id)
       device_info = model.DeviceInfo.get_or_insert(device_id)
 
       device_info.user = users.get_current_user()
-      # Don't want the embedded properties in the device_info structure
+      # Don't want the embedded properties in the device_info structure.
       device_info_dict = dict(checkin)
       del device_info_dict['properties']
       util.ConvertFromDict(device_info, device_info_dict)
       device_info.put()
 
-      # Extract DeviceProperties
+      # Extract DeviceProperties.
       device_properties = model.DeviceProperties(parent=device_info)
       device_properties.device_info = device_info
       util.ConvertFromDict(device_properties, checkin['properties'])

@@ -36,22 +36,24 @@ from __future__ import with_statement
 
 __author__ = 'gavaletz@google.com (Eric Gavaletz)'
 
-import logging
 import datetime
+
+from django.utils import simplejson as json
 
 from google.appengine.api import files
 from google.appengine.ext import webapp
 from google.appengine.runtime import DeadlineExceededError
 
-from gspeedometer import config, config_private
+from gspeedometer import config
+from gspeedometer import config_private
 from gspeedometer import model
 from gspeedometer.helpers import archive_util
 from gspeedometer.helpers import util
 
-from django.utils import simplejson as json
+import logging
 
 
-def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
+def GetMeasurementDictList(device_id, start=None, end=None, anonymize=False,
                            limit=config.QUERY_FETCH_LIMIT):
   """Retrieves device measurements from the datastore.
 
@@ -62,8 +64,8 @@ def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
     device_id: A string that matches a single device.
     start: A dataetime object for the earliest measurement.
     end: A dataetime object for the latest measurement.
-    sanitize: A boolean, will sanitize data if set to True
-    limit: An int specifying number of records to fetch
+    anonymize: A boolean, will anonymize data if set to True.
+    limit: An int specifying number of records to fetch.
 
   Returns:
     A list of dictionary items representing the measurement entities from the
@@ -76,10 +78,10 @@ def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
   exclude_fields = None
   include_fields = None
   location_precision = None
-  if sanitize:
-    # set up include/exclude fields for sanitization
-    exclude_fields = config.SANITIZE_FIELDS
-    location_precision = config.SANITIZE_LOCATION_PRECISION
+  if anonymize:
+    # set up include/exclude fields for anonymization.
+    exclude_fields = config.ANONYMIZE_FIELDS
+    location_precision = config.ANONYMIZE_LOCATION_PRECISION
 
   measurement_q = model.Measurement.all()
   if device_id:
@@ -90,7 +92,8 @@ def GetMeasurementDictList(device_id, start=None, end=None, sanitize=False,
     measurement_q.filter('timestamp <', end)
   measurement_q.order('timestamp')
   measurement_list = measurement_q.fetch(limit)
-  #NOTE: see TODO(gavaletz) in helpers/util.py:MeasurementListToDictList    
+  #NOTE: this is inefficient and should iterate over a query instead of a list.
+  #There is a TODO for this in util.MeasurementListToDictList
   return util.MeasurementListToDictList(measurement_list, include_fields,
                                         exclude_fields, location_precision)
 
@@ -105,9 +108,9 @@ def ParametersToFileNameBase(device_id=None, start_time=None, end_time=None):
     Args:
       device_id: A string key for a device in the datastore.
       start_time: A string with the timestamp for the earliest measurement
-          (microseconds UTC)
+          (microseconds UTC).
       end_time: A string with the timestamp for the latest measurement
-          (microseconds UTC)
+          (microseconds UTC).
 
     Returns:
       A name that is suitable for describing the contents of the file based on
@@ -149,8 +152,8 @@ class Archive(webapp.RequestHandler):
 
     URL Args:
       device_id: A string key for a device in the datastore.
-      start_time: The timestamp for the earliest measurement (microseconds UTC)
-      end_time: The timestamp for the latest measurement (microseconds UTC)
+      start_time: The timestamp for the earliest measurement (microseconds UTC).
+      end_time: The timestamp for the latest measurement (microseconds UTC).
 
     All of the URL Args are optional and in the case where none are given no
     restrictions are assumed and all the data is returned.  Since these
@@ -171,7 +174,7 @@ class Archive(webapp.RequestHandler):
     device_id = self.request.get('device_id')
     start_time = self.request.get('start_time')
     end_time = self.request.get('end_time')
-    sanitize = self.request.get('sanitize')
+    anonymize = self.request.get('anonymize')
     limit = self.request.get('limit')
     if start_time:
       start = util.MicrosecondsSinceEpochToTime(int(start_time))
@@ -183,23 +186,23 @@ class Archive(webapp.RequestHandler):
     else:
       d0 = datetime.datetime.today() - datetime.timedelta(days=1)
       end = datetime.datetime(d0.year, d0.month, d0.day, 23, 59, 59, 999999)
-    sanitize = not not sanitize
-    # use limit if specified, otherwise use default limit
+    anonymize = not not anonymize
+    # Use limit if specified, otherwise use default limit
     if limit is None:
       limit = int(limit)
     else:
       limit = config.QUERY_FETCH_LIMIT_LARGE
 
-    # Get data based on parameters
-    model_list = GetMeasurementDictList(device_id, start, end, sanitize, limit)
+    # Get data based on parameters.
+    model_list = GetMeasurementDictList(device_id, start, end, anonymize, limit)
 
-    # Serialize the data
+    # Serialize the data.
     data = {'Measurement': json.dumps(model_list)}
 
-    # Generate directory/file name based on parameters
+    # Generate directory/file name based on parameters.
     archive_dir = ParametersToFileNameBase(device_id, start, end)
 
-    # For some reason there was a problem with Unicode chars in the request
+    # For some reason there was a problem with Unicode chars in the request.
     archive_dir = archive_dir.encode('ascii', 'ignore')
 
     #NOTE: This is a multiple return.
@@ -262,11 +265,11 @@ class Archive(webapp.RequestHandler):
     try:
       archive_dir, archive_data = self._Archive()
 
-      sanitize = self.request.get('sanitize')
-      sanitize = not not sanitize
+      anonymize = self.request.get('anonymize')
+      anonymize = not not anonymize
 
       # Create the file
-      if not sanitize:
+      if not anonymize:
         bucket = config_private.ARCHIVE_GS_BUCKET
         acl = config_private.ARCHIVE_GS_ACL
       else:

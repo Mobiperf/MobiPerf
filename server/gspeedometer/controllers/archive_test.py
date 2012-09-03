@@ -27,7 +27,7 @@ from gspeedometer.controllers import archive
 
 class ArchiveTest(unittest2.TestCase):
   """Tests for controllers/archive.py."""
-  
+
   START = '1332979200000000'
   END = '1333065600000000'
   DEVICE = '351863040021202'
@@ -65,16 +65,16 @@ class ArchiveTest(unittest2.TestCase):
         end_time=ArchiveTest.END, device_id=ArchiveTest.DEVICE)
     self.assertEqual(gen_base, ArchiveTest.FN_BASE_SED)
 
-  def testSanitizeFieldsRespected(self):
-    """ Test whether data sanitization is happening properly """
+  def testAnonymizeFieldsRespected(self):
+    """Test whether data anonymization is happening properly."""
     # Tests:
-    # 1) fields to sanitize haven't changed
-    sanitize_fields = ["user", "ip_address", "id"]
-    self.assertEqual(sanitize_fields, config.SANITIZE_FIELDS,
-                     'Sanitize fields do not match')
-    
-    # 2) fields to sanitize don't appear in output
-    # get data to find range of time to test
+    # 1) Fields to anonymize haven't changed.
+    anonymize_fields = ['user', 'ip_address', 'id']
+    self.assertEqual(anonymize_fields, config.ANONYMIZE_FIELDS,
+                     'Anonymize fields do not match')
+
+    # 2) Fields to anonymize don't appear in output.
+    # Get data to find range of time to test.
     query = model.Measurement.all()
     results = query.fetch(100)
     self.assertTrue(len(results) > 0, 'Empty dataset')
@@ -85,33 +85,37 @@ class ArchiveTest(unittest2.TestCase):
         start_time = measurement.timestamp
       if not end_time or end_time < measurement.timestamp:
         end_time = measurement.timestamp
-        
-    dictlist = archive.GetMeasurementDictList(None, start_time, end_time, True)
+
+    dictlist = archive.GetMeasurementDictList(None, start_time, end_time,
+                                              sanitize=True)
     self.assertTrue(len(results) > 0, 'Empty dictlist')
-    # check for fields being stripped
+    # Check for fields being stripped.
     for m in dictlist:
-      self._CheckForKeyNotPresent(m, Set(sanitize_fields))
-        
-    # 3) location precision is chopped properly
+      self._CheckForKeyNotPresent(m, Set(anonymize_fields))
+
+    # 3) Location precision is chopped properly.
     for m in dictlist:
       self._CheckForGeoResolution(m, Set(['latitude', 'longitude']))
-    
+
+    # TODO(drchoffnes): Add test where anonymize=False and test that fields
+    # are all present.
+
   def _CheckForKeyNotPresent(self, dict_to_check, keys, parent=None):
-    """ Fails assertion check if dict_to_check has a key specified in keys """
+    """Fails assertion check if dict_to_check has a key specified in keys."""
     for key, value in dict_to_check.iteritems():
       if parent and parent != 'task':
-        self.assertFalse(key in keys,
+        self.assertNotIn(key, keys,
             'Key %s found in dict (value: %s)' % (key, value))
       if isinstance(value , dict):
-        self._CheckForKeyNotPresent(value, keys, key) 
-      
+        self._CheckForKeyNotPresent(value, keys, key)
+
   def _CheckForGeoResolution(self, dict_to_check, keys):
-    """ Fails assertion check if dict_to_check has a key specified in keys """
+    """Fails assertion check if dict_to_check has a key specified in keys."""
     for key, value in dict_to_check.iteritems():
       if key in keys:
         self.assertAlmostEqual(float(value),
-            int(config.SANITIZE_LOCATION_PRECISION * float(value)) / 
-            float(config.SANITIZE_LOCATION_PRECISION), 5,
+            int(config.ANONYMIZE_LOCATION_PRECISION * float(value)) /
+            float(config.ANONYMIZE_LOCATION_PRECISION), 5,
             'Location precision off %d' % float(value))
       if isinstance(value , dict):
-        self._CheckForGeoResolution(value, keys) 
+        self._CheckForGeoResolution(value, keys)

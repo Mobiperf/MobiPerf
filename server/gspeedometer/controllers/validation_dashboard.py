@@ -68,7 +68,7 @@ class Dashboard(webapp.RequestHandler):
     else:
       limit = 1000
 
-    # TODO(drc): Incorporate date limits
+    # TODO(drc): Incorporate date limits.
     time_to_type_to_cnt = SortedDict()
 
     # group by time

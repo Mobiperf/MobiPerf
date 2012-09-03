@@ -13,27 +13,22 @@
 # limitations under the License.
 #!/usr/bin/python2.4
 #
-import os
-import calendar
 
 """Utility functions for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
-import cgi
-import datetime
-import logging
-import random
-import sys
-import time
-import hashlib
 import base64
+import datetime
+from django.utils import simplejson as json
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-from django.utils import simplejson as json
 from gspeedometer import config_private
+import hashlib
+import logging
+import time
 
 def StringToTime(thestr):
   """Convert an ISO8601 timestring into a datetime object."""
@@ -250,16 +245,16 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
   return output
 
 def GetTypeAllocationCode(imei):
-  """ Returns the 'type allocation code' (TAC) from the IMEI."""
+  """Returns the 'type allocation code' (TAC) from the IMEI."""
   return imei[0:8]
 
 def HashDeviceId(imei):
-  """ Returns a salted hash of the unique portion of IMEI """
-  # unique portion of IMEI starts at index 8
+  """Returns a salted hash of the unique portion of IMEI."""
+  # Unique portion of IMEI starts at index 8.
   rest = imei[8:]
-  # add salt, get hash
+  # Add salt, get hash.
   salted = config_private.IMEI_SALT[0:16] + rest + config_private.IMEI_SALT[16:]
   m = hashlib.md5()
   m.update(salted)
-  # base64 encoding to save space
+  # Base64 encoding to save space.
   return base64.b64encode(m.digest(), '._').strip('=')

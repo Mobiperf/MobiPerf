@@ -67,6 +67,6 @@ ARCHIVE_CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
 ARCHIVE_GS_BUCKET_PUBLIC = 'openmobiledata_public'
 ARCHIVE_GS_ACL_PUBLIC = 'public-read'
 
-# Archive sanitization settings
-SANITIZE_FIELDS = ["user", "ip_address", "id"] # fields to remove from data
-SANITIZE_LOCATION_PRECISION = 100 # number of sig figs is log(this)
+# Archive anonymization settings
+ANONYMIZE_FIELDS = ["user", "ip_address", "id"] # fields to remove from data
+ANONYMIZE_LOCATION_PRECISION = 100 # number of sig figs is log(this)

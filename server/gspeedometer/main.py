@@ -51,10 +51,6 @@ m.connect('/',
           controller='home:Home',
           action='Dashboard')
 
-m.connect('/help',
-          controller='help:Help',
-          action='Help')
-
 m.connect('/about',
           controller='about:About',
           action='About')
@@ -144,13 +140,13 @@ m.connect('/admin/archive/cron',
           controller='archive:Archive',
           action='ArchiveToGoogleStorage')
 
-# for backend instance, give it something that won't 
-# return a 500 error
+# For backend instance, give it something that won't 
+# return a 500 error.
 m.connect('/_ah/start',
           controller='about:About',
           action='About')
 
-application = wsgi.WSGIApplication(m, debug=True)
+application = wsgi.WSGIApplication(m, debug=False)
 
 
 def real_main():

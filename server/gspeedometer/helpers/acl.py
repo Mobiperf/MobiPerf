@@ -50,8 +50,6 @@ def UserIsAnonymousAdmin():
     return True
   return False
 
-
-
 def UserIsScheduleAdmin():
   """Whether current user is a schedule admin."""
   user = users.get_current_user()
