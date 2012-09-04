@@ -87,7 +87,7 @@ class ArchiveTest(unittest2.TestCase):
         end_time = measurement.timestamp
 
     dictlist = archive.GetMeasurementDictList(None, start_time, end_time,
-                                              sanitize=True)
+                                              anonymize=True)
     self.assertTrue(len(results) > 0, 'Empty dictlist')
     # Check for fields being stripped.
     for m in dictlist:
@@ -97,8 +97,48 @@ class ArchiveTest(unittest2.TestCase):
     for m in dictlist:
       self._CheckForGeoResolution(m, Set(['latitude', 'longitude']))
 
-    # TODO(drchoffnes): Add test where anonymize=False and test that fields
-    # are all present.
+  def testRawDataExistsWhenNotAnonymizing(self):
+    """Test whether raw data is fetched properly."""
+    # Get data to find range of time to test.
+    query = model.Measurement.all()
+    results = query.fetch(100)
+    self.assertTrue(len(results) > 0, 'Empty dataset')
+    start_time = None
+    end_time = None
+    for measurement in results:
+      if not start_time or start_time > measurement.timestamp:
+        start_time = measurement.timestamp
+      if not end_time or end_time < measurement.timestamp:
+        end_time = measurement.timestamp
+
+    dictlist = archive.GetMeasurementDictList(None, start_time, end_time,
+                                              anonymize=False)
+    self.assertTrue(len(results) > 0, 'Empty dictlist')
+    # Check for fields being present.
+    # NOTE: Currently only the id is guaranteed to be in a data item. IP 
+    # addresses are stored only by measurement-specific object (and not all of 
+    # them), while user account info is NEVER retrieved by archive methods).
+    anonymize_fields = Set(['id'])
+    for m in dictlist:
+      found_fields = self._CheckForKeyPresent(m, anonymize_fields, Set())
+      self.assertSetEqual(anonymize_fields, found_fields,
+          'Raw data not present in dict %s\n%s' % (m, found_fields))
+
+  def _CheckForKeyPresent(self, dict_to_check, keys, keys_found, parent=None):
+    """Fails assertion check if dict_to_check does not have a key 
+       specified in keys.
+       
+       Returns the set of keys found in the measurement dict.
+    """
+    for key, value in dict_to_check.iteritems():
+      if key in keys:
+        keys_found.add(key)
+      if keys_found == keys:
+        return keys_found
+      if isinstance(value , dict):
+        keys_found |= self._CheckForKeyPresent(value, keys, keys_found, parent)
+    return keys_found
+
 
   def _CheckForKeyNotPresent(self, dict_to_check, keys, parent=None):
     """Fails assertion check if dict_to_check has a key specified in keys."""
@@ -107,10 +147,12 @@ class ArchiveTest(unittest2.TestCase):
         self.assertNotIn(key, keys,
             'Key %s found in dict (value: %s)' % (key, value))
       if isinstance(value , dict):
-        self._CheckForKeyNotPresent(value, keys, key)
+        self._CheckForKeyNotPresent(value, keys, parent)
 
   def _CheckForGeoResolution(self, dict_to_check, keys):
-    """Fails assertion check if dict_to_check has a key specified in keys."""
+    """Fails assertion check if dict_to_check has high-resolution geographic 
+       coordinates.
+    """
     for key, value in dict_to_check.iteritems():
       if key in keys:
         self.assertAlmostEqual(float(value),
