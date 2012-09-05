@@ -24,7 +24,7 @@
       <td><a href="/device/view?device_id={{m.device_properties.device_info.id}}"
           target="_blank">{{m.device_properties.device_info.id}}</a></td>
       <td>{% if m.GetTaskID %}{{m.GetTaskID}}{% else %}Unknown{% endif %}</td>
-      <td>{{m.timestamp}}</td>
+      <td>{{m.GetTimestampInZone}}</td>
       <td>{{m.type}}</td>
       <td>{{m.success}}</td>
       <td>

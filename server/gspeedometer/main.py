@@ -44,7 +44,6 @@ from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
-
 import routes
 
 m = routes.Mapper()
@@ -52,9 +51,21 @@ m.connect('/',
           controller='home:Home',
           action='Dashboard')
 
+m.connect('/about',
+          controller='about:About',
+          action='About')
+
 m.connect('/checkin',
           controller='checkin:Checkin',
           action='Checkin')
+
+m.connect('/anonymous/checkin',
+          controller='checkin:Checkin',
+          action='Checkin')
+
+m.connect('anonymous/postmeasurement',
+          controller='measurement:Measurement',
+          action='PostMeasurement')
 
 m.connect('/device/view',
           controller='device:Device',
@@ -96,7 +107,46 @@ m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
 
-application = wsgi.WSGIApplication(m, debug=True)
+m.connect('/validation/data',
+          controller='validation:Validation',
+          action='Validate')
+
+m.connect('/validation/dashboard',
+          controller='validation_dashboard:Dashboard',
+          action='Dashboard')
+
+m.connect('/validation/dashboard/detail',
+          controller='validation_dashboard:Dashboard',
+          action='ErrorDetail')
+
+m.connect('/validation/timeseries',
+          controller='validation_timeseries:Timeseries',
+          action='Timeseries')
+
+m.connect('/validation/timeseries/data',
+          controller='validation_timeseries:Timeseries',
+          action='TimeseriesData')
+
+# Control to these handlers is controlled by the app.yaml acl lists.
+m.connect('/admin/archive/gs',
+          controller='archive:Archive',
+          action='ArchiveToGoogleStorage')
+
+m.connect('/admin/archive/file',
+          controller='archive:Archive',
+          action='ArchiveToFile')
+
+m.connect('/admin/archive/cron',
+          controller='archive:Archive',
+          action='ArchiveToGoogleStorage')
+
+# For backend instance, give it something that won't 
+# return a 500 error.
+m.connect('/_ah/start',
+          controller='about:About',
+          action='About')
+
+application = wsgi.WSGIApplication(m, debug=False)
 
 
 def real_main():

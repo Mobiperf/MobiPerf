@@ -14,15 +14,9 @@
 #!/usr/bin/python2.4
 #
 
-"""Configuration options for the Speedometer service."""
+"""Configuration options for the Mobiperf service."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
-
-# Set of users with admin privileges
-ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
-
-# Set of users with rights to administer tasks
-SCHEDULE_ADMIN_USERS = ['mdw@google.com', 'mattp@google.com']
+__author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)'
 
 NUM_PROPERTIES_IN_LIST = 5
 NUM_MEASUREMENTS_IN_LIST = 20
@@ -30,13 +24,15 @@ NUM_DEVICES_IN_LIST = 20
 
 GOOGLE_MAP_ZOOM = 15
 DEFAULT_GOOGLEMAP_ICON_IMAGE = '/static/green_location_pin.png'
-GOOGLEMAP_KEY = ('ABQIAAAAXVsx51W4RvTDuDUeIpF0qxRM6wioRijWnXUBkeVfSDD8OvINmRSa'
-                 'z2Wa7XNxJDFBqSTkzyC0aVYxYw')
+GOOGLEMAP_KEY = ('AIzaSyBGcqV5HgIdC-EXeO_pQOEBLrhz4bpRwZM')
 
 # Default viewport of map is Google's PKV office building in Seattle
 DEFAULT_MAP_CENTER = (47.6508, -122.3515)
 
 DEFAULT_MEASUREMENT_TYPE_FOR_VIEWING = 'ping'
+
+# default timezone set to PST (values are stored as UTC)
+DEFAULT_TIMEZONE = 'pst'
 
 # Amount to randomize lat/long of locations on the map
 LOCATION_FUZZ_FACTOR = 0.001
@@ -47,6 +43,8 @@ GOOGLEMAP_MARKER_LIMIT = 500
 TIMESERIES_POINT_LIMIT = 100
 # The total number of elements to fetch for a given query
 QUERY_FETCH_LIMIT = 500
+# The total number of elements to fetch for a large query
+QUERY_FETCH_LIMIT_LARGE = 100000
 # The minimum ping delay in ms that we consider 'slow'
 SLOW_PING_THRESHOLD_MS = 150
 # The minimum dns lookup delay in ms that we consider 'slow'
@@ -62,3 +60,13 @@ MAX_QUERY_INTERVAL_DAY = 31
 
 # Timespan over which we consider a device to be active
 ACTIVE_DAYS = 5
+
+# Archive Settings
+ARCHIVE_CONTENT_TYPE = 'application/zip'
+ARCHIVE_CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
+ARCHIVE_GS_BUCKET_PUBLIC = 'openmobiledata_public'
+ARCHIVE_GS_ACL_PUBLIC = 'public-read'
+
+# Archive anonymization settings
+ANONYMIZE_FIELDS = ["user", "ip_address", "id"] # fields to remove from data
+ANONYMIZE_LOCATION_PRECISION = 100 # number of sig figs is log(this)

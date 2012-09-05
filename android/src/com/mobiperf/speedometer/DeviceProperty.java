@@ -15,13 +15,12 @@
 
 package com.mobiperf.speedometer;
 
-
-
 /**
  * POJO class containing dynamic information about the device
+ * 
  * @see DeviceInfo
  * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * 
  */
 public class DeviceProperty {
 
@@ -40,15 +39,15 @@ public class DeviceProperty {
   public int rssi;
 
   public DeviceProperty(String deviceId, String appVersion, long timeStamp, String osVersion,
-      String ipAddress, double longtitude, double latitude, String locationType, 
-      String networkType, String carrier, int batteryLevel, boolean isCharging,
-      String cellInfo, int rssi) {
+      String ipAddress, double longtitude, double latitude, String locationType,
+      String networkType, String carrier, int batteryLevel, boolean isCharging, String cellInfo,
+      int rssi) {
     super();
     this.deviceId = deviceId;
     this.appVersion = appVersion;
     this.timestamp = timeStamp;
     this.osVersion = osVersion;
-    this.ipAddress = ipAddress;    
+    this.ipAddress = ipAddress;
     this.location = new GeoLocation(longtitude, latitude);
     this.locationType = locationType;
     this.networkType = networkType;
@@ -58,11 +57,11 @@ public class DeviceProperty {
     this.cellInfo = cellInfo;
     this.rssi = rssi;
   }
-  
+
   private class GeoLocation {
     private double longitude;
     private double latitude;
-    
+
     public GeoLocation(double longtitude, double latitude) {
       this.longitude = longtitude;
       this.latitude = latitude;

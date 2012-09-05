@@ -14,9 +14,9 @@
 #!/usr/bin/python2.4
 #
 
-"""Data model for the Speedometer service."""
+"""Data model for the Mobiperf service."""
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = 'mdw@google.com (Matt Welsh), gavaletz@google.com (Eric Gavaletz)'
 
 import logging
 
@@ -38,6 +38,8 @@ class DeviceInfo(db.Model):
   manufacturer = db.StringProperty()
   model = db.StringProperty()
   os = db.StringProperty()
+  # The type allocation code (TAC) that identifies the device model
+  tac = db.StringProperty()
 
   def last_update(self):
     query = self.deviceproperties_set
@@ -77,6 +79,7 @@ class DeviceInfo(db.Model):
   def GetDeviceWithAcl(cls, device_id):
     device = cls.get_by_key_name(device_id)
     if device and (acl.UserIsAdmin() or
+                  (acl.UserIsAnonymousAdmin() and device.user is None) or
                    device.user == users.get_current_user()):
       return device
     else:
@@ -88,12 +91,10 @@ class DeviceProperties(db.Model):
 
   # Reference to the corresponding DeviceInfo
   device_info = db.ReferenceProperty(DeviceInfo)
-  # Speedometer app version
+  # Mobiperf app version
   app_version = db.StringProperty()
   # Timestamp
   timestamp = db.DateTimeProperty(auto_now_add=True)
-  # IP address
-  ip_address = db.StringProperty()
   # OS version
   os_version = db.StringProperty()
   # Location
@@ -288,8 +289,56 @@ class Measurement(db.Expando):
     return 'Measurement <device %s, type %s>' % (
         self.device_properties, self.type)
 
+  def GetTimestampInZone(self, zone=config.DEFAULT_TIMEZONE):
+    if zone and util.TZINFOS[zone]:
+      return self.timestamp.replace(
+            tzinfo=util.TZINFOS['utc']).astimezone(util.TZINFOS[zone])
+    else:
+      return self.timestamp
 
 class DeviceTask(db.Model):
   """Represents a task currently assigned to a given device."""
   task = db.ReferenceProperty(Task)
   device_info = db.ReferenceProperty(DeviceInfo)
+
+class ValidationSummary(db.Model):
+  """Represents the summary of validation results for a specific 
+  measurement type during a specific time interval."""
+  # measurement type (ping, traceroute, ...)
+  measurement_type = db.StringProperty()
+  # timestamp representing the end of the observation interval
+  timestamp_start = db.DateTimeProperty()
+  # timestamp representing the end of the observation interval
+  timestamp_end = db.DateTimeProperty(auto_now_add=True)
+  # number of total records
+  record_count = db.IntegerProperty()
+  # number of errors
+  error_count = db.IntegerProperty()
+  # list of errors and counts
+  per_error_count = db.StringListProperty()
+
+  def SetErrorByType(self, error_count_dict):
+    """Takes a dict of error names to count of those 
+    errors, and sets the per_error_count string list 
+    property to those values"""
+    self.per_error_count = []
+    for error, count in error_count_dict.items():
+      self.per_error_count.append(('%s:%s' % (error, count)))
+
+  def GetErrorByType(self):
+    """Takes the string list property representation of error
+    counts and returns the dict representation."""
+    error_count_dict = dict()
+    for entry in self.per_error_count.items():
+      error, count = entry.split(":")
+      dict[error] = int(count)
+    return error_count_dict
+
+class ValidationEntry(db.Model):
+  """Represents details of an invalid measurement result."""
+  # reference to the summary it represents
+  summary = db.ReferenceProperty(ValidationSummary)
+  # reference to the measurement this came from
+  measurement = db.ReferenceProperty(Measurement)
+  # error types
+  error_types = db.StringListProperty()

@@ -3,59 +3,28 @@ mobile network measurements. This is intended for experimental use
 only.
 
 Home page:
-  https://github.com/Mobiperf/Speedometer
-
-Contact:
-  Matt Welsh <mdw@google.com>
+  https://github.com/Mobiperf/Mobiperf
 
 This code is released under the Apache 2.0 License (see LICENSE for
 details).
-
-IMPORTANT NOTE:
-
-This code was originally developed as an internal measurement tool by
-Google. We decided to open source it to support the mobile networking
-research community. As such, in its current form, the code is designed
-to work on Google's internal AppEngine infrastructure, and will need
-some work to remove the Google dependencies before it can be used more
-broadly. In particular the app checks for a "google.com" account on
-the device and the service assumes that devices and users have
-authenticated with a google.com account. These dependencies will need
-to be stripped out to make this useful outside of Google.
-
 
 How to Contribute to this Codebase
 ----------------------------------
 
 This code can be found here:
-  https://github.com/Mobiperf/Speedometer
+  https://github.com/Mobiperf/Mobiperf
 
-This is a github fork of the original Speedometer code found at Google Code:
-  https://code.google.com/p/gspeedometer
+If you wish to contribute, please read the instructions in
 
-If you wish to contribute, please clone the above project on github
-and submit a pull request.
+  docs/code-review.txt
 
-Code Reviews
-------------
-
-All pull requests on github will be subject to code review. Code reviews
-are an excellent way to ensure that any new code is designed well and
-that we can catch bugs early.
-
-All new code should adhere to the Google Style Guides:
-
-Python: http://code.google.com/p/google-styleguide/
-Java: https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
-
-to maintain consistency with internal code that we are developing and
-contributions from the open source community. Please familiarize
-yourself with this style and use it consistently any new code.
+Note that simply issuing pull requests to the Mobiperf repository
+on github will not suffice.
 
 Overview of this code
 ---------------------
 
-Speedometer consists of an Android app that collects mobile network
+Mobiperf consists of an Android app that collects mobile network
 measurements, and a data collection server, which runs on AppEngine.
 
 The Android app periodically checks in with the measurement server,
@@ -82,7 +51,7 @@ querying measurement results.
 Protocol Description
 --------------------
 
-The Speedometer app communicates with the Speedometer service using
+The Mobiperf app communicates with the Mobiperf service using
 the following protocol, using JSON-encoded payloads over HTTP POST
 methods.
 

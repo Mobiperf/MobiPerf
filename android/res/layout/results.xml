@@ -20,27 +20,33 @@
       android:id="@+id/resultFilter"
       android:layout_below="@id/progress_bar">
         <ToggleButton android:id="@+id/showUserResults"
-          android:layout_width="150dp"
+          android:layout_width="120dp"
           android:layout_height="wrap_content"
           android:layout_alignParentLeft="true"
           android:textSize="@dimen/regularTextSize"
           android:textOn="Manual"
           android:textOff="Manual"/>
         <ToggleButton android:id="@+id/showSystemResults"
-          android:layout_width="150dp"
+          android:layout_width="120dp"
           android:layout_height="wrap_content"
           android:layout_alignParentRight="true"
           android:textSize="@dimen/regularTextSize"
           android:textOn="Scheduled"
           android:textOff="Scheduled"/>
-    </RelativeLayout>      
+    </RelativeLayout>
     <ListView
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
+      android:layout_width="wrap_content"
+      android:layout_height="fill_parent"
+      android:layout_below="@+id/resultFilter"
       android:id="@+id/resultConsole"
-      android:scrollbars="vertical"
-      android:textColor="#000000"
-      android:layout_below="@id/resultFilter"/>
-      
+      android:cacheColorHint="#00000000"
+      android:textColor="#00FF00"
+      android:background="#888888"/>
+<!--  TODO(junxian): need to add back chart later for throughput/rtt (from 4GTest) related tests           
+    <LinearLayout android:id="@+id/chart"
+		android:layout_width="wrap_content"
+		android:layout_height="fill_parent"
+		android:layout_below="@+id/resultConsole"
+		android:orientation="horizontal"/>  -->
   </RelativeLayout>
 </FrameLayout>

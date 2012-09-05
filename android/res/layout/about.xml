@@ -1,8 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="500dip"
-    android:padding="6dip"
-    android:background="@android:color/black" >
+    android:padding="6dip" >
 
     <ImageView
         android:id="@+id/icon"
@@ -16,15 +15,14 @@
         android:layout_height="1000dip"
         android:layout_weight="1"
         android:orientation="vertical" >
-        
+
         <TextView
             android:id="@+id/about1"
             android:layout_width="fill_parent"
             android:layout_height="50dip"
             android:gravity="center_vertical"
             android:text="@string/aboutTitle"
-            android:textSize="25px"
-            android:textColor="@android:color/white" />
+            android:textSize="25px" />
 
         <TextView
             android:layout_width="fill_parent"
@@ -38,17 +36,10 @@
             android:maxLines="15"
             android:scrollbars="vertical"
             android:singleLine="false"
+            android:autoLink="all"
             android:text="@string/aboutText"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/secondary_text_dark_nodisable"
             android:textSize="20px" />
-        
-        <TextView 
-            android:id="@+id/about_version"
-            android:layout_width="fill_parent"
-            android:layout_height="18dip"
-            android:text=""
-            android:textColor="@android:color/white"
-            android:textSize="18px" />
 
         <TextView
             android:id="@+id/link1_view"
@@ -56,7 +47,6 @@
             android:layout_height="fill_parent"
             android:autoLink="all"
             android:text="@string/aboutContact"
-            android:textColor="@android:color/white"
             android:textSize="18px" />
     </LinearLayout>
 
