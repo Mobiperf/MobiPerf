@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+	<p>
+	<h2>Timeseries</h2>
+	<iframe z-index="-1" src="/validation/timeseries" width="100%" height="480" frameborder="0">
+	<p>Your browser does not support the iframe tag.</p>
+	</iframe>
+	</p>
+
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript">
+	google.load("jquery", "1.6.4");
+	
+	  function fetchData(url) {
+	    $.getJSON(url,
+	        setErrorDetails);
+	  }
+	
+	  function setErrorDetails(data) {
+		  var items = [];
+		  var hash = 'tabletop';
+		  
+		  $.each(data, function(key, val) {
+			  if (key == 'validation_results') {
+				  temp = '<li>' + key + ':<br><ul>';
+				  $.each(val, function(k, v){
+					  temp = temp+'<li>' + k + ':' + v + '</li>';
+				  });
+				  temp = temp + '</ul></li>';
+				  items.push(temp);
+			  } else if (key == 'details'){
+				  items.push('<li>' + key + ':<br>' + val + '</li>');
+			  } else if (key == 'hash'){
+				  hash = val
+			  }
+			  else {
+		    items.push('<li>' + key + ':' + val + '</li>');
+			  }
+		  });
+	
+		  
+	    var detail = document.getElementById('detail');
+	
+	    detail.innerHTML = '<span><ul>'+items.join('')+'</ul></span>';
+	    window.location.hash=hash;
+	  }
+	
+	</script>
+
+	{% if error_details %}
+
+  <h2>Error details</h2>
+
+	<div class="device-properties-list-section">
+	
+		<div class="modal hide" id="myModal" style="display: none;"
+			data-toggle="modal">
+			<div class="modal-header">
+				<button class="close" data-dismiss="modal">x</button>
+				<h3>Details for measurement error</h3>
+			</div>
+			<div class="modal-body" id="detail">
+				<p>Nothing to see here...</p>
+			</div>
+			<div class="modal-footer">
+				<a href="#" class="btn" data-dismiss="modal">Close</a>
+			</div>
+		</div>
+		<a name="tabletop"></a>
+		<table class="table table-bordered table-condensed">
+			<tr>
+				<th>Timestamp (UTC)</th>
+				<th>Summary</th>
+				<th>Measurement ids</th>
+			</tr>
+			{% for time, detail_dict in error_details.items %}
+			<tr>
+				<td rowspan="{{detail_dict|length}}">{{time|date:"DATE_FORMAT"}}</td>
+				{% for mtype, dict in detail_dict.items %}
+				<td>{{mtype}}: {{dict.count}}</td>
+				<td><a name='{{time|date:"Ymd"}}'></a> 
+				{% for id,parent in dict.details %} 
+				<a class="btn" data-toggle="modal" href="#myModal" onClick=
+					"fetchData('/validation/dashboard/detail?result_id={{id}}&parent={{parent}}')">
+					{{id}}</a>&nbsp;
+					{% endfor %}
+				</td>
+	
+			</tr>
+			<tr>
+			{% endfor %}
+			</tr>
+	
+			</tr>
+		{% endfor %}
+		</table>
+	</div>
+	
+	<div class="device-properties-list-section">
+		<h2>Top Errors</h2>
+		<table class="table table-bordered table-condensed">
+			<tr>
+				<th>Count</th>
+				<th>Error</th>
+			</tr>
+			{% for error in top_errors %}
+			<tr>
+				<td>{{error.1}}</td>
+				<td>{{error.0}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+
+
+{% endif %}
+
+{% endblock %}

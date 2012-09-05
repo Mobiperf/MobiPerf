@@ -15,11 +15,11 @@
 
 package com.mobiperf.speedometer;
 
-
 /**
  * POJO class containing static device information. @see{@link DeviceProperty}
+ * 
  * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * 
  */
 public class DeviceInfo {
   public String deviceId;

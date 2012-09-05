@@ -15,21 +15,19 @@
 
 package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.R;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
-import android.widget.TextView;
+
+import com.mobiperf.mobiperf.R;
 
 /**
  * The splash screen for Speedometer
+ * 
  * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * 
  */
 public class SplashScreenActivity extends Activity {
   @Override
@@ -39,21 +37,18 @@ public class SplashScreenActivity extends Activity {
     // Make sure the splash screen is shown in portrait orientation
     this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-    
-    TextView version = (TextView)findViewById(R.id.splash_version);
-    
-    try {
-      PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-      version.setText(pInfo.versionName);
-    } catch (NameNotFoundException e) {
-    }
-    
+
     new Handler().postDelayed(new Runnable() {
       @Override
       public void run() {
-        Intent intent = new Intent(SpeedometerApp.class.getName());
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        SplashScreenActivity.this.getApplication().startActivity(intent);
+        // Intent intent = new
+        // Intent(com.mobiperf.ui.HomeScreen.class.getName());
+        // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // SplashScreenActivity.this.getApplication().startActivity(intent);
+
+        Intent intent = new Intent(SplashScreenActivity.this,
+            com.mobiperf.mobiperf.MobiperfActivity.class);
+        startActivity(intent);
         SplashScreenActivity.this.finish();
       }
     }, Config.SPLASH_SCREEN_DURATION_MSEC);

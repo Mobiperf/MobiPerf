@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MobiPerf</string>
-    <string name="appContact">mobiperf@googlegroups.com</string>
-    <string name="appCopyRight">Copyright 2011 Google Inc.</string>
-    <string name="aboutApplicationTitle">Application Name</string>
-    <string name="aboutVersionTitle">Version</string>
-    <string name="aboutCheckinServerTitle">Checkin Server</string>
-    <string name="aboutContactTitle">Contact</string>
-    <string name="aboutCopyRight">Copyright</string>
-    <string name="user_agent">Linux; Android</string>
-    <string name="default_user_agent">"Mobiperf-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
     <string name="serverUrl">https://openmobiledata.appspot.com</string>
     <string name="menuQuit">Quit</string>
@@ -17,6 +8,8 @@
     <string name="pauseMessage">MobiPerf is paused.</string>
     <string name="menuResume">Resume</string>
     <string name="resumeMessage">MobiPerf is running.</string>
+    <string name="user_agent">Linux; Android</string>
+    <string name="default_user_agent">"MobiPerf-1.0 (Linux; Android)"</string>
     <string name="menuSettings">Settings</string>
     <string name="menuAbout">About</string>
     <string name="menuLog">System Log</string>
@@ -27,20 +20,20 @@
     <string name="pingTargetHint">e.g. www.google.com</string>
     <string name="pingTargetLabel">Where to ping?</string>
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
-    <string name="UDPBurstTargetLabel">Server name/IP?</string>
-    <string name="UDPBurstDirLabel">Direction:</string>
-    <string name="UDPBurstTargetHint">www.google.com</string>
     <string name="httpMethodLabel">HTTP Method</string>
     <string name="httpGetRadioText">Get</string>
     <string name="httpHeadRadioText">Head</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
-    <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
+    <string name="selectedString">is selected for authenticating with MobiPerf server.</string>
     <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
-    <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="notificationSchedulerStarted">MobiPerf service has started</string>
     <string name="notificatioContent">MobiPerf service is running</string>
+    <string name="enableBackground">Enabled background measurements</string>
+    <string name="disableBackground">Disabled background measurements</string>
+    <string name="enableGps">Enabled location sharing</string>
+    <string name="disableGps">Disabled location sharing</string>
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
     <string name="userMeasurementBusySchedulerToast">The scheduler is busy, your measurement will start shortly</string>
@@ -50,8 +43,21 @@
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="idleTextForUserConsoleStatusBar">There is no measurement running.</string>
     <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
-    <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
+    <string name="btn_network_test">Measure\nNetwork Speed</string>
+    <string name="btn_settings">Settings</string>
     <string name="aboutTitle">About</string>
-    <string name="aboutText">MobiPerf is open source software for measuring network performance on mobile platforms. You can measure network throughput and latency, as well as other useful network metrics. The collected data are used anonymously in research projects in universities and user credentials are never collected or leaked via this software.</string>
-    <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
+    <string name="aboutText">Mobiperf is a collaboration between University of Michigan, University of Washington, and Google to develop an open platform for mobile network measurements. Please see: \n\n
+                             \thttp://mobiperf.com \n\nfor more information about this project and for information on how you can contribute. \nMobiperf is licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+                             License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+                             CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</string>
+    <string name="aboutContact">Version: 1.0\n\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
+    <string name="btn_network_toggle">Switch 3G/4G</string>
+    <string name="periodtest_prompt">Select the measurement to be run periodically.</string>
+    <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
+    <string name="status_noMeasurements">No measurements running.\n</string>
+    <string name="status_batteryAbove">Battery above threshold.\n</string>
+    <string name="status_batteryBelow">Battery below threshold.\n</string>
+    <string name="status_runningMeasurement">Currently running </string>
+    <string name="status_lastCheckin">Last Checkin: </string>
+    <string name="account_anon">anonymous</string>
 </resources>

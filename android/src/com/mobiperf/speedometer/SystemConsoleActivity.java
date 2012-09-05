@@ -14,8 +14,8 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.R;
 import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
+import com.mobiperf.mobiperf.R;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -24,25 +24,25 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement
  * 
  * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * 
  */
 public class SystemConsoleActivity extends Activity {
   private ListView consoleView;
   private MeasurementScheduler scheduler = null;
   private boolean isBound = false;
-  
+
   /** Defines callbacks for service binding, passed to bindService() */
   private ServiceConnection serviceConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName className, IBinder service) {
-      // We've bound to LocalService, cast the IBinder and get LocalService
+      // We've bound to LocalService, cast the IBinder and get
+      // LocalService
       // instance
       SchedulerBinder binder = (SchedulerBinder) service;
       scheduler = binder.getService();
@@ -55,7 +55,7 @@ public class SystemConsoleActivity extends Activity {
       isBound = false;
     }
   };
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -63,13 +63,13 @@ public class SystemConsoleActivity extends Activity {
     this.consoleView = (ListView) this.findViewById(R.viewId.systemConsole);
     bindToService();
   }
-  
+
   @Override
   protected void onResume() {
     super.onResume();
     updateConsole();
   }
-  
+
   private void bindToService() {
     if (!isBound) {
       // Bind to the scheduler service if it is not bounded
@@ -77,7 +77,7 @@ public class SystemConsoleActivity extends Activity {
       bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
     }
   }
-  
+
   @Override
   protected void onDestroy() {
     super.onDestroy();
@@ -86,11 +86,10 @@ public class SystemConsoleActivity extends Activity {
       isBound = false;
     }
   }
-  
+
   private void updateConsole() {
     if (scheduler != null) {
-      consoleView.setAdapter(new ArrayAdapter<String>(
-          this, R.layout.list_item, scheduler.getSystemConsole()));
+      consoleView.setAdapter(scheduler.systemConsole);
     }
   }
 }

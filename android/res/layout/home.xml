@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:orientation="vertical">
+    
+    <LinearLayout android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        android:layout_weight="7">
+        
+        <TextView 
+            android:id="@+id/main_status"
+            android:layout_width="fill_parent" android:layout_height="fill_parent"
+            android:gravity="center_horizontal"
+            android:text=""/>
+    </LinearLayout>
+    
+<com.mobiperf.mobiperf.DashboardLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent"
+	android:layout_weight="1">
+<!--  <Button android:id="@+id/home_btn_networktest" 
+		style="@style/DashboardButton"
+		android:text="@string/btn_network_test"
+		 android:drawableTop="@drawable/home_btn_networktest" /> -->
+	
+	<Button android:id="@+id/home_btn_mtask"
+		style="@style/DashboardButton"
+		android:text="Measurement\nTask"
+		android:drawableTop="@drawable/home_btn_trafficmonitor" />
+	
+	<Button android:id="@+id/home_btn_results"
+		style="@style/DashboardButton"
+		android:text="Results"
+		android:drawableTop="@drawable/pie" />
+	
+	<Button android:id="@+id/home_btn_networktoggle"
+		style="@style/DashboardButton"
+		android:text="@string/btn_network_toggle"
+		android:drawableTop="@drawable/home_btn_networktoggle" />
+		 
+	<Button android:id="@+id/home_btn_taskqueue" 
+		style="@style/DashboardButton"
+		android:text="Task Queue" 
+		android:drawableTop="@drawable/home_btn_lock" />	
+	
+	<Button android:id="@+id/home_btn_settings" 
+		style="@style/DashboardButton"
+		android:text="@string/btn_settings" 
+		android:drawableTop="@drawable/home_btn_settings" />
+	
+	<Button android:id="@+id/home_btn_about" 
+		style="@style/DashboardButton"
+		android:text="@string/aboutTitle" 
+		android:drawableTop="@drawable/home_btn_performance" />		
+		
+
+</com.mobiperf.mobiperf.DashboardLayout>
+</LinearLayout>

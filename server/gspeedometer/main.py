@@ -44,6 +44,8 @@ from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
+from gspeedometer.controllers import validation
+from gspeedometer.controllers import validation_timeseries
 
 import routes
 
@@ -51,6 +53,14 @@ m = routes.Mapper()
 m.connect('/',
           controller='home:Home',
           action='Dashboard')
+
+m.connect('/help',
+          controller='help:Help',
+          action='Help')
+
+m.connect('/about',
+          controller='about:About',
+          action='About')
 
 m.connect('/checkin',
           controller='checkin:Checkin',
@@ -95,6 +105,35 @@ m.connect('/timeseries',
 m.connect('/timeseries/data',
           controller='timeseries:Timeseries',
           action='TimeseriesData')
+
+m.connect('/validation/data',
+          controller='validation:Validation',
+          action='Validate')
+
+m.connect('/validation/dashboard',
+          controller='validation_dashboard:Dashboard',
+          action='Dashboard')
+
+m.connect('/validation/dashboard/detail',
+          controller='validation_dashboard:Dashboard',
+          action='ErrorDetail')
+
+m.connect('/validation/timeseries',
+          controller='validation_timeseries:Timeseries',
+          action='Timeseries')
+
+m.connect('/validation/timeseries/data',
+          controller='validation_timeseries:Timeseries',
+          action='TimeseriesData')
+
+# Control to these handlers is controlled by the app.yaml acl lists.
+m.connect('/admin/archive/gs',
+          controller='archive:Archive',
+          action='ArchiveToGoogleStorage')
+
+m.connect('/admin/archive/file',
+          controller='archive:Archive',
+          action='ArchiveToFile')
 
 application = wsgi.WSGIApplication(m, debug=True)
 

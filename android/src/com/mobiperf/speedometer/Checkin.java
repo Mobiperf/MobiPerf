@@ -14,12 +14,26 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.util.MeasurementJsonConvertor;
-import com.mobiperf.util.PhoneUtils;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.content.Context;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.HttpVersion;
 import org.apache.http.client.CookieStore;
@@ -47,26 +61,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import com.mobiperf.mobiperf.R;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * Handles checkins with the SpeedometerApp server.
@@ -82,21 +85,21 @@ public class Checkin {
   private volatile Cookie authCookie = null;
   private AccountSelector accountSelector = null;
   PhoneUtils phoneUtils;
-  
+
   public Checkin(Context context, String serverUrl) {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
     this.serverUrl = serverUrl;
     sendStringMsg("Using server " + this.serverUrl);
   }
-  
+
   public Checkin(Context context) {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
     this.serverUrl = phoneUtils.getServerUrl();
     sendStringMsg("Using server " + this.serverUrl);
   }
-  
+
   /** Returns whether the service is running on a testing server. */
   public boolean isTestingServer() {
     if (phoneUtils.isTestingServer(serverUrl)) {
@@ -106,18 +109,17 @@ public class Checkin {
       return false;
     }
   }
-  
+
   /** Shuts down the checkin thread */
   public void shutDown() {
     if (this.accountSelector != null) {
       this.accountSelector.shutDown();
     }
   }
-  
+
   /** Return a fake authentication cookie for a test server instance */
   private Cookie getFakeAuthCookie() {
-    BasicClientCookie cookie = new BasicClientCookie(
-        "dev_appserver_login",
+    BasicClientCookie cookie = new BasicClientCookie("dev_appserver_login",
         "test@nobody.com:False:185804764220139124118");
     cookie.setDomain(".google.com");
     cookie.setVersion(1);
@@ -125,48 +127,48 @@ public class Checkin {
     cookie.setSecure(false);
     return cookie;
   }
-  
+
   public Date lastCheckinTime() {
     return this.lastCheckin;
   }
-  
+
   public String getServerUrl() {
     return serverUrl;
   }
-  
+
   public List<MeasurementTask> checkin() throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
     try {
       JSONObject status = new JSONObject();
       DeviceInfo info = phoneUtils.getDeviceInfo();
-      // TODO(Wenjie): There is duplicated info here, such as device ID. 
+      // TODO(Wenjie): There is duplicated info here, such as device ID.
       status.put("id", info.deviceId);
       status.put("manufacturer", info.manufacturer);
       status.put("model", info.model);
       status.put("os", info.os);
-      status.put("properties", 
+      status.put("properties",
           MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
-      
+
       Logger.d(status.toString());
       sendStringMsg("Checking in");
-      
+
       String result = speedometerServiceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
-      
+
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
       sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
-      
+
       for (int i = 0; i < jsonArray.length(); i++) {
         Logger.d("Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
         Logger.d("Value is " + json);
         if (json != null) {
           try {
-            MeasurementTask task = 
-                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
+            MeasurementTask task = MeasurementJsonConvertor.makeMeasurementTaskFromJson(json,
+                this.context);
             Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
             schedule.add(task);
           } catch (IllegalArgumentException e) {
@@ -175,10 +177,9 @@ public class Checkin {
           }
         }
       }
-      
+
       this.lastCheckin = new Date();
-      Logger.i("Checkin complete, got " + schedule.size() +
-          " new tasks");
+      Logger.i("Checkin complete, got " + schedule.size() + " new tasks");
       checkinSuccess = true;
       return schedule;
     } catch (JSONException e) {
@@ -189,15 +190,15 @@ public class Checkin {
       throw e;
     } finally {
       if (!checkinSuccess) {
-        // Failure probably due to authToken expiration. Will authenticate upon next checkin.
+        // Failure probably due to authToken expiration. Will
+        // authenticate upon next checkin.
         this.accountSelector.setAuthImmediately(true);
         this.authCookie = null;
       }
     }
   }
-  
-  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
-      throws IOException {    
+
+  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks) throws IOException {
     JSONArray resultArray = new JSONArray();
     for (MeasurementResult result : finishedTasks) {
       try {
@@ -206,12 +207,10 @@ public class Checkin {
         Logger.e("Error when adding " + result);
       }
     }
-    
+
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
-    Logger.i("TaskSchedule.uploadMeasurementResult() uploading: " + 
-        resultArray.toString());
-    String response = 
-      speedometerServiceRequest("postmeasurement", resultArray.toString());
+    Logger.i("TaskSchedule.uploadMeasurementResult() uploading: " + resultArray.toString());
+    String response = speedometerServiceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
       if (!responseJson.getBoolean("success")) {
@@ -223,17 +222,15 @@ public class Checkin {
     Logger.i("TaskSchedule.uploadMeasurementResult() complete");
     sendStringMsg("Result upload complete.");
   }
-  
-  
+
   /**
    * Used to generate SSL sockets.
    */
   class MySSLSocketFactory extends SSLSocketFactory {
     SSLContext sslContext = SSLContext.getInstance("TLS");
 
-    public MySSLSocketFactory(KeyStore truststore)
-        throws NoSuchAlgorithmException, KeyManagementException,
-        KeyStoreException, UnrecoverableKeyException {
+    public MySSLSocketFactory(KeyStore truststore) throws NoSuchAlgorithmException,
+        KeyManagementException, KeyStoreException, UnrecoverableKeyException {
       super(truststore);
 
       X509TrustManager tm = new X509TrustManager() {
@@ -258,10 +255,9 @@ public class Checkin {
     }
 
     @Override
-    public Socket createSocket(Socket socket, String host, int port,
-        boolean autoClose) throws IOException, UnknownHostException {
-      return sslContext.getSocketFactory().createSocket(socket, host, port,
-          autoClose);
+    public Socket createSocket(Socket socket, String host, int port, boolean autoClose)
+        throws IOException, UnknownHostException {
+      return sslContext.getSocketFactory().createSocket(socket, host, port, autoClose);
     }
 
     @Override
@@ -285,23 +281,21 @@ public class Checkin {
       HttpParams params = new BasicHttpParams();
       HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
       HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
-      
+
       HttpConnectionParams.setConnectionTimeout(params, POST_TIMEOUT_MILLISEC);
       HttpConnectionParams.setSoTimeout(params, POST_TIMEOUT_MILLISEC);
 
       SchemeRegistry registry = new SchemeRegistry();
-      registry.register(new Scheme("http", PlainSocketFactory
-          .getSocketFactory(), 80));
+      registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
       registry.register(new Scheme("https", sf, 443));
 
-      ClientConnectionManager ccm = new ThreadSafeClientConnManager(params,
-          registry);
+      ClientConnectionManager ccm = new ThreadSafeClientConnManager(params, registry);
       client = new DefaultHttpClient(ccm, params);
     } catch (Exception e) {
       Logger.w("Unable to create SSL HTTP client", e);
       client = new DefaultHttpClient();
     }
-    
+
     // TODO(mdw): For some reason this is not sending the cookie to the
     // test server, probably because the cookie itself is not properly
     // initialized. Below I manually set the Cookie header instead.
@@ -310,10 +304,9 @@ public class Checkin {
     client.setCookieStore(store);
     return client;
   }
-  
-  private String speedometerServiceRequest(String url, String jsonString) 
-      throws IOException {
-    
+
+  private String speedometerServiceRequest(String url, String jsonString) throws IOException {
+
     synchronized (this) {
       if (authCookie == null) {
         if (!checkGetCookie()) {
@@ -321,11 +314,11 @@ public class Checkin {
         }
       }
     }
-    
+
     HttpClient client = getNewHttpClient();
     String fullurl = serverUrl + "/" + url;
     HttpPost postMethod = new HttpPost(fullurl);
-    
+
     StringEntity se;
     try {
       se = new StringEntity(jsonString);
@@ -335,18 +328,23 @@ public class Checkin {
     postMethod.setEntity(se);
     postMethod.setHeader("Accept", "application/json");
     postMethod.setHeader("Content-type", "application/json");
-    // TODO(mdw): This should not be needed
-    postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
-
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (!selectedAccount.equals(context.getString(R.string.account_anon))) {
+      // TODO(mdw): This should not be needed
+      postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+    }
+    
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
     Logger.i("Sending request: " + fullurl);
     String result = client.execute(postMethod, responseHandler);
     return result;
   }
-  
+
   /**
-   * Initiates the process to get the authentication cookie for the user account.
-   * Returns immediately.
+   * Initiates the process to get the authentication cookie for the user account. Returns
+   * immediately.
    */
   public synchronized void getCookie() {
     if (isTestingServer()) {
@@ -357,7 +355,7 @@ public class Checkin {
     if (this.accountSelector == null) {
       accountSelector = new AccountSelector(context, this);
     }
-    
+
     try {
       // Authenticates if there are no ongoing ones
       if (accountSelector.getCheckinFuture() == null) {
@@ -371,7 +369,7 @@ public class Checkin {
       Logger.e("Unable to get auth cookie", e);
     }
   }
-  
+
   /**
    * Resets the checkin variables in AccountSelector
    * */
@@ -379,12 +377,19 @@ public class Checkin {
     accountSelector.resetCheckinFuture();
     accountSelector.setAuthImmediately(false);
   }
-  
+
   private synchronized boolean checkGetCookie() {
     if (isTestingServer()) {
       authCookie = getFakeAuthCookie();
       return true;
     }
+    
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (selectedAccount.equals(context.getString(R.string.account_anon))) {
+      return true;
+    }
+    
     Future<Cookie> getCookieFuture = accountSelector.getCheckinFuture();
     if (getCookieFuture == null) {
       Logger.i("checkGetCookie called too early");
@@ -407,9 +412,9 @@ public class Checkin {
       return false;
     }
   }
-  
+
   private void sendStringMsg(String str) {
     UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
-    context.sendBroadcast(intent);    
+    context.sendBroadcast(intent);
   }
 }
