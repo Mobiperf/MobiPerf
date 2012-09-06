@@ -84,27 +84,27 @@ def GetMeasurementDictList(device_id, start=None, end=None):
 
 
 def ParametersToFileNameBase(device_id=None, start_time=None, end_time=None):
-    """Builds a file name base based on query parameters.
+  """Builds a file name base based on query parameters.
 
-    This method builds a file name base (laking an extension, timestamp or
-    other things that may be useful to add) that describes the contents of the
-    file of directory of files.
+  This method builds a file name base (laking an extension, timestamp or
+  other things that may be useful to add) that describes the contents of the
+  file of directory of files.
 
-    Args:
-      device_id: A string key for a device in the datastore.
-      start_time: A string with the timestamp for the earliest measurement
-          (microseconds UTC)
-      end_time: A string with the timestamp for the latest measurement
-          (microseconds UTC)
+  Args:
+    device_id: A string key for a device in the datastore.
+    start_time: A string with the timestamp for the earliest measurement
+        (microseconds UTC)
+    end_time: A string with the timestamp for the latest measurement
+        (microseconds UTC)
 
-    Returns:
-      A name that is suitable for describing the contents of the file based on
-          the parameters for the request.
+  Returns:
+    A name that is suitable for describing the contents of the file based on
+        the parameters for the request.
 
-    Raises:
-       No exceptions handled here.
-       No new exceptions generated here.
-    """
+  Raises:
+     No exceptions handled here.
+     No new exceptions generated here.
+  """
   archive_dir = ''
   if start_time:
     archive_dir += 'S-%s' % start_time
