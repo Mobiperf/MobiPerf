@@ -18,15 +18,6 @@
 
 __author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)'
 
-# Set of users with admin privileges
-ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']
-
-# Set of users with rights to administer tasks
-SCHEDULE_ADMIN_USERS = ['drchoffnes@gmail.com', 'haneul0318@gmail.com']
-
-VALIDATION_EMAIL_SENDER = 'David Choffnes <drchoffnes@gmail.com>'
-VALIDATION_EMAIL_RECIPIENT = 'David Choffnes <drchoffnes@gmail.com>'
-
 NUM_PROPERTIES_IN_LIST = 5
 NUM_MEASUREMENTS_IN_LIST = 20
 NUM_DEVICES_IN_LIST = 20
@@ -52,6 +43,8 @@ GOOGLEMAP_MARKER_LIMIT = 500
 TIMESERIES_POINT_LIMIT = 100
 # The total number of elements to fetch for a given query
 QUERY_FETCH_LIMIT = 500
+# The total number of elements to fetch for a large query
+QUERY_FETCH_LIMIT_LARGE = 100000
 # The minimum ping delay in ms that we consider 'slow'
 SLOW_PING_THRESHOLD_MS = 150
 # The minimum dns lookup delay in ms that we consider 'slow'
@@ -71,5 +64,9 @@ ACTIVE_DAYS = 5
 # Archive Settings
 ARCHIVE_CONTENT_TYPE = 'application/zip'
 ARCHIVE_CONTENT_DISPOSITION_BASE = 'attachment; filename="%s.zip"'
-ARCHIVE_GS_BUCKET = 'gavaletz_mobiperf'
-ARCHIVE_GS_ACL = 'project-private'
+ARCHIVE_GS_BUCKET_PUBLIC = 'openmobiledata_public'
+ARCHIVE_GS_ACL_PUBLIC = 'public-read'
+
+# Archive anonymization settings
+ANONYMIZE_FIELDS = ["user", "ip_address", "id"] # fields to remove from data
+ANONYMIZE_LOCATION_PRECISION = 100 # number of sig figs is log(this)
