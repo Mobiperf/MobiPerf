@@ -3,9 +3,11 @@
 # Author: mdw@google.com (Matt Welsh)
 
 # This script updates the Speedometer service running on AppEngine.
+# For more information on options try "appcfg.py --help" or
+# https://developers.google.com/appengine/docs/python/tools/uploadinganapp
 
-VERSION=`./set_version.sh`
+. ./script_config.sh
 
-appcfg.py -e $USER@google.com -A google.com:speedometer-dev update .
+$PYTHON $APPCFG -e $USER_EMAIL -A $APP_ID update .
 
-echo "Try going to http://$VERSION.speedometer-dev.googleplex.com"
+echo "Try going to http://$VERSION.$APP_ID.$APP_DOMAIN"

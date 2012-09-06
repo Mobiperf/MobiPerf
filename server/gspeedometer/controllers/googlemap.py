@@ -27,7 +27,7 @@ from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
-from gspeedometer.helpers import googlemaphelper
+from gspeedometer.helpers import googlemaphelper, util
 
 
 # Workaround to mismatch between Google App Engine
