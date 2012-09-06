@@ -1,0 +1,11 @@
+cron:
+- description: daily archive of private data to GS
+  url: /admin/archive/cron
+  schedule: every day 1:00
+  timezone: GMT
+  target: anonymization
+- description: daily archive of private data to GS
+  url: /admin/archive/cron?anonymize=true
+  schedule: every day 1:05
+  timezone: GMT
+  target: anonymization
