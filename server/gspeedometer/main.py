@@ -63,7 +63,7 @@ m.connect('/anonymous/checkin',
           controller='checkin:Checkin',
           action='Checkin')
 
-m.connect('anonymous/postmeasurement',
+m.connect('/anonymous/postmeasurement',
           controller='measurement:Measurement',
           action='PostMeasurement')
 
