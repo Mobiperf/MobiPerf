@@ -1,0 +1,52 @@
+<html>
+{% if iters %}
+<script type="text/javascript">
+<!--
+window.location = "http://"+location.host+"/validation/data?use_webpage=true&iters={{iters}}&start_time={{next_start_time}}&end_time={{next_end_time}}"
+//-->
+</script>
+{% endif %}
+<body>
+	<p>Below are the validation results from {{start_time}} to {{end_time}}:</p>
+	<h2>traceroute</h2>
+	<p class="smaller">
+		Total samples: {{traceroute_count}}<br> Total invalid:
+		{{traceroute_invalid}} {% if traceroute_invalid_detail %}
+	<ul>
+		{% for value in traceroute_invalid_detail %}
+		<li>{{value|safe}}</li> {% endfor %}
+	</ul>
+	{% endif %}
+	</p>
+	<h2>ping</h2>
+	<p class="smaller">
+		Total samples: {{ping_count}}<br> Total invalid: {{ping_invalid}}
+		{% if ping_invalid_detail %}
+	<ul>
+		{% for value in ping_invalid_detail %}
+		<li>{{value|safe}}</li> {% endfor %}
+	</ul>
+	{% endif %}
+	</p>
+	<h2>http</h2>
+	<p class="smaller">
+		Total samples: {{http_count}}<br> Total invalid: {{http_invalid}}
+		{% if http_invalid_detail %}
+	<ul>
+		{% for value in http_invalid_detail %}
+		<li>{{value|safe}}</li> {% endfor %}
+	</ul>
+	{% endif %}
+	</p>
+	<h2>dns</h2>
+	<p class="smaller">
+		Total samples: {{dns_lookup_count}}<br> Total invalid:
+		{{dns_invalid}} {% if dns_invalid_detail %}
+	<ul>
+		{% for value in dns_invalid_detail %}
+		<li>{{value|safe}}</li> {% endfor %}
+	</ul>
+	{% endif %}
+	</p>
+</body>
+</html>

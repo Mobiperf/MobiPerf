@@ -13,8 +13,10 @@
 # limitations under the License.
 #!/usr/bin/python2.4
 #
+import os
+import calendar
 
-"""Utility functions for the Speedometer service."""
+"""Utility functions for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
@@ -133,3 +135,101 @@ def ConvertFromDict(model, input_dict, include_fields=None,
       method(v)
     else:
       setattr(model, k, v)
+
+class PstTzinfo(datetime.tzinfo):
+  def utcoffset(self, dt): return datetime.timedelta(hours= -7)
+  def dst(self, dt): return datetime.timedelta(0)
+  def tzname(self, dt): return 'PST+07PDT'
+  def olsen_name(self): return 'US/Pacific'
+  
+class UtcTzinfo(datetime.tzinfo):
+  def utcoffset(self, dt): return datetime.timedelta(hours=0)
+  def dst(self, dt): return datetime.timedelta(0)
+  def tzname(self, dt): return 'UTC'
+  def olsen_name(self): return 'UTC'
+
+TZINFOS = {
+  'pst': PstTzinfo(),
+  'utc': UtcTzinfo()
+}
+
+def translate(self, timestamp):
+    """Translates a UTC datetime to the env_tz query parameter's time zone.
+
+    Args:
+      timestamp: A datetime instance.
+
+    Returns:
+      A (str, datetime) tuple. The string is the code snippet used to
+      translate the timestamp, and the datetime is the result.
+    """
+    translate_to = self.request.get('translate_to', 'nothing')
+    translate_with = self.request.get('translate_with', 'astimezone()')
+    utc = TZINFOS['utc']
+
+    if translate_to == 'nothing':
+      return ('no translation', 'N/A')
+    elif translate_with == 'astimezone':
+      timestamp = timestamp.replace(tzinfo=utc)
+      return ('timestamp.astimezone(to_tzinfo)',
+              timestamp.astimezone(TZINFOS[translate_to]))   
+    else:
+      return ('invalid translation', 'invalid translation')
+
+def MeasurementListToDictList(measurement_list, include_fields=None,
+    exclude_fields=None):
+  """Converts a list of measurement entities into a list of dictionaries.
+
+  Given a list of measuerment model objects from the datastore, this method
+  will convert that list into a list of python dictionaries that can then
+  be serialized.
+
+  Args:
+    measurement_list: A list of measurement entities from the datastore.
+    include_fields: A list of attributes for the entities that should be
+        included in the serialized form.
+    exclude_fields: A list of attributes for the entities that should be
+        excluded in the serialized form.
+  
+  Returns:
+    A list of dictionaries representing the list of measurement entities.
+
+  Raises:
+    db.ReferencePropertyResolveError: handled for the cases where a device has
+        been deleted and where task has been deleted.
+    No New exceptions generated here.
+  """
+  #TODO(mdw) Unit test needed.
+  #TODO(gavaletz) make this iterate over a query instead of a list.
+  output = list()
+  for measurement in measurement_list:
+    # Need to catch case where device has been deleted
+    try:
+      unused_device_info = measurement.device_properties.device_info
+    except db.ReferencePropertyResolveError:
+      logging.exception('Device deleted for measurement %s',
+          measurement.key().id())
+      # Skip this measurement
+      continue
+
+    # Need to catch case where task has been deleted
+    try:
+      unused_task = measurement.task
+    except db.ReferencePropertyResolveError:
+      measurement.task = None
+      measurement.put()
+
+    mdict = ConvertToDict(measurement, include_fields, exclude_fields,
+        timestamps_in_microseconds=True)
+
+    # Fill in additional fields
+    mdict['id'] = str(measurement.key().id())
+    mdict['parameters'] = measurement.Params()
+    mdict['values'] = measurement.Values()
+
+    if 'task' in mdict and mdict['task'] is not None:
+      mdict['task']['id'] = str(measurement.GetTaskID())
+      mdict['task']['parameters'] = measurement.task.Params()
+
+    output.append(mdict)
+  return output

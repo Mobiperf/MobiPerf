@@ -40,6 +40,7 @@ from google.appengine.ext.webapp import template
 
 from gspeedometer import config
 from gspeedometer import model
+from gspeedometer.helpers import util
 
 
 class Device(webapp.RequestHandler):
