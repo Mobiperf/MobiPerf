@@ -109,14 +109,14 @@ public class ResultsConsoleActivity extends Activity {
    * 
    * @param showUserResults If true, show user results; otherwise, show system results.
    */
-  private void switchBetweenResults(boolean showUserResults) {
+  private synchronized void switchBetweenResults(boolean showUserResults) {
     getConsoleContentFromScheduler();
     showUserResultButton.setChecked(showUserResults);
     showSystemResultButton.setChecked(!showUserResults);
-    if (showUserResults) {
+    if (showUserResults && userResults != null) {
       Logger.d("switchBetweenResults: showing " + userResults.getCount() + " user results");
       this.consoleView.setAdapter(userResults);
-    } else {
+    } else if (!showUserResults && systemResults != null) {
       Logger.d("switchBetweenResults: showing " + systemResults.getCount() + " system results");
       this.consoleView.setAdapter(systemResults);
     }
@@ -153,6 +153,7 @@ public class ResultsConsoleActivity extends Activity {
     }
     if (scheduler != null) {
       // In case scheduler has not started yet.
+      Logger.d("Updating measurement results from thread " + Thread.currentThread().getName());
       userResults = new ArrayAdapter<String>(this, R.layout.list_item,
           scheduler.getUserResults());
       systemResults = new ArrayAdapter<String>(this, R.layout.list_item,
