@@ -63,3 +63,9 @@ indexes:
   properties:
   - name: device_id
   - name: timestamp
+
+- kind: Measurement
+  ancestor: yes
+  properties:
+  - name: timestamp
+    direction: desc

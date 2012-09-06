@@ -13,25 +13,22 @@
 # limitations under the License.
 #!/usr/bin/python2.4
 #
-import os
-import calendar
 
 """Utility functions for the Mobiperf service."""
 
 __author__ = 'mdw@google.com (Matt Welsh)'
 
-import cgi
+import base64
 import datetime
-import logging
-import random
-import sys
-import time
+from django.utils import simplejson as json
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext import db
-from django.utils import simplejson as json
-
+from gspeedometer import config_private
+import hashlib
+import logging
+import time
 
 def StringToTime(thestr):
   """Convert an ISO8601 timestring into a datetime object."""
@@ -80,11 +77,16 @@ _SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
 
 def ConvertToDict(model, include_fields=None, exclude_fields=None,
-                  timestamps_in_microseconds=False):
+                  timestamps_in_microseconds=False, location_precision=None):
   """Convert an AppEngine Model object to a Python dict ready for json dump.
 
      For each property in the model, set a value in the returned dict
      with the property name as its key.
+     
+     location_precision: if not None, it specifies how location precision. The 
+     code will multiply by this value, take the integer value and divide by 
+     this value. In other words, we're giving precision to the 
+     'location_precision'ths. If it's ten, we're giving tenths of a degree.
   """
   output = {}
   for key, prop in model.properties().iteritems():
@@ -99,12 +101,19 @@ def ConvertToDict(model, include_fields=None, exclude_fields=None,
       else:
         output[key] = TimeToString(value)
     elif isinstance(value, db.GeoPt):
-      output[key] = {'latitude': value.lat, 'longitude': value.lon}
+      if not location_precision:
+        output[key] = {'latitude': value.lat, 'longitude': value.lon}
+      else:
+        lat = int(value.lat * location_precision) / float(location_precision)
+        lon = int(value.lon * location_precision) / float(location_precision)
+        output[key] = {'latitude': lat, 'longitude': lon}
     elif isinstance(value, db.Model):
       output[key] = ConvertToDict(value, include_fields, exclude_fields,
-                                  timestamps_in_microseconds)
+                                  timestamps_in_microseconds,
+                                  location_precision)
     elif isinstance(value, users.User):
-      output[key] = value.email()
+      # we do not need nor want to store user info in the archive
+      pass
     else:
       raise ValueError('cannot encode ' + repr(prop))
   return output
@@ -141,7 +150,7 @@ class PstTzinfo(datetime.tzinfo):
   def dst(self, dt): return datetime.timedelta(0)
   def tzname(self, dt): return 'PST+07PDT'
   def olsen_name(self): return 'US/Pacific'
-  
+
 class UtcTzinfo(datetime.tzinfo):
   def utcoffset(self, dt): return datetime.timedelta(hours=0)
   def dst(self, dt): return datetime.timedelta(0)
@@ -172,12 +181,12 @@ def translate(self, timestamp):
     elif translate_with == 'astimezone':
       timestamp = timestamp.replace(tzinfo=utc)
       return ('timestamp.astimezone(to_tzinfo)',
-              timestamp.astimezone(TZINFOS[translate_to]))   
+              timestamp.astimezone(TZINFOS[translate_to]))
     else:
       return ('invalid translation', 'invalid translation')
 
 def MeasurementListToDictList(measurement_list, include_fields=None,
-    exclude_fields=None):
+    exclude_fields=None, location_precision=None):
   """Converts a list of measurement entities into a list of dictionaries.
 
   Given a list of measuerment model objects from the datastore, this method
@@ -190,6 +199,8 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
         included in the serialized form.
     exclude_fields: A list of attributes for the entities that should be
         excluded in the serialized form.
+    location_precision: Precision for location measurements. If you want 
+        n significant figures, specify 10^n for this value.
   
   Returns:
     A list of dictionaries representing the list of measurement entities.
@@ -199,7 +210,6 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
         been deleted and where task has been deleted.
     No New exceptions generated here.
   """
-  #TODO(mdw) Unit test needed.
   #TODO(gavaletz) make this iterate over a query instead of a list.
   output = list()
   for measurement in measurement_list:
@@ -220,7 +230,7 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
       measurement.put()
 
     mdict = ConvertToDict(measurement, include_fields, exclude_fields,
-        timestamps_in_microseconds=True)
+        True, location_precision)
 
     # Fill in additional fields
     mdict['id'] = str(measurement.key().id())
@@ -233,3 +243,18 @@ def MeasurementListToDictList(measurement_list, include_fields=None,
 
     output.append(mdict)
   return output
+
+def GetTypeAllocationCode(imei):
+  """Returns the 'type allocation code' (TAC) from the IMEI."""
+  return imei[0:8]
+
+def HashDeviceId(imei):
+  """Returns a salted hash of the unique portion of IMEI."""
+  # Unique portion of IMEI starts at index 8.
+  rest = imei[8:]
+  # Add salt, get hash.
+  salted = config_private.IMEI_SALT[0:16] + rest + config_private.IMEI_SALT[16:]
+  m = hashlib.md5()
+  m.update(salted)
+  # Base64 encoding to save space.
+  return base64.b64encode(m.digest(), '._').strip('=')

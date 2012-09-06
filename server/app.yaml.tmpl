@@ -23,6 +23,9 @@ handlers:
   script: gspeedometer/main.py
   login: admin
 
+- url: /anonymous/.*
+  script: gspeedometer/main.py
+
 - url: /.*
   script: gspeedometer/main.py
   login: required
