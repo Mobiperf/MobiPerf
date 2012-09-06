@@ -1,0 +1,138 @@
+How to Contribute to this Codebase
+----------------------------------
+
+The official version of Mobiperf is hosted at Github:
+
+  https://github.com/Mobiperf/Mobiperf
+
+If you wish to contribute, you must first submit any propsed changes
+for code review, following the instructions below.
+
+1) Clone the Mobiperf tree from the github repository above.
+
+In your cloned repository, be sure to add the Mobiperf repository as
+a remote branch, so you can track changes to it:
+
+   % git remote add mobiperf git://github.com/Mobiperf/MobiPerf.git
+
+2) Create a new git branch for your proposed changes (if you don't do
+   this, then code reviews will not work correctly):
+
+   % git checkout -b mybranch
+
+3) Edit your code and then do a commit to your local repository.
+
+   % [ edit some files .... ]
+
+   # The command below will commit only to your local repository, so this
+   # is safe!
+   # Be sure to use descriptive log messages for local commits since
+   # these will appear in the file revision history.
+   % git commit -a
+
+4) Keep your local branch up to date with respect to Mobiperf. For
+   this we recommend the following workflow, using "git rebase":
+
+   % git fetch mobiperf
+   % git checkout master
+   % git rebase mobiperf/master
+   % git checkout mybranch
+   % git rebase master
+
+   This ensures that your changes are rebased on top of anything that
+   has happened in the master branch since you started work.
+
+5) When you have some changes ready to review, use the "upload.py"
+   script to upload them to the code review system, described below.
+
+6) Once you have an LGTM for your changes in the code review system, you
+   can submit a pull request on github for your changes.
+
+   First be sure you have merged in any changes from upstream before
+   you send the pull request (or else your pull request can't be
+   merged). Test and re-test your code after the merge.
+
+   Push the changes in your local branch to your cloned repository on github:
+
+   % git push origin mybranch
+
+   Finally, submit a pull request on github from the "mybranch" branch
+   of your cloned repository to Mobiperf.
+
+   IMPORTANT: Include in the pull request description the link to the
+   code review issue, so we can see that the pull request has already
+   been reviewed and approved.
+
+Your pull request will then be merged by one of the Mobiperf
+developers.
+
+Code Reviews
+------------
+
+All new code must be submitted for review before it will be accepted
+for inclusion in the main line tree. Code reviews are an excellent way
+to ensure that any new code is designed well and that we can catch
+bugs early.
+
+All new code should adhere to the Google Style Guides:
+
+Python:
+http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
+
+Java:
+https://sites.google.com/a/android.com/opensource/submit-patches/code-style-guide
+
+to maintain consistency with internal code that we are developing and
+contributions from the open source community. Please familiarize
+yourself with this style and use it consistently any new code.
+
+The code review system is hosted at:
+
+ http://speedometer-reviews.appspot.com/
+
+To use it, follow the below instructions:
+
+1) Download a copy of the Rietveld upload.py script here:
+   http://codereview.appspot.com/static/upload.py
+
+2) Save this script to a local "bin" directory (on your PATH).
+
+3) Edit upload.py and change the line
+     DEFAULT_REVIEW_SERVER = "codereview.appspot.com"
+   to:
+     DEFAULT_REVIEW_SERVER = "speedometer-reviews.appspot.com"
+   (Alternately, you can pass "-s speedometer-reviews.appspot.com"
+   every time you run upload.py.)
+
+4) Be sure any edits you have made have been done in your private
+branch -- *not* in the "master" branch.
+
+5) In your GIT tree, run:
+
+  % upload.py master
+
+This will upload a patch for your changes to the code review system
+and assign a new "issue ID" to the patch. Be sure to enter a meaningful
+description for the patch.
+
+6) Go to http://speedometer-reviews.appspot.com and click on the
+new issue you created. Click "Edit Issue" on the left and add
+reviewers to the "Reviewers" field.
+
+You can select reviewers from the set of developers on the Mobiperf
+project on github.
+
+After selecting reviwers, click "Update Issue".
+
+8) Click on "Publish/Mail Comments" to send the review email off.
+
+9) Respond to comments made by the reviewers and update your code
+accordingly. To update an existing issue with revisions (e.g., when
+addressing review comments), use:
+
+   % upload.py -i <issuenumber> master
+
+When you get your LGTM, you are almost ready to commit; follow the
+instructions above to sync your code with master before pushing the
+changes back to the main tree.
+
