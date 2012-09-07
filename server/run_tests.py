@@ -20,7 +20,7 @@ Install the Python unittest2 package before you run this script.
 See: http://pypi.python.org/pypi/unittest2
 """
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)'
 
 import optparse
 import os
@@ -33,28 +33,31 @@ BASE_DIR = os.path.abspath('./server')
 TEST_DATASTORE = '%s/dev_data/test.datastore' % BASE_DIR
 
 def main(sdk_path, test_path):
-  # Get the appserver on the path
+  # Get the appserver on the path.
   sys.path.insert(0, sdk_path)
   import dev_appserver
   dev_appserver.fix_sys_path()
 
-  # copy datastore to new file
+  # Copy datastore to new file.
   shutil.copyfile(TEST_DATASTORE, TEST_DATASTORE + "_tmp")
 
-  # set up datastore so we can test on meaningful data
+  # Set up datastore so we can test on meaningful data.
   t = testbed.Testbed()
   t.setup_env(True, application_id='dev~openmobiledata')
   t.activate()
   t.init_datastore_v3_stub(True, TEST_DATASTORE + "_tmp", False)
   t.init_memcache_stub()
 
-  # Get correct Django version
+
+  # Get correct Django version.
   from google.appengine.dist import use_library
   use_library('django', '1.2')
 
   suite = unittest2.loader.TestLoader().discover(test_path,
                                                  pattern='*_test.py')
   unittest2.TextTestRunner(verbosity=2).run(suite)
+
+  t.deactivate()
 
 if __name__ == '__main__':
   devapp_server_path = None

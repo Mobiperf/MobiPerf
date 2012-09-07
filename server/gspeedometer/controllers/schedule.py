@@ -97,6 +97,7 @@ class Schedule(webapp.RequestHandler):
         thefilter = add_to_schedule_form.cleaned_data['filter']
         count = add_to_schedule_form.cleaned_data['count'] or -1
         interval = add_to_schedule_form.cleaned_data['interval']
+        priority = add_to_schedule_form.cleaned_data['priority']
 
         logging.info('Got TYPE: ' + thetype)
 
@@ -110,6 +111,7 @@ class Schedule(webapp.RequestHandler):
           task.filter = thefilter
         task.count = count
         task.interval_sec = float(interval)
+        task.priority = priority
 
         # Set up correct type-specific measurement parameters        
         for name, value in params.items():
@@ -197,6 +199,8 @@ class Schedule(webapp.RequestHandler):
         required=True, label='Interval (sec)', min_value=1, initial=600)
     fields['tag'] = forms.CharField(required=False)
     fields['filter'] = forms.CharField(required=False)
+    fields['priority'] = forms.IntegerField(
+        required=False, label='Priority (larger is higher)', min_value=1)
     fields['selectedType'] = forms.CharField(
         initial=mymeasurement.kind, widget=forms.widgets.HiddenInput())
     return fields

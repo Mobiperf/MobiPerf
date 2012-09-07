@@ -44,19 +44,12 @@ from gspeedometer.controllers import home
 from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
-from gspeedometer.controllers import validation
-from gspeedometer.controllers import validation_timeseries
-
 import routes
 
 m = routes.Mapper()
 m.connect('/',
           controller='home:Home',
           action='Dashboard')
-
-m.connect('/help',
-          controller='help:Help',
-          action='Help')
 
 m.connect('/about',
           controller='about:About',
@@ -65,6 +58,14 @@ m.connect('/about',
 m.connect('/checkin',
           controller='checkin:Checkin',
           action='Checkin')
+
+m.connect('/anonymous/checkin',
+          controller='checkin:Checkin',
+          action='Checkin')
+
+m.connect('/anonymous/postmeasurement',
+          controller='measurement:Measurement',
+          action='PostMeasurement')
 
 m.connect('/device/view',
           controller='device:Device',
@@ -135,7 +136,17 @@ m.connect('/admin/archive/file',
           controller='archive:Archive',
           action='ArchiveToFile')
 
-application = wsgi.WSGIApplication(m, debug=True)
+m.connect('/admin/archive/cron',
+          controller='archive:Archive',
+          action='ArchiveToGoogleStorage')
+
+# For backend instance, give it something that won't 
+# return a 500 error.
+m.connect('/_ah/start',
+          controller='about:About',
+          action='About')
+
+application = wsgi.WSGIApplication(m, debug=False)
 
 
 def real_main():
