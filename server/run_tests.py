@@ -20,15 +20,17 @@ Install the Python unittest2 package before you run this script.
 See: http://pypi.python.org/pypi/unittest2
 """
 
-__author__ = 'mdw@google.com (Matt Welsh)'
+__author__ = 'mdw@google.com (Matt Welsh), drchoffnes@gmail.com (David Choffnes)'
 
 import optparse
 import os
 import sys
+import shutil
 import unittest2
 from google.appengine.ext import testbed
 
-TEST_DATASTORE = './dev_data/test.datastore'
+BASE_DIR = os.path.abspath('./server')
+TEST_DATASTORE = '%s/dev_data/test.datastore' % BASE_DIR
 
 def main(sdk_path, test_path):
   # Get the appserver on the path.
@@ -36,12 +38,16 @@ def main(sdk_path, test_path):
   import dev_appserver
   dev_appserver.fix_sys_path()
 
+  # Copy datastore to new file.
+  shutil.copyfile(TEST_DATASTORE, TEST_DATASTORE + "_tmp")
+
   # Set up datastore so we can test on meaningful data.
   t = testbed.Testbed()
   t.setup_env(True, application_id='dev~openmobiledata')
   t.activate()
-  t.init_datastore_v3_stub(True, TEST_DATASTORE, False)
+  t.init_datastore_v3_stub(True, TEST_DATASTORE + "_tmp", False)
   t.init_memcache_stub()
+
 
   # Get correct Django version.
   from google.appengine.dist import use_library
@@ -62,7 +68,7 @@ if __name__ == '__main__':
       dev_appserver_path = os.path.dirname(os.path.realpath(dev_appserver_path))
       break
   if not dev_appserver_path:
-    print >>sys.stderr, 'Can\'t find dev_appserver.py on your PATH.'
+    print >> sys.stderr, 'Can\'t find dev_appserver.py on your PATH.'
     sys.exit(1)
   print 'Using appserver path ' + dev_appserver_path
   main(dev_appserver_path, 'gspeedometer')

@@ -1,5 +1,6 @@
-# Copyright (c) 2011-2012  University of Washington
+# Copyright (c) 2012, University of Washington
 # All rights reserved.
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +32,9 @@ from google.appengine.ext import db
 from gspeedometer import model
 from gspeedometer.controllers import measurement
 from gspeedometer.helpers import util
+
+from django.utils.datastructures import SortedDict
+from gspeedometer.controllers.validation import MeasurementValidatorFactory
 
 class Dashboard(webapp.RequestHandler):
   """Controller for the dashboard view."""
@@ -105,7 +109,7 @@ class Dashboard(webapp.RequestHandler):
          'type': m.type,
          'success': m.success,
          'validation_results': validator.Validate(),
-         'details': validator.PrintData()}))
+         'details': validator.GetHTML()}))
 
   def CommonExceptions(self, **unused_args):
     """Returns a list containing the most common 10 exceptions and the number 
