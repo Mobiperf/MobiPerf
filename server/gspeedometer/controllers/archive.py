@@ -178,7 +178,7 @@ class Archive(webapp.RequestHandler):
 
     # For some reason there was a problem with Unicode chars in the request
     archive_dir = archive_dir.encode('ascii', 'ignore')
-    
+
     #NOTE: This is a multiple return.
     return archive_dir, archive_util.ArchiveCompress(data,
         directory=archive_dir)

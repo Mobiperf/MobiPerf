@@ -1,4 +1,6 @@
-# Copyright 2012 University of Washington.
+# Copyright (c) 2012, University of Washington
+# All rights reserved.
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,9 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-""" Supports printing of validation time series data."""
+"""Supports printing of validation time series data."""
 
 __author__ = 'drchoffnes@gmail.com (David Choffnes)'
 
@@ -40,11 +41,11 @@ class Timeseries(webapp.RequestHandler):
     tscolumns = []
     for meas, name in measurement.MEASUREMENT_TYPES:
       tscolumns.append('%s' % meas)
-      
+
     template_args = {
         'limit': config.TIMESERIES_POINT_LIMIT,
         'timeseries_columns': tscolumns,
-        'types': {'record_count': 'Record count', 'error_count': 'Error count'} 
+        'types': {'record_count': 'Record count', 'error_count': 'Error count'}
     }
     self.response.out.write(template.render(
         'templates/validation_timeseries.html', template_args))
@@ -66,20 +67,20 @@ class Timeseries(webapp.RequestHandler):
       summaries.filter('timestamp_end < ', end_time)
     if limit:
       limit = int(limit)
-    else: 
+    else:
       limit = 1000
-      
+
     summaries.filter('timestamp_start > ', 0)
     summaries.order('timestamp_start')
-    time_to_type_to_count = dict()    
+    time_to_type_to_count = dict()
     tsdata = []
-    
+
     # group data by timestamp for timeline printing
     for summary in summaries.fetch(limit):
       ms_time = util.TimeToMicrosecondsSinceEpoch(summary.timestamp_start) / 1e3
       if not time_to_type_to_count.has_key(ms_time):
-        time_to_type_to_count[ms_time] = dict()        
-      
+        time_to_type_to_count[ms_time] = dict()
+
       if sample_type:
         time_to_type_to_count[ms_time][summary.measurement_type] = \
           getattr(summary, sample_type)

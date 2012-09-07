@@ -1,4 +1,6 @@
-# Copyright 2012 University of Washington.
+# Copyright (c) 2012, University of Washington
+# All rights reserved.
+#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,9 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-from django.utils.datastructures import SortedDict
-from gspeedometer.controllers.validation import MeasurementValidatorFactory
 
 """ Builds the validation webpage."""
 
@@ -32,6 +31,9 @@ from gspeedometer import model
 from gspeedometer.controllers import measurement
 from gspeedometer.helpers import util
 
+from django.utils.datastructures import SortedDict
+from gspeedometer.controllers.validation import MeasurementValidatorFactory
+
 class Dashboard(webapp.RequestHandler):
   """Controller for the dashboard view."""
 
@@ -43,7 +45,7 @@ class Dashboard(webapp.RequestHandler):
     tscolumns = []
     for meas, name in measurement.MEASUREMENT_TYPES:
       tscolumns.append('%s' % meas)
-      
+
     template_args = {
         'error_details': self.DashboardDetail(),
         'top_errors': self.CommonExceptions()
@@ -65,12 +67,12 @@ class Dashboard(webapp.RequestHandler):
       end_time = util.MicrosecondsSinceEpochToTime(int(end_time))
     if limit:
       limit = int(limit)
-    else: 
+    else:
       limit = 1000
-      
+
     # TODO(drc): Incorporate date limits
-    time_to_type_to_cnt = SortedDict()    
-    
+    time_to_type_to_cnt = SortedDict()
+
     # group by time
     for ent in entries.fetch(limit):
       ms_time = ent.summary.timestamp_start
@@ -81,23 +83,23 @@ class Dashboard(webapp.RequestHandler):
       # links to ids for eventually showing more detail
       time_to_type_to_cnt[ms_time][meas_type]['details'].append(
         [ent.measurement.key().id(),
-         ent.measurement.device_properties.device_info.id])      
+         ent.measurement.device_properties.device_info.id])
 
     # now sort by time
     sorted_results = SortedDict()
     for k in sorted(time_to_type_to_cnt.iterkeys()):
       sorted_results[k] = time_to_type_to_cnt[k]
-      
+
     return sorted_results
-      
+
   def ErrorDetail(self, **unused_args):
     """Returns JSON encoded measurement details that are displayed when the user
     clicks on a measurement ID."""
     result_id = self.request.get('result_id') #  measurement id
     parent = self.request.get('parent') #  required parent (deviceinfo) id
-    
+
     k = db.Key.from_path('DeviceInfo', parent, 'Measurement', int(result_id))
-    
+
     m = model.Measurement.get(k)
     validator = MeasurementValidatorFactory.CreateValidator(m)
     self.response.out.write(json.dumps(
@@ -105,8 +107,8 @@ class Dashboard(webapp.RequestHandler):
          'type': m.type,
          'success': m.success,
          'validation_results': validator.Validate(),
-         'details': validator.PrintData()}))
-    
+         'details': validator.GetHTML()}))
+
   def CommonExceptions(self, **unused_args):
     """Returns a list containing the most common 10 exceptions and the number 
     of times they have been reported."""
@@ -115,9 +117,9 @@ class Dashboard(webapp.RequestHandler):
     limit = self.request.get('limit')
 
     entries = model.ValidationEntry.all()
-    logging.log(logging.INFO, "Found %s records" % 
+    logging.log(logging.INFO, "Found %s records" %
                 model.ValidationEntry.all().count(10000))
-    
+
     # TODO(drc): support date queries
     if start_time:
       start_time = util.MicrosecondsSinceEpochToTime(int(start_time))
@@ -126,9 +128,9 @@ class Dashboard(webapp.RequestHandler):
     if limit:
       limit = int(limit)
     else: limit = 1000
-      
+
     error_to_count = dict()
-          
+
     for entry in entries.fetch(limit):
       if entry.measurement.success == False:
         # Only grab first portion of stack trace if there was an error
@@ -138,8 +140,8 @@ class Dashboard(webapp.RequestHandler):
           if not error_to_count.has_key(error):
             error_to_count[error] = 1
           else: error_to_count[error] += 1
-       
+
     sorted_errors = sorted(error_to_count.iteritems(),
                            key=operator.itemgetter(1), reverse=True)
     return sorted_errors[0:10]
-    
+
