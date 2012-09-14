@@ -11,7 +11,7 @@
     <string name="user_agent">Linux; Android</string>
     <string name="default_user_agent">"Mobiperf-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
-    <string name="serverUrl">https://openmobiledata.appspot.com</string>
+    <string name="serverUrl">https://anonymous-reporting-test.openmobiledata.appspot.com/anonymous</string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="pauseMessage">MobiPerf is paused.</string>
@@ -54,4 +54,5 @@
     <string name="aboutTitle">About</string>
     <string name="aboutText">MobiPerf is open source software for measuring network performance on mobile platforms. You can measure network throughput and latency, as well as other useful network metrics. The collected data are used anonymously in research projects in universities and user credentials are never collected or leaked via this software.</string>
     <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
+    <string name="selectAccountPrefKey">PREF_KEY_ACCOUNT</string>
 </resources>

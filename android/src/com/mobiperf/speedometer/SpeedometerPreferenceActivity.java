@@ -19,6 +19,7 @@ import com.mobiperf.speedometer.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
@@ -92,6 +93,25 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
         return true;
       }
     };
+    
+    ListPreference lp = (ListPreference)findPreference(Config.PREF_KEY_ACCOUNT);
+    final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+    lp.setEntries(items);
+    lp.setEntryValues(items);
+    
+    lp.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+      @Override
+      public boolean onPreferenceChange(Preference preference, Object newValue) {
+        final String account = newValue.toString();
+        Logger.i("account selected is: "+account);
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, account);
+        editor.commit();
+        return true;
+      }
+    });
     
     intervalPref.setOnPreferenceChangeListener(prefChangeListener);
     batteryPref.setOnPreferenceChangeListener(prefChangeListener);

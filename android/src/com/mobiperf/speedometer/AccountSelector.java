@@ -22,7 +22,9 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
@@ -100,6 +102,23 @@ public class AccountSelector {
     return this.lastAuthTime;
   }
   
+  /**
+   * Return the list of account names for users to select
+   */
+  public static String[] getAccountList(Context context) {
+    AccountManager accountManager = AccountManager.get(context.getApplicationContext());
+    Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
+    String[] accountNames = null;
+    if (accounts != null && accounts.length > 0) {
+      accountNames = new String[accounts.length+1];
+      for (int i = 0 ; i < accounts.length ; i++) {
+        accountNames[i] = accounts[i].name;
+      }
+      accountNames[accounts.length] = "anonymous";
+    }
+    return accountNames;
+  }
+  
   /** Starts an authentication request  */
   public void authenticate() 
     throws OperationCanceledException, AuthenticatorException, IOException {
@@ -130,7 +149,14 @@ public class AccountSelector {
     Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
     Logger.i("Got " + accounts.length + " accounts");
     
-    if (accounts != null && accounts.length > 0) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    
+    if (selectedAccount == "anonymous") {
+      return;
+    }
+    
+    if (accounts != null && accounts.length > 0 && selectedAccount != "anonymous") {
       // TODO(mdw): If multiple accounts, need to pick the correct one
       Account accountToUse = accounts[0];
       // We prefer google's corporate account to personal accounts such as somebody@gmail.com
@@ -143,6 +169,9 @@ public class AccountSelector {
       }
       
       Logger.i("Trying to get auth token for " + accountToUse);
+      if (accountToUse == null) {
+        return;
+      }
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
           accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
