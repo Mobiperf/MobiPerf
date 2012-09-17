@@ -39,6 +39,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TabHost;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.security.Security;
 
@@ -52,8 +53,10 @@ public class SpeedometerApp extends TabActivity {
   public static final String TAG = "MobiPerf";
   
   private boolean userConsented = false;
+  private String selectedAccount = null;
   
   private static final int DIALOG_CONSENT = 0;
+  private static final int DIALOG_ACCOUNT_SELECTOR = 1;
   private MeasurementScheduler scheduler;
   private TabHost tabHost;
   private boolean isBound = false;
@@ -170,11 +173,17 @@ public class SpeedometerApp extends TabActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
     
+    restoreDefaultAccount();
+    if (selectedAccount == null) {
+      showDialog(DIALOG_ACCOUNT_SELECTOR);
+    }
+    
     restoreConsentState();
     if (!userConsented) {
       /* Before doing anything, show the consent dialog. */
       showDialog(DIALOG_CONSENT);
     }
+    
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
@@ -244,6 +253,8 @@ public class SpeedometerApp extends TabActivity {
     switch(id) {
     case DIALOG_CONSENT:
       return showConsentDialog();
+    case DIALOG_ACCOUNT_SELECTOR:
+      return showAccountDialog();
     default:
       return null;
     }
@@ -287,6 +298,28 @@ public class SpeedometerApp extends TabActivity {
       bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
       isBindingToService = true;
     }
+  }
+  
+  private Dialog showAccountDialog() {
+    //Dialog dialog;
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Select Authentication Account");
+    final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+
+    builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int item) {
+        Toast.makeText(getApplicationContext(),
+            items[item] + " " + getString(R.string.selectedString), Toast.LENGTH_SHORT).show();
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
+        editor.commit();
+        dialog.dismiss();
+      }
+    });
+    return builder.create();
   }
   
   private Dialog showConsentDialog() {
@@ -382,6 +415,14 @@ public class SpeedometerApp extends TabActivity {
     SharedPreferences.Editor editor = prefs.edit();
     editor.putBoolean(Config.PREF_KEY_CONSENTED, userConsented);
     editor.commit();
+  }
+  
+  /**
+   * Restore the last used account
+   */
+  private void restoreDefaultAccount() {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
   }
   
   /**
