@@ -114,8 +114,8 @@ public class AccountSelector {
       for (int i = 0 ; i < accounts.length ; i++) {
         accountNames[i] = accounts[i].name;
       }
-      accountNames[accounts.length] = "anonymous";
     }
+    accountNames[accounts.length] = "anonymous";
     return accountNames;
   }
   
@@ -156,22 +156,16 @@ public class AccountSelector {
       return;
     }
     
-    if (accounts != null && accounts.length > 0 && selectedAccount != "anonymous") {
-      // TODO(mdw): If multiple accounts, need to pick the correct one
+    if (accounts != null && accounts.length > 0) {
       Account accountToUse = accounts[0];
-      // We prefer google's corporate account to personal accounts such as somebody@gmail.com
       for (Account account : accounts) {
-        if (account.name.toLowerCase().trim().endsWith(ACCOUNT_NAME)) {
-          Logger.i("Using the preferred google.com account: " + account.name);
+        if (account.name.equals(selectedAccount)) {
           accountToUse = account;
           break;
         }
       }
       
       Logger.i("Trying to get auth token for " + accountToUse);
-      if (accountToUse == null) {
-        return;
-      }
       
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
           accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
