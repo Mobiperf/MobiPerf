@@ -115,7 +115,7 @@ public class AccountSelector {
         accountNames[i] = accounts[i].name;
       }
     }
-    accountNames[accounts.length] = "anonymous";
+    accountNames[accounts.length] = context.getString(R.string.defaultUser);
     return accountNames;
   }
   
@@ -152,12 +152,13 @@ public class AccountSelector {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
     
-    if (selectedAccount == "anonymous") {
+    if (selectedAccount.equals(context.getString(R.string.defaultUser))) {
       return;
     }
     
     if (accounts != null && accounts.length > 0) {
-      Account accountToUse = accounts[0];
+      // Default account should be the Anonymous account
+      Account accountToUse = accounts[accounts.length-1];
       for (Account account : accounts) {
         if (account.name.equals(selectedAccount)) {
           accountToUse = account;

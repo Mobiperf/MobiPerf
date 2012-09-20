@@ -56,4 +56,5 @@
     <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
     <string name="selectAccountPrefKey">PREF_KEY_ACCOUNT</string>
     <string name="selectedString">is selected for authenticating with MobiPerf server.</string>
+    <string name="defaultUser">Anonymous</string>
 </resources>

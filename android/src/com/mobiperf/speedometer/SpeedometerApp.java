@@ -184,7 +184,6 @@ public class SpeedometerApp extends TabActivity {
       showDialog(DIALOG_CONSENT);
     }
     
-    
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
      * on these properties but may enforce them in future versions.
