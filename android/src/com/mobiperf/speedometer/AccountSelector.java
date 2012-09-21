@@ -158,7 +158,16 @@ public class AccountSelector {
     
     if (accounts != null && accounts.length > 0) {
       // Default account should be the Anonymous account
-      Account accountToUse = accounts[accounts.length-1];
+      Account accountToUse = null;
+      if (!accounts[accounts.length-1].name.equals(context.getString(R.string.defaultUser))) {
+        for (Account account : accounts) {
+          if (account.name.equals(context.getString(R.string.defaultUser))) {
+            accountToUse = account;
+            break;
+          }
+        }
+      }
+      else accountToUse = accounts[accounts.length-1];
       for (Account account : accounts) {
         if (account.name.equals(selectedAccount)) {
           accountToUse = account;
