@@ -19,4 +19,8 @@
     android:defaultValue="true"
     android:summary="Start Speedometer automatically when the phone boots?"
     android:key="@string/startOnBootPrefKey" />
+  <ListPreference
+    android:title="Select Authentication Account"
+    android:summary="Account used for checkin authentication."
+    android:key="PREF_KEY_ACCOUNT" />
 </PreferenceScreen>
