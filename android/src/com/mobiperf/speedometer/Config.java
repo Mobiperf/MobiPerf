@@ -86,6 +86,8 @@ public interface Config {
   public static final String PREF_KEY_COMPLETED_MEASUREMENTS = "PREF_KEY_COMPLETED_MEASUREMENTS";
   public static final String PREF_KEY_FAILED_MEASUREMENTS = "PREF_KEY_FAILED_MEASUREMENTS";
   public static final String PREF_KEY_CONSENTED = "PREF_KEY_CONSENTED";
+  public static final String PREF_KEY_ACCOUNT = "PREF_KEY_ACCOUNT";
+  public static final String PREF_KEY_SELECTED_ACCOUNT = "PREF_KEY_SELECTED_ACCOUNT";
   
   /** Constants for the splash screen */
   public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;
