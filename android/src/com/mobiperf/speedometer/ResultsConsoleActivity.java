@@ -90,7 +90,7 @@ public class ResultsConsoleActivity extends Activity {
               Config.INVALID_PROGRESS);
           int priority = intent.getIntExtra(UpdateIntent.TASK_PRIORITY_PAYLOAD, 
               MeasurementTask.INVALID_PRIORITY);
-          // Show user results if we there is currently a user measurement running
+          // Show user results if there is currently a user measurement running
           if (priority == MeasurementTask.USER_PRIORITY) {
             switchBetweenResults(true);
           }
