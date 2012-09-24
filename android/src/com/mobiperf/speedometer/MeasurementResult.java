@@ -96,7 +96,9 @@ public class MeasurementResult {
       } else if (type == TracerouteTask.TYPE) {
         getTracerouteResult(printer, values);
       } else if (type == UDPBurstTask.TYPE) {
-          getUDPBurstResult(printer, values);
+        getUDPBurstResult(printer, values);
+      } else {
+        Logger.e("Failed to get results for unknown measurement type " + type);
       }
       return builder.toString();
     } catch (NumberFormatException e) {
@@ -113,7 +115,11 @@ public class MeasurementResult {
     PingDesc desc = (PingDesc) parameters;
     printer.println("[Ping]");
     printer.println("Target: " + desc.target);
-    printer.println("IP address: " + removeQuotes(values.get("target_ip")));
+    String ipAddress = removeQuotes(values.get("target_ip"));
+    // TODO: internationalize 'Unknown'.
+    if (ipAddress == null)
+      ipAddress = "Unknown";
+    printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
     if (success) {
@@ -185,6 +191,8 @@ public class MeasurementResult {
       printer.println(" ");
     
       int hops = Integer.parseInt(values.get("num_hops"));
+      // TODO(dominich): Find largest length of 'hop' and 'ipAddress' and
+      // manually align results.
       for (int i = 0; i < hops; i++) {
         String key = "hop_" + i + "_addr_1";
         String ipAddress = removeQuotes(values.get(key));
@@ -201,7 +209,7 @@ public class MeasurementResult {
         }
       
         float time = Float.parseFloat(timeStr);
-        printer.println(hopInfo + "\t\t" + String.format("%.1f", time) + " ms");
+        printer.println(hopInfo + "  " + String.format("%.1f", time) + " ms");
       }
     } else {
       printer.println("Failed");
@@ -226,15 +234,10 @@ public class MeasurementResult {
   }
 
   /**
-   * Removes the quotes surrounding the string. If the string is less than 2 in length,
-   * we returns null
+   * Removes the quotes surrounding the string. If |str| is null, returns null.
    */
   private String removeQuotes(String str) {
-    if (str != null && str.length() > 2) {
-      return str.substring(1, str.length() - 2);
-    } else {
-      return null;
-    }
+    return str != null ? str.replaceAll("^\"|\"$", "") : null;
   }
 }
  
