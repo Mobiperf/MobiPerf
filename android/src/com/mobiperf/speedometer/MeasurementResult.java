@@ -128,18 +128,18 @@ public class MeasurementResult {
       int count = Integer.parseInt(values.get("packets_sent"));
       printer.println("\n" + count + " packets transmitted, " + (int) (count * (1 - packetLoss)) + 
           " received, " + (packetLoss * 100) + "% packet loss");
-    
+
       float value = Float.parseFloat(values.get("mean_rtt_ms"));
       printer.println("Mean RTT: " + String.format("%.1f", value) + " ms");
     
       value = Float.parseFloat(values.get("min_rtt_ms"));
-      printer.println("Min RTT: " + String.format("%.1f", value) + " ms");
+      printer.println("Min RTT:  " + String.format("%.1f", value) + " ms");
     
       value = Float.parseFloat(values.get("max_rtt_ms"));
-      printer.println("Max RTT: " + String.format("%.1f", value) + " ms");
+      printer.println("Max RTT:  " + String.format("%.1f", value) + " ms");
     
       value = Float.parseFloat(values.get("stddev_rtt_ms"));
-      printer.println("Std dev: " + String.format("%.1f", value) + " ms");
+      printer.println("Std dev:  " + String.format("%.1f", value) + " ms");
     } else {
       printer.println("Failed");
     }
@@ -155,7 +155,8 @@ public class MeasurementResult {
       int headerLen = Integer.parseInt(values.get("headers_len"));
       int bodyLen = Integer.parseInt(values.get("body_len"));
       int time = Integer.parseInt(values.get("time_ms"));
-      printer.println("\nDownloaded " + (headerLen + bodyLen) + " bytes in " + time + " ms");
+      printer.println("");
+      printer.println("Downloaded " + (headerLen + bodyLen) + " bytes in " + time + " ms");
       printer.println("Bandwidth: " + (headerLen + bodyLen) * 8 / time + " Kbps");
     } else {
       printer.println("Download failed, status code " + values.get("code"));
@@ -192,15 +193,23 @@ public class MeasurementResult {
       printer.println(" ");
     
       int hops = Integer.parseInt(values.get("num_hops"));
-      // TODO(dominich): Find largest length of 'hop' and 'ipAddress' and
-      // manually align results.
+      int hop_str_len = String.valueOf(hops + 1).length();
       for (int i = 0; i < hops; i++) {
         String key = "hop_" + i + "_addr_1";
         String ipAddress = removeQuotes(values.get(key));
         if (ipAddress == null) {
           ipAddress = "Unknown";
         }
-        String hopInfo = (i + 1) + " " + ipAddress;
+        String hop_str = String.valueOf(i+1);
+        String hopInfo = hop_str;
+        for (int j = 0; j < hop_str_len + 1 - hop_str.length(); ++j) {
+          hopInfo += " ";
+        }
+        hopInfo += ipAddress;
+        // Maximum IP address length is 15.
+        for (int j = 0; j < 16 - ipAddress.length(); ++j) {
+          hopInfo += " ";
+        }
       
         key = "hop_" + i + "_rtt_ms";
         // The first and last character of this string are double quotes.
@@ -210,7 +219,7 @@ public class MeasurementResult {
         }
       
         float time = Float.parseFloat(timeStr);
-        printer.println(hopInfo + "  " + String.format("%.1f", time) + " ms");
+        printer.println(hopInfo + String.format("%6.2f", time) + " ms");
       }
     } else {
       printer.println("Failed");
