@@ -117,8 +117,9 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     String ipAddress = removeQuotes(values.get("target_ip"));
     // TODO: internationalize 'Unknown'.
-    if (ipAddress == null)
+    if (ipAddress == null) {
       ipAddress = "Unknown";
+    }
     printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     
@@ -240,4 +241,3 @@ public class MeasurementResult {
     return str != null ? str.replaceAll("^\"|\"$", "") : null;
   }
 }
- 
