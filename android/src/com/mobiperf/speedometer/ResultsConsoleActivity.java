@@ -49,6 +49,7 @@ public class ResultsConsoleActivity extends Activity {
   ToggleButton showUserResultButton;
   ToggleButton showSystemResultButton;
   MeasurementScheduler scheduler = null;
+  boolean userResultsActive = false;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,7 @@ public class ResultsConsoleActivity extends Activity {
     showSystemResultButton = (ToggleButton) findViewById(R.id.showSystemResults);
     showUserResultButton.setChecked(true);
     showSystemResultButton.setChecked(false);
+    userResultsActive = true;
     
     // We enforce a either-or behavior between the two ToggleButtons
     OnCheckedChangeListener buttonClickListener = new OnCheckedChangeListener() {
@@ -95,6 +97,8 @@ public class ResultsConsoleActivity extends Activity {
             switchBetweenResults(true);
           }
           upgradeProgress(progress, Config.MAX_PROGRESS_BAR_VALUE);
+        } else if (intent.getAction().equals(UpdateIntent.SCHEDULER_CONNECTED_ACTION)) {
+          switchBetweenResults(userResultsActive);
         }
         getConsoleContentFromScheduler();
       }
@@ -113,12 +117,15 @@ public class ResultsConsoleActivity extends Activity {
     getConsoleContentFromScheduler();
     showUserResultButton.setChecked(showUserResults);
     showSystemResultButton.setChecked(!showUserResults);
-    if (showUserResults && userResults != null) {
-      Logger.d("switchBetweenResults: showing " + userResults.getCount() + " user results");
-      this.consoleView.setAdapter(userResults);
-    } else if (!showUserResults && systemResults != null) {
-      Logger.d("switchBetweenResults: showing " + systemResults.getCount() + " system results");
-      this.consoleView.setAdapter(systemResults);
+    userResultsActive = showUserResults;
+    ArrayAdapter<String> adapter = showUserResults ? userResults : systemResults;
+    String debugString = showUserResults ? "user" : "system";
+    Logger.d("switchBetweenResults: showing " + adapter.getCount() + " " + debugString +
+        " results");
+    if (adapter != null) {
+      this.consoleView.setAdapter(adapter);
+    } else {
+      Logger.e("Tried to switch to " + debugString + " results but they're null.");
     }
   }
   
