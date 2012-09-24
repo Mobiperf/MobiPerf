@@ -114,8 +114,10 @@ public class AccountSelector {
       for (int i = 0 ; i < accounts.length ; i++) {
         accountNames[i] = accounts[i].name;
       }
+    } else {
+      accountNames = new String[1];
     }
-    accountNames[accounts.length] = context.getString(R.string.defaultUser);
+    accountNames[accountNames.length - 1] = context.getString(R.string.defaultUser);
     return accountNames;
   }
   
