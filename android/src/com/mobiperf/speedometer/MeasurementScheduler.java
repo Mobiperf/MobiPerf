@@ -201,20 +201,18 @@ public class MeasurementScheduler extends Service {
     };
     this.registerReceiver(broadcastReceiver, filter);
     // TODO(mdw): Make this a user-selectable option
-    //startSpeedomterInForeGround();
+    addIconToStatusBar();
+    //startMobiperfInForeground();
   }
   
   public boolean hasBatteryToScheduleExperiment() {
     return powerManager.canScheduleExperiment();
   }
-  
+
   /**
-   * This will put a notification icon in the phone status bar, and keep the service
-   * in the foreground, preventing it from being killed in low-memory situations.
-   */
-  @SuppressWarnings("unused")
-  private void startSpeedometerInForeGround() {
-    Logger.d("Service startSpeedometerInForeGround called");
+   * Create notification that indicates the service is running.
+   */ 
+  private Notification createServiceRunningNotification() {
     //The intent to launch when the user clicks the expanded notification
     Intent intent = new Intent(this, SpeedometerApp.class);
     PendingIntent pendIntent = PendingIntent.getActivity(this, 0, intent, 
@@ -223,13 +221,37 @@ public class MeasurementScheduler extends Service {
     //This constructor is deprecated in 3.x. But most phones still run 2.x systems
     Notification notice = new Notification(R.drawable.icon_statusbar,
         getString(R.string.notificationSchedulerStarted), System.currentTimeMillis());
+    notice.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
 
     //This is deprecated in 3.x. But most phones still run 2.x systems
-    notice.setLatestEventInfo(this, "Speedometer", 
-        getString(R.string.notificatioContent), pendIntent);
+    notice.setLatestEventInfo(this, getString(R.string.app_name),
+        getString(R.string.notificationServiceRunning), pendIntent);
+    return notice;
+  }
+ 
+  /**
+   * Add an icon to the device status bar.
+   */
+  private void addIconToStatusBar() {
+    notificationManager.notify(1, createServiceRunningNotification());
+  }
+
+  /**
+   * Remove the icon from the device status bar.
+   */
+  private void removeIconFromStatusBar() {
+    notificationManager.cancelAll();
+  }
+
+  /**
+   * Keep the service in the foreground, preventing it from being killed in low-memory situations.
+   */
+  @SuppressWarnings("unused")
+  private void startSpeedometerInForeGround() {
+    Logger.d("Service startSpeedometerInForeGround called");
 
     //Put scheduler service into foreground. Makes the process less likely of being killed
-    startForeground(NOTIFICATION_ID, notice);
+    startForeground(NOTIFICATION_ID, createServiceRunningNotification());
   }
   
   /**
@@ -524,7 +546,6 @@ public class MeasurementScheduler extends Service {
     //This is deprecated in 3.x. But most phones still run 2.x systems
     notice.setLatestEventInfo(this, "Speedometer", notificationMsg, pendIntent);
 
-
     notificationManager.notify(NOTIFICATION_ID, notice);
   }
 
@@ -601,6 +622,9 @@ public class MeasurementScheduler extends Service {
     persistState();
     this.notifyAll();
     phoneUtils.shutDown();
+
+    removeIconFromStatusBar();
+
     Logger.i("Shut down all executors and stopping service");
   }
   
