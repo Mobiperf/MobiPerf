@@ -108,16 +108,12 @@ public class AccountSelector {
   public static String[] getAccountList(Context context) {
     AccountManager accountManager = AccountManager.get(context.getApplicationContext());
     Account[] accounts = accountManager.getAccountsByType(ACCOUNT_TYPE);
-    String[] accountNames = null;
-    if (accounts != null && accounts.length > 0) {
-      accountNames = new String[accounts.length+1];
-      for (int i = 0 ; i < accounts.length ; i++) {
-        accountNames[i] = accounts[i].name;
-      }
-    } else {
-      accountNames = new String[1];
+    int numAccounts = accounts == null ? 1 : accounts.length + 1;
+    String[] accountNames = new String[numAccounts];
+    for (int i = 0 ; i < accounts.length ; i++) {
+      accountNames[i] = accounts[i].name;
     }
-    accountNames[accountNames.length - 1] = context.getString(R.string.defaultUser);
+    accountNames[numAccounts - 1] = context.getString(R.string.defaultUser);
     return accountNames;
   }
   
