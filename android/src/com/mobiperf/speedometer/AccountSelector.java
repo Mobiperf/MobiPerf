@@ -150,7 +150,8 @@ public class AccountSelector {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
     
-    if (selectedAccount.equals(context.getString(R.string.defaultUser))) {
+    if (selectedAccount != null &&
+        selectedAccount.equals(context.getString(R.string.defaultUser))) {
       return;
     }
     
@@ -165,7 +166,6 @@ public class AccountSelector {
           }
         }
       }
-      else accountToUse = accounts[accounts.length-1];
       for (Account account : accounts) {
         if (account.name.equals(selectedAccount)) {
           accountToUse = account;
