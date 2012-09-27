@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<ProgressBar xmlns:android="http://schemas.android.com/apk/res/android"
-  style="@android:style/Widget.ProgressBar.Small"
-  android:layout_width="match_parent" android:layout_height="wrap_content"
-  android:layout_alignParentBottom="true" android:max="100">
-</ProgressBar>
