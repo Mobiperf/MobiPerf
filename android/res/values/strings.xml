@@ -5,6 +5,8 @@
     <string name="default_user_agent">"Mobiperf-1.0 (Linux; Android)"</string>
     <string name="ping_executable">/system/bin/ping</string>
     <string name="serverUrl">https://openmobiledata.appspot.com</string>
+    <string name="anonymousServerUrl">https://anonymous-reporting-test.openmobiledata.appspot.com/anonymous</string>
+    <string name="testServerUrl"></string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
     <string name="pauseMessage">MobiPerf is paused.</string>
@@ -22,7 +24,8 @@
     <string name="UDPBurstTargetHint">www.google.com</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
-    <string name="checkinIntervalPrefKey">KEY_CHEKCEDIN_INTERVAL</string>
+    <string name="checkinIntervalPrefKey">KEY_CHECKEDIN_INTERVAL</string>
+    <string name="measureWhenPluggedPrefKey">KEY_MEASURE_WHEN_PLUGGED</string>
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="notificationSchedulerStarted">MobiPerf service has started</string>
