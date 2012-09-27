@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.MeasurementDesc;
-import com.google.wireless.speed.speedometer.MeasurementError;
-import com.google.wireless.speed.speedometer.MeasurementResult;
-import com.google.wireless.speed.speedometer.MeasurementScheduler;
-import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.MeasurementError;
+import com.mobiperf.speedometer.MeasurementResult;
+import com.mobiperf.speedometer.MeasurementScheduler;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.speedometer.SpeedometerApp;
 
 import android.app.Instrumentation;
 import android.content.Context;
@@ -32,7 +32,6 @@ import java.util.Map;
 
 /**
  * Base class for test cases that involves UI. 
- * @author wenjiezeng@google.com (Steve Zeng)
  *
  */
 public class TestMeasurementTaskBase extends 
@@ -42,17 +41,17 @@ public class TestMeasurementTaskBase extends
   // Required by the ActivityInstrumentationTestCase2 as shown in the Android tutorial
   protected Instrumentation inst;
   // The system console for the test case to print debugging message to the phone screen
-  protected TextView systemConsole;
+  //protected TextView systemConsole;
   protected MeasurementScheduler scheduler;
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase() {
-    super("com.google.wireless.speed.speedometer.SpeedometerApp", SpeedometerApp.class);
+    super("com.mobiperf.speedometer.SpeedometerApp", SpeedometerApp.class);
   }
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase(boolean isCheckinEnabled) {
-    super("com.google.wireless.speed.speedometer.SpeedometerApp", SpeedometerApp.class);
+    super("com.mobiperf.speedometer.SpeedometerApp", SpeedometerApp.class);
   }
   
   @Override
@@ -61,20 +60,17 @@ public class TestMeasurementTaskBase extends
     this.activity = getActivity();
     this.inst = getInstrumentation();
     this.scheduler = this.activity.getScheduler();
-    this.systemConsole = (TextView) 
-        activity.findViewById(com.google.wireless.speed.speedometer.R.viewId.systemConsole);
+    assertNotNull(this.scheduler);
+    //this.systemConsole = (TextView) 
+    //    activity.findViewById(com.mobiperf.speedometer.R.viewId.systemConsole);
   }
   
   /**
    * A task created only for testing purpose. It never finishes.
-   * 
-   * @author wenjiezeng@google.com (Steve Zeng)
    */
   public static class DummyTask extends MeasurementTask {
     /**
      * The description for the dummy task
-     * 
-     * @author wenjiezeng@google.com (Steve Zeng)
      */
     public static class DummyDesc extends MeasurementDesc {
       protected DummyDesc(String type, String key, Date startTime, Date endTime,
@@ -112,7 +108,7 @@ public class TestMeasurementTaskBase extends
     }
 
     /** 
-     * @see com.google.wireless.speed.speedometer.MeasurementTask#getType() 
+     * @see com.mobiperf.speedometer.MeasurementTask#getType() 
      * */
     @Override
     public String getType() {
@@ -120,7 +116,7 @@ public class TestMeasurementTaskBase extends
     }
 
     /* (non-Javadoc)
-     * @see com.google.wireless.speed.speedometer.MeasurementTask#clone()
+     * @see com.mobiperf.speedometer.MeasurementTask#clone()
      */
     @Override
     public MeasurementTask clone() {

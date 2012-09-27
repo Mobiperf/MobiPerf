@@ -22,8 +22,6 @@ import java.security.InvalidParameterException;
 
 /**
  * A repackaged Intent class that includes Speedometer-specific information. 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class UpdateIntent extends Intent {
   

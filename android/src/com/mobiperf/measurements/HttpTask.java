@@ -52,8 +52,6 @@ import java.util.Map;
 
 /**
  * A Callable class that performs download throughput test using HTTP get
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class HttpTask extends MeasurementTask {
   // Type name for internal use

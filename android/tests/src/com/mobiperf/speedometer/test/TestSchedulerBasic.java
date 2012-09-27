@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.HttpTask;
-import com.google.wireless.speed.speedometer.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.HttpTask.HttpDesc;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.speedometer.SpeedometerApp;
 
 import android.util.Log;
 
@@ -25,7 +25,6 @@ import java.util.HashMap;
 
 /**
  * Test baseic task manipulation and one-shot checkin on the scheduler 
- * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class TestSchedulerBasic extends TestMeasurementTaskBase { 
   /* TODO(Wenjie): create mock objects of tasks and the scheduler for even better testing.

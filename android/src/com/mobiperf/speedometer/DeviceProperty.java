@@ -20,8 +20,6 @@ package com.mobiperf.speedometer;
 /**
  * POJO class containing dynamic information about the device
  * @see DeviceInfo
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class DeviceProperty {
 
