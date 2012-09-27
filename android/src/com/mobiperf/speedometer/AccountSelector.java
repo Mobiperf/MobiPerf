@@ -14,6 +14,8 @@
  */
 package com.mobiperf.speedometer;
 
+import com.mobiperf.util.PhoneUtils;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -49,17 +51,20 @@ public class AccountSelector {
   // The authentication period in milliseconds
   private static final long AUTHENTICATE_PERIOD_MSEC = 24 * 3600 * 1000;
   private Context context;
-  private Checkin checkin;
   private String authToken = null;
   private ExecutorService checkinExecutor = null;
   private Future<Cookie> checkinFuture = null;
   private long lastAuthTime = 0;
   private boolean authImmediately = false;
+  private PhoneUtils phoneUtils;
+
+  private boolean isAnonymous = true;
+  public boolean isAnonymous() { return isAnonymous; }
   
-  public AccountSelector(Context context, Checkin checkin) {
+  public AccountSelector(Context context) {
     this.context = context;
-    this.checkin = checkin;
     this.checkinExecutor = Executors.newFixedThreadPool(1);
+    this.phoneUtils = PhoneUtils.getPhoneUtils();
   }
   
   /** Returns the Future to monitor the checkin progress */
@@ -132,8 +137,7 @@ public class AccountSelector {
     Logger.i("Authenticating. Last authentication is " + 
         timeSinceLastAuth / 1000 / 60 + " minutes ago. ");
     
-    AccountManager accountManager = AccountManager.get(
-        context.getApplicationContext());
+    AccountManager accountManager = AccountManager.get(context.getApplicationContext());
     if (this.authToken != null) {
       // There will be no effect on the token if it is still valid
       Logger.i("Invalidating token");
@@ -145,32 +149,41 @@ public class AccountSelector {
     
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this.context);
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
-    
-    if (selectedAccount != null &&
-        selectedAccount.equals(context.getString(R.string.defaultUser))) {
+   
+    final String defaultUserName = context.getString(R.string.defaultUser);
+    isAnonymous = true;
+    if (selectedAccount != null && selectedAccount.equals(defaultUserName)) {
       return;
     }
-    
+
     if (accounts != null && accounts.length > 0) {
       // Default account should be the Anonymous account
       Account accountToUse = accounts[accounts.length-1];
-      if (!accounts[accounts.length-1].name.equals(context.getString(R.string.defaultUser))) {
+      if (!accounts[accounts.length-1].name.equals(defaultUserName)) {
         for (Account account : accounts) {
-          if (account.name.equals(context.getString(R.string.defaultUser))) {
+          if (account.name.equals(defaultUserName)) {
             accountToUse = account;
             break;
           }
         }
       }
-      for (Account account : accounts) {
-        if (account.name.equals(selectedAccount)) {
-          accountToUse = account;
-          break;
+      if (selectedAccount != null) {
+        for (Account account : accounts) {
+          if (account.name.equals(selectedAccount)) {
+            accountToUse = account;
+            break;
+          }
         }
       }
       
+      isAnonymous = accountToUse.name.equals(defaultUserName);
+     
+      if (isAnonymous) {
+        Logger.d("Skipping authentication as account is " + defaultUserName);
+        return;
+      }
+
       Logger.i("Trying to get auth token for " + accountToUse);
-      
       AccountManagerFuture<Bundle> future = accountManager.getAuthToken(
           accountToUse, "ah", false, new AccountManagerCallback<Bundle>() {
         @Override
@@ -232,8 +245,8 @@ public class AccountSelector {
       DefaultHttpClient httpClient = new DefaultHttpClient();
       boolean success = false;
       try {
-        String loginUrlPrefix = checkin.getServerUrl() +
-          "/_ah/login?continue=" + checkin.getServerUrl() + 
+        String loginUrlPrefix = phoneUtils.getServerUrl() +
+          "/_ah/login?continue=" + phoneUtils.getServerUrl() + 
           "&action=Login&auth=";
         // Don't follow redirects
         httpClient.getParams().setBooleanParameter(
