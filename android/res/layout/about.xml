@@ -5,7 +5,6 @@
     android:background="@android:color/black" >
 
     <ImageView
-        android:id="@+id/icon"
         android:layout_width="60dip"
         android:layout_height="80dip"
         android:layout_marginRight="6dip"
@@ -18,7 +17,6 @@
         android:orientation="vertical" >
         
         <TextView
-            android:id="@+id/about1"
             android:layout_width="fill_parent"
             android:layout_height="50dip"
             android:gravity="center_vertical"
@@ -51,7 +49,6 @@
             android:textSize="18px" />
 
         <TextView
-            android:id="@+id/link1_view"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:autoLink="all"
