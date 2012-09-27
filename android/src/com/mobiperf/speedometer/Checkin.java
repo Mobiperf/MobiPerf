@@ -74,36 +74,16 @@ import javax.net.ssl.X509TrustManager;
 public class Checkin {
   private static final int POST_TIMEOUT_MILLISEC = 20 * 1000;
   private Context context;
-  private String serverUrl;
   private Date lastCheckin;
   private volatile Cookie authCookie = null;
   private AccountSelector accountSelector = null;
   PhoneUtils phoneUtils;
   
-  public Checkin(Context context, String serverUrl) {
-    phoneUtils = PhoneUtils.getPhoneUtils();
-    this.context = context;
-    this.serverUrl = serverUrl;
-    sendStringMsg("Using server " + this.serverUrl);
-  }
-  
   public Checkin(Context context) {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
-    this.serverUrl = phoneUtils.getServerUrl();
-    sendStringMsg("Using server " + this.serverUrl);
   }
-  
-  /** Returns whether the service is running on a testing server. */
-  public boolean isTestingServer() {
-    if (phoneUtils.isTestingServer(serverUrl)) {
-      accountSelector = new AccountSelector(context, this);
-      return true;
-    } else {
-      return false;
-    }
-  }
-  
+
   /** Shuts down the checkin thread */
   public void shutDown() {
     if (this.accountSelector != null) {
@@ -127,10 +107,6 @@ public class Checkin {
     return this.lastCheckin;
   }
   
-  public String getServerUrl() {
-    return serverUrl;
-  }
-  
   public List<MeasurementTask> checkin() throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
@@ -148,7 +124,7 @@ public class Checkin {
       Logger.d(status.toString());
       sendStringMsg("Checking in");
       
-      String result = speedometerServiceRequest("checkin", status.toString());
+      String result = serviceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
       
       // Parse the result
@@ -207,8 +183,7 @@ public class Checkin {
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Logger.i("TaskSchedule.uploadMeasurementResult() uploading: " + 
         resultArray.toString());
-    String response = 
-      speedometerServiceRequest("postmeasurement", resultArray.toString());
+    String response = serviceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
       if (!responseJson.getBoolean("success")) {
@@ -308,19 +283,27 @@ public class Checkin {
     return client;
   }
   
-  private String speedometerServiceRequest(String url, String jsonString) 
+  private String serviceRequest(String url, String jsonString) 
       throws IOException {
     
-    synchronized (this) {
-      if (authCookie == null) {
-        if (!checkGetCookie()) {
-          throw new IOException("No authCookie yet");
+    if (this.accountSelector == null) {
+      accountSelector = new AccountSelector(context);
+    }
+    if (!accountSelector.isAnonymous()) {
+      synchronized (this) {
+        if (authCookie == null) {
+          if (!checkGetCookie()) {
+            throw new IOException("No authCookie yet");
+          }
         }
       }
     }
     
     HttpClient client = getNewHttpClient();
-    String fullurl = serverUrl + "/" + url;
+    String fullurl = (accountSelector.isAnonymous() ?
+                      phoneUtils.getAnonymousServerUrl() :
+                      phoneUtils.getServerUrl()) + "/" + url;
+    Logger.i("Checking in to " + fullurl);
     HttpPost postMethod = new HttpPost(fullurl);
     
     StringEntity se;
@@ -332,8 +315,10 @@ public class Checkin {
     postMethod.setEntity(se);
     postMethod.setHeader("Accept", "application/json");
     postMethod.setHeader("Content-type", "application/json");
-    // TODO(mdw): This should not be needed
-    postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+    if (!accountSelector.isAnonymous()) {
+      // TODO(mdw): This should not be needed
+      postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+    }
 
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
     Logger.i("Sending request: " + fullurl);
@@ -346,13 +331,13 @@ public class Checkin {
    * Returns immediately.
    */
   public synchronized void getCookie() {
-    if (isTestingServer()) {
+    if (phoneUtils.isTestingServer(phoneUtils.getServerUrl())) {
       Logger.i("Setting fakeAuthCookie");
       authCookie = getFakeAuthCookie();
       return;
     }
     if (this.accountSelector == null) {
-      accountSelector = new AccountSelector(context, this);
+      accountSelector = new AccountSelector(context);
     }
     
     try {
@@ -378,7 +363,7 @@ public class Checkin {
   }
   
   private synchronized boolean checkGetCookie() {
-    if (isTestingServer()) {
+    if (phoneUtils.isTestingServer(phoneUtils.getServerUrl())) {
       authCookie = getFakeAuthCookie();
       return true;
     }

@@ -640,10 +640,18 @@ public class PhoneUtils {
     return context.getResources().getString(R.string.serverUrl);
   }
   
-  public boolean isTestingServer(String serverUrl) {
-    return serverUrl.indexOf("corp.google.com") > 0;
+  public String getAnonymousServerUrl() {
+    return context.getResources().getString(R.string.anonymousServerUrl);
   }
-  
+
+  public String getTestingServerUrl() {
+    return context.getResources().getString(R.string.testServerUrl);
+  }
+
+  public boolean isTestingServer(String serverUrl) {
+    return serverUrl == getTestingServerUrl();
+  }
+
   private String getCellularIp() {
     String ipAddress = null;
    
@@ -717,10 +725,10 @@ public class PhoneUtils {
   public DeviceProperty getDeviceProperty() {
     String carrierName = telephonyManager.getNetworkOperatorName();
     Location location;
-    if (!isTestingServer(getServerUrl())) {
-      location = getLocation();
-    } else {
+    if (isTestingServer(getServerUrl())) {
       location = getMockLocation();
+    } else {
+      location = getLocation();
     }
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
