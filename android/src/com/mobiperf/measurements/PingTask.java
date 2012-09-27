@@ -54,8 +54,6 @@ import java.util.Map;
 
 /**
  * A callable that executes a ping task using one of three methods
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class PingTask extends MeasurementTask {
   // Type name for internal use

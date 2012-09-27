@@ -6,9 +6,6 @@ import android.util.Log;
 
 /**
  * Wrapper for logging operations which can be disabled by setting LOGGING_ENABLED.
- * 
- * @author mdw@google.com (Matt Welsh)
- *
  */
 public class Logger {
   private final static boolean LOGGING_ENABLED = true;

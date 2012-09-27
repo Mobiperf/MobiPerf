@@ -36,10 +36,6 @@ import java.util.Map;
 
 /**
  * Measures the DNS lookup time
- * 
- * @author mdw@gogole.com (Matt Welsh)
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class DnsLookupTask extends MeasurementTask {
   // Type name for internal use

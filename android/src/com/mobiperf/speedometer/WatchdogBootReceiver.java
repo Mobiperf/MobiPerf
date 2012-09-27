@@ -26,9 +26,6 @@ import android.util.Log;
 
 /**
  * A broadcast receiver that starts the Speedometer service upon the BOOT_COMPLETED event.
- *
- * @author wenjiezeng@google.com (Wenjie Zeng)
- *
  */
 public class WatchdogBootReceiver extends BroadcastReceiver {
 

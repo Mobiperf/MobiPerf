@@ -44,9 +44,6 @@ import com.mobiperf.speedometer.R;
 
 /**
  * Activity that shows the current measurement schedule of the scheduler
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class MeasurementScheduleConsoleActivity extends Activity {
   public static final String TAB_TAG = "MEASUREMENT_SCHEDULE";

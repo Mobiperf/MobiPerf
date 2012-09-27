@@ -12,13 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.R;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.TracerouteTask;
-import com.google.wireless.speed.speedometer.measurements.TracerouteTask.TracerouteDesc;
-import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
+import com.mobiperf.speedometer.R;
+import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.util.MeasurementJsonConvertor;
 
 import android.util.Log;
 
@@ -26,8 +26,6 @@ import java.util.HashMap;
 
 /**
  * Test case for the Traceroute measurement 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class TestTracerouteTask extends TestMeasurementTaskBase {
   

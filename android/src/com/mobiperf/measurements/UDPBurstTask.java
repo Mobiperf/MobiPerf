@@ -35,8 +35,6 @@ import java.util.Map;
  * 2. UDPBurst Down: the device sends a request to a remote server on a UDP port 
  * and the server responds by sending a burst of UDPBurstCount packets. 
  * The size of each packet is packetSizeByte
- * 
- * @author aterzis@google.com (Andreas Terzis)
  */
 public class UDPBurstTask extends MeasurementTask {
 

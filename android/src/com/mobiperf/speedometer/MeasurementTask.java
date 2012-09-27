@@ -34,9 +34,6 @@ import java.util.concurrent.Callable;
  * Represents a scheduled measurement task. Subclasses implement functionality
  * for performing the actual measurement. Comparable interface allow comparison
  * inside the priority queue.
- * 
- * @author mdw@google.com (Matt Welsh)
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 @SuppressWarnings("rawtypes")
 public abstract class MeasurementTask implements Callable<MeasurementResult>, Comparable {

@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.PingTask.PingDesc;
-import com.google.wireless.speed.speedometer.util.MeasurementJsonConvertor;
+import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.util.MeasurementJsonConvertor;
 
 import android.test.AndroidTestCase;
 
@@ -32,8 +32,6 @@ import java.util.regex.Pattern;
 
 /**
  * Unit test for the Util class
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class UtilTest extends AndroidTestCase {
   public UtilTest() {
@@ -95,4 +93,3 @@ public class UtilTest extends AndroidTestCase {
     assertEquals(matcher.group(2), "12");
   }
 }
- 

@@ -27,9 +27,6 @@ import java.util.concurrent.Callable;
  * A basic power manager implementation that decides whether a measurement can be scheduled
  * based on the current battery level: no measurements will be scheduled if the current battery
  * is lower than a threshold.
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class BatteryCapPowerManager {
   /** The minimum threshold below which no measurements will be scheduled */

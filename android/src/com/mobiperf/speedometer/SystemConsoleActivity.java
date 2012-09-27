@@ -29,9 +29,6 @@ import android.widget.ListView;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class SystemConsoleActivity extends Activity {
   private ListView consoleView;

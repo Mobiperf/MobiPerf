@@ -42,10 +42,6 @@ import java.util.concurrent.Future;
 
 /**
  * Helper class for google account checkins
- * 
- * @author mdw@google.com (Matt Welsh)
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class AccountSelector {
   private static final String ACCOUNT_TYPE = "com.google";

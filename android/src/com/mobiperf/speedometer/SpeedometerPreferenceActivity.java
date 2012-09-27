@@ -29,9 +29,6 @@ import android.widget.Toast;
 
 /**
  * Activity that handles user preferences
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class SpeedometerPreferenceActivity extends PreferenceActivity {
   

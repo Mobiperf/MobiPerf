@@ -28,8 +28,6 @@ import android.widget.TextView;
 
 /**
  * The splash screen for Speedometer
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class SplashScreenActivity extends Activity {
   @Override

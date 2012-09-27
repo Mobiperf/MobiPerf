@@ -51,9 +51,6 @@ import java.util.Map;
 
 /**
  * The UI Activity that allows users to create their own measurements
- *
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class MeasurementCreationActivity extends Activity {
 

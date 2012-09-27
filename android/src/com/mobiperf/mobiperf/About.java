@@ -25,7 +25,6 @@ import android.widget.TextView;
 
 /**
  * Display a simple description of this application
- * 
  */
 public class About extends Activity {
   public void onCreate(Bundle savedInstanceState) {
