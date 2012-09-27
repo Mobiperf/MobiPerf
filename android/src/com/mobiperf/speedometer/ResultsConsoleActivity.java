@@ -35,9 +35,6 @@ import java.util.List;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class ResultsConsoleActivity extends Activity {
   

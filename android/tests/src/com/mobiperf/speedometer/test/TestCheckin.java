@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.Checkin;
-import com.google.wireless.speed.speedometer.MeasurementTask;
-import com.google.wireless.speed.speedometer.SpeedometerApp;
+import com.mobiperf.speedometer.Checkin;
+import com.mobiperf.speedometer.MeasurementTask;
+import com.mobiperf.speedometer.SpeedometerApp;
 
 import android.util.Log;
 
@@ -25,8 +25,6 @@ import java.util.List;
 
 /**
  * Test the basic checkin without the scheduler
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class TestCheckin extends TestMeasurementTaskBase {
   

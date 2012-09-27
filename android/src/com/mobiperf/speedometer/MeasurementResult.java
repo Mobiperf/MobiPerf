@@ -35,7 +35,6 @@ import java.util.HashMap;
 
 /**
  * POJO that represents the result of a measurement
- * @author wenjiezeng@google.com (Wenjie Zeng)
  * @see MeasurementDesc
  */
 public class MeasurementResult {   

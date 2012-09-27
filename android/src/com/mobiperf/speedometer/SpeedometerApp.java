@@ -45,8 +45,6 @@ import java.security.Security;
 
 /**
  * The main UI thread that manages different tabs
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class SpeedometerApp extends TabActivity {
   

@@ -70,9 +70,6 @@ import javax.net.ssl.X509TrustManager;
 
 /**
  * Handles checkins with the SpeedometerApp server.
- * 
- * @author mdw@google.com (Matt Welsh)
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Checkin {
   private static final int POST_TIMEOUT_MILLISEC = 20 * 1000;

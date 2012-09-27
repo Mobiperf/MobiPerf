@@ -12,23 +12,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.wireless.speed.speedometer.test;
+package com.mobiperf.speedometer.test;
 
-import com.google.wireless.speed.speedometer.SpeedometerApp;
-import com.google.wireless.speed.speedometer.measurements.HttpTask;
-import com.google.wireless.speed.speedometer.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.PingTask;
+import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.speedometer.MeasurementDesc;
+import com.mobiperf.speedometer.R;
+import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.util.MeasurementJsonConvertor;
 
 import android.util.Log;
 
 import java.util.HashMap;
 
 /**
- * Test case for the HTTP measurement
- * @author wenjiezeng@google.com (Steve Zeng)
- *
+ * Test case for the Ping measurement
  */
-public class TestHttpTask extends TestMeasurementTaskBase {
-  public TestHttpTask() {
+public class TestPingTask extends TestMeasurementTaskBase {
+
+  public TestPingTask() {
     // Disable the auto checkin so that our manually inserted task can be run
     super(false);
   }
@@ -40,35 +42,30 @@ public class TestHttpTask extends TestMeasurementTaskBase {
   
   /* TODO(Wenjie): Make this test case to be more self-contained without depending
    * on the external links */
-  public void testHttpTask() {
+  public void testPingTask() {
+    String pingExe = this.activity.getString(R.string.ping_executable);
+    String pingServer = "www.randomhostname.com";
+
     HashMap<String, String> params = new HashMap<String, String>();
-    params.put("url", "www.google.com");
-    //params.put("url", "inst.eecs.berkeley.edu/~cs150/Documents/CC2420.pdf");
-    params.put("method", "GET");
-    HttpDesc desc = new HttpDesc(null, null, null, 0, 0, 0, params);
-    HttpTask task = new HttpTask(desc, this.activity);
-    assertTrue(task != null);
-    
-    this.activity.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        systemConsole.requestFocus();
-      }      
-    });
+    params.put("ping_exe", pingExe);
+    params.put("target", pingServer);    
+    PingDesc pingDesc = new PingDesc(null, null, null, 0, 0, 0, params);
+    Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(pingDesc));
+    MeasurementDesc desc;
+    PingTask pingTask = new PingTask(pingDesc, this.activity);
     
     // submitTask will notify the waiting scheduler thread upon success
-    this.scheduler.submitTask(task);
+    this.scheduler.submitTask(pingTask);
     
-    /* TODO(Wenjie): Before we know how to figure out the output of a HTTP
+    /* TODO(Wenjie): Before we figure out how to verify the output of a ping
      * measurement is correct, we simply use this test case as a driver to submit
-     * task and verify monitor output from the phone
+     * task and verify the output by manually inspecting the printout on the phone
      */
     try {
-      Thread.sleep(Long.MAX_VALUE);
+      Thread.sleep(20000);
     } catch (InterruptedException e) {
       Log.i(SpeedometerApp.TAG, "Test case sleep interrupted");
     }
-    
     this.inst.waitForIdleSync();
   }
 }

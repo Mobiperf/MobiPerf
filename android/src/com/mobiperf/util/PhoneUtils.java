@@ -65,12 +65,6 @@ import java.util.List;
 
 /**
  * Phone related utilities.
- *
- * @author klm@google.com (Michael Klepikov)
- * 
- * Changed acquireLock() to acquire the power lock if and only if wifi is active  
- * 
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class PhoneUtils {
 

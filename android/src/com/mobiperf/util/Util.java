@@ -32,9 +32,6 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class for Speedometer that does not require runtime information
- * 
- * @author mdw@google.com (Matt Welsh)
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Util {
     

@@ -45,8 +45,6 @@ import java.util.Map;
 
 /**
  * A Callable task that handles Traceroute measurements
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class TracerouteTask extends MeasurementTask {
   // Type name for internal use

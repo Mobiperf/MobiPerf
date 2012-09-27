@@ -51,8 +51,6 @@ import java.util.TimeZone;
  * measurement objects (descriptions, tasks, and results, etc.) and JSON objects. 
  * New types of MeasurementDesc should be registered in the static HashMap initialization
  * section.
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 @SuppressWarnings("rawtypes")
 public class MeasurementJsonConvertor {

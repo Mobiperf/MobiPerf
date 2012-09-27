@@ -23,7 +23,6 @@ import java.util.Map;
  * MeasurementDesc and all its subclasses are POJO classes that encode a measurement 
  * and enable easy (de)serialization. On the other hand {@link MeasurementTask} contains 
  * runtime specific information for task execution. 
- * @author wenjiezeng@google.com (Steve Zeng)
  * @see MeasurementTask 
  */
 public abstract class MeasurementDesc {

@@ -65,8 +65,6 @@ import java.util.concurrent.PriorityBlockingQueue;
  * times, and finally retrieves and reports results once they finish. 
  * 
  * All method invocations on the singleton object are thread-safe.
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
  */
 public class MeasurementScheduler extends Service {
   

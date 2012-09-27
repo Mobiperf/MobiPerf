@@ -17,9 +17,6 @@ package com.mobiperf.speedometer;
 
 /**
  * The system defaults.
- * 
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public interface Config {
   public static final boolean DEFAULT_START_ON_BOOT = false;
