@@ -10,7 +10,6 @@
     android:gravity="center_horizontal"
     android:background="@color/lightGray"
     android:textColor="@color/white"
-    android:id="@+id/logConsoleTitle"
     android:text="System Log Console"/>
   <ListView
     android:layout_width="match_parent" 
