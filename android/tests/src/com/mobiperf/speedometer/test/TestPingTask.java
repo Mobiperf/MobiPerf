@@ -54,13 +54,6 @@ public class TestPingTask extends TestMeasurementTaskBase {
     MeasurementDesc desc;
     PingTask pingTask = new PingTask(pingDesc, this.activity);
     
-    this.activity.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        systemConsole.requestFocus();
-      }      
-    });
-    
     // submitTask will notify the waiting scheduler thread upon success
     this.scheduler.submitTask(pingTask);
     

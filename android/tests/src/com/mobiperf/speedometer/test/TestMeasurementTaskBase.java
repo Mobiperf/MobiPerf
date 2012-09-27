@@ -41,7 +41,7 @@ public class TestMeasurementTaskBase extends
   // Required by the ActivityInstrumentationTestCase2 as shown in the Android tutorial
   protected Instrumentation inst;
   // The system console for the test case to print debugging message to the phone screen
-  protected TextView systemConsole;
+  //protected TextView systemConsole;
   protected MeasurementScheduler scheduler;
   
   @SuppressWarnings("unchecked")
@@ -60,8 +60,9 @@ public class TestMeasurementTaskBase extends
     this.activity = getActivity();
     this.inst = getInstrumentation();
     this.scheduler = this.activity.getScheduler();
-    this.systemConsole = (TextView) 
-        activity.findViewById(com.mobiperf.speedometer.R.viewId.systemConsole);
+    assertNotNull(this.scheduler);
+    //this.systemConsole = (TextView) 
+    //    activity.findViewById(com.mobiperf.speedometer.R.viewId.systemConsole);
   }
   
   /**

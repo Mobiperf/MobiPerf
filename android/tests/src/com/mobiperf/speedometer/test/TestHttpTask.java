@@ -47,13 +47,6 @@ public class TestHttpTask extends TestMeasurementTaskBase {
     HttpTask task = new HttpTask(desc, this.activity);
     assertTrue(task != null);
     
-    this.activity.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        systemConsole.requestFocus();
-      }      
-    });
-    
     // submitTask will notify the waiting scheduler thread upon success
     this.scheduler.submitTask(task);
     

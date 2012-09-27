@@ -48,13 +48,6 @@ public class TestTracerouteTask extends TestMeasurementTaskBase {
     Log.i(SpeedometerApp.TAG, MeasurementJsonConvertor.toJsonString(desc));
     TracerouteTask task = new TracerouteTask(desc, this.activity);
     
-    this.activity.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        systemConsole.requestFocus();
-      }      
-    });
-    
     // submitTask will notify the waiting scheduler thread upon success
     this.scheduler.submitTask(task);
     this.scheduler.resume();
