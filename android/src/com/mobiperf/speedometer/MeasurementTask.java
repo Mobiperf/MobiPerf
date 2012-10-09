@@ -66,8 +66,9 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
-    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
-    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
+    // TODO(dominich): reinstate this once m-lab support has been added.
+//    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+//    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
   }
   
   /** Gets the currently available measurement types*/
