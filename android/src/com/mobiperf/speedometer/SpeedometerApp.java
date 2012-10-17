@@ -142,24 +142,28 @@ public class SpeedometerApp extends TabActivity {
           }
         }
         return true;
-      case R.id.menuQuit:
+      case R.id.menuQuit: {
         Logger.i("User requests exit. Quitting the app");
         quitApp();
         return true;
-      case R.id.menuSettings:
+      }
+      case R.id.menuSettings: {
         Intent settingsActivity = new Intent(getBaseContext(),
             SpeedometerPreferenceActivity.class);
         startActivity(settingsActivity);
         return true;
-      case R.id.aboutPage:
+      }
+      case R.id.aboutPage: {
         Intent intent = new Intent(getBaseContext(),
             com.mobiperf.mobiperf.About.class);
         startActivity(intent);
         return true;
-      case R.id.menuLog:
-        intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
+      }
+      case R.id.menuLog: {
+        Intent intent = new Intent(getBaseContext(), SystemConsoleActivity.class);
         startActivity(intent);
         return true;
+      }
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -373,6 +377,7 @@ public class SpeedometerApp extends TabActivity {
       isBound = false;
     }
     if (this.scheduler != null) {
+      Logger.d("requesting Scheduler stop");
       scheduler.requestStop();
     }
     // Force consent on next restart.
