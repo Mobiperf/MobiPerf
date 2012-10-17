@@ -21,7 +21,7 @@ import android.content.Intent;
 import java.security.InvalidParameterException;
 
 /**
- * A repackaged Intent class that includes Speedometer-specific information. 
+ * A repackaged Intent class that includes Mobiperf-specific information. 
  */
 public class UpdateIntent extends Intent {
   

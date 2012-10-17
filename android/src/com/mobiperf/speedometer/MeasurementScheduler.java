@@ -231,14 +231,14 @@ public class MeasurementScheduler extends Service {
    * Add an icon to the device status bar.
    */
   private void addIconToStatusBar() {
-    notificationManager.notify(1, createServiceRunningNotification());
+    notificationManager.notify(NOTIFICATION_ID, createServiceRunningNotification());
   }
 
   /**
    * Remove the icon from the device status bar.
    */
   private void removeIconFromStatusBar() {
-    notificationManager.cancelAll();
+    notificationManager.cancel(NOTIFICATION_ID);
   }
 
   /**
@@ -503,6 +503,7 @@ public class MeasurementScheduler extends Service {
     this.stopRequested = true;
     this.notifyAll();
     this.stopForeground(true);
+    this.removeIconFromStatusBar();
     this.stopSelf();
   }
   
