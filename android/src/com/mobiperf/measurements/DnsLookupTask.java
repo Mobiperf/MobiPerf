@@ -54,7 +54,7 @@ public class DnsLookupTask extends MeasurementTask {
         double intervalSec, long count, long priority, Map<String, String> params) {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);
-      initalizeParams(params);
+      initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("LookupDnsTask cannot be created due " +
             " to null target string");
@@ -70,7 +70,7 @@ public class DnsLookupTask extends MeasurementTask {
     }
 
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       if (params == null) {
         return;
       }

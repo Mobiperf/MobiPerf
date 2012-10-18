@@ -13,6 +13,18 @@
  */
 package com.mobiperf.speedometer;
 
+import com.mobiperf.measurements.DnsLookupTask;
+import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.PingTask;
+import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.UDPBurstTask;
+import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
+import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.speedometer.R;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -32,17 +44,8 @@ import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.Toast;
 
-import com.mobiperf.measurements.DnsLookupTask;
-import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
-import com.mobiperf.measurements.HttpTask;
-import com.mobiperf.measurements.HttpTask.HttpDesc;
-import com.mobiperf.measurements.PingTask;
-import com.mobiperf.measurements.PingTask.PingDesc;
-import com.mobiperf.measurements.TracerouteTask;
-import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
-import com.mobiperf.measurements.UDPBurstTask;
-import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
-
+import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,8 +108,6 @@ public class MeasurementCreationActivity extends Activity {
     text.setOnFocusChangeListener(textFocusChangeListener);
     text = (EditText) findViewById(R.id.dnsLookupText);
     text.setOnFocusChangeListener(textFocusChangeListener);
-    text = (EditText) findViewById(R.id.UDPBurstLookupText);
-    text.setOnFocusChangeListener(textFocusChangeListener);
   }
 
   @Override
@@ -134,7 +135,6 @@ public class MeasurementCreationActivity extends Activity {
     } else if (this.measurementTypeUnderEdit.compareTo(DnsLookupTask.TYPE) == 0) {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE) == 0) {
-      this.findViewById(R.id.UDPBurstTargetView).setVisibility(View.VISIBLE);
       this.findViewById(R.id.UDPBurstDirView).setVisibility(View.VISIBLE);
     }
   }
@@ -213,9 +213,10 @@ public class MeasurementCreationActivity extends Activity {
           newTask =
               new DnsLookupTask(desc, MeasurementCreationActivity.this.getApplicationContext());
         } else if (measurementTypeUnderEdit.equals(UDPBurstTask.TYPE)) {
-          EditText udpTargetText = (EditText) findViewById(R.id.UDPBurstLookupText);
           Map<String, String> params = new HashMap<String, String>();
-          params.put("target", udpTargetText.getText().toString());
+          // TODO(dominich): Support multiple servers for UDP. For now, just
+          // m-lab.
+          params.put("target", "m-lab");
           params.put("direction", udpDir);
           UDPBurstDesc desc = new UDPBurstDesc(null,
               Calendar.getInstance().getTime(),
@@ -223,7 +224,7 @@ public class MeasurementCreationActivity extends Activity {
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
-              params);
+              params, MeasurementCreationActivity.this.getApplicationContext());
           newTask =
               new UDPBurstTask(desc, MeasurementCreationActivity.this.getApplicationContext());
         }
@@ -255,10 +256,12 @@ public class MeasurementCreationActivity extends Activity {
                 Toast.LENGTH_LONG).show();
           }
         }
-      } catch (Exception e) {
-        Logger.e("Exception when creating user measurements", e);
-        Toast.makeText(MeasurementCreationActivity.this, R.string.invalidUserMeasurementInputToast,
-            Toast.LENGTH_LONG).show();
+      } catch (InvalidParameterException e) {
+        Logger.e("InvalidParameterException when creating user measurements", e);
+        Toast.makeText(MeasurementCreationActivity.this,
+                       R.string.invalidParameterExceptionMeasurementToast +
+                       ": " + e.getMessage(),
+                       Toast.LENGTH_LONG).show();
       }
     }
 

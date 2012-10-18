@@ -84,7 +84,7 @@ public class TestMeasurementTaskBase extends
       }
 
       @Override
-      protected void initalizeParams(Map<String, String> params) {
+      protected void initializeParams(Map<String, String> params) {
         // no need to do anything here.
       }
       

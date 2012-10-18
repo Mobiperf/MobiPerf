@@ -63,7 +63,8 @@
           android:hint="@string/pingTargetHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/regularTextSize" android:text="www.google.com"/>
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/defaultDomain"/>
       </LinearLayout>    
     </TableRow>
     <TableRow
@@ -88,7 +89,8 @@
           android:hint="@string/pingTargetHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/regularTextSize" android:text="www.google.com"/>
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/defaultDomain"/>
       </LinearLayout>    
     </TableRow>
     <TableRow
@@ -113,7 +115,8 @@
           android:hint="@string/httpUrlHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/defaultDomain"/>
       </LinearLayout>          
     </TableRow>
     <TableRow
@@ -138,34 +141,10 @@
           android:hint="@string/pingTargetHint"
           android:inputType="textUri"
           android:lines="1"
-          android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/defaultDomain"/>
       </LinearLayout>
     </TableRow>
-    <TableRow
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:id="@+id/UDPBurstTargetView"
-      android:paddingTop="@dimen/marginBetweenRows">
-      <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|center_vertical"
-        android:textSize="@dimen/regularTextSize"
-        android:text="@string/UDPBurstTargetLabel"/>
-      <LinearLayout
-        android:paddingLeft="@dimen/marginBetweenColumns"
-        android:orientation="horizontal" 
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <EditText android:id="@+id/UDPBurstLookupText"
-          android:layout_height="@dimen/editTextBoxHeight"
-          android:layout_width="match_parent"
-          android:hint="@string/UDPBurstTargetHint"
-          android:inputType="textUri"
-          android:lines="1"
-          android:textSize="@dimen/smallTextSize" android:text="www.google.com"/>
-      </LinearLayout>
-    </TableRow>      
     <TableRow
       android:layout_width="match_parent"
       android:layout_height="wrap_content"

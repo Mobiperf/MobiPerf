@@ -3,30 +3,52 @@
 
 package com.mobiperf.measurements;
 
+import com.mobiperf.speedometer.Logger;
 import com.mobiperf.speedometer.MeasurementDesc;
 import com.mobiperf.speedometer.MeasurementError;
 import com.mobiperf.speedometer.MeasurementResult;
 import com.mobiperf.speedometer.MeasurementTask;
 import com.mobiperf.speedometer.SpeedometerApp;
 import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.util.Util;
 
 import android.content.Context;
+import android.util.Base64;
 import android.util.Log;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HTTP;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * 
  * UDPBurstTask provides two types of measurements, Burst Up and Burst Down,
- * described next. 
+ * described next.
  * 
  * 1. UDPBurst Up: the device sends sends a burst of UDPBurstCount UDP packets
  * and waits for a response from the server that includes the number of
@@ -46,7 +68,7 @@ public class UDPBurstTask extends MeasurementTask {
   private static final int MIN_PACKETSIZE = 20;
   private static final int MAX_PACKETSIZE = 500;
   private static final int DEFAULT_PORT = 31341;
-  
+
   private static final int RCV_TIMEOUT = 3000; // in msec
 
   private static final int PKT_ERROR = 1;
@@ -55,6 +77,7 @@ public class UDPBurstTask extends MeasurementTask {
   private static final int PKT_REQUEST = 4;
 
   private String targetIp = null;
+  private Context context = null;
 
   private static int seq = 1;
 
@@ -71,17 +94,103 @@ public class UDPBurstTask extends MeasurementTask {
     public int dstPort = UDPBurstTask.DEFAULT_PORT;
     public String target = null;
     public boolean dirUp = false;
+    private Context context = null;
 
     public UDPBurstDesc(String key, Date startTime,
         Date endTime, double intervalSec, long count, 
-        long priority, Map<String, String> params) 
+        long priority, Map<String, String> params, Context context) 
             throws InvalidParameterException {
       super(UDPBurstTask.TYPE, key, startTime, endTime, intervalSec, count,
-          priority, params);  
-      initalizeParams(params);
+          priority, params);
+      this.context = context;
+      initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
-        throw new InvalidParameterException("UDPTask null target");
+        throw new InvalidParameterException("UDPBurstTask null target");
       }
+    }
+
+    private String getContentCharSet(final HttpEntity entity) throws ParseException {
+      if (entity == null) {
+        throw new IllegalArgumentException("entity may not be null");
+      }
+
+      String charset = null;
+      if (entity.getContentType() != null) {
+        HeaderElement values[] = entity.getContentType().getElements();
+        if (values.length > 0) {
+          NameValuePair param = values[0].getParameterByName("charset");
+          if (param != null) {
+            charset = param.getValue();
+          }
+        }
+      }
+      return charset;
+    }
+
+    private String getResponseBodyFromEntity(HttpEntity entity) throws IOException, ParseException {
+      if (entity == null) {
+        throw new IllegalArgumentException("entity may not be null");
+      }
+
+      InputStream instream = entity.getContent();
+      if (instream == null) {
+        return "";
+      }
+
+      if (entity.getContentEncoding() != null) {
+        if ("gzip".equals(entity.getContentEncoding().getValue())) {
+          instream = new GZIPInputStream(instream);
+        }
+      }
+
+      if (entity.getContentLength() > Integer.MAX_VALUE) {
+        throw new IllegalArgumentException("HTTP entity too large to be buffered into memory");
+      }
+
+      String charset = getContentCharSet(entity);
+      if (charset == null) {
+        charset = HTTP.DEFAULT_CONTENT_CHARSET;
+      }
+
+      Reader reader = new InputStreamReader(instream, charset);
+      StringBuilder buffer = new StringBuilder();
+
+      try {
+        char[] tmp = new char[1024];
+        int l;
+        while ((l = reader.read(tmp, 0, tmp.length)) != -1) {
+          Logger.d("  reading: " + tmp);
+          buffer.append(tmp);
+        }
+      } finally {
+        reader.close();
+      }
+      
+      return buffer.toString();
+    }
+
+    private String getResponseBody(HttpResponse response) throws IllegalArgumentException {
+      String response_text = null;
+      HttpEntity entity = null;
+      
+      if (response == null) {
+        throw new IllegalArgumentException("response may not be null");
+      }
+
+      try {
+        entity = response.getEntity();
+        response_text = getResponseBodyFromEntity(entity);
+      } catch (ParseException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        if (entity != null) {
+          try {
+            entity.consumeContent();
+          } catch (IOException e1) {
+          }
+        }
+      }
+      return response_text;
     }
 
     /**
@@ -92,14 +201,70 @@ public class UDPBurstTask extends MeasurementTask {
      * 3. "packet_size_byte": the size of each packet in bytes
      */
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       if (params == null) {
         return;
       }
 
       this.target = params.get("target");
+      if (!this.target.equals("m-lab")) {
+        throw new InvalidParameterException("Unknown target " + target + " for UDPBurstTask");
+      }
 
-      try {        
+      // TODO(dominich): Abstract this out.
+      // Query m-lab-ns for a domain to use.
+      final int maxResponseSize = 1024;
+
+      ByteBuffer body = ByteBuffer.allocate(maxResponseSize);
+      InputStream inputStream = null;
+    
+      try {
+        // TODO(Wenjie): Need to set timeout for the HTTP methods
+        // TODO(dominich): This should not be done on the UI thread.
+        DefaultHttpClient httpClient = new DefaultHttpClient();
+        Logger.d("Creating request GET for mlab-ns");
+        // TODO(dominich): Remove address_family and allow for IPv6.
+        HttpGet request = new HttpGet("http://mlab-ns.appspot.com/mobiperf?format=json&address_family=ipv4");
+        request.setHeader("User-Agent", Util.prepareUserAgent(this.context));
+
+        HttpResponse response = httpClient.execute(request);
+
+        /* TODO(Wenjie): HttpClient does not automatically handle the following codes
+         * 301 Moved Permanently. HttpStatus.SC_MOVED_PERMANENTLY
+         * 302 Moved Temporarily. HttpStatus.SC_MOVED_TEMPORARILY
+         * 303 See Other. HttpStatus.SC_SEE_OTHER
+         * 307 Temporary Redirect. HttpStatus.SC_TEMPORARY_REDIRECT
+         * 
+         * We may want to fetch instead from the redirected page. 
+         */
+        if (response.getStatusLine().getStatusCode() != 200) {
+          throw new InvalidParameterException(
+              "Received status " + response.getStatusLine().getStatusCode() + " from m-lab-ns");
+        }
+        Logger.d("STATUS OK");
+
+        String body_str = getResponseBody(response);
+        Logger.i("Received from m-lab-ns: " + body_str);
+        JSONObject json = new JSONObject(body_str);
+        this.target = String.valueOf(json.getString("fqdn"));
+        Logger.i("Setting target to: " + this.target);
+      } catch (IOException e) {
+        Logger.e("IOException trying to contact m-lab-ns: " + e.getMessage());
+        throw new InvalidParameterException(e.getMessage());
+      } catch (JSONException e) {
+        Logger.e("JSONException trying to contact m-lab-ns: " + e.getMessage());
+        throw new InvalidParameterException(e.getMessage());
+      } finally {
+        if (inputStream != null) {
+          try {
+            inputStream.close();
+          } catch (IOException e) {
+            Logger.e("Failed to close the input stream from the HTTP response");
+          }
+        }
+      }
+
+      try {
         String val = null;
         if ((val = params.get("packet_size_byte")) != null && val.length() > 0 
             && Integer.parseInt(val) > 0) {
@@ -143,9 +308,11 @@ public class UDPBurstTask extends MeasurementTask {
     return UDPBurstDesc.class;
   }
 
-  public UDPBurstTask(MeasurementDesc desc, Context parent) {
+  public UDPBurstTask(MeasurementDesc desc, Context context) {
     super(new UDPBurstDesc(desc.key, desc.startTime, desc.endTime, 
-        desc.intervalSec, desc.count, desc.priority, desc.parameters), parent);
+        desc.intervalSec, desc.count, desc.priority, desc.parameters, context),
+        context);
+    this.context = context;
   }
 
   /**
@@ -156,10 +323,10 @@ public class UDPBurstTask extends MeasurementTask {
     MeasurementDesc desc = this.measurementDesc;
     UDPBurstDesc newDesc = new UDPBurstDesc(desc.key, desc.startTime, 
         desc.endTime, desc.intervalSec, desc.count, desc.priority, 
-        desc.parameters);
-    return new UDPBurstTask(newDesc, parent);
+        desc.parameters, context);
+    return new UDPBurstTask(newDesc, context);
   }
-  
+ 
   /**
    * Opens a datagram (UDP) socket
    * 
@@ -176,10 +343,10 @@ public class UDPBurstTask extends MeasurementTask {
     } catch (SocketException e) {
       throw new MeasurementError("Socket creation failed");
     }
-    
+ 
     return sock;
   }
-  
+ 
   /**
    * Opens a Datagram socket to the server included in the UDPDesc
    * and sends a burst of UDPBurstCount packets, each of size packetSizeByte.
@@ -195,7 +362,7 @@ public class UDPBurstTask extends MeasurementTask {
     ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
     DataOutputStream dataOut = new DataOutputStream(byteOut);
     DatagramSocket sock = null;
-    
+ 
     // Resolve the server's name
     try {
       addr = InetAddress.getByName(desc.target);
@@ -203,7 +370,7 @@ public class UDPBurstTask extends MeasurementTask {
     } catch (UnknownHostException e) {
       throw new MeasurementError("Unknown host " + desc.target);
     }
-    
+ 
     sock = openSocket();
     byte[] data = byteOut.toByteArray();
     DatagramPacket packet = new DatagramPacket(data, data.length, addr, desc.dstPort);
@@ -227,7 +394,7 @@ public class UDPBurstTask extends MeasurementTask {
       }
       data = byteOut.toByteArray();
       packet.setData(data);
-      
+ 
       try {
         sock.send(packet);
       } catch (IOException e) {
@@ -245,7 +412,7 @@ public class UDPBurstTask extends MeasurementTask {
     }
     return sock;
   }
-  
+ 
   /**
    * Receive a response from the server after the burst of uplink packets was
    * sent, parse it, and return the number of packets the server received.
@@ -258,13 +425,13 @@ public class UDPBurstTask extends MeasurementTask {
   private int recvUpResponse(DatagramSocket sock) throws MeasurementError {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
     int ptype, burstsize, pktnum;
-    
+ 
     // Receive response
     Log.i(SpeedometerApp.TAG, "Waiting for UDP response from " + desc.target + ": " + targetIp);
 
     byte buffer[] = new byte[UDPBurstTask.MIN_PACKETSIZE];
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
-    
+ 
     try {
       sock.setSoTimeout(RCV_TIMEOUT);
       sock.receive(recvpacket);
@@ -279,7 +446,7 @@ public class UDPBurstTask extends MeasurementTask {
     ByteArrayInputStream byteIn =
         new ByteArrayInputStream(recvpacket.getData(), 0, recvpacket.getLength());
     DataInputStream dataIn = new DataInputStream(byteIn);
-    
+ 
     try {
       ptype = dataIn.readInt();
       burstsize = dataIn.readInt();
@@ -288,13 +455,13 @@ public class UDPBurstTask extends MeasurementTask {
       sock.close();
       throw new MeasurementError("Error parsing response from " + desc.target);
     }
-    
+ 
     Log.i(SpeedometerApp.TAG, "Recv UDP resp from " + desc.target + " type:" + ptype + " burst:"
         + burstsize + " pktnum:" + pktnum);
-  
+ 
     return pktnum;
   }
-  
+ 
   /**
    * Opens a datagram socket to the server in the UDPDesc and requests the
    * server to send a burst of UDPBurstCount packets, each of packetSizeByte
@@ -310,7 +477,7 @@ public class UDPBurstTask extends MeasurementTask {
     ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
     DataOutputStream dataOut = new DataOutputStream(byteOut);
     DatagramSocket sock = null;
-    
+ 
     // Resolve the server's name
     try {
       addr = InetAddress.getByName(desc.target);
@@ -338,7 +505,7 @@ public class UDPBurstTask extends MeasurementTask {
     byte []data = byteOut.toByteArray();
     packet = new DatagramPacket(data, data.length, addr, desc.dstPort);
 
-    try {   
+    try { 
       sock.send(packet);
     } catch (IOException e) {
       sock.close();
@@ -396,7 +563,7 @@ public class UDPBurstTask extends MeasurementTask {
         pktnum = dataIn.readInt();
       } catch (IOException e) {
         sock.close();
-        throw new MeasurementError("Error parsing response from " + desc.target);       
+        throw new MeasurementError("Error parsing response from " + desc.target); 
       }
 
       Log.i(SpeedometerApp.TAG, "Recv UDP response from " + desc.target + 
@@ -435,6 +602,7 @@ public class UDPBurstTask extends MeasurementTask {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
 
+    Logger.i("Running UDPBurstTask on " + desc.target);
     try {
       if (desc.dirUp == true) {
         socket = sendUpBurst();
