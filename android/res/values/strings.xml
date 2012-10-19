@@ -40,7 +40,7 @@
     <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
     <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
     <string name="aboutTitle">About</string>
-    <string name="aboutText">MobiPerf is open source software for measuring network performance on mobile platforms. You can measure network throughput and latency, as well as other useful network metrics. The collected data are used anonymously in research projects in universities and user credentials are never collected or leaked via this software.</string>
+    <string name="aboutText"> Mobiperf is an open source application for measuring network performance on mobile platforms. You can measure your network\'s throughput and latency, as well as other useful network metrics. Mobiperf also performs measurements at regular intervals in the background.\n\nThe data is collected either anonymously or from your selected account, which allows you to see your own data on http://openmobiledata.appspot.com. The user credentials collected are not shared outside of this site, and any data used in research projects in universities are anonymized before use.</string>
     <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
     <string name="selectedString">is selected for authenticating with MobiPerf server.</string>
     <string name="defaultUser">Anonymous</string>

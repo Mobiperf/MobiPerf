@@ -22,7 +22,7 @@
             android:gravity="center_vertical"
             android:text="@string/aboutTitle"
             android:textSize="25px"
-            android:textColor="@android:color/white" />
+            android:textColor="@color/white" />
 
         <TextView
             android:layout_width="fill_parent"
@@ -37,7 +37,7 @@
             android:scrollbars="vertical"
             android:singleLine="false"
             android:text="@string/aboutText"
-            android:textColor="@android:color/white"
+            android:textColor="@color/white"
             android:textSize="20px" />
         
         <TextView 
@@ -45,7 +45,7 @@
             android:layout_width="fill_parent"
             android:layout_height="18dip"
             android:text=""
-            android:textColor="@android:color/white"
+            android:textColor="@color/white"
             android:textSize="18px" />
 
         <TextView
@@ -53,7 +53,8 @@
             android:layout_height="fill_parent"
             android:autoLink="all"
             android:text="@string/aboutContact"
-            android:textColor="@android:color/white"
+            android:textColor="@color/white"
+            android:textColorLink="@color/cyan"
             android:textSize="18px" />
     </LinearLayout>
 
