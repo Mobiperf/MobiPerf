@@ -38,7 +38,7 @@
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
     <string name="powerThreasholdReachedMsg">Measurement paused - below battery threshold</string>
-    <string name="terms">MobiPerf is a useful tool that collects anonymous network measurement results for academic research. If you agree that we can collect such anonymous information, click agree. Otherwise, you will quit this app.</string>
+    <string name="terms">MobiPerf is a useful tool that collects network measurement results for academic research. If you agree that we can collect such information, click agree. On the account selection screen, you will have the option to submit results anonymously. If you do not agree, the application will exit.</string>
     <string name="aboutTitle">About</string>
     <string name="aboutText">MobiPerf is an open source application for measuring network performance on mobile platforms. You can measure your network\'s throughput and latency, as well as other useful network metrics. MobiPerf also performs measurements at regular intervals in the background.\n\nThe data is collected either anonymously or from your selected account, which allows you to see your own data on http://openmobiledata.appspot.com. The user credentials collected are not shared outside of this site, and any data used in research projects in universities are anonymized before use.</string>
     <string name="aboutContact">\nHomepage:\nhttp://mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
