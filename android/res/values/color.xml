@@ -2,4 +2,5 @@
 <resources>
     <color name="lightGray">#888888</color>
     <color name="white">#FFFFFF</color>
+    <color name="cyan">#00FFFF</color>
 </resources>
