@@ -14,8 +14,6 @@
  */
 package com.mobiperf.speedometer;
 
-import java.security.Security;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.TabActivity;
@@ -37,6 +35,8 @@ import android.view.MenuItem;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.security.Security;
 
 import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 
