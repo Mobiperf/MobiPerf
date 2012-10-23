@@ -14,7 +14,7 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.R;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
@@ -30,8 +29,6 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ToggleButton;
-
-import java.util.List;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement

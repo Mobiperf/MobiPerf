@@ -15,20 +15,18 @@
 package com.mobiperf.speedometer;
 
 
-import com.mobiperf.measurements.DnsLookupTask;
-import com.mobiperf.measurements.HttpTask;
-import com.mobiperf.measurements.PingTask;
-import com.mobiperf.measurements.TracerouteTask;
-import com.mobiperf.measurements.UDPBurstTask;
-
-
-import android.content.Context;
-import android.content.Intent;
-
 import java.io.InvalidClassException;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import android.content.Context;
+import android.content.Intent;
+
+import com.mobiperf.measurements.DnsLookupTask;
+import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.PingTask;
+import com.mobiperf.measurements.TracerouteTask;
 
 /**
  * Represents a scheduled measurement task. Subclasses implement functionality

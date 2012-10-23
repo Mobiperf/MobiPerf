@@ -15,28 +15,6 @@
 
 package com.mobiperf.speedometer;
 
-import com.google.myjson.reflect.TypeToken;
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.BatteryCapPowerManager.PowerAwareTask;
-import com.mobiperf.util.MeasurementJsonConvertor;
-import com.mobiperf.util.PhoneUtils;
-
-import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.os.Binder;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
-import android.util.Log;
-import android.widget.ArrayAdapter;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -59,6 +37,25 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.os.Binder;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
+
+import com.google.myjson.reflect.TypeToken;
+import com.mobiperf.speedometer.BatteryCapPowerManager.PowerAwareTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 
 /**
  * The single scheduler thread that monitors the task queue, runs tasks at their specified

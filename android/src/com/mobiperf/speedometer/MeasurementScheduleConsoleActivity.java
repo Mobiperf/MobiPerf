@@ -15,13 +15,16 @@
 
 package com.mobiperf.speedometer;
 
+import java.util.AbstractCollection;
+import java.util.Date;
+import java.util.HashMap;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuInflater;
@@ -35,12 +38,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import java.util.AbstractCollection;
-import java.util.Date;
-import java.util.HashMap;
-
-import com.mobiperf.speedometer.R;
 
 /**
  * Activity that shows the current measurement schedule of the scheduler

@@ -14,8 +14,7 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
+import java.security.Security;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -28,12 +27,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -41,7 +38,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.security.Security;
+import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
 
 /**
  * The main UI thread that manages different tabs
