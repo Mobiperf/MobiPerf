@@ -14,21 +14,20 @@
  */
 package com.mobiperf.speedometer;
 
+import android.util.StringBuilderPrinter;
+
 import com.mobiperf.measurements.DnsLookupTask;
-import com.mobiperf.measurements.HttpTask;
-import com.mobiperf.measurements.PingTask;
-import com.mobiperf.measurements.TracerouteTask;
-import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.measurements.HttpTask;
 import com.mobiperf.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.PingTask;
 import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
+import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.Util;
-
-import android.util.Log;
-import android.util.StringBuilderPrinter;
 
 import java.util.Formatter;
 import java.util.HashMap;

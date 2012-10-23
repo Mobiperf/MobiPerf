@@ -13,23 +13,10 @@
  */
 package com.mobiperf.speedometer;
 
-import com.mobiperf.measurements.DnsLookupTask;
-import com.mobiperf.measurements.HttpTask;
-import com.mobiperf.measurements.PingTask;
-import com.mobiperf.measurements.TracerouteTask;
-import com.mobiperf.measurements.UDPBurstTask;
-import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
-import com.mobiperf.measurements.HttpTask.HttpDesc;
-import com.mobiperf.measurements.PingTask.PingDesc;
-import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
-import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
-import com.mobiperf.speedometer.R;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
@@ -44,6 +31,17 @@ import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.Toast;
+
+import com.mobiperf.measurements.DnsLookupTask;
+import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.PingTask;
+import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
+import com.mobiperf.measurements.UDPBurstTask;
+import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
 
 import java.util.Calendar;
 import java.util.HashMap;

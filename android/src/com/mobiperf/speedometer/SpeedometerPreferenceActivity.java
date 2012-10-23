@@ -15,8 +15,6 @@
 
 package com.mobiperf.speedometer;
 
-import com.mobiperf.speedometer.R;
-
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -24,7 +22,6 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -37,8 +34,6 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     super.onCreate(savedInstanceState);
     addPreferencesFromResource(R.xml.preference);
     
-    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
-        getApplicationContext());
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
     
@@ -92,15 +87,22 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     };
     
     ListPreference lp = (ListPreference)findPreference(Config.PREF_KEY_ACCOUNT);
-    final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
+    final CharSequence[] items = AccountSelector.getAccountList(getApplicationContext());
     lp.setEntries(items);
     lp.setEntryValues(items);
+   
+    // Restore current settings.
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+    String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
+    if (selectedAccount != null) {
+      lp.setValue(selectedAccount);
+    }
     
     lp.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
       @Override
       public boolean onPreferenceChange(Preference preference, Object newValue) {
         final String account = newValue.toString();
-        Logger.i("account selected is: "+account);
+        Logger.i("account selected is: " + account);
         
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         SharedPreferences.Editor editor = prefs.edit();
@@ -120,8 +122,8 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    // The scheduler has a receiver monitoring this intent to get the update
-    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings
+    // The scheduler has a receiver monitoring this intent to get the update.
+    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings.
     this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
   }
 }
