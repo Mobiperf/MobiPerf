@@ -91,7 +91,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     lp.setEntries(items);
     lp.setEntryValues(items);
    
-    //Restore current settings
+    // Restore current settings.
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
     String selectedAccount = prefs.getString(Config.PREF_KEY_SELECTED_ACCOUNT, null);
     if (selectedAccount != null) {
@@ -122,8 +122,8 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    // The scheduler has a receiver monitoring this intent to get the update
-    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings
+    // The scheduler has a receiver monitoring this intent to get the update.
+    // TODO(Wenjie): Only broadcast update intent when there is real change in the settings.
     this.sendBroadcast(new UpdateIntent("", UpdateIntent.PREFERENCE_ACTION));
   }
 }
