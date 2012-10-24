@@ -13,14 +13,12 @@ import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 
 import android.content.Context;
-import android.util.Base64;
 import android.util.Log;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
