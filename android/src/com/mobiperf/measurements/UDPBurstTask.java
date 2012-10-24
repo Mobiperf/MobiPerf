@@ -1,5 +1,4 @@
-// Copyright 2012 Google Inc. All Rights Reserved.
-
+// Copyright 2012 Measurement Lab. All Rights Reserved.
 
 package com.mobiperf.measurements;
 
@@ -9,6 +8,7 @@ import com.mobiperf.speedometer.MeasurementError;
 import com.mobiperf.speedometer.MeasurementResult;
 import com.mobiperf.speedometer.MeasurementTask;
 import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.util.MLabNS;
 import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 
@@ -23,27 +23,9 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HTTP;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * 
@@ -109,90 +91,6 @@ public class UDPBurstTask extends MeasurementTask {
       }
     }
 
-    private String getContentCharSet(final HttpEntity entity) throws ParseException {
-      if (entity == null) {
-        throw new IllegalArgumentException("entity may not be null");
-      }
-
-      String charset = null;
-      if (entity.getContentType() != null) {
-        HeaderElement values[] = entity.getContentType().getElements();
-        if (values.length > 0) {
-          NameValuePair param = values[0].getParameterByName("charset");
-          if (param != null) {
-            charset = param.getValue();
-          }
-        }
-      }
-      return charset;
-    }
-
-    private String getResponseBodyFromEntity(HttpEntity entity) throws IOException, ParseException {
-      if (entity == null) {
-        throw new IllegalArgumentException("entity may not be null");
-      }
-
-      InputStream instream = entity.getContent();
-      if (instream == null) {
-        return "";
-      }
-
-      if (entity.getContentEncoding() != null) {
-        if ("gzip".equals(entity.getContentEncoding().getValue())) {
-          instream = new GZIPInputStream(instream);
-        }
-      }
-
-      if (entity.getContentLength() > Integer.MAX_VALUE) {
-        throw new IllegalArgumentException("HTTP entity too large to be buffered into memory");
-      }
-
-      String charset = getContentCharSet(entity);
-      if (charset == null) {
-        charset = HTTP.DEFAULT_CONTENT_CHARSET;
-      }
-
-      Reader reader = new InputStreamReader(instream, charset);
-      StringBuilder buffer = new StringBuilder();
-
-      try {
-        char[] tmp = new char[1024];
-        int l;
-        while ((l = reader.read(tmp, 0, tmp.length)) != -1) {
-          Logger.d("  reading: " + tmp);
-          buffer.append(tmp);
-        }
-      } finally {
-        reader.close();
-      }
-      
-      return buffer.toString();
-    }
-
-    private String getResponseBody(HttpResponse response) throws IllegalArgumentException {
-      String response_text = null;
-      HttpEntity entity = null;
-      
-      if (response == null) {
-        throw new IllegalArgumentException("response may not be null");
-      }
-
-      try {
-        entity = response.getEntity();
-        response_text = getResponseBodyFromEntity(entity);
-      } catch (ParseException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        if (entity != null) {
-          try {
-            entity.consumeContent();
-          } catch (IOException e1) {
-          }
-        }
-      }
-      return response_text;
-    }
-
     /**
      * There are three UDP specific parameters:
      * 
@@ -211,58 +109,8 @@ public class UDPBurstTask extends MeasurementTask {
         throw new InvalidParameterException("Unknown target " + target + " for UDPBurstTask");
       }
 
-      // TODO(dominich): Abstract this out.
-      // Query m-lab-ns for a domain to use.
-      final int maxResponseSize = 1024;
-
-      ByteBuffer body = ByteBuffer.allocate(maxResponseSize);
-      InputStream inputStream = null;
-    
-      try {
-        // TODO(Wenjie): Need to set timeout for the HTTP methods
-        // TODO(dominich): This should not be done on the UI thread.
-        DefaultHttpClient httpClient = new DefaultHttpClient();
-        Logger.d("Creating request GET for mlab-ns");
-        // TODO(dominich): Remove address_family and allow for IPv6.
-        HttpGet request = new HttpGet("http://mlab-ns.appspot.com/mobiperf?format=json&address_family=ipv4");
-        request.setHeader("User-Agent", Util.prepareUserAgent(this.context));
-
-        HttpResponse response = httpClient.execute(request);
-
-        /* TODO(Wenjie): HttpClient does not automatically handle the following codes
-         * 301 Moved Permanently. HttpStatus.SC_MOVED_PERMANENTLY
-         * 302 Moved Temporarily. HttpStatus.SC_MOVED_TEMPORARILY
-         * 303 See Other. HttpStatus.SC_SEE_OTHER
-         * 307 Temporary Redirect. HttpStatus.SC_TEMPORARY_REDIRECT
-         * 
-         * We may want to fetch instead from the redirected page. 
-         */
-        if (response.getStatusLine().getStatusCode() != 200) {
-          throw new InvalidParameterException(
-              "Received status " + response.getStatusLine().getStatusCode() + " from m-lab-ns");
-        }
-        Logger.d("STATUS OK");
-
-        String body_str = getResponseBody(response);
-        Logger.i("Received from m-lab-ns: " + body_str);
-        JSONObject json = new JSONObject(body_str);
-        this.target = String.valueOf(json.getString("fqdn"));
-        Logger.i("Setting target to: " + this.target);
-      } catch (IOException e) {
-        Logger.e("IOException trying to contact m-lab-ns: " + e.getMessage());
-        throw new InvalidParameterException(e.getMessage());
-      } catch (JSONException e) {
-        Logger.e("JSONException trying to contact m-lab-ns: " + e.getMessage());
-        throw new InvalidParameterException(e.getMessage());
-      } finally {
-        if (inputStream != null) {
-          try {
-            inputStream.close();
-          } catch (IOException e) {
-            Logger.e("Failed to close the input stream from the HTTP response");
-          }
-        }
-      }
+      this.target = MLabNS.Lookup(context, "mobiperf-udp");
+      Logger.i("Setting target to: " + this.target);
 
       try {
         String val = null;
