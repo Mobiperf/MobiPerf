@@ -21,6 +21,7 @@ import com.mobiperf.measurements.DnsLookupTask;
 import com.mobiperf.measurements.HttpTask;
 import com.mobiperf.measurements.PingTask;
 import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.UDPBurstTask;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
