@@ -13,7 +13,6 @@ import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -107,7 +106,7 @@ public class UDPBurstTask extends MeasurementTask {
         throw new InvalidParameterException("Unknown target " + target + " for UDPBurstTask");
       }
 
-      this.target = MLabNS.Lookup(context, "mobiperf-udp");
+      this.target = MLabNS.Lookup(context, "mobiperf");
       Logger.i("Setting target to: " + this.target);
 
       try {
@@ -247,7 +246,7 @@ public class UDPBurstTask extends MeasurementTask {
         sock.close();
         throw new MeasurementError("Error sending " + desc.target);
       }
-      Log.i(SpeedometerApp.TAG, "Sent packet pnum:" + i + " to " + desc.target + ": " + targetIp);
+      Logger.i("Sent packet pnum:" + i + " to " + desc.target + ": " + targetIp);
     } // for()
 
     try {
@@ -273,7 +272,7 @@ public class UDPBurstTask extends MeasurementTask {
     int ptype, burstsize, pktnum;
  
     // Receive response
-    Log.i(SpeedometerApp.TAG, "Waiting for UDP response from " + desc.target + ": " + targetIp);
+    Logger.i("Waiting for UDP response from " + desc.target + ": " + targetIp);
 
     byte buffer[] = new byte[UDPBurstTask.MIN_PACKETSIZE];
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
@@ -302,8 +301,8 @@ public class UDPBurstTask extends MeasurementTask {
       throw new MeasurementError("Error parsing response from " + desc.target);
     }
  
-    Log.i(SpeedometerApp.TAG, "Recv UDP resp from " + desc.target + " type:" + ptype + " burst:"
-        + burstsize + " pktnum:" + pktnum);
+    Logger.i("Recv UDP resp from " + desc.target + " type:" + ptype + " burst:" + burstsize +
+             " pktnum:" + pktnum);
  
     return pktnum;
   }
@@ -334,8 +333,8 @@ public class UDPBurstTask extends MeasurementTask {
 
     sock = openSocket();
 
-    Log.i(SpeedometerApp.TAG, "Requesting UDP burst:" + desc.udpBurstCount + " pktsize: " 
-        + desc.packetSizeByte + " to " + desc.target + ": " + targetIp);
+    Logger.i("Requesting UDP burst:" + desc.udpBurstCount + " pktsize: " + desc.packetSizeByte +
+             " to " + desc.target + ": " + targetIp);
 
     try {
       dataOut.writeInt(UDPBurstTask.PKT_REQUEST);
@@ -383,7 +382,7 @@ public class UDPBurstTask extends MeasurementTask {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
 
     // Receive response
-    Log.i(SpeedometerApp.TAG, "Waiting for UDP burst from " + desc.target);
+    Logger.i("Waiting for UDP burst from " + desc.target);
 
     byte buffer[] = new byte[desc.packetSizeByte];
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
@@ -412,8 +411,8 @@ public class UDPBurstTask extends MeasurementTask {
         throw new MeasurementError("Error parsing response from " + desc.target); 
       }
 
-      Log.i(SpeedometerApp.TAG, "Recv UDP response from " + desc.target + 
-          " type:" + ptype + " burst:" + burstsize + " pktnum:" + pktnum);
+      Logger.i("Recv UDP response from " + desc.target + " type:" + ptype + " burst:" + burstsize +
+               " pktnum:" + pktnum);
 
       if (ptype == UDPBurstTask.PKT_DATA) {
         pktrecv++;

@@ -52,8 +52,10 @@ public class MLabNS {
       DefaultHttpClient httpClient = new DefaultHttpClient();
       Logger.d("Creating request GET for mlab-ns");
       // TODO(dominich): Remove address_family and allow for IPv6.
-      HttpGet request = new HttpGet("http://mlab-ns.appspot.com/" + tool + "?format=json&" +
-                                    "address_family=" + address_family);
+      String url = "http://mlab-ns.appspot.com/" + tool +
+          "?format=json&address_family=" + address_family;
+      Logger.i("Sending request: " + url);
+      HttpGet request = new HttpGet(url);
       request.setHeader("User-Agent", Util.prepareUserAgent(context));
 
       HttpResponse response = httpClient.execute(request);
