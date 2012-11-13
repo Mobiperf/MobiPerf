@@ -14,9 +14,9 @@
  */
 package com.mobiperf.speedometer.test;
 
-import com.mobiperf.speedometer.Checkin;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.Checkin;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.SpeedometerApp;
 
 import android.util.Log;
 

@@ -17,7 +17,7 @@ package com.mobiperf.speedometer.test;
 import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.SpeedometerApp;
 import com.mobiperf.util.MeasurementJsonConvertor;
 
 import android.util.Log;
