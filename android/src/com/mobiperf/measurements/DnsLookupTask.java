@@ -20,12 +20,10 @@ import com.mobiperf.MeasurementDesc;
 import com.mobiperf.MeasurementError;
 import com.mobiperf.MeasurementResult;
 import com.mobiperf.MeasurementTask;
-import com.mobiperf.SpeedometerApp;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.InvalidClassException;
 import java.net.InetAddress;
