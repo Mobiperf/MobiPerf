@@ -29,9 +29,6 @@ public class About extends Activity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.about);
-    //The following lines are not necessary, commenting them out help solve the privacy link unclickable problem
-    //TextView textView = (TextView) findViewById(R.id.about2);
-    //textView.setMovementMethod(ScrollingMovementMethod.getInstance());
     TextView version = (TextView)findViewById(R.id.about_version);
     
     try {
