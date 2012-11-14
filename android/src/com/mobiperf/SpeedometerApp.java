@@ -12,7 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer;
+package com.mobiperf;
+
+import java.security.Security;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -26,9 +28,13 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -36,9 +42,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.security.Security;
-
-import com.mobiperf.speedometer.MeasurementScheduler.SchedulerBinder;
+import com.mobiperf.MeasurementScheduler.SchedulerBinder;
 
 /**
  * The main UI thread that manages different tabs
@@ -145,14 +149,12 @@ public class SpeedometerApp extends TabActivity {
         return true;
       }
       case R.id.menuSettings: {
-        Intent settingsActivity = new Intent(getBaseContext(),
-            SpeedometerPreferenceActivity.class);
+        Intent settingsActivity = new Intent(getBaseContext(), SpeedometerPreferenceActivity.class);
         startActivity(settingsActivity);
         return true;
       }
       case R.id.aboutPage: {
-        Intent intent = new Intent(getBaseContext(),
-            com.mobiperf.mobiperf.About.class);
+        Intent intent = new Intent(getBaseContext(), com.mobiperf.About.class);
         startActivity(intent);
         return true;
       }
@@ -322,7 +324,16 @@ public class SpeedometerApp extends TabActivity {
   
   private Dialog showConsentDialog() {
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setMessage(getString(R.string.terms))
+    
+    final TextView message = new TextView(this);
+    final SpannableString s = new SpannableString(getString(R.string.terms));
+    Linkify.addLinks(s, Linkify.WEB_URLS);
+    message.setText(s);
+    message.setTextColor(Color.WHITE);
+    message.setTextSize(17);
+    message.setMovementMethod(LinkMovementMethod.getInstance());
+
+    builder.setView(message)
            .setCancelable(false)
            .setPositiveButton("Okay, got it", new DialogInterface.OnClickListener() {
               public void onClick(DialogInterface dialog, int which) {
@@ -338,7 +349,7 @@ public class SpeedometerApp extends TabActivity {
                  quitApp();
                }
            });
-    return builder.create(); 
+    return builder.create();
   }
   
   

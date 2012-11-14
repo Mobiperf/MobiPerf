@@ -14,12 +14,12 @@
  */
 package com.mobiperf.speedometer.test;
 
-import com.mobiperf.speedometer.MeasurementDesc;
-import com.mobiperf.speedometer.MeasurementError;
-import com.mobiperf.speedometer.MeasurementResult;
-import com.mobiperf.speedometer.MeasurementScheduler;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.MeasurementDesc;
+import com.mobiperf.MeasurementError;
+import com.mobiperf.MeasurementResult;
+import com.mobiperf.MeasurementScheduler;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.SpeedometerApp;
 
 import android.app.Instrumentation;
 import android.content.Context;
@@ -46,12 +46,12 @@ public class TestMeasurementTaskBase extends
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase() {
-    super("com.mobiperf.speedometer.SpeedometerApp", SpeedometerApp.class);
+    super("com.mobiperf.SpeedometerApp", SpeedometerApp.class);
   }
   
   @SuppressWarnings("unchecked")
   public TestMeasurementTaskBase(boolean isCheckinEnabled) {
-    super("com.mobiperf.speedometer.SpeedometerApp", SpeedometerApp.class);
+    super("com.mobiperf.SpeedometerApp", SpeedometerApp.class);
   }
   
   @Override
@@ -108,7 +108,7 @@ public class TestMeasurementTaskBase extends
     }
 
     /** 
-     * @see com.mobiperf.speedometer.MeasurementTask#getType() 
+     * @see com.mobiperf.MeasurementTask#getType() 
      * */
     @Override
     public String getType() {
@@ -116,7 +116,7 @@ public class TestMeasurementTaskBase extends
     }
 
     /* (non-Javadoc)
-     * @see com.mobiperf.speedometer.MeasurementTask#clone()
+     * @see com.mobiperf.MeasurementTask#clone()
      */
     @Override
     public MeasurementTask clone() {

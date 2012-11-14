@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -23,6 +23,8 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
+
+import com.mobiperf.R;
 
 /**
  * Activity that handles user preferences

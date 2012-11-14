@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.app.Activity;
 import android.content.Context;
@@ -42,6 +42,7 @@ import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.R;
 
 import java.util.Calendar;
 import java.util.HashMap;

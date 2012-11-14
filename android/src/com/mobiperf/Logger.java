@@ -1,6 +1,6 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
 
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.util.Log;
 

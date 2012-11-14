@@ -21,8 +21,10 @@
             android:layout_height="50dip"
             android:gravity="center_vertical"
             android:text="@string/aboutTitle"
-            android:textSize="25px"
-            android:textColor="@color/white" />
+            android:textSize="30px"
+            android:textColor="@color/white"
+            android:textColorLink="@color/cyan" />
+        
 
         <TextView
             android:layout_width="fill_parent"
@@ -33,12 +35,14 @@
             android:id="@+id/about2"
             android:layout_width="fill_parent"
             android:layout_height="250dip"
+            android:autoLink="all"
             android:maxLines="15"
             android:scrollbars="vertical"
             android:singleLine="false"
             android:text="@string/aboutText"
             android:textColor="@color/white"
-            android:textSize="20px" />
+            android:textColorLink="@color/cyan"
+            android:textSize="26px" />
         
         <TextView 
             android:id="@+id/about_version"
@@ -46,7 +50,7 @@
             android:layout_height="18dip"
             android:text=""
             android:textColor="@color/white"
-            android:textSize="18px" />
+            android:textSize="22px" />
 
         <TextView
             android:layout_width="fill_parent"
@@ -55,7 +59,7 @@
             android:text="@string/aboutContact"
             android:textColor="@color/white"
             android:textColorLink="@color/cyan"
-            android:textSize="18px" />
+            android:textSize="22px" />
     </LinearLayout>
 
 </LinearLayout>

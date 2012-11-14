@@ -12,16 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer;
+
+package com.mobiperf;
 
 /**
- * Error raised when a measurement fails.
+ * Subclass of MeasurementError that indicates that a measurement was skipped - a non-error result.
  */
-public class MeasurementError extends Exception {
-  public MeasurementError(String reason) {
+public class MeasurementSkippedException extends MeasurementError {
+  public MeasurementSkippedException(String reason) {
     super(reason);
   }
-  public MeasurementError(String reason, Throwable e) {
+
+  public MeasurementSkippedException(String reason, Throwable e) {
     super(reason, e);
   }
+
 }
