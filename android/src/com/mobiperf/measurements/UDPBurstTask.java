@@ -3,11 +3,11 @@
 
 package com.mobiperf.measurements;
 
-import com.mobiperf.speedometer.MeasurementDesc;
-import com.mobiperf.speedometer.MeasurementError;
-import com.mobiperf.speedometer.MeasurementResult;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.MeasurementDesc;
+import com.mobiperf.MeasurementError;
+import com.mobiperf.MeasurementResult;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.SpeedometerApp;
 import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;

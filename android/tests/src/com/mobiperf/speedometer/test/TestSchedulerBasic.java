@@ -16,8 +16,8 @@ package com.mobiperf.speedometer.test;
 
 import com.mobiperf.measurements.HttpTask;
 import com.mobiperf.measurements.HttpTask.HttpDesc;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.SpeedometerApp;
 
 import android.util.Log;
 

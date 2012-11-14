@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.R;
 
 /**
  * Helper class for google account checkins
