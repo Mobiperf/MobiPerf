@@ -14,9 +14,9 @@
  */
 package com.mobiperf.util;
 
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.Logger;
+import com.mobiperf.R;
+import com.mobiperf.SpeedometerApp;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

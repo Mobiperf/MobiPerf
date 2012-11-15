@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -29,6 +29,8 @@ import android.widget.ProgressBar;
 import android.widget.ToggleButton;
 
 import java.util.List;
+
+import com.mobiperf.R;
 
 /**
  * The activity that provides a console and progress bar of the ongoing measurement

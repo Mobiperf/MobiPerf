@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -28,11 +28,6 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-
-import com.google.myjson.reflect.TypeToken;
-import com.mobiperf.speedometer.BatteryCapPowerManager.PowerAwareTask;
-import com.mobiperf.util.MeasurementJsonConvertor;
-import com.mobiperf.util.PhoneUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -56,6 +51,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import com.google.myjson.reflect.TypeToken;
+import com.mobiperf.BatteryCapPowerManager.PowerAwareTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.R;
 
 /**
  * The single scheduler thread that monitors the task queue, runs tasks at their specified

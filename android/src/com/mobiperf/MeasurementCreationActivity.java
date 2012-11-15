@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 import com.mobiperf.measurements.DnsLookupTask;
 import com.mobiperf.measurements.HttpTask;
@@ -23,7 +23,7 @@ import com.mobiperf.measurements.HttpTask.HttpDesc;
 import com.mobiperf.measurements.PingTask.PingDesc;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
-import com.mobiperf.speedometer.R;
+import com.mobiperf.R;
 
 import android.app.Activity;
 import android.content.Context;

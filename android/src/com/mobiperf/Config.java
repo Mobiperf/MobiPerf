@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer;
+package com.mobiperf;
 
 /**
  * The system defaults.

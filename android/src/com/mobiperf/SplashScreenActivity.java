@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-package com.mobiperf.speedometer;
-
-import com.mobiperf.speedometer.R;
+package com.mobiperf;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -25,6 +23,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
+
+import com.mobiperf.R;
 
 /**
  * The splash screen for Speedometer
