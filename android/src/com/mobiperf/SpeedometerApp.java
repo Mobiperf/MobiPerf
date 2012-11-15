@@ -330,6 +330,7 @@ public class SpeedometerApp extends TabActivity {
     Linkify.addLinks(s, Linkify.WEB_URLS);
     message.setText(s);
     message.setTextColor(Color.WHITE);
+    message.setLinkTextColor(Color.CYAN);
     message.setTextSize(17);
     message.setMovementMethod(LinkMovementMethod.getInstance());
 
