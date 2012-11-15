@@ -8,6 +8,7 @@ import com.mobiperf.MeasurementError;
 import com.mobiperf.MeasurementResult;
 import com.mobiperf.MeasurementTask;
 import com.mobiperf.SpeedometerApp;
+import com.mobiperf.util.MLabNS;
 import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 

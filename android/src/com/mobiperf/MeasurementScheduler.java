@@ -640,8 +640,8 @@ public class MeasurementScheduler extends Service {
     removeAllUnscheduledTasks();
 
     for (MeasurementTask task : tasksFromServer) {
-      //Logger.i("added task: " + task.toString());
-      //this.submitTask(task);
+      Logger.i("added task: " + task.toString());
+      this.submitTask(task);
     }
   }
   

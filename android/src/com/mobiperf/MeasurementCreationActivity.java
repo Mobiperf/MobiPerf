@@ -13,18 +13,6 @@
  */
 package com.mobiperf;
 
-import com.mobiperf.measurements.DnsLookupTask;
-import com.mobiperf.measurements.HttpTask;
-import com.mobiperf.measurements.PingTask;
-import com.mobiperf.measurements.TracerouteTask;
-import com.mobiperf.measurements.UDPBurstTask;
-import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
-import com.mobiperf.measurements.HttpTask.HttpDesc;
-import com.mobiperf.measurements.PingTask.PingDesc;
-import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
-import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
-import com.mobiperf.R;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -43,6 +31,18 @@ import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.Toast;
+
+import com.mobiperf.measurements.DnsLookupTask;
+import com.mobiperf.measurements.DnsLookupTask.DnsLookupDesc;
+import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.HttpTask.HttpDesc;
+import com.mobiperf.measurements.PingTask;
+import com.mobiperf.measurements.PingTask.PingDesc;
+import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
+import com.mobiperf.measurements.UDPBurstTask;
+import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.R;
 
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -214,7 +214,7 @@ public class MeasurementCreationActivity extends Activity {
               new DnsLookupTask(desc, MeasurementCreationActivity.this.getApplicationContext());
         } else if (measurementTypeUnderEdit.equals(UDPBurstTask.TYPE)) {
           Map<String, String> params = new HashMap<String, String>();
-          // TODO(dominich): Support multiple servers for UDP. For now, just
+          // TODO(dominic): Support multiple servers for UDP. For now, just
           // m-lab.
           params.put("target", "m-lab");
           params.put("direction", udpDir);
@@ -224,7 +224,8 @@ public class MeasurementCreationActivity extends Activity {
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
-              params, MeasurementCreationActivity.this.getApplicationContext());
+              params,
+              MeasurementCreationActivity.this.getApplicationContext());
           newTask =
               new UDPBurstTask(desc, MeasurementCreationActivity.this.getApplicationContext());
         }
