@@ -102,7 +102,7 @@ public class UDPBurstTask extends MeasurementTask {
       }
 
       this.target = params.get("target");
-      if (!this.target.equals("m-lab")) {
+      if (!this.target.equals(MLabNS.TARGET)) {
         throw new InvalidParameterException("Unknown target " + target + " for UDPBurstTask");
       }
 

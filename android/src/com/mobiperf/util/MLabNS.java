@@ -30,6 +30,8 @@ import org.json.JSONObject;
 
 public class MLabNS {
 
+  static public final String TARGET = "m-lab";
+
   /**
    * Query MLab-NS to get an FQDN for the given tool.
    */
@@ -47,8 +49,8 @@ public class MLabNS {
     InputStream inputStream = null;
 
     try {
-      // TODO(Wenjie): Need to set timeout for the HTTP methods
-      // TODO(dominich): This should not be done on the UI thread.
+      // TODO(dominic): Need to set timeout for the HTTP methods
+      // TODO(dominic): This should not be done on the UI thread.
       DefaultHttpClient httpClient = new DefaultHttpClient();
       Logger.d("Creating request GET for mlab-ns");
       // TODO(dominich): Remove address_family and allow for IPv6.
@@ -59,18 +61,9 @@ public class MLabNS {
       request.setHeader("User-Agent", Util.prepareUserAgent(context));
 
       HttpResponse response = httpClient.execute(request);
-
-      /* TODO(Wenjie): HttpClient does not automatically handle the following codes
-       * 301 Moved Permanently. HttpStatus.SC_MOVED_PERMANENTLY
-       * 302 Moved Temporarily. HttpStatus.SC_MOVED_TEMPORARILY
-       * 303 See Other. HttpStatus.SC_SEE_OTHER
-       * 307 Temporary Redirect. HttpStatus.SC_TEMPORARY_REDIRECT
-       * 
-       * We may want to fetch instead from the redirected page. 
-       */
       if (response.getStatusLine().getStatusCode() != 200) {
         throw new InvalidParameterException(
-            "Received status " + response.getStatusLine().getStatusCode() + " from m-lab-ns");
+            "Received status " + response.getStatusLine().getStatusCode() + " from mlab-ns");
       }
       Logger.d("STATUS OK");
 
@@ -113,7 +106,8 @@ public class MLabNS {
     return charset;
   }
 
-  static private String getResponseBodyFromEntity(HttpEntity entity) throws IOException, ParseException {
+  static private String getResponseBodyFromEntity(HttpEntity entity)
+      throws IOException, ParseException {
     if (entity == null) {
       throw new IllegalArgumentException("entity may not be null");
     }

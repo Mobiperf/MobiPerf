@@ -42,6 +42,7 @@ import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.util.MLabNS;
 import com.mobiperf.R;
 
 import java.io.IOException;
@@ -216,7 +217,7 @@ public class MeasurementCreationActivity extends Activity {
           Map<String, String> params = new HashMap<String, String>();
           // TODO(dominic): Support multiple servers for UDP. For now, just
           // m-lab.
-          params.put("target", "m-lab");
+          params.put("target", MLabNS.TARGET);
           params.put("direction", udpDir);
           UDPBurstDesc desc = new UDPBurstDesc(null,
               Calendar.getInstance().getTime(),
