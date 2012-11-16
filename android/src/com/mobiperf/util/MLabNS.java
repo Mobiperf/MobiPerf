@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 public class MLabNS {
 
+  /** Used by measurement tests if MLabNS should be used to retrieve the real server target. */
   static public final String TARGET = "m-lab";
 
   /**

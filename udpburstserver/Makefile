@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -m32
+CFLAGS=-Wall -m32 -O3
 LDFLAGS=-m32
 DEPS = hellomake.h
 
