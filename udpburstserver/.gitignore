@@ -1,0 +1,3 @@
+*.o
+udpburstserver
+udpclient

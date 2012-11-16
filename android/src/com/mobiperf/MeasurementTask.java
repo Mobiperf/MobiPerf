@@ -21,6 +21,7 @@ import com.mobiperf.measurements.DnsLookupTask;
 import com.mobiperf.measurements.HttpTask;
 import com.mobiperf.measurements.PingTask;
 import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.UDPBurstTask;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
@@ -63,9 +64,9 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
-    // TODO(dominich): reinstate this once m-lab support has been added.
-//    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
-//    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
+    // TODO(dominic): reinstate this when we're ready for m-lab support.
+    // measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+    // measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);    
   }
   
   /** Gets the currently available measurement types*/

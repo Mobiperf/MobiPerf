@@ -86,7 +86,7 @@ public class PingTask extends MeasurementTask {
                     Map<String, String> params) throws InvalidParameterException {
       super(PingTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);  
-      initalizeParams(params);
+      initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("PingTask cannot be created due "
             + " to null target string");
@@ -94,7 +94,7 @@ public class PingTask extends MeasurementTask {
     }
     
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       if (params == null) {
         return;
       }

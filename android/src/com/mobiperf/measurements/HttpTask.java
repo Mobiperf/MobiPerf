@@ -90,14 +90,14 @@ public class HttpTask extends MeasurementTask {
                       double intervalSec, long count, long priority, Map<String, String> params) 
                       throws InvalidParameterException {
       super(HttpTask.TYPE, key, startTime, endTime, intervalSec, count, priority, params);
-      initalizeParams(params);
+      initializeParams(params);
       if (this.url == null || this.url.length() == 0) {
         throw new InvalidParameterException("URL for http task is null");
       }
     }
     
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       
       if (params == null) {
         return;

@@ -83,7 +83,7 @@ public class TracerouteTask extends MeasurementTask {
                           Map<String, String> params) throws InvalidParameterException {
       super(TracerouteTask.TYPE, key, startTime, endTime, intervalSec, count, 
           priority, params);
-      initalizeParams(params);
+      initializeParams(params);
       
       if (target == null || target.length() == 0) {
         throw new InvalidParameterException("Target of traceroute cannot be null");
@@ -96,7 +96,7 @@ public class TracerouteTask extends MeasurementTask {
     }
     
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       
       if (params == null) {
         return;
