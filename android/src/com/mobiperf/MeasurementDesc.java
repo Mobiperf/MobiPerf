@@ -86,7 +86,7 @@ public abstract class MeasurementDesc {
   public abstract String getType();
   
   /** Subclass override this method to initialize measurement specific parameters*/
-  protected abstract void initalizeParams(Map<String, String> params);
+  protected abstract void initializeParams(Map<String, String> params);
   
   @Override
   public String toString() {

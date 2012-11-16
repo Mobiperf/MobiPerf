@@ -16,7 +16,8 @@
     <string name="menuAbout">About</string>
     <string name="menuLog">System Log</string>
     <string name="measurementTypePrompt">Measurement Type</string>
-    <string name="pingTargetHint">e.g. www.google.com</string>
+    <string name="defaultDomain">www.google.com</string>
+    <string name="pingTargetHint">www.google.com</string>
     <string name="pingTargetLabel">Where to ping?</string>
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
     <string name="UDPBurstTargetLabel">Server name/IP?</string>
@@ -34,7 +35,9 @@
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
     <string name="userMeasurementFailureToast">The scheduler is busy, please run the measurement later</string>
     <string name="userMeasurementBusySchedulerToast">The scheduler is busy, your measurement will start shortly</string>
-    <string name="invalidUserMeasurementInputToast">Some parameters are not correct. Please make sure all measurement parameters are set properly.</string>
+    <string name="invalidParameterExceptionMeasurementToast">Some parameters are not correct. Please make sure all measurement parameters are set properly.</string>
+    <string name="ioExceptionMeasurementToast">Failed to run test. It\'s possible there is no network connection. Please make sure you have a network connection before running tests.</string>
+    <string name="exceptionMeasurementToast">An unknown error occurred when trying to run the measurement test. Please try again.</string>
     <string name="invalidCheckinIntervalToast">Invalid setting! Please choose an interval between 1 and 24 hours</string>
     <string name="invalidBatteryToast">Invalid setting! Please choose a battery level between 0 and 100 percent</string>
     <string name="menuInitializationExceptionToast">Exception occurs during menu initialization.</string>
