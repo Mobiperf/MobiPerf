@@ -15,18 +15,6 @@
 
 package com.mobiperf.measurements;
 
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.Config;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.MeasurementDesc;
-import com.mobiperf.speedometer.MeasurementError;
-import com.mobiperf.speedometer.MeasurementResult;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
-import com.mobiperf.util.MeasurementJsonConvertor;
-import com.mobiperf.util.PhoneUtils;
-import com.mobiperf.util.Util;
-
 import android.content.Context;
 import android.net.http.AndroidHttpClient;
 import android.util.Log;
@@ -52,10 +40,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
+import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
+import com.mobiperf.util.Util;
+import com.mobiperf.Config;
+import com.mobiperf.Logger;
+import com.mobiperf.MeasurementDesc;
+import com.mobiperf.MeasurementError;
+import com.mobiperf.MeasurementResult;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.R;
+import com.mobiperf.SpeedometerApp;
+
 /**
  * A callable that executes a ping task using one of three methods
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class PingTask extends MeasurementTask {
   // Type name for internal use
@@ -88,7 +86,7 @@ public class PingTask extends MeasurementTask {
                     Map<String, String> params) throws InvalidParameterException {
       super(PingTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);  
-      initalizeParams(params);
+      initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("PingTask cannot be created due "
             + " to null target string");
@@ -96,7 +94,7 @@ public class PingTask extends MeasurementTask {
     }
     
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       if (params == null) {
         return;
       }

@@ -1,5 +1,6 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -m32 -O3
+LDFLAGS=-m32
 DEPS = hellomake.h
 
 %.o: %.c $(DEPS)
@@ -8,10 +9,10 @@ DEPS = hellomake.h
 all: udpburstserver udpclient
 
 udpburstserver: udpburstserver.o
-	gcc -o udpburstserver udpburstserver.o
+	gcc $(LDFLAGS) -o udpburstserver udpburstserver.o
 
 udpclient: udpclient.o
-	gcc -o udpclient udpclient.o
+	gcc $(LDFLAGS) -o udpclient udpclient.o
 
 clean:
 	rm -f *.o *~ core udpburstserver udpclient

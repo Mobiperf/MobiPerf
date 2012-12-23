@@ -297,7 +297,7 @@ int processpacket(int sockfd, struct clientrec *clientp, char *msgp,
 }  // processpacket()
 
 int main(int argc, char**argv) {
-  int sockfd, n, i, rc;
+  int sockfd, i, rc;
   struct sockaddr_in servaddr, cliaddr;
   socklen_t len;
   char mesg[BUFSIZE];
@@ -363,8 +363,7 @@ int main(int argc, char**argv) {
 
     if (FD_ISSET(sockfd, &workset)) {
       len = sizeof(cliaddr);
-      n = recvfrom(sockfd, mesg, BUFSIZE, 0, (struct sockaddr *) &cliaddr,
-                   &len);
+      recvfrom(sockfd, mesg, BUFSIZE, 0, (struct sockaddr *) &cliaddr, &len);
 
       logmsg("received message from", inet_ntoa(cliaddr.sin_addr));
 

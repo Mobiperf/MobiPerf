@@ -14,18 +14,16 @@
  */
 package com.mobiperf.measurements;
 
-import com.mobiperf.speedometer.Config;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.MeasurementDesc;
-import com.mobiperf.speedometer.MeasurementError;
-import com.mobiperf.speedometer.MeasurementResult;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.Config;
+import com.mobiperf.Logger;
+import com.mobiperf.MeasurementDesc;
+import com.mobiperf.MeasurementError;
+import com.mobiperf.MeasurementResult;
+import com.mobiperf.MeasurementTask;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.InvalidClassException;
 import java.net.InetAddress;
@@ -36,10 +34,6 @@ import java.util.Map;
 
 /**
  * Measures the DNS lookup time
- * 
- * @author mdw@gogole.com (Matt Welsh)
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 public class DnsLookupTask extends MeasurementTask {
   // Type name for internal use
@@ -58,7 +52,7 @@ public class DnsLookupTask extends MeasurementTask {
         double intervalSec, long count, long priority, Map<String, String> params) {
       super(DnsLookupTask.TYPE, key, startTime, endTime, intervalSec, count,
           priority, params);
-      initalizeParams(params);
+      initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("LookupDnsTask cannot be created due " +
             " to null target string");
@@ -74,7 +68,7 @@ public class DnsLookupTask extends MeasurementTask {
     }
 
     @Override
-    protected void initalizeParams(Map<String, String> params) {
+    protected void initializeParams(Map<String, String> params) {
       if (params == null) {
         return;
       }
