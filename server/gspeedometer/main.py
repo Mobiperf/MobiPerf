@@ -63,6 +63,10 @@ m.connect('/anonymous/checkin',
           controller='checkin:Checkin',
           action='Checkin')
 
+m.connect('/anonymous/',
+          controller='home:Home',
+          action='Dashboard')
+
 m.connect('/anonymous/postmeasurement',
           controller='measurement:Measurement',
           action='PostMeasurement')
