@@ -25,10 +25,10 @@ import com.google.myjson.JsonParseException;
 import com.google.myjson.JsonPrimitive;
 import com.google.myjson.JsonSerializationContext;
 import com.google.myjson.JsonSerializer;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.MeasurementDesc;
-import com.mobiperf.speedometer.MeasurementTask;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.Logger;
+import com.mobiperf.MeasurementDesc;
+import com.mobiperf.MeasurementTask;
+import com.mobiperf.SpeedometerApp;
 
 import android.content.Context;
 import android.util.Log;
@@ -51,8 +51,6 @@ import java.util.TimeZone;
  * measurement objects (descriptions, tasks, and results, etc.) and JSON objects. 
  * New types of MeasurementDesc should be registered in the static HashMap initialization
  * section.
- * @author wenjiezeng@google.com (Steve Zeng)
- *
  */
 @SuppressWarnings("rawtypes")
 public class MeasurementJsonConvertor {

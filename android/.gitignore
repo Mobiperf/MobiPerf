@@ -1,7 +1,4 @@
 bin/*
 gen/*
-tests/bin/*
-tests/gen/*
-tests/src/com/google/wireless/speed/speedometer/test/TestSchedulerUi.java
 local.properties
 proguard.cfg

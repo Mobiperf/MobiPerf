@@ -14,9 +14,9 @@
  */
 package com.mobiperf.util;
 
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.Logger;
+import com.mobiperf.R;
+import com.mobiperf.SpeedometerApp;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -32,9 +32,6 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class for Speedometer that does not require runtime information
- * 
- * @author mdw@google.com (Matt Welsh)
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class Util {
     

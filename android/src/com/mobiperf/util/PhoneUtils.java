@@ -14,11 +14,11 @@
  */
 package com.mobiperf.util;
 
-import com.mobiperf.speedometer.R;
-import com.mobiperf.speedometer.DeviceInfo;
-import com.mobiperf.speedometer.DeviceProperty;
-import com.mobiperf.speedometer.Logger;
-import com.mobiperf.speedometer.SpeedometerApp;
+import com.mobiperf.DeviceInfo;
+import com.mobiperf.DeviceProperty;
+import com.mobiperf.Logger;
+import com.mobiperf.R;
+import com.mobiperf.SpeedometerApp;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -65,12 +65,6 @@ import java.util.List;
 
 /**
  * Phone related utilities.
- *
- * @author klm@google.com (Michael Klepikov)
- * 
- * Changed acquireLock() to acquire the power lock if and only if wifi is active  
- * 
- * @author wenjiezeng@google.com (Wenjie Zeng)
  */
 public class PhoneUtils {
 
@@ -570,9 +564,9 @@ public class PhoneUtils {
   
   private synchronized void updateBatteryStat(Intent powerIntent) {
     int scale = powerIntent.getIntExtra(BatteryManager.EXTRA_SCALE, 
-        com.mobiperf.speedometer.Config.DEFAULT_BATTERY_SCALE);
+        com.mobiperf.Config.DEFAULT_BATTERY_SCALE);
     int level = powerIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, 
-        com.mobiperf.speedometer.Config.DEFAULT_BATTERY_LEVEL);
+        com.mobiperf.Config.DEFAULT_BATTERY_LEVEL);
     // change to the unit of percentage
     this.curBatteryLevel = level * 100 / scale;
     this.isCharging = powerIntent.getIntExtra(BatteryManager.EXTRA_STATUS, 
@@ -646,10 +640,18 @@ public class PhoneUtils {
     return context.getResources().getString(R.string.serverUrl);
   }
   
-  public boolean isTestingServer(String serverUrl) {
-    return serverUrl.indexOf("corp.google.com") > 0;
+  public String getAnonymousServerUrl() {
+    return context.getResources().getString(R.string.anonymousServerUrl);
   }
-  
+
+  public String getTestingServerUrl() {
+    return context.getResources().getString(R.string.testServerUrl);
+  }
+
+  public boolean isTestingServer(String serverUrl) {
+    return serverUrl == getTestingServerUrl();
+  }
+
   private String getCellularIp() {
     String ipAddress = null;
    
@@ -723,10 +725,10 @@ public class PhoneUtils {
   public DeviceProperty getDeviceProperty() {
     String carrierName = telephonyManager.getNetworkOperatorName();
     Location location;
-    if (!isTestingServer(getServerUrl())) {
-      location = getLocation();
-    } else {
+    if (isTestingServer(getServerUrl())) {
       location = getMockLocation();
+    } else {
+      location = getLocation();
     }
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
