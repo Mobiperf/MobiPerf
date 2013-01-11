@@ -175,6 +175,37 @@
         </RadioGroup> 
       </LinearLayout>          
     </TableRow>
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/TCPThroughputDirView">
+      
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/TCPThroughputDirLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"  
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RadioGroup
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal">
+          <RadioButton android:id="@+id/TCPThroughputUpButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Up" />
+          <RadioButton android:id="@+id/TCPThroughputDownButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Down" />
+        </RadioGroup> 
+      </LinearLayout>        
+    </TableRow>
     </TableLayout>
   </ScrollView>
 </RelativeLayout>

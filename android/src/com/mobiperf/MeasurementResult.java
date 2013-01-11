@@ -26,6 +26,8 @@ import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.measurements.TCPThroughputTask;
+import com.mobiperf.measurements.TCPThroughputTask.TCPThroughputDesc;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.Util;
 
@@ -95,6 +97,8 @@ public class MeasurementResult {
         getTracerouteResult(printer, values);
       } else if (type == UDPBurstTask.TYPE) {
         getUDPBurstResult(printer, values);
+      } else if (type == TCPThroughputTask.TYPE) {
+        getTCPThroughputResult(printer, values);
       } else {
         Logger.e("Failed to get results for unknown measurement type " + type);
       }
@@ -241,6 +245,45 @@ public class MeasurementResult {
     }
   }
 
+  private void getTCPThroughputResult(StringBuilderPrinter printer, 
+                                      HashMap<String, String> values) {
+    TCPThroughputDesc desc = (TCPThroughputDesc) parameters;
+    if (desc.dirUp) {
+      printer.println("[TCP Speed Test Uplink]");
+    } else {
+      printer.println("[TCP Speed Test Downlink]");
+    }
+    printer.println("Target: " + desc.target);
+    if (success) {
+      printer.println("Timestamp: " +
+                      Util.getTimeStringFromMicrosecond(properties.timestamp));
+      // printer.println("Server version: " + values.get("server_version"));
+      printer.println("");
+      // Display result with precision up to 2 digit
+      String speedInJSON = values.get("tcp_speed_results");
+      String dataLimitExceedInJSON = values.get("data_limit_exceeded");
+      String displayResult = "";
+
+      double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
+      double KB = Math.pow(2, 10);
+      if (tp > KB*KB) {
+        displayResult = "Speed: " + String.format("%.2f",tp/(KB*KB)) + " Gbps";
+      } else if (tp > KB ) {
+        displayResult = "Speed: " + String.format("%.2f",tp/KB) + " Mbps";
+      } else {
+        displayResult = "Speed: " + String.format("%.2f", tp) + " Kbps";
+      }
+
+      // Append notice for exceeding data limit
+      if (dataLimitExceedInJSON.equals("true")) {
+        displayResult += "\n* Task incomplete due to data limit";
+      }
+      printer.println(displayResult);
+    } else {
+      printer.println("Failed");
+    }
+  }
+  
   /**
    * Removes the quotes surrounding the string. If |str| is null, returns null.
    */
