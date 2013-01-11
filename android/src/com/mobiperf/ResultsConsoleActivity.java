@@ -58,7 +58,7 @@ public class ResultsConsoleActivity extends Activity {
     filter.addAction(UpdateIntent.MEASUREMENT_PROGRESS_UPDATE_ACTION);
 
     this.consoleView = (ListView) this.findViewById(R.id.resultConsole);
-    this.results = new ArrayAdapter<String>(this, R.layout.list_item);
+    this.results = new ArrayAdapter<String>(getApplicationContext(), R.layout.list_item);
     this.consoleView.setAdapter(this.results);
     this.progressBar = (ProgressBar) this.findViewById(R.id.progress_bar);
     this.progressBar.setMax(Config.MAX_PROGRESS_BAR_VALUE);

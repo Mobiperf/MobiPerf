@@ -1,6 +1,6 @@
 package com.mobiperf.util;
 
-import com.mobiperf.speedometer.Logger;
+import com.mobiperf.Logger;
 
 import android.content.Context;
 
@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.zip.GZIPInputStream;
@@ -23,6 +24,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
 import org.json.JSONException;
@@ -45,19 +49,25 @@ public class MLabNS {
    */
   static public String Lookup(Context context, String tool, String address_family) {
     final int maxResponseSize = 1024;
+    // Set the timeout in milliseconds until a connection is established.
+    final int timeoutConnection = 5000;
+    // Set the socket timeout in milliseconds.
+    final int timeoutSocket = 5000;
 
     ByteBuffer body = ByteBuffer.allocate(maxResponseSize);
     InputStream inputStream = null;
 
     try {
-      // TODO(dominic): Need to set timeout for the HTTP methods
       // TODO(dominic): This should not be done on the UI thread.
-      DefaultHttpClient httpClient = new DefaultHttpClient();
+      HttpParams httpParameters = new BasicHttpParams();
+      HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+      HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+      DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
+      
       Logger.d("Creating request GET for mlab-ns");
       // TODO(dominich): Remove address_family and allow for IPv6.
       String url = "http://mlab-ns.appspot.com/" + tool +
           "?format=json&address_family=" + address_family;
-      Logger.i("Sending request: " + url);
       HttpGet request = new HttpGet(url);
       request.setHeader("User-Agent", Util.prepareUserAgent(context));
 
@@ -69,9 +79,12 @@ public class MLabNS {
       Logger.d("STATUS OK");
 
       String body_str = getResponseBody(response);
-      Logger.i("Received from m-lab-ns: " + body_str);
       JSONObject json = new JSONObject(body_str);
       return String.valueOf(json.getString("fqdn"));
+    } catch (SocketTimeoutException e) {
+      Logger.e("SocketTimeoutException trying to contact m-lab-ns");
+      // e.getMessage() is null       
+      throw new InvalidParameterException("Connect to m-lab-ns timeout. Please try again.");
     } catch (IOException e) {
       Logger.e("IOException trying to contact m-lab-ns: " + e.getMessage());
       throw new InvalidParameterException(e.getMessage());

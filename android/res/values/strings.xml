@@ -48,4 +48,6 @@
     <string name="aboutContact">\nHomepage:\nhttp://www.mobiperf.com\n\nCode repository:\nhttps://github.com/Mobiperf/MobiPerf\n\nEmail:\nmobiperf@googlegroups.com</string>
     <string name="selectedString">is selected for authenticating with MobiPerf server.</string>
     <string name="defaultUser">Anonymous</string>
+    <string name="TCPThroughputDirLabel">Direction:</string>
+    <string name="TCPThroughputTargetHint">m-lab</string>
 </resources>

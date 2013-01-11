@@ -42,6 +42,8 @@ import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.TracerouteTask.TracerouteDesc;
 import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
+import com.mobiperf.measurements.TCPThroughputTask;
+import com.mobiperf.measurements.TCPThroughputTask.TCPThroughputDesc;
 import com.mobiperf.util.MLabNS;
 import com.mobiperf.R;
 
@@ -63,6 +65,7 @@ public class MeasurementCreationActivity extends Activity {
   private String measurementTypeUnderEdit;
   private ArrayAdapter<String> spinnerValues;
   private String udpDir;
+  private String tcpDir;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -90,13 +93,20 @@ public class MeasurementCreationActivity extends Activity {
     setupEditTextFocusChangeListener();
 
     this.udpDir = "Up";
-
-    final RadioButton radioUp = (RadioButton) findViewById(R.id.UDPBurstUpButton);
-    final RadioButton radioDown = (RadioButton) findViewById(R.id.UDPBurstDownButton);
-
-    radioUp.setChecked(true);
-    radioUp.setOnClickListener(new RadioOnClickListener());
-    radioDown.setOnClickListener(new RadioOnClickListener());
+    this.tcpDir = "Up";
+    
+    final RadioButton radioUDPUp = (RadioButton) findViewById(R.id.UDPBurstUpButton);
+    final RadioButton radioUDPDown = (RadioButton) findViewById(R.id.UDPBurstDownButton);
+    final RadioButton radioTCPUp = (RadioButton) findViewById(R.id.TCPThroughputUpButton);
+    final RadioButton radioTCPDown = (RadioButton) findViewById(R.id.TCPThroughputDownButton);
+    
+    radioUDPUp.setChecked(true);
+    radioUDPUp.setOnClickListener(new UDPRadioOnClickListener());
+    radioUDPDown.setOnClickListener(new UDPRadioOnClickListener());
+    
+    radioTCPUp.setChecked(true);
+    radioTCPUp.setOnClickListener(new TCPRadioOnClickListener());
+    radioTCPDown.setOnClickListener(new TCPRadioOnClickListener());
   }
 
   private void setupEditTextFocusChangeListener() {
@@ -137,6 +147,8 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE) == 0) {
       this.findViewById(R.id.UDPBurstDirView).setVisibility(View.VISIBLE);
+    } else if (this.measurementTypeUnderEdit.compareTo(TCPThroughputTask.TYPE) == 0) {
+      this.findViewById(R.id.TCPThroughputDirView).setVisibility(View.VISIBLE);
     }
   }
 
@@ -147,7 +159,7 @@ public class MeasurementCreationActivity extends Activity {
     }
   }
 
-  private class RadioOnClickListener implements OnClickListener {
+  private class UDPRadioOnClickListener implements OnClickListener {
     @Override
     public void onClick(View v) {
       RadioButton rb = (RadioButton) v;
@@ -155,6 +167,14 @@ public class MeasurementCreationActivity extends Activity {
     }
   }
 
+  private class TCPRadioOnClickListener implements OnClickListener {
+    @Override
+    public void onClick(View v) {
+      RadioButton rb = (RadioButton) v;
+      MeasurementCreationActivity.this.tcpDir = (String) rb.getText();
+    }
+  }
+  
   private class ButtonOnClickListener implements OnClickListener {
     @Override
     public void onClick(View v) {
@@ -229,6 +249,20 @@ public class MeasurementCreationActivity extends Activity {
               MeasurementCreationActivity.this.getApplicationContext());
           newTask =
               new UDPBurstTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+        } else if (measurementTypeUnderEdit.equals(TCPThroughputTask.TYPE)) {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("target", MLabNS.TARGET);
+            params.put("direction", tcpDir);
+            TCPThroughputDesc desc = new TCPThroughputDesc(null,
+              Calendar.getInstance().getTime(),
+              null,
+              Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
+              Config.DEFAULT_USER_MEASUREMENT_COUNT,
+              MeasurementTask.USER_PRIORITY,
+              params,
+              MeasurementCreationActivity.this.getApplicationContext());
+            newTask = new TCPThroughputTask(desc, 
+                          MeasurementCreationActivity.this.getApplicationContext());
         }
 
         if (newTask != null) {
