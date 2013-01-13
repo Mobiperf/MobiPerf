@@ -236,7 +236,7 @@ array.
 
 TCP Throughput parameters
 
-(required) direction - Uplink or Downlink measurement (i.e. "Up" is for uplink)
+(required) dir_up - Uplink or Downlink measurement (i.e. "Up" is for uplink)
 (optional) data_limit_mb_up - Uplink cellular network data limit
 (optional) data_limit_mb_down - Downlink cellular network data limit
 (optional) duration_period_sec - Downlink maximum experiment duration period

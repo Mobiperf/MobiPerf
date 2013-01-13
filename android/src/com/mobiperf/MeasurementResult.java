@@ -248,7 +248,7 @@ public class MeasurementResult {
   private void getTCPThroughputResult(StringBuilderPrinter printer, 
                                       HashMap<String, String> values) {
     TCPThroughputDesc desc = (TCPThroughputDesc) parameters;
-    if (desc.dirUp) {
+    if (desc.dir_up) {
       printer.println("[TCP Speed Test Uplink]");
     } else {
       printer.println("[TCP Speed Test Downlink]");

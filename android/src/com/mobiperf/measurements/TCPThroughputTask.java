@@ -85,8 +85,7 @@ public class TCPThroughputTask extends MeasurementTask {
   // class constructor
   public TCPThroughputTask(MeasurementDesc desc, Context context) {
     super(new TCPThroughputDesc(desc.key, desc.startTime, desc.endTime, 
-          desc.intervalSec, desc.count, desc.priority, desc.parameters, context),
-          context);
+          desc.intervalSec, desc.count, desc.priority, desc.parameters), context);
     this.context = context;
     Logger.i("Create new throughput task");
   }
@@ -106,7 +105,7 @@ public class TCPThroughputTask extends MeasurementTask {
     // declared parameters
     public int     data_limit_bytes_up = TCPThroughputTask.DATA_LIMIT_BYTE_UP;
     public int     data_limit_bytes_down = TCPThroughputTask.DATA_LIMIT_BYTE_DOWN;
-    public boolean dirUp = false;
+    public boolean dir_up = false;
     public long    duration_period_ms = TCPThroughputTask.DURATION_IN_MILLI;
     public int     pkt_size_up_bytes = TCPThroughputTask.THROUGHPUT_UP_PKT_SIZE_MAX;
     public int     port_uplink = TCPThroughputTask.PORT_UPLINK;
@@ -116,18 +115,13 @@ public class TCPThroughputTask extends MeasurementTask {
     public long    slow_start_period_ms = TCPThroughputTask.SLOW_START_PERIOD_IN_MILLI;
     public String  target = null;
     public int     tcp_timeout_ms = TCPThroughputTask.TCP_TIMEOUT_IN_MILLI;
-    public String  uplink_finish_msg = TCPThroughputTask.UPLINK_FINISH_MSG;
-
-    private Context context = null;
 
     public TCPThroughputDesc(String key, Date startTime,
                              Date endTime, double intervalSec, long count, 
-                             long priority, Map<String, String> params,
-                             Context context) 
+                             long priority, Map<String, String> params) 
                              throws InvalidParameterException {
       super(TCPThroughputTask.TYPE, key, startTime, endTime, intervalSec, count,
             priority, params);
-      this.context = context;
 
       initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
@@ -142,14 +136,6 @@ public class TCPThroughputTask extends MeasurementTask {
       }
 
       this.target = params.get("target");
-      if (!this.target.equals(MLabNS.TARGET)) {
-        Logger.i("Not using MLab server!");
-        throw new InvalidParameterException("Unknown target " + target +
-        		" for TCPThroughput");
-      }
-
-      this.target = MLabNS.Lookup(context, "mobiperf");
-      Logger.i("Setting target to: " + this.target);
 
       try {
         String readVal = null;
@@ -219,7 +205,7 @@ public class TCPThroughputTask extends MeasurementTask {
       String dir = null;
       if ((dir = params.get("direction")) != null && dir.length() > 0) {
         if (dir.compareTo("Up") == 0) {
-          this.dirUp = true;
+          this.dir_up = true;
         }
       }
     }
@@ -264,8 +250,8 @@ public class TCPThroughputTask extends MeasurementTask {
     TCPThroughputDesc newDesc = new TCPThroughputDesc(
                                 desc.key, desc.startTime, 
                                 desc.endTime, desc.intervalSec, desc.count, desc.priority,
-                                desc.parameters, this.context);
-    return new TCPThroughputTask(newDesc, this.context);
+                                desc.parameters);
+    return new TCPThroughputTask(newDesc, parent);
   }
 
   @Override
@@ -287,7 +273,7 @@ public class TCPThroughputTask extends MeasurementTask {
     TCPThroughputDesc desc = (TCPThroughputDesc) measurementDesc;
     String resp;
 
-    if (desc.dirUp) {
+    if (desc.dir_up) {
       resp = "[TCP Uplink]\n";
     } else {
       resp = "[TCP Downlink]\n";
@@ -310,8 +296,19 @@ public class TCPThroughputTask extends MeasurementTask {
 
   @Override
   public MeasurementResult call() throws MeasurementError {
-    boolean isMeasurementSuccessful = false;
+  	boolean isMeasurementSuccessful = false;
     TCPThroughputDesc desc = (TCPThroughputDesc)measurementDesc;
+    
+  	// Apply MLabNS lookup to fetch FQDN
+  	if (!desc.target.equals(MLabNS.TARGET)) {
+      Logger.i("Not using MLab server!");
+      throw new InvalidParameterException("Unknown target " + desc.target +
+      		" for TCPThroughput");
+    }
+
+  	desc.target = MLabNS.Lookup(context, "mobiperf");
+    Logger.i("Setting target to: " + desc.target);
+    
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
 
     // reset the data limit if the phone is under Wifi
@@ -327,7 +324,7 @@ public class TCPThroughputTask extends MeasurementTask {
         throw new MeasurementError("Fail to acquire server configuration");
       }
       Logger.w("Server version is " + this.serverVersion);
-      if (desc.dirUp == true) {
+      if (desc.dir_up == true) {
         uplink();
         Logger.i("Uplink measurement result is:");
       }
@@ -363,6 +360,7 @@ public class TCPThroughputTask extends MeasurementTask {
     result.addResult("data_limit_exceeded", this.DATA_LIMIT_EXCEEDED);
     result.addResult("duration", this.taskDuration);
     result.addResult("server_version", this.serverVersion);
+    Logger.w(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
   
@@ -475,7 +473,7 @@ public class TCPThroughputTask extends MeasurementTask {
       Logger.i("Uplink total data comsumption is " + 
               (double)this.totalSendSize/(1024*1024) + " MB");
       // send last message with special content
-      uplinkBuffer = ((TCPThroughputDesc)measurementDesc).uplink_finish_msg.getBytes();
+      uplinkBuffer = TCPThroughputTask.UPLINK_FINISH_MSG.getBytes();
       oStream.write(uplinkBuffer, 0, uplinkBuffer.length);
       oStream.flush();
       // read from server side results

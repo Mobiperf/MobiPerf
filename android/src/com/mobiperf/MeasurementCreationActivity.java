@@ -259,8 +259,7 @@ public class MeasurementCreationActivity extends Activity {
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
-              params,
-              MeasurementCreationActivity.this.getApplicationContext());
+              params);
             newTask = new TCPThroughputTask(desc, 
                           MeasurementCreationActivity.this.getApplicationContext());
         }
