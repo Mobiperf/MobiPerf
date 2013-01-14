@@ -49,8 +49,11 @@ public class SplashScreenActivity extends Activity {
     new Handler().postDelayed(new Runnable() {
       @Override
       public void run() {
-        Intent intent = new Intent(SpeedometerApp.class.getName());
+        Intent intent = new Intent();
+        intent.setClassName(SplashScreenActivity.this.getApplicationContext(),
+                            SpeedometerApp.class.getName());
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         SplashScreenActivity.this.getApplication().startActivity(intent);
         SplashScreenActivity.this.finish();
       }

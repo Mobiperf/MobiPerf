@@ -944,7 +944,7 @@ public class MeasurementScheduler extends Service {
     restoreConsole(systemResults, Config.PREF_KEY_SYSTEM_RESULTS);
     if (systemResults.size() == 0) {
       insertStringToConsole(systemResults, "Automatically-scheduled measurement results will " +
-      		"appear here.");
+                            "appear here.");
     }
     
     userResults = new ArrayList<String>();

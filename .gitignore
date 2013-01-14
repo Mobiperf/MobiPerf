@@ -8,7 +8,9 @@
 android/bin/
 android/images/
 android/.settings/
-
+tcpserver/bin/
+tcpserver/mlab/
+tcpserver/*.jar
 
 # These are produced by templates
 server/app.yaml
