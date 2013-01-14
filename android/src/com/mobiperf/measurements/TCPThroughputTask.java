@@ -122,11 +122,11 @@ public class TCPThroughputTask extends MeasurementTask {
                              throws InvalidParameterException {
       super(TCPThroughputTask.TYPE, key, startTime, endTime, intervalSec, count,
             priority, params);
-
+      Logger.w("Create tcp throughput desc");
       initializeParams(params);
-      if (this.target == null || this.target.length() == 0) {
+      /*if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("TCPThroughputTask null target");
-      }
+      }*/
     }
 
     @Override
@@ -135,7 +135,7 @@ public class TCPThroughputTask extends MeasurementTask {
         return;
       }
 
-      this.target = params.get("target");
+      // this.target = params.get("target");
 
       try {
         String readVal = null;
@@ -156,6 +156,7 @@ public class TCPThroughputTask extends MeasurementTask {
           this.data_limit_bytes_up = Integer.parseInt(readVal)*
                                      TCPThroughputTask.KBYTE*
                                      TCPThroughputTask.KBYTE;
+          Logger.w("Set data limit mb up is " + this.data_limit_bytes_up);
           if (this.data_limit_bytes_up > TCPThroughputTask.DATA_LIMIT_BYTE_UP) {
             this.data_limit_bytes_up = TCPThroughputTask.DATA_LIMIT_BYTE_UP;
           }
@@ -163,6 +164,7 @@ public class TCPThroughputTask extends MeasurementTask {
         if ((readVal = params.get("duration_period_sec")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
           this.duration_period_ms = (long)Integer.parseInt(readVal)*1000;
+          Logger.w("Set duration to be " + this.duration_period_ms);
           if (this.duration_period_ms > TCPThroughputTask.DURATION_IN_MILLI) {
             this.duration_period_ms = TCPThroughputTask.DURATION_IN_MILLI;
           }
@@ -203,11 +205,12 @@ public class TCPThroughputTask extends MeasurementTask {
       }
 
       String dir = null;
-      if ((dir = params.get("direction")) != null && dir.length() > 0) {
-        if (dir.compareTo("Up") == 0) {
+      if ((dir = params.get("dir_up")) != null && dir.length() > 0) {
+        if (dir.compareTo("Up") == 0 || dir.compareTo("true") == 0) {
           this.dir_up = true;
         }
       }
+      Logger.w("Finish init parameters");
     }
 
     @Override
@@ -300,11 +303,11 @@ public class TCPThroughputTask extends MeasurementTask {
     TCPThroughputDesc desc = (TCPThroughputDesc)measurementDesc;
     
     // Apply MLabNS lookup to fetch FQDN
-    if (!desc.target.equals(MLabNS.TARGET)) {
+    /*if (!desc.target.equals(MLabNS.TARGET)) {
       Logger.i("Not using MLab server!");
       throw new InvalidParameterException("Unknown target " + desc.target +
                                           " for TCPThroughput");
-    }
+    }*/
 
     desc.target = MLabNS.Lookup(context, "mobiperf");
     Logger.i("Setting target to: " + desc.target);

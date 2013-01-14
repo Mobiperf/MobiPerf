@@ -252,7 +252,7 @@ public class MeasurementCreationActivity extends Activity {
         } else if (measurementTypeUnderEdit.equals(TCPThroughputTask.TYPE)) {
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", MLabNS.TARGET);
-            params.put("direction", tcpDir);
+            params.put("dir_up", tcpDir);
             TCPThroughputDesc desc = new TCPThroughputDesc(null,
               Calendar.getInstance().getTime(),
               null,
