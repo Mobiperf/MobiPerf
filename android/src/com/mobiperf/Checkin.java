@@ -136,12 +136,14 @@ public class Checkin {
         Logger.d("Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
         Logger.d("Value is " + json);
-        if (json != null) {
+        // checkin task must support 
+        if (json != null && 
+            MeasurementTask.getMeasurementNames().contains(json.get("type"))) {
           try {
             MeasurementTask task = 
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
             Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
-            // TODO (Haokun): remove this after test
+            // TODO (Haokun): remove this after testing
             if (json.get("type").equals("tcpthroughput"))
               schedule.add(task);
           } catch (IllegalArgumentException e) {

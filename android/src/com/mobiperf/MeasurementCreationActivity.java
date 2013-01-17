@@ -262,6 +262,7 @@ public class MeasurementCreationActivity extends Activity {
               params);
             newTask = new TCPThroughputTask(desc, 
                           MeasurementCreationActivity.this.getApplicationContext());
+            showLengthWarning = true;
         }
 
         if (newTask != null) {

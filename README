@@ -236,18 +236,26 @@ array.
 
 TCP Throughput parameters
 
-(required) dir_up - Uplink or Downlink measurement (i.e. "Up" is for uplink)
-(optional) data_limit_mb_up - Uplink cellular network data limit
-(optional) data_limit_mb_down - Downlink cellular network data limit
-(optional) duration_period_sec - Downlink maximum experiment duration period
-(optional) pkt_size_up_bytes - The size each packet in the uplink
-(optional) sample_period_sec - The small interval to calculate current throughput result
-(optional) slow_start_period_sec - Waiting period to avoid TCP slow start
-(optional) tcp_timeout_sec - TCP connection timeout
+(required) dir_up - Uplink or Downlink measurement (true/false)
+(required) target - hostname for servers. Use m-lab for now. (string)
+(optional) data_limit_mb_up - Uplink cellular network data 
+limit (double)
+(optional) data_limit_mb_down - Downlink cellular network data 
+limit (double)
+(optional) duration_period_sec - Downlink maximum experiment 
+duration period (double)
+(optional) pkt_size_up_bytes - The size each packet in the uplink (int)
+(optional) sample_period_sec - The small interval to calculate current 
+throughput result (double)
+(optional) slow_start_period_sec - Waiting period to avoid TCP slow 
+start (double)
+(optional) tcp_timeout_sec - TCP connection timeout (double)
 
 TCP Throughput value
 
-(required) tcp_speed_results - A list of throughput sampling results in kbps
-(required) data_limit_exceeded - A flag indicating transmitted data exceeding limit
-(required) duration - Time to finish the task
-(required) server_version - M-Lab server side code version
+(required) tcp_speed_results - A list of throughput sampling results 
+in kbps (list of double)
+(required) data_limit_exceeded - A flag indicating transmitted data 
+exceeding limit (boolean)
+(required) duration - Time to finish the task (double)
+(required) server_version - M-Lab server side code version (string)

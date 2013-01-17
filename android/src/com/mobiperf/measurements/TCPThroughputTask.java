@@ -49,18 +49,19 @@ public class TCPThroughputTask extends MeasurementTask {
 
   // Timing related
   public final int BUFFER_SIZE = 5000;
-  public static final long DURATION_IN_MILLI = 15000;
-  public static final long SAMPLE_PERIOD_IN_MILLI = 1000; 
-  public static final long SLOW_START_PERIOD_IN_MILLI = 5000;
-  public static final int TCP_TIMEOUT_IN_MILLI = 30000;
+  public static final long DURATION_IN_SEC = 15;
+  public final int KSEC = 1000;
+  public static final long SAMPLE_PERIOD_IN_SEC = 1; 
+  public static final long SLOW_START_PERIOD_IN_SEC = 5;
+  public static final int TCP_TIMEOUT_IN_SEC = 30;
   // largest non-fragment packet size in LTE (uplink)
   public static final int THROUGHPUT_UP_PKT_SIZE_MAX = 1357;
   public static final int THROUGHPUT_UP_PKT_SIZE_MIN = 700;
 
   // Data related
-  private static final int KBYTE = 1024;
-  private static final int DATA_LIMIT_BYTE_UP = 5*KBYTE*KBYTE; 
-  private static final int DATA_LIMIT_BYTE_DOWN = 10*KBYTE*KBYTE;
+  private final int KBYTE = 1024;
+  private static final int DATA_LIMIT_MB_UP = 5; 
+  private static final int DATA_LIMIT_MB_DOWN = 10;
   private boolean DATA_LIMIT_ON = true;
   private boolean DATA_LIMIT_EXCEEDED = false;
   private static final String UPLINK_FINISH_MSG = "*";
@@ -103,18 +104,15 @@ public class TCPThroughputTask extends MeasurementTask {
   
   public static class TCPThroughputDesc extends MeasurementDesc {
     // declared parameters
-    public int     data_limit_bytes_up = TCPThroughputTask.DATA_LIMIT_BYTE_UP;
-    public int     data_limit_bytes_down = TCPThroughputTask.DATA_LIMIT_BYTE_DOWN;
+    public double  data_limit_mb_up = TCPThroughputTask.DATA_LIMIT_MB_UP;
+    public double  data_limit_mb_down = TCPThroughputTask.DATA_LIMIT_MB_DOWN;
     public boolean dir_up = false;
-    public long    duration_period_ms = TCPThroughputTask.DURATION_IN_MILLI;
+    public double  duration_period_sec = TCPThroughputTask.DURATION_IN_SEC;
     public int     pkt_size_up_bytes = TCPThroughputTask.THROUGHPUT_UP_PKT_SIZE_MAX;
-    public int     port_uplink = TCPThroughputTask.PORT_UPLINK;
-    public int     port_downlink = TCPThroughputTask.PORT_DOWNLINK;
-    public int     port_config = TCPThroughputTask.PORT_CONFIG;
-    public long    sample_period_ms = TCPThroughputTask.SAMPLE_PERIOD_IN_MILLI;
-    public long    slow_start_period_ms = TCPThroughputTask.SLOW_START_PERIOD_IN_MILLI;
+    public double  sample_period_sec = TCPThroughputTask.SAMPLE_PERIOD_IN_SEC;
+    public double  slow_start_period_sec = TCPThroughputTask.SLOW_START_PERIOD_IN_SEC;
     public String  target = null;
-    public int     tcp_timeout_ms = TCPThroughputTask.TCP_TIMEOUT_IN_MILLI;
+    public double  tcp_timeout_sec = TCPThroughputTask.TCP_TIMEOUT_IN_SEC;
 
     public TCPThroughputDesc(String key, Date startTime,
                              Date endTime, double intervalSec, long count, 
@@ -124,9 +122,9 @@ public class TCPThroughputTask extends MeasurementTask {
             priority, params);
       Logger.w("Create tcp throughput desc");
       initializeParams(params);
-      /*if (this.target == null || this.target.length() == 0) {
+      if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("TCPThroughputTask null target");
-      }*/
+      }
     }
 
     @Override
@@ -135,38 +133,32 @@ public class TCPThroughputTask extends MeasurementTask {
         return;
       }
 
-      // this.target = params.get("target");
+      this.target = params.get("target");
 
       try {
         String readVal = null;
         // TODO (Haokun): get limitation from configuration
         if ((readVal = params.get("data_limit_mb_down")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
-          this.data_limit_bytes_down = Integer.parseInt(readVal)*
-                                       TCPThroughputTask.KBYTE*
-                                       TCPThroughputTask.KBYTE;
-          if (this.data_limit_bytes_down > TCPThroughputTask.DATA_LIMIT_BYTE_DOWN) {
-            this.data_limit_bytes_down = TCPThroughputTask.DATA_LIMIT_BYTE_DOWN;
+          this.data_limit_mb_down = Double.parseDouble(readVal);
+          if (this.data_limit_mb_down > TCPThroughputTask.DATA_LIMIT_MB_DOWN) {
+            this.data_limit_mb_down = TCPThroughputTask.DATA_LIMIT_MB_DOWN;
           }
         }
 
         // TODO (Haokun): get limitation from configuration
         if ((readVal = params.get("data_limit_mb_up")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
-          this.data_limit_bytes_up = Integer.parseInt(readVal)*
-                                     TCPThroughputTask.KBYTE*
-                                     TCPThroughputTask.KBYTE;
-          Logger.w("Set data limit mb up is " + this.data_limit_bytes_up);
-          if (this.data_limit_bytes_up > TCPThroughputTask.DATA_LIMIT_BYTE_UP) {
-            this.data_limit_bytes_up = TCPThroughputTask.DATA_LIMIT_BYTE_UP;
+          this.data_limit_mb_up = Double.parseDouble(readVal);
+          if (this.data_limit_mb_up > TCPThroughputTask.DATA_LIMIT_MB_UP) {
+            this.data_limit_mb_up = TCPThroughputTask.DATA_LIMIT_MB_UP;
           }
         }
         if ((readVal = params.get("duration_period_sec")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
-          this.duration_period_ms = (long)Integer.parseInt(readVal)*1000;
-          Logger.w("Set duration to be " + this.duration_period_ms);
-          if (this.duration_period_ms > TCPThroughputTask.DURATION_IN_MILLI) {
-            this.duration_period_ms = TCPThroughputTask.DURATION_IN_MILLI;
+          this.duration_period_sec = Double.parseDouble(readVal);
+          if (this.duration_period_sec > TCPThroughputTask.DURATION_IN_SEC) {
+            this.duration_period_sec = TCPThroughputTask.DURATION_IN_SEC;
           }
         }
         if ((readVal = params.get("pkt_size_up_bytes")) != null && readVal.length() > 0 
@@ -181,23 +173,23 @@ public class TCPThroughputTask extends MeasurementTask {
         }
         if ((readVal = params.get("sample_period_sec")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
-          this.sample_period_ms = (long)Integer.parseInt(readVal)*1000;
-          if (this.sample_period_ms > TCPThroughputTask.DURATION_IN_MILLI/2) {
-            this.sample_period_ms = TCPThroughputTask.DURATION_IN_MILLI/2;
+          this.sample_period_sec = Double.parseDouble(readVal);
+          if (this.sample_period_sec > TCPThroughputTask.DURATION_IN_SEC/2) {
+            this.sample_period_sec = TCPThroughputTask.DURATION_IN_SEC/2;
           }
         }
         if ((readVal = params.get("slow_start_period_sec")) != null
              && readVal.length() > 0 && Integer.parseInt(readVal) > 0) {
-          this.slow_start_period_ms = (long)Integer.parseInt(readVal)*1000;
-          if (this.slow_start_period_ms > TCPThroughputTask.DURATION_IN_MILLI/2) {
-            this.slow_start_period_ms = TCPThroughputTask.DURATION_IN_MILLI/2;
+          this.slow_start_period_sec = Double.parseDouble(readVal);
+          if (this.slow_start_period_sec > TCPThroughputTask.DURATION_IN_SEC/2) {
+            this.slow_start_period_sec = TCPThroughputTask.DURATION_IN_SEC/2;
           }
         }
         if ((readVal = params.get("tcp_timeout_sec")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
-          this.tcp_timeout_ms = Integer.parseInt(readVal)*1000;
-          if (this.tcp_timeout_ms > TCPThroughputTask.TCP_TIMEOUT_IN_MILLI) {
-            this.tcp_timeout_ms = TCPThroughputTask.TCP_TIMEOUT_IN_MILLI;
+          this.tcp_timeout_sec = Integer.parseInt(readVal)*1000;
+          if (this.tcp_timeout_sec > TCPThroughputTask.TCP_TIMEOUT_IN_SEC) {
+            this.tcp_timeout_sec = TCPThroughputTask.TCP_TIMEOUT_IN_SEC;
           }
         }
       } catch  (NumberFormatException e) {
@@ -225,19 +217,24 @@ public class TCPThroughputTask extends MeasurementTask {
        */
     public double calMedianSpeedFromTCPThroughputOutput(String outputInJSON) {
       if (outputInJSON == null || 
-          outputInJSON.equals("") || 
+          outputInJSON.equals("") ||
+          outputInJSON.equals("[]") ||
           outputInJSON.charAt(0) != '[' || 
           outputInJSON.charAt(outputInJSON.length()-1) != ']') {
         return 0.0;
       }
 
-      String[] splitResult = outputInJSON.split(",");
+      String[] splitResult = outputInJSON.substring(1, outputInJSON.length()-1).split(",");
       int resultLen = splitResult.length;
+      if (resultLen <= 0)
+        return 0.0;
       double result = 0.0;
+      Logger.w("Result length is " + resultLen);
       if (resultLen % 2 == 0) {
         result = (Double.parseDouble(splitResult[resultLen / 2]) +
-                 Double.parseDouble(splitResult[resultLen / 2 + 1])) / 2;
+                 Double.parseDouble(splitResult[resultLen / 2 - 1])) / 2;
       } else {
+        Logger.w("Measurement result is " + splitResult[(resultLen - 1) / 2]);
         result = Double.parseDouble(splitResult[(resultLen - 1) / 2]);
       }
       return result;
@@ -303,11 +300,11 @@ public class TCPThroughputTask extends MeasurementTask {
     TCPThroughputDesc desc = (TCPThroughputDesc)measurementDesc;
     
     // Apply MLabNS lookup to fetch FQDN
-    /*if (!desc.target.equals(MLabNS.TARGET)) {
+    if (!desc.target.equals(MLabNS.TARGET)) {
       Logger.i("Not using MLab server!");
       throw new InvalidParameterException("Unknown target " + desc.target +
                                           " for TCPThroughput");
-    }*/
+    }
 
     desc.target = MLabNS.Lookup(context, "mobiperf");
     Logger.i("Setting target to: " + desc.target);
@@ -384,13 +381,13 @@ public class TCPThroughputTask extends MeasurementTask {
     try {
       tcpSocket = new Socket();
       buildUpSocket(tcpSocket, ((TCPThroughputDesc)measurementDesc).target, 
-                   ((TCPThroughputDesc)measurementDesc).port_config);
+                   TCPThroughputTask.PORT_CONFIG);
       iStream = tcpSocket.getInputStream();
     } catch (IOException e) {
       throw new MeasurementError("Error open uplink socket at " + 
                                 ((TCPThroughputDesc)measurementDesc).target + 
                                 " with port " +
-                                ((TCPThroughputDesc)measurementDesc).port_config); 
+                                TCPThroughputTask.PORT_CONFIG); 
     }
     
     try {
@@ -427,7 +424,7 @@ public class TCPThroughputTask extends MeasurementTask {
     try {
       tcpSocket = new Socket();
       buildUpSocket(tcpSocket, ((TCPThroughputDesc)measurementDesc).target, 
-                   ((TCPThroughputDesc)measurementDesc).port_uplink);
+                    TCPThroughputTask.PORT_UPLINK);
       oStream = tcpSocket.getOutputStream();
       iStream = tcpSocket.getInputStream();
     } catch (IOException e){
@@ -435,18 +432,20 @@ public class TCPThroughputTask extends MeasurementTask {
       throw new MeasurementError("Error open uplink socket at " + 
                                 ((TCPThroughputDesc)measurementDesc).target + 
                                 " with port " +
-                                ((TCPThroughputDesc)measurementDesc).port_uplink);
+                                TCPThroughputTask.PORT_UPLINK);
     }
 
     long startTime = System.currentTimeMillis();
     long endTime = startTime;
-
+    int  data_limit_byte_up = (int)(((TCPThroughputDesc)measurementDesc).data_limit_mb_up
+                              *this.KBYTE*this.KBYTE);
     byte[] uplinkBuffer = new byte[((TCPThroughputDesc)measurementDesc).pkt_size_up_bytes];
     this.genRandomByteArray(uplinkBuffer);
     try {
       int progUpdateCount = 0;
-      long totalDuration = ((TCPThroughputDesc)measurementDesc).duration_period_ms +
-                           ((TCPThroughputDesc)measurementDesc).slow_start_period_ms;
+      long totalDuration = (long)(this.KSEC*
+                           ((TCPThroughputDesc)measurementDesc).duration_period_sec +
+                           ((TCPThroughputDesc)measurementDesc).slow_start_period_sec);
       do {
         oStream.write(uplinkBuffer, 0, uplinkBuffer.length);
         oStream.flush();
@@ -454,11 +453,9 @@ public class TCPThroughputTask extends MeasurementTask {
 
         this.totalSendSize += ((TCPThroughputDesc)measurementDesc).pkt_size_up_bytes;
         if (this.DATA_LIMIT_ON &&
-            this.totalSendSize >= 
-            ((TCPThroughputDesc)measurementDesc).data_limit_bytes_up) {
+            this.totalSendSize >= data_limit_byte_up) {
           Logger.i("Detect uplink exceeding limitation " +
-                  (double)((TCPThroughputDesc)measurementDesc).data_limit_bytes_up /
-                  (1024*1024) + " MB");
+                  (double)((TCPThroughputDesc)measurementDesc).data_limit_mb_up + " MB");
           this.DATA_LIMIT_EXCEEDED = true;
           break;
         }
@@ -518,31 +515,33 @@ public class TCPThroughputTask extends MeasurementTask {
     try {
       tcpSocket = new Socket();
       buildUpSocket(tcpSocket, ((TCPThroughputDesc)measurementDesc).target,
-                   ((TCPThroughputDesc)measurementDesc).port_downlink);
+                    TCPThroughputTask.PORT_DOWNLINK);
       iStream = tcpSocket.getInputStream();
     } catch (IOException i) {
       Logger.e("Downlink socket opening error" + i.getCause().toString());
       throw new MeasurementError("Error to open downlink socket at " +
                                 ((TCPThroughputDesc)measurementDesc).target +
                                 " with port " + 
-                                ((TCPThroughputDesc)measurementDesc).port_downlink);
+                                TCPThroughputTask.PORT_DOWNLINK);
     }
     try {
       int read_bytes = 0;
       int progUpdateCount = 0;
+      int data_limit_byte_down = (int)(this.KBYTE*this.KBYTE*
+                                 ((TCPThroughputDesc)measurementDesc).data_limit_mb_down);
       byte[] buffer = new byte[this.BUFFER_SIZE];
-      long totalDuration = (((TCPThroughputDesc)measurementDesc).duration_period_ms + 
-                           ((TCPThroughputDesc)measurementDesc).slow_start_period_ms);
+      long totalDuration = (long)(this.KSEC*
+                           ((TCPThroughputDesc)measurementDesc).duration_period_sec + 
+                           ((TCPThroughputDesc)measurementDesc).slow_start_period_sec);
       do {
         read_bytes = iStream.read(buffer, 0, buffer.length);
         updateSize(read_bytes);
 
         this.totalRevSize += read_bytes;
         if (this.DATA_LIMIT_ON &&
-            this.totalRevSize >= 
-            ((TCPThroughputDesc)measurementDesc).data_limit_bytes_down) {
+            this.totalRevSize >= data_limit_byte_down) {
           Logger.i("Detect downlink data limitation exceed with " +
-                  ((TCPThroughputDesc)measurementDesc).data_limit_bytes_down + " bytes");
+                  ((TCPThroughputDesc)measurementDesc).data_limit_mb_down + " MB");
           this.DATA_LIMIT_EXCEEDED = true;
           break;
         }
@@ -584,7 +583,7 @@ public class TCPThroughputTask extends MeasurementTask {
   private void updateSize(int delta) {
     double gtime = System.currentTimeMillis() - this.taskStartTime;
     //ignore slow start
-    if (gtime < ((TCPThroughputDesc)measurementDesc).slow_start_period_ms)
+    if (gtime < ((TCPThroughputDesc)measurementDesc).slow_start_period_sec*this.KSEC)
       return;
     if (this.startSampleTime == 0) {
       this.startSampleTime = System.currentTimeMillis();
@@ -592,7 +591,7 @@ public class TCPThroughputTask extends MeasurementTask {
     }
     this.accumulativeSize += delta;
     double time = System.currentTimeMillis() - this.startSampleTime;
-    if (time < ((TCPThroughputDesc)measurementDesc).sample_period_ms) {
+    if (time < ((TCPThroughputDesc)measurementDesc).sample_period_sec*this.KSEC) {
       return;
     } else {
       double throughput = (double)this.accumulativeSize * 8.0 / time;
@@ -606,8 +605,8 @@ public class TCPThroughputTask extends MeasurementTask {
           throws IOException {
     TCPThroughputDesc desc = (TCPThroughputDesc) measurementDesc;
     SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
-    tcpSocket.connect(remoteAddr, desc.tcp_timeout_ms);
-    tcpSocket.setSoTimeout(desc.tcp_timeout_ms);
+    tcpSocket.connect(remoteAddr, (int)desc.tcp_timeout_sec*this.KSEC);
+    tcpSocket.setSoTimeout((int)desc.tcp_timeout_sec*this.KSEC);
     tcpSocket.setTcpNoDelay(true);
   }
   
