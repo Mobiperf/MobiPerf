@@ -120,7 +120,6 @@ public class TCPThroughputTask extends MeasurementTask {
                              throws InvalidParameterException {
       super(TCPThroughputTask.TYPE, key, startTime, endTime, intervalSec, count,
             priority, params);
-      Logger.w("Create tcp throughput desc");
       initializeParams(params);
       if (this.target == null || this.target.length() == 0) {
         throw new InvalidParameterException("TCPThroughputTask null target");
@@ -202,7 +201,6 @@ public class TCPThroughputTask extends MeasurementTask {
           this.dir_up = true;
         }
       }
-      Logger.w("Finish init parameters");
     }
 
     @Override
@@ -214,6 +212,9 @@ public class TCPThroughputTask extends MeasurementTask {
        * Find the median value from a TCPThroughput JSON result string (already sorted)
        * Suppose N is the number of results. If N is odd, we pick the result with index
        * (N-1)/2. If N is even, we take the mean value between index N/2 and N/2-1
+       * 
+       * @return -1 fail to create result
+       * @return median value result
        */
     public double calMedianSpeedFromTCPThroughputOutput(String outputInJSON) {
       if (outputInJSON == null || 
@@ -221,7 +222,7 @@ public class TCPThroughputTask extends MeasurementTask {
           outputInJSON.equals("[]") ||
           outputInJSON.charAt(0) != '[' || 
           outputInJSON.charAt(outputInJSON.length()-1) != ']') {
-        return 0.0;
+        return -1;
       }
 
       String[] splitResult = outputInJSON.substring(1, outputInJSON.length()-1).split(",");
@@ -229,12 +230,10 @@ public class TCPThroughputTask extends MeasurementTask {
       if (resultLen <= 0)
         return 0.0;
       double result = 0.0;
-      Logger.w("Result length is " + resultLen);
       if (resultLen % 2 == 0) {
         result = (Double.parseDouble(splitResult[resultLen / 2]) +
                  Double.parseDouble(splitResult[resultLen / 2 - 1])) / 2;
       } else {
-        Logger.w("Measurement result is " + splitResult[(resultLen - 1) / 2]);
         result = Double.parseDouble(splitResult[(resultLen - 1) / 2]);
       }
       return result;

@@ -73,26 +73,11 @@ public class MeasurementJsonConvertor {
       throws IllegalArgumentException {  
     try {
       String type = String.valueOf(json.getString("type"));
-      Logger.w("Receive type is " + json.getString("type"));
       Class taskClass = MeasurementTask.getTaskClassForMeasurement(type);
       Method getDescMethod = taskClass.getMethod("getDescClass");
       // The getDescClassForMeasurement() is static and takes no arguments
       Class descClass = (Class) getDescMethod.invoke(null, (Object[]) null);
-      // TODO(Haokun): remove this after test
-      if (json.get("type").equals("tcpthroughput")) {
-      	// reset interval
-      	json.put("interval_sec", 50);
-      	json.put("count", -1);
-        Logger.w(json.toString());
-      }
       MeasurementDesc measurementDesc = (MeasurementDesc) gson.fromJson(json.toString(), descClass);
-      // TODO(Haokun): remove this after test
-      if (measurementDesc.startTime != null)
-        Logger.w("Start time: " + measurementDesc.startTime.toString());
-      if (measurementDesc.endTime != null)
-        Logger.w("End time: " + measurementDesc.endTime.toString());
-      Logger.w("IntervaleSec is: " + measurementDesc.intervalSec);
-      Logger.w("Key is: " + measurementDesc.key);
       Object[] cstParams = {measurementDesc, context};
       Constructor<MeasurementTask> constructor = 
           taskClass.getConstructor(MeasurementDesc.class, Context.class);

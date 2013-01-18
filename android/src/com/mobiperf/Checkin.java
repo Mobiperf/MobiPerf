@@ -131,21 +131,19 @@ public class Checkin {
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
       sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
-      
+
       for (int i = 0; i < jsonArray.length(); i++) {
         Logger.d("Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
         Logger.d("Value is " + json);
         // checkin task must support 
         if (json != null && 
-            MeasurementTask.getMeasurementNames().contains(json.get("type"))) {
+            MeasurementTask.getMeasurementTypes().contains(json.get("type"))) {
           try {
             MeasurementTask task = 
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
             Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
-            // TODO (Haokun): remove this after testing
-            if (json.get("type").equals("tcpthroughput"))
-              schedule.add(task);
+            schedule.add(task);
           } catch (IllegalArgumentException e) {
             Logger.w("Could not create task from JSON: " + e);
             // Just skip it, and try the next one

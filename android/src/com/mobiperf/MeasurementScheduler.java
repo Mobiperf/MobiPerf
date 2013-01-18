@@ -275,27 +275,16 @@ public class MeasurementScheduler extends Service {
   }
   
   private void handleMeasurement() {
-  	// TODO (Haokun): delete after test
-  	Logger.w("Start handle measurement");
     if (!userConsented()) {
       Logger.i("Skipping measurement - User has not consented");
       return;
     }
     
     try {
-      // TODO (Haokun): delete after test
-    	Logger.w("taskQueue Length is " + taskQueue.size());
       MeasurementTask task = taskQueue.peek();
       // Process the head of the queue.
       if (task != null && task.timeFromExecution() <= 0) {
-        // TODO (Haokun): delete after test
-      	Logger.w("Task is " + task.toString());
-      	Logger.w("Start time " + task.getDescription().startTime);
-      	Logger.w("End time " + task.getDescription().endTime);
-      	Logger.w("Intersec is " + task.getDescription().intervalSec);
-      	Logger.w("Count is " + task.getDescription().count);
         taskQueue.poll();
-        Logger.w("taskQueue after poll Length is " + taskQueue.size());
         Future<MeasurementResult> future;
         Logger.i("Processing task " + task.toString());
         // Run the head task using the executor
@@ -309,7 +298,6 @@ public class MeasurementScheduler extends Service {
         }
         synchronized (pendingTasks) {
           pendingTasks.put(task, future);
-          Logger.w("pendingTask Length is " + pendingTasks.size());
         }
         
         MeasurementDesc desc = task.getDescription();
@@ -318,9 +306,6 @@ public class MeasurementScheduler extends Service {
         // Add a clone of the task if it's still valid.
         if (newStartTime < desc.endTime.getTime() &&
             (desc.count == MeasurementTask.INFINITE_COUNT || desc.count > 1)) {
-          // TODO (Haokun): delete after test
-        	Logger.w("Add new task: " + task.toString());
-        	Logger.w("Task count is " + task.getDescription().count);
           MeasurementTask newTask = task.clone();
           if (desc.count != MeasurementTask.INFINITE_COUNT) {
             newTask.getDescription().count--;
@@ -330,8 +315,6 @@ public class MeasurementScheduler extends Service {
         }
       }
       // Schedule the next measurement in the taskQueue
-      // TODO (Haokun): delete after test
-    	Logger.w("taskQueue Length is " + taskQueue.size());
       task = taskQueue.peek();
       if (task != null) {
         long timeFromExecution = Math.max(task.timeFromExecution(),
@@ -664,9 +647,6 @@ public class MeasurementScheduler extends Service {
   
   @SuppressWarnings("unchecked")
   private void uploadResults() {
-  	// TODO(Haokun): remove after test
-  	Logger.w("Call uploadResults()");
-  	Logger.w("Pendingtask length is " + pendingTasks.size());
     Vector<MeasurementResult> finishedTasks = new Vector<MeasurementResult>();
     MeasurementResult result;
     Future<MeasurementResult> future;

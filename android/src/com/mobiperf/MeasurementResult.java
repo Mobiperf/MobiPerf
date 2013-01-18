@@ -249,9 +249,9 @@ public class MeasurementResult {
                                       HashMap<String, String> values) {
     TCPThroughputDesc desc = (TCPThroughputDesc) parameters;
     if (desc.dir_up) {
-      printer.println("[TCP Speed Test Uplink]");
+      printer.println("[TCP Uplink]");
     } else {
-      printer.println("[TCP Speed Test Downlink]");
+      printer.println("[TCP Downlink]");
     }
     printer.println("Target: " + desc.target);
     if (success) {
@@ -265,6 +265,11 @@ public class MeasurementResult {
       String displayResult = "";
 
       double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
+      if (tp < 0) {
+        printer.println("No result available");
+        return;
+      }
+
       double KB = Math.pow(2, 10);
       if (tp > KB*KB) {
         displayResult = "Speed: " + String.format("%.2f",tp/(KB*KB)) + " Gbps";
