@@ -266,7 +266,7 @@ public class MeasurementResult {
 
       double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
       if (tp < 0) {
-        printer.println("No result available");
+        printer.println("No results available.");
         return;
       }
 
