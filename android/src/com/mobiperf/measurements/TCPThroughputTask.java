@@ -291,6 +291,7 @@ public class TCPThroughputTask extends MeasurementTask {
 
   @Override
   public void stop() {
+    System.gc();
   }
 
   @Override

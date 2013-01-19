@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InvalidClassException;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -148,8 +149,11 @@ public class PingTask extends MeasurementTask {
   @Override
   public MeasurementResult call() throws MeasurementError {
     PingDesc desc = (PingDesc) measurementDesc;
+    boolean isIPv6;
     try {
       InetAddress addr = InetAddress.getByName(desc.target);
+      // check resolved address length is 4 bytes (ipv4) or 16 bytes (ipv6)
+      isIPv6 = (addr.getAddress().length == 16);
       // All ping methods ping against targetIp rather than desc.target
       targetIp = addr.getHostAddress();
     } catch (UnknownHostException e) {
@@ -159,7 +163,7 @@ public class PingTask extends MeasurementTask {
     try {
       Logger.i("running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
-      return executePingCmdTask();
+      return executePingCmdTask(isIPv6);
     } catch (MeasurementError e) {
       try {
         Logger.i("running java ping");
@@ -263,13 +267,14 @@ public class PingTask extends MeasurementTask {
   }
   
   // Runs when SystemState is IDLE
-  private MeasurementResult executePingCmdTask() throws MeasurementError {
+  private MeasurementResult executePingCmdTask(boolean isIPv6) throws MeasurementError {
     Logger.i("Starting executePingCmdTask");
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
-    pingTask.pingExe = parent.getString(R.string.ping_executable);
+    pingTask.pingExe = isIPv6 ? parent.getString(R.string.ping6_executable)
+                              : parent.getString(R.string.ping_executable);
     try {
       String command = Util.constructCommand(pingTask.pingExe, "-i", 
           Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,

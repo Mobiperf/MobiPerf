@@ -143,6 +143,7 @@ public class Checkin {
             MeasurementTask task = 
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
             Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
+            // TODO (Haokun): remove before release
             if (!json.get("type").equals("traceroute"))
               schedule.add(task);
           } catch (IllegalArgumentException e) {

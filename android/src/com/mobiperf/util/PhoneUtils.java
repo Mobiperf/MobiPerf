@@ -17,6 +17,7 @@ package com.mobiperf.util;
 import com.mobiperf.DeviceInfo;
 import com.mobiperf.DeviceProperty;
 import com.mobiperf.Logger;
+import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
 import com.mobiperf.SpeedometerApp;
 
@@ -53,8 +54,12 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -662,9 +667,14 @@ public class PhoneUtils {
         for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); 
             enumIpAddr.hasMoreElements();) {
           InetAddress inetAddress = enumIpAddr.nextElement();
+          // TODO (Haokun): remove after testing
+          Logger.w(inetAddress.getHostAddress());
+          Logger.w("Is loop back " + inetAddress.isLoopbackAddress());
           if (!inetAddress.isLoopbackAddress()
               && inetAddress.getHostAddress().compareTo("0.0.0.0") != 0) {
-            return inetAddress.getHostAddress().toString();
+            // TODO (Haokun): remove after testing
+            // return inetAddress.getHostAddress().toString();
+          	// Logger.w(inetAddress.getHostAddress());
           }
         }
       }
@@ -682,6 +692,10 @@ public class PhoneUtils {
     for (int i = 0; i < bytes.length; i++) {
       bytes[i] = (byte) ((number >> (32 - (4 - i) * 8)) & 0xFF);
     }
+    // TODO (Haokun): delete lines after
+    Logger.w("The number is " + number);
+    String s = new String(bytes);
+    Logger.w("Byte array is " + s);
     try {
        /* 
        * Integer is encoded in network byte order (big endian), and getByAddress(byte[])
@@ -705,12 +719,38 @@ public class PhoneUtils {
       return null;
     }
   }
+
+  private String getIpFromSocket() {
+  	Socket tcpSocket = new Socket();
+  	String localIP = "";
+  	try {
+	    SocketAddress remoteAddr = new InetSocketAddress("www.google.com", 80);
+	    tcpSocket.setTcpNoDelay(true);
+	    tcpSocket.connect(remoteAddr, 3000);
+	    localIP = tcpSocket.getLocalAddress().getHostAddress();
+  	} catch (IOException e) {
+  		Logger.e("Error happen during local ip lookup: fail to set up socket.");
+  	} finally {
+  		try {
+	      tcpSocket.close();
+      } catch (IOException e) {
+      	Logger.e("Error happen during local ip lookup: fail to close socket.");
+      }
+  	}
+  	return localIP;
+  }
   
   /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
    * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
    * network IP*/
   private String getIp() {
     String ipStr = getWifiIp();
+    // TODO (Haokun): remove after testing
+    String cellStr = getCellularIp();
+    String ip = getIpFromSocket();
+    Logger.w("Wifi IP is " + ipStr);
+    Logger.w("Cell ip is " + cellStr);
+    Logger.w("Accurate IP is " + ip);
     if (ipStr == null) {
       ipStr = getCellularIp();
     }

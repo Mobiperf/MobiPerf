@@ -166,8 +166,6 @@ public class TracerouteTask extends MeasurementTask {
     int maxHopCount = task.maxHopCount;
     int ttl = 1;
     String hostIp = null;
-    // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
-    task.pingExe = parent.getString(R.string.ping_executable);
     String target = task.target;
     boolean success = false;
     ArrayList<HopInfo> hopHosts = new ArrayList<HopInfo>();
@@ -176,7 +174,15 @@ public class TracerouteTask extends MeasurementTask {
     
     
     try {
-      hostIp = InetAddress.getByName(target).getHostAddress();
+    	InetAddress hostInetAddr = InetAddress.getByName(target);
+    	hostIp = hostInetAddr.getHostAddress();
+      // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
+      // add support for ipv6
+      task.pingExe = (hostInetAddr.getAddress().length == 4)
+                     ? parent.getString(R.string.ping_executable)
+                     : parent.getString(R.string.ping6_executable);
+      // TODO (Haokun): delete after testing
+      Logger.w("ping executable is " + task.pingExe);
     } catch (UnknownHostException e) {
       Logger.e("Cannont resolve host " + target);
       throw new MeasurementError("target " + target + " cannot be resolved");
