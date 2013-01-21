@@ -55,6 +55,7 @@ import android.view.WindowManager;
 import android.webkit.WebView;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -679,6 +680,7 @@ public class PhoneUtils {
     return null;
   }
 
+  @Deprecated
   /* TODO(Wenjie): It assume that WifiInfo.getIpAddress() always returns an integer in
    * big endian. Otherwise, the order of the numbers in the IP String will need 
    * to be reversed.*/
@@ -703,12 +705,30 @@ public class PhoneUtils {
   private String getWifiIp() {
     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-    if (wifiInfo != null) {
+    String resultIp = null;
+    // use reflection to acquire the "InetAddress" type, which handle ipv6 internally
+    try {
+    	Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
+    	// enforce accessibility
+    	reflectIPField.setAccessible(true);
+	    InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
+	    resultIp = myIp.getHostAddress();
+    } catch (IllegalArgumentException e) {
+      Logger.e("Bad arguments");
+    } catch (IllegalAccessException e) {
+      Logger.e("Cannot access the field -- mIpAddress");
+    } catch (SecurityException e) {
+	    e.printStackTrace();
+    } catch (NoSuchFieldException e) {
+	    Logger.e("Error during reflect: no mIpAddress field exists");
+    }
+    return resultIp;
+    /*if (wifiInfo != null) {
       int ipAddress = wifiInfo.getIpAddress();
       return ipAddress == 0 ? null : intToIp(ipAddress);
     } else {
       return null;
-    }
+    }*/
   }
 
   private String getIpFromSocket() {
@@ -723,20 +743,22 @@ public class PhoneUtils {
   	} catch (IOException e) {
   		Logger.e("Error happen during local ip lookup: fail to set up socket.");
   	} finally {
-  		try {
+          try {
 	      tcpSocket.close();
-      } catch (IOException e) {
+          } catch (IOException e) {
       	Logger.e("Error happen during local ip lookup: fail to close socket.");
+      } finally {
+  	return localIP;
       }
   	}
-  	return localIP;
   }
   
   /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
    * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
    * network IP*/
   private String getIp() {
-    // String ipStr = getWifiIp();
+    String wifiIp = getWifiIp();
+    Logger.w("Wifi IP is " + wifiIp);
   	// Handle ipv6 internally
     String ipStr = getIpFromSocket();
     Logger.w("Mobile IP is " + ipStr);
