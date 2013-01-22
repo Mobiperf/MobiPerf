@@ -387,7 +387,7 @@ public class TCPThroughputTask extends MeasurementTask {
       byte [] resultMsg = new byte[this.BUFFER_SIZE];
       int resultMsgLen = iStream.read(resultMsg, 0, resultMsg.length);
       if (resultMsgLen > 0) {
-        // TODO(Haokun): Maybe switch to JSON for multiple acquired data 
+        // TODO (Haokun): Maybe switch to JSON for multiple acquired data 
         //               currently use one double number
         this.serverVersion = new String(resultMsg).substring(0, resultMsgLen);
         result = true;
