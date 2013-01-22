@@ -194,7 +194,7 @@ public class TracerouteTask extends MeasurementTask {
        * get the exact rtt from the output of the ping command with ttl being set
        * */        
       String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
-        "-s", task.packetSizeByte, "-c 1 ", target);
+        "-s", task.packetSizeByte, "-c 1", target);
       try {
         double rtt = 0;
         long t1;
