@@ -127,11 +127,6 @@ public class BatteryCapPowerManager {
           Logger.i("Skipping measurement - low battery");
           throw new MeasurementSkippedException("Not enough battery power");
         }
-        // Enable scheduled task over Wifi
-        /*if (PhoneUtils.getPhoneUtils().getNetwork() == PhoneUtils.NETWORK_WIFI) {
-          Logger.i("Skipping measurement - on wifi");
-          throw new MeasurementSkippedException("Connected via WiFi");
-        }*/
         scheduler.setCurrentTask(realTask);
         broadcastMeasurementStart();
         try {

@@ -176,11 +176,15 @@ public class TracerouteTask extends MeasurementTask {
     try {
       InetAddress hostInetAddr = InetAddress.getByName(target);
       hostIp = hostInetAddr.getHostAddress();
-      // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
       // add support for ipv6
-      task.pingExe = (hostInetAddr.getAddress().length == 4)
-                     ? parent.getString(R.string.ping_executable)
-                     : parent.getString(R.string.ping6_executable);
+      int ipByteLen = hostInetAddr.getAddress().length; 
+      if (ipByteLen == 4) {
+        task.pingExe = parent.getString(R.string.ping_executable);
+      } else if (ipByteLen == 16) {
+        task.pingExe = parent.getString(R.string.ping6_executable);
+      } else {
+        throw new MeasurementError("Unknown IP address byte length");
+      }
     } catch (UnknownHostException e) {
       Logger.e("Cannont resolve host " + target);
       throw new MeasurementError("target " + target + " cannot be resolved");
