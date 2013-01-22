@@ -60,8 +60,8 @@ public class TCPThroughputTask extends MeasurementTask {
 
   // Data related
   private final int KBYTE = 1024;
-  private static final int DATA_LIMIT_MB_UP = 5; 
-  private static final int DATA_LIMIT_MB_DOWN = 10;
+  private static final int DATA_LIMIT_MB_UP = 3; 
+  private static final int DATA_LIMIT_MB_DOWN = 5;
   private boolean DATA_LIMIT_ON = true;
   private boolean DATA_LIMIT_EXCEEDED = false;
   private static final String UPLINK_FINISH_MSG = "*";
@@ -136,7 +136,6 @@ public class TCPThroughputTask extends MeasurementTask {
 
       try {
         String readVal = null;
-        // TODO (Haokun): get limitation from configuration
         if ((readVal = params.get("data_limit_mb_down")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
           this.data_limit_mb_down = Double.parseDouble(readVal);
@@ -145,7 +144,6 @@ public class TCPThroughputTask extends MeasurementTask {
           }
         }
 
-        // TODO (Haokun): get limitation from configuration
         if ((readVal = params.get("data_limit_mb_up")) != null && readVal.length() > 0 
              && Integer.parseInt(readVal) > 0) {
           this.data_limit_mb_up = Double.parseDouble(readVal);
@@ -323,7 +321,7 @@ public class TCPThroughputTask extends MeasurementTask {
       if (!acquireServerConfig()) {
         throw new MeasurementError("Fail to acquire server configuration");
       }
-      Logger.w("Server version is " + this.serverVersion);
+      Logger.i("Server version is " + this.serverVersion);
       if (desc.dir_up == true) {
         uplink();
         Logger.i("Uplink measurement result is:");
@@ -350,17 +348,11 @@ public class TCPThroughputTask extends MeasurementTask {
                                System.currentTimeMillis() * 1000, isMeasurementSuccessful,
                                this.measurementDesc);
     // TODO (Haokun): add more results if necessary
-    String resultList = MeasurementJsonConvertor.toJsonString(this.samplingResults);
-    String limitExceed = MeasurementJsonConvertor.toJsonString(this.DATA_LIMIT_EXCEEDED);
-    String taskDur = MeasurementJsonConvertor.toJsonString(this.taskDuration);
-    Logger.w("Result for this round is " + resultList);
-    Logger.w("Data limit exceed is " + limitExceed);
-    Logger.w("Total task duration is " + taskDur);
     result.addResult("tcp_speed_results", this.samplingResults);
     result.addResult("data_limit_exceeded", this.DATA_LIMIT_EXCEEDED);
     result.addResult("duration", this.taskDuration);
     result.addResult("server_version", this.serverVersion);
-    Logger.w(MeasurementJsonConvertor.toJsonString(result));
+    Logger.i(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
   

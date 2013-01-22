@@ -658,6 +658,7 @@ public class PhoneUtils {
     return serverUrl == getTestingServerUrl();
   }
 
+  @Deprecated
   private String getCellularIp() {
     String ipAddress = null;
    
@@ -702,25 +703,29 @@ public class PhoneUtils {
     }
   }
   
+  @Deprecated
+  /**
+   * Read the ip address from WifiInfo
+   * Use reflection to acquire the "InetAddress" field, which handles ipv6 internally
+   */
   private String getWifiIp() {
     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     WifiInfo wifiInfo = wifiManager.getConnectionInfo();
     String resultIp = null;
-    // use reflection to acquire the "InetAddress" type, which handle ipv6 internally
     try {
-    	Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
-    	// enforce accessibility
-    	reflectIPField.setAccessible(true);
-	    InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
-	    resultIp = myIp.getHostAddress();
+      Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
+      // enforce accessibility
+      reflectIPField.setAccessible(true);
+      InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
+      resultIp = myIp.getHostAddress();
     } catch (IllegalArgumentException e) {
-      Logger.e("Bad arguments");
+      Logger.e("Bad arguments when access WifiInfo");
     } catch (IllegalAccessException e) {
-      Logger.e("Cannot access the field -- mIpAddress");
+      Logger.e("Cannot access the mIpAddress field in WifiInfo");
     } catch (SecurityException e) {
-	    e.printStackTrace();
+      Logger.e("Security Exception detected when access WifiInfo");
     } catch (NoSuchFieldException e) {
-	    Logger.e("Error during reflect: no mIpAddress field exists");
+      Logger.e("No mIpAddress field exists in WifiInfo");
     }
     return resultIp;
     /*if (wifiInfo != null) {
@@ -730,42 +735,45 @@ public class PhoneUtils {
       return null;
     }*/
   }
-
+  
+  @Deprecated
+  /**
+   * Create temporary network to lookup for ip address
+   */
   private String getIpFromSocket() {
-  	Socket tcpSocket = new Socket();
-  	String localIP = null;
-  	try {
-  		// TODO (Haokun): store constant into config
-	    SocketAddress remoteAddr = new InetSocketAddress("www.google.com", 80);
-	    tcpSocket.setTcpNoDelay(true);
-	    tcpSocket.connect(remoteAddr, 3000);
-	    localIP = tcpSocket.getLocalAddress().getHostAddress();
-  	} catch (IOException e) {
-  		Logger.e("Error happen during local ip lookup: fail to set up socket.");
-  	} finally {
-          try {
-	      tcpSocket.close();
-          } catch (IOException e) {
-      	Logger.e("Error happen during local ip lookup: fail to close socket.");
-      } finally {
-  	return localIP;
+    Socket tcpSocket = new Socket();
+    String localIP = null;
+    try {
+      String hostname = "www.google.com";
+      int portNum = 80;
+      int tcpTimeout = 3000;
+      SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
+      tcpSocket.setTcpNoDelay(true);
+      tcpSocket.connect(remoteAddr, tcpTimeout);
+      localIP = tcpSocket.getLocalAddress().getHostAddress();
+    } catch (IOException e) {
+      Logger.e("Error happen during local ip lookup: fail to set up socket.");
+    } finally {
+      try {
+        tcpSocket.close();
+      } catch (IOException e) {
+        Logger.e("Error happen during local ip lookup: fail to close socket.");
       }
-  	}
+    }
+    return localIP;
   }
   
+  @Deprecated
   /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
    * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
    * network IP*/
   private String getIp() {
-    String wifiIp = getWifiIp();
-    Logger.w("Wifi IP is " + wifiIp);
-  	// Handle ipv6 internally
-    String ipStr = getIpFromSocket();
-    Logger.w("Mobile IP is " + ipStr);
+    String ipStr = getWifiIp();
+    if (ipStr == null) {
+      ipStr = getIpFromSocket();
+    }
     if (ipStr == null) {
       ipStr = getCellularIp();
-      // TODO (Haokun): remove after testing
-      Logger.w("IP from interface is " + ipStr);
     }
     if (ipStr == null) {
       return "";
@@ -786,15 +794,15 @@ public class PhoneUtils {
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
-    String activeIp = getIp();
-    if (activeNetwork != null && activeIp.compareTo("") == 0) {
+    // String activeIp = getIp();
+    if (activeNetwork != null) {
       networkType = activeNetwork.getTypeName();
     }
     String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
 
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
-        System.currentTimeMillis() * 1000, getVersionStr(), activeIp, location.getLongitude(),
+        System.currentTimeMillis() * 1000, getVersionStr(), location.getLongitude(),
         location.getLatitude(), location.getProvider(), networkType, carrierName, 
         utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
         utils.getCurrentRssi());

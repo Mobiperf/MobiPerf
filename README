@@ -236,7 +236,7 @@ array.
 
 TCP Throughput parameters
 
-(required) dir_up - Uplink or Downlink measurement (true/false)
+(required) dir_up - Uplink or Downlink measurement (boolean)
 (required) target - hostname for servers. Use m-lab for now. (string)
 (optional) data_limit_mb_up - Uplink cellular network data 
 limit (double)
