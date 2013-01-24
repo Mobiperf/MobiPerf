@@ -27,8 +27,7 @@ public class DeviceProperty {
   public String appVersion;
   public long timestamp;
   public String osVersion;
-  // Exclude ip address due to NAT
-  // public String ipAddress;
+  public String ipType;
   public GeoLocation location;
   public String locationType;
   public String networkType;
@@ -39,14 +38,15 @@ public class DeviceProperty {
   public int rssi;
 
   public DeviceProperty(String deviceId, String appVersion, long timeStamp, String osVersion,
-      double longtitude, double latitude, String locationType, 
+      String ipType, double longtitude, double latitude, String locationType, 
       String networkType, String carrier, int batteryLevel, boolean isCharging,
       String cellInfo, int rssi) {
     super();
     this.deviceId = deviceId;
     this.appVersion = appVersion;
     this.timestamp = timeStamp;
-    this.osVersion = osVersion;    
+    this.osVersion = osVersion;
+    this.ipType = ipType;
     this.location = new GeoLocation(longtitude, latitude);
     this.locationType = locationType;
     this.networkType = networkType;

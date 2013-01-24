@@ -273,11 +273,8 @@ public class PingTask extends MeasurementTask {
     String errorMsg = "";
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
-    if (ipByteLen == 4) {
-      pingTask.pingExe = parent.getString(R.string.ping_executable);
-    } else if (ipByteLen == 16) {
-      pingTask.pingExe = parent.getString(R.string.ping6_executable);
-    } else {
+    pingTask.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent);
+    if (pingTask.pingExe == null) {
       throw new MeasurementError("Unknown IP address byte length");
     }
     try {

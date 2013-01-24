@@ -15,6 +15,7 @@
 package com.mobiperf.util;
 
 import com.mobiperf.Logger;
+import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
 import com.mobiperf.SpeedometerApp;
 
@@ -169,5 +170,17 @@ public class Util {
     } catch (NullPointerException e) {    
       return null;
     }
+  }
+  
+  /**
+   * Determine the ping executable based on ip address byte length
+   */
+  public static String pingExecutableBasedOnIPType (int ipByteLen, Context context) {
+    if (ipByteLen == 4) {
+      return context.getString(R.string.ping_executable);
+    } else if (ipByteLen == 16) {
+      return context.getString(R.string.ping6_executable);
+    }
+    return null;
   }
 }

@@ -56,6 +56,7 @@ import android.webkit.WebView;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
@@ -67,6 +68,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 
 /**
@@ -116,7 +118,9 @@ public class PhoneUtils {
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
   private DeviceInfo deviceInfo = null;
-
+  /** Unknown IP type */
+  private String UNKNOWN_IP_TYPE = "Unknown";
+  
   protected PhoneUtils(Context context) {
     this.context = context;
     broadcastReceiver = new PowerStateChangeReceiver();
@@ -319,13 +323,16 @@ public class PhoneUtils {
    * TODO(wenjiezeng): As folklore has it and Wenjie has confirmed, we cannot get cell info from
    * Samsung phones.
    */
-  public String getCellInfo() {
+  public String getCellInfo(boolean cidOnly) {
     initNetwork();
     List<NeighboringCellInfo> infos = telephonyManager.getNeighboringCellInfo();
     StringBuffer buf = new StringBuffer();
+    String tempResult = "";
     if (infos.size() > 0) {
       for (NeighboringCellInfo info : infos) {
-        buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
+        tempResult = cidOnly ? info.getCid() + ";" : info.getLac() + "," 
+                               + info.getCid() + "," + info.getRssi() + ";";
+        buf.append(tempResult);
       }
       // Removes the trailing semicolon
       buf.deleteCharAt(buf.length() - 1);
@@ -657,7 +664,173 @@ public class PhoneUtils {
   public boolean isTestingServer(String serverUrl) {
     return serverUrl == getTestingServerUrl();
   }
- 
+  
+  /** Reflection to access private ip address field, working for 4.0.1+*/
+  private int getWifiIpByteLen() {
+    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+    int ipByteLen = 0;
+    try {
+      Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
+      // enforce accessibility
+      reflectIPField.setAccessible(true);
+      InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
+      ipByteLen = myIp.getAddress().length;
+    } catch (IllegalArgumentException e) {
+      Logger.e("Bad arguments when access WifiInfo");
+    } catch (IllegalAccessException e) {
+      Logger.e("Cannot access the mIpAddress field in WifiInfo");
+    } catch (SecurityException e) {
+      Logger.e("Security Exception detected when access WifiInfo");
+    } catch (NoSuchFieldException e) {
+      Logger.e("No mIpAddress field exists in WifiInfo");
+    }
+    return ipByteLen;
+  }
+  
+  /**
+   * Fetch Address byte length by create a temporary socket
+   * @return length of the ip address
+   */
+  public int getInetIPByteLen() {
+    Socket tcpSocket = new Socket();
+    int ipByteLen = 0;
+    try {
+      String hostname = "ipv6.google.com";
+      int portNum = 80;
+      int tcpTimeout = 3000;
+      SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
+      tcpSocket.setTcpNoDelay(true);
+      tcpSocket.connect(remoteAddr, tcpTimeout);
+      ipByteLen = tcpSocket.getLocalAddress().getAddress().length;
+    } catch (IOException e) {
+      Logger.e("Fail to create temp socket in getIpType(). " + e.getMessage());
+    } finally {
+      try {
+        tcpSocket.close();
+      } catch (IOException e) {
+        Logger.e("Fail to close temp socket in getIpType().");
+      }
+    }
+    return ipByteLen;
+  }
+  
+  /**
+   * Get IP address based on ip length
+   * @return ipv4, ipv6 or UNKNOWN_IP_TYPE 
+   */
+  private String getIpTypeByLen(int IpLen) {
+    if (IpLen == 4) {
+      return "ipv4";
+    } else if (IpLen == 16) {
+      return "ipv6";
+    }
+    return UNKNOWN_IP_TYPE;
+  }
+  
+  /**
+   * Handle version string contains beta version
+   */
+  private int[] getBetaVersion (String betaStr, String token) {
+    if (betaStr == null)
+    	return null;
+    String[] betaStr_split = betaStr.split(token);
+    int[] rt = new int[]{0,0};
+    if (betaStr_split.length >= 1) {
+      rt[0] = Integer.parseInt(betaStr_split[0]);
+    }
+    if (betaStr_split.length >= 2) {
+    	rt[1] = Integer.parseInt(betaStr_split[1]);
+    }
+    return rt;
+  }
+
+  /**
+   * Tokenize the string by split with ".", and compare each 
+   * @return 1 if v1 > v2
+   *        -1 if v1 < v2
+   *         0 if v1 == v2 
+   */
+  private int compareVersion (String v1, String v2, String token) {
+    if (v1 == null && v2 == null)  return 0;
+    if (v1 == null)  return 1;
+    if (v2 == null)  return -1;
+
+    String[] v1_split = v1.split(token);
+    String[] v2_split = v2.split(token);
+  	int maxLen = Math.max(v1_split.length, v2_split.length);
+  	int v1_cur, v2_cur, v1_beta, v2_beta;
+    for (int i = 0; i < maxLen; i++) {
+      if (i == v1_split.length - 1) {
+        int[] v1_last = getBetaVersion(v1_split[i], "b");
+        v1_cur = v1_last[0];
+        v1_beta = v1_last[1];
+      } else {
+        v1_cur = (i < v1_split.length) ?
+                 Integer.parseInt(v1_split[i]) : 0;
+        v1_beta = 0;
+    	}
+      if (i == v2_split.length - 1) {
+        int[] v2_last = getBetaVersion(v2_split[i], "b");
+        v2_cur = v2_last[0];
+        v2_beta = v2_last[1];
+      } else {
+        v2_cur = (i < v2_split.length) ?
+                 Integer.parseInt(v2_split[i]) : 0;
+        v2_beta = 0;
+    	}
+      if (v1_cur < v2_cur)	return -1;
+      if (v1_cur > v2_cur)  return 1;
+      // handle beta version, i.e. "3.4b5"
+      if (v1_beta < v2_beta)  return -1;
+      if (v1_beta > v2_beta)  return 1; 
+    }
+    return 0;
+  }
+  
+  /**
+   * Validate the version number
+   * It was composed with number and connect with "."
+   * Also could end with "b" plus a number for beta 
+   */
+  private boolean validateVersion (String version) {
+    return version.matches("[0-9]+(\\.[0-9]+)*([b]?[0-9]+)?$");
+  }
+  
+  /** 
+   * Acquire ip address length, then determine ipv4 or ipv6.
+   * First try Wifi network, if fails, try set up temporary tcp connection.
+   * Reduce network traffic by cache previous type result. 
+   * Redo the experiment only when Wifi AP or Cell ID changes.
+   * 
+   * @return ipv4, ipv6 or UNKNOWN_IP_TYPE 
+   */
+  public String getIpType() {
+    String ipType = UNKNOWN_IP_TYPE;
+
+    String networkType = PhoneUtils.getPhoneUtils().getNetwork();
+    String minOSVersion = "4.10.34";
+    Logger.w("Validate result is " + validateVersion("3.4b.2"));
+    Logger.w("Validate result is " + validateVersion("3.4.2b3"));
+    Logger.w("Test 1: " + compareVersion("3.0.2", "3.1.2", "\\.")); // -1
+    Logger.w("Test 2: " + compareVersion("3.0.2", "3.1b3", "\\.")); // -1
+    Logger.w("Test 3: " + compareVersion("1", "1.1.1", "\\.")); // -1
+    Logger.w("Test 4: " + compareVersion("10.12b3", "10.9", "\\.")); // 1
+    Logger.w("Test 5: " + compareVersion("1.2b5", "1.2b1", "\\.")); // 1
+    Logger.w("Test 6: " + compareVersion("4.0.43", "4.0.43", "\\.")); // 0
+    // Wifi works only for 4.0.1+, for lower version try temp connection method
+    if (networkType == NETWORK_WIFI 
+        && Build.VERSION.RELEASE.compareTo(minOSVersion) >= 0) {
+      ipType = getIpTypeByLen(getWifiIpByteLen());
+      Logger.w("Wifi IP type is " + ipType);
+    }
+    if (ipType == UNKNOWN_IP_TYPE) {
+      ipType = getIpTypeByLen(getInetIPByteLen());
+    }
+    Logger.w("IP type is " + ipType);
+    return ipType;
+  }
+  
   /** Returns the DeviceProperty needed to report the measurement result */
   public DeviceProperty getDeviceProperty() {
     String carrierName = telephonyManager.getNetworkOperatorName();
@@ -670,7 +843,7 @@ public class PhoneUtils {
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
-    // String activeIp = getIp();
+    String ipType = getIpType();
     if (activeNetwork != null) {
       networkType = activeNetwork.getTypeName();
     }
@@ -678,9 +851,9 @@ public class PhoneUtils {
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
 
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
-        System.currentTimeMillis() * 1000, getVersionStr(), location.getLongitude(),
-        location.getLatitude(), location.getProvider(), networkType, carrierName, 
-        utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
-        utils.getCurrentRssi());
+        System.currentTimeMillis() * 1000, getVersionStr(), ipType, 
+        location.getLongitude(), location.getLatitude(), location.getProvider(), 
+        networkType, carrierName, utils.getCurrentBatteryLevel(), utils.isCharging(), 
+        utils.getCellInfo(false), utils.getCurrentRssi());
   }  
 }

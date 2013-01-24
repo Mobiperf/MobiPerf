@@ -177,12 +177,9 @@ public class TracerouteTask extends MeasurementTask {
       InetAddress hostInetAddr = InetAddress.getByName(target);
       hostIp = hostInetAddr.getHostAddress();
       // add support for ipv6
-      int ipByteLen = hostInetAddr.getAddress().length; 
-      if (ipByteLen == 4) {
-        task.pingExe = parent.getString(R.string.ping_executable);
-      } else if (ipByteLen == 16) {
-        task.pingExe = parent.getString(R.string.ping6_executable);
-      } else {
+      int ipByteLen = hostInetAddr.getAddress().length;
+      task.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent); 
+      if (task.pingExe == null) {
         throw new MeasurementError("Unknown IP address byte length");
       }
     } catch (UnknownHostException e) {
