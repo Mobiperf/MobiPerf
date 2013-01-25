@@ -302,8 +302,12 @@ public class TCPThroughputTask extends MeasurementTask {
       throw new InvalidParameterException("Unknown target " + desc.target +
                                           " for TCPThroughput");
     }
-
-    desc.target = MLabNS.Lookup(context, "mobiperf");
+    
+    try {
+      desc.target = MLabNS.Lookup(context, "mobiperf");
+    } catch (InvalidParameterException e) {
+      throw new MeasurementError(e.getMessage());
+    }
     Logger.i("Setting target to: " + desc.target);
     
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
