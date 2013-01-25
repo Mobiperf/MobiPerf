@@ -56,20 +56,16 @@ import android.webkit.WebView;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.Inet6Address;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 
 /**
@@ -119,8 +115,18 @@ public class PhoneUtils {
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
   private DeviceInfo deviceInfo = null;
-  /** Unknown IP type */
-  private String UNKNOWN_IP_TYPE = "NONE";
+  /** IP type */
+  private String IP_TYPE_UNKNOWN = "UNKNOWN";
+  private String IP_TYPE_NONE = "NONE";
+  private String IP_TYPE_IPV4_ONLY = "ipv4";
+  private String IP_TYPE_IPV6_ONLY = "ipv6";
+  private String IP_TYPE_IPV4_IPV6_BOTH = "ipv4_ipv6";
+  /** IP type status */
+  // Indeterministic type due to client side timer expired
+  private int IP_TYPE_CANNOT_DECIDE = 2;
+  // Cannot resolve the hostname or cannot reach the destination address
+  private int IP_TYPE_UNCOMPATIABLE = 1;
+  private int IP_TYPE_COMPATIABLE = 0;
   
   protected PhoneUtils(Context context) {
     this.context = context;
@@ -692,58 +698,73 @@ public class PhoneUtils {
   /**
    * Using MLab service to detect ipv4 or ipv6 compatibility
    * @param ip_detect_type -- "ipv4" or "ipv6"
-   * @return true/false
+   * @return IP_TYPE_CANNOT_DECIDE, IP_TYPE_UNCOMPATIABLE, IP_TYPE_COMPATIABLE
    */
-  public boolean checkIPCompatibility(String ip_detect_type) {
-    if (!ip_detect_type.equals("ipv4")
-        && !ip_detect_type.equals("ipv6")) {
-      return false;
+  public int checkIPCompatibility(String ip_detect_type) {
+    if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
+      return IP_TYPE_CANNOT_DECIDE;
     }
     Socket tcpSocket = new Socket();
     try {
       String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type);
       if (hostname == null || hostname == "")
-        return false;
+        return IP_TYPE_CANNOT_DECIDE;
       int portNum = 80;
       int tcpTimeout = 3000;
       SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
       tcpSocket.setTcpNoDelay(true);
       tcpSocket.connect(remoteAddr, tcpTimeout);
+    } catch (ConnectException e) {
+      // Server is not reachable due to client not support ipv6
+      Logger.e("Connection exception is " + e.getMessage());
+      return IP_TYPE_UNCOMPATIABLE;
+    } catch (UnknownHostException e) {
+      // Fail to resolve ip address
+      Logger.e("UnknownHostException in checkIPCompatibility() " + e.getMessage());
+      return IP_TYPE_UNCOMPATIABLE;
     } catch (IOException e) {
+      // Client timer expired
       Logger.e("Fail to setup TCP in checkIPCompatibility(). "
                + e.getMessage());
-      return false;
+      return IP_TYPE_CANNOT_DECIDE;
     } catch (InvalidParameterException e) {
+      // MLabNS service lookup fail
       Logger.e("InvalidParameterException in checkIPCompatibility(). "
                + e.getMessage());
-      return false;
+      return IP_TYPE_CANNOT_DECIDE;
     } catch (IllegalArgumentException e) {
       Logger.e("IllegalArgumentException in checkIPCompatibility(). "
                + e.getMessage());
-      return false;
+      return IP_TYPE_CANNOT_DECIDE;
     } finally {
       try {
         tcpSocket.close();
       } catch (IOException e) {
         Logger.e("Fail to close TCP in checkIPCompatibility().");
+        return IP_TYPE_CANNOT_DECIDE;
       }
     }
-    return true;
+    return IP_TYPE_COMPATIABLE;
   }
    
   /** 
    * Use MLabNS slices to check v4 and v6 connectivity to infer
    * ip network compatibility
    * 
-   * @return ipv4, ipv6, ipv4_ipv6 or NONE 
+   * @return ipv4, ipv6, ipv4_ipv6, IP_TYPE_NONE or IP_TYPE_UNKNOWN
    */
-  public String getIpCompatability() {
-    boolean v4Comp = checkIPCompatibility("ipv4");
-    boolean v6Comp = checkIPCompatibility("ipv6");
-    if (v4Comp && v6Comp) return "ipv4_ipv6";
-    if (v4Comp) return "ipv4";
-    if (v6Comp) return "ipv6";
-    return UNKNOWN_IP_TYPE;
+  public String getIpCompatibility() {
+    int v4Comp = checkIPCompatibility("ipv4");
+    int v6Comp = checkIPCompatibility("ipv6");
+    if (v4Comp == IP_TYPE_COMPATIABLE && v6Comp == IP_TYPE_COMPATIABLE)
+      return IP_TYPE_IPV4_IPV6_BOTH;
+    if (v4Comp == IP_TYPE_COMPATIABLE && v6Comp != IP_TYPE_COMPATIABLE)
+      return IP_TYPE_IPV4_ONLY;
+    if (v4Comp != IP_TYPE_COMPATIABLE && v6Comp == IP_TYPE_COMPATIABLE)
+      return IP_TYPE_IPV6_ONLY;
+    if (v4Comp == IP_TYPE_UNCOMPATIABLE && v6Comp == IP_TYPE_UNCOMPATIABLE)
+      return IP_TYPE_NONE;
+    return IP_TYPE_UNKNOWN;
   }
   
   /** Returns the DeviceProperty needed to report the measurement result */
@@ -758,7 +779,8 @@ public class PhoneUtils {
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
-    String ipCompatability = getIpCompatability();
+    String ipCompatability = getIpCompatibility();
+    Logger.w("IP type is " + ipCompatability);
     if (activeNetwork != null) {
       networkType = activeNetwork.getTypeName();
     }

@@ -376,7 +376,7 @@ public class TCPThroughputTask extends MeasurementTask {
     try {
       tcpSocket = new Socket();
       buildUpSocket(tcpSocket, ((TCPThroughputDesc)measurementDesc).target, 
-                   TCPThroughputTask.PORT_CONFIG);
+                    TCPThroughputTask.PORT_CONFIG);
       iStream = tcpSocket.getInputStream();
     } catch (IOException e) {
       throw new MeasurementError("Error open uplink socket at " + 
