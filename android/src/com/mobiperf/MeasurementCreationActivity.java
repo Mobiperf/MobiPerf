@@ -252,17 +252,17 @@ public class MeasurementCreationActivity extends Activity {
         } else if (measurementTypeUnderEdit.equals(TCPThroughputTask.TYPE)) {
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", MLabNS.TARGET);
-            params.put("direction", tcpDir);
+            params.put("dir_up", tcpDir);
             TCPThroughputDesc desc = new TCPThroughputDesc(null,
               Calendar.getInstance().getTime(),
               null,
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
-              params,
-              MeasurementCreationActivity.this.getApplicationContext());
+              params);
             newTask = new TCPThroughputTask(desc, 
                           MeasurementCreationActivity.this.getApplicationContext());
+            showLengthWarning = true;
         }
 
         if (newTask != null) {

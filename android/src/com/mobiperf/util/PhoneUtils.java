@@ -17,6 +17,7 @@ package com.mobiperf.util;
 import com.mobiperf.DeviceInfo;
 import com.mobiperf.DeviceProperty;
 import com.mobiperf.Logger;
+import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
 import com.mobiperf.SpeedometerApp;
 
@@ -53,12 +54,16 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.ConnectException;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
@@ -110,7 +115,19 @@ public class PhoneUtils {
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
   private DeviceInfo deviceInfo = null;
-
+  /** IP type */
+  private String IP_TYPE_UNKNOWN = "UNKNOWN";
+  private String IP_TYPE_NONE = "NONE";
+  private String IP_TYPE_IPV4_ONLY = "ipv4";
+  private String IP_TYPE_IPV6_ONLY = "ipv6";
+  private String IP_TYPE_IPV4_IPV6_BOTH = "ipv4_ipv6";
+  /** IP type status */
+  // Indeterministic type due to client side timer expired
+  private int IP_TYPE_CANNOT_DECIDE = 2;
+  // Cannot resolve the hostname or cannot reach the destination address
+  private int IP_TYPE_UNCOMPATIBLE = 1;
+  private int IP_TYPE_COMPATIBLE = 0;
+  
   protected PhoneUtils(Context context) {
     this.context = context;
     broadcastReceiver = new PowerStateChangeReceiver();
@@ -313,13 +330,16 @@ public class PhoneUtils {
    * TODO(wenjiezeng): As folklore has it and Wenjie has confirmed, we cannot get cell info from
    * Samsung phones.
    */
-  public String getCellInfo() {
+  public String getCellInfo(boolean cidOnly) {
     initNetwork();
     List<NeighboringCellInfo> infos = telephonyManager.getNeighboringCellInfo();
     StringBuffer buf = new StringBuffer();
+    String tempResult = "";
     if (infos.size() > 0) {
       for (NeighboringCellInfo info : infos) {
-        buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
+        tempResult = cidOnly ? info.getCid() + ";" : info.getLac() + "," 
+                               + info.getCid() + "," + info.getRssi() + ";";
+        buf.append(tempResult);
       }
       // Removes the trailing semicolon
       buf.deleteCharAt(buf.length() - 1);
@@ -651,74 +671,100 @@ public class PhoneUtils {
   public boolean isTestingServer(String serverUrl) {
     return serverUrl == getTestingServerUrl();
   }
-
-  private String getCellularIp() {
-    String ipAddress = null;
-   
-    try {
-      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); 
-          en.hasMoreElements();) {
-        NetworkInterface intf = en.nextElement();
-        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); 
-            enumIpAddr.hasMoreElements();) {
-          InetAddress inetAddress = enumIpAddr.nextElement();
-          if (!inetAddress.isLoopbackAddress()
-              && inetAddress.getHostAddress().compareTo("0.0.0.0") != 0) {
-            return inetAddress.getHostAddress().toString();
-          }
-        }
-      }
-    } catch (SocketException ex) {
-      return null;
-    }
-    return null;
-  }
-
-  /* TODO(Wenjie): It assume that WifiInfo.getIpAddress() always returns an integer in
-   * big endian. Otherwise, the order of the numbers in the IP String will need 
-   * to be reversed.*/
-  private String intToIp(int number) {
-    byte[] bytes = new byte[4];
-    for (int i = 0; i < bytes.length; i++) {
-      bytes[i] = (byte) ((number >> (32 - (4 - i) * 8)) & 0xFF);
-    }
-    try {
-       /* 
-       * Integer is encoded in network byte order (big endian), and getByAddress(byte[])
-       * address that endian issue internally.
-       */
-      InetAddress ipAddress = InetAddress.getByAddress(bytes);
-      return ipAddress.getHostAddress();
-    } catch (UnknownHostException e) {
-      Logger.e("error when translating the wifi address to string");
-      return null;
-    }
-  }
   
-  private String getWifiIp() {
+  /** Reflection to access private ip address field, working for 4.0.1+*/
+  private int getWifiIpByteLen() {
     WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-    if (wifiInfo != null) {
-      int ipAddress = wifiInfo.getIpAddress();
-      return ipAddress == 0 ? null : intToIp(ipAddress);
-    } else {
-      return null;
+    int ipByteLen = 0;
+    try {
+      Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
+      // enforce accessibility
+      reflectIPField.setAccessible(true);
+      InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
+      ipByteLen = myIp.getAddress().length;
+    } catch (IllegalArgumentException e) {
+      Logger.e("Bad arguments when access WifiInfo");
+    } catch (IllegalAccessException e) {
+      Logger.e("Cannot access the mIpAddress field in WifiInfo");
+    } catch (SecurityException e) {
+      Logger.e("Security Exception detected when access WifiInfo");
+    } catch (NoSuchFieldException e) {
+      Logger.e("No mIpAddress field exists in WifiInfo");
     }
+    return ipByteLen;
   }
   
-  /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
-   * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
-   * network IP*/
-  private String getIp() {
-    String ipStr = getWifiIp();
-    if (ipStr == null) {
-      ipStr = getCellularIp();
+  /**
+   * Using MLab service to detect ipv4 or ipv6 compatibility
+   * @param ip_detect_type -- "ipv4" or "ipv6"
+   * @return IP_TYPE_CANNOT_DECIDE, IP_TYPE_UNCOMPATIBLE, IP_TYPE_COMPATIBLE
+   */
+  public int checkIPCompatibility(String ip_detect_type) {
+    if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
+      return IP_TYPE_CANNOT_DECIDE;
     }
-    if (ipStr == null) {
-      return "";
-    } else {
-      return ipStr;
+    Socket tcpSocket = new Socket();
+    try {
+      String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type);
+      if (hostname == null || hostname == "")
+        return IP_TYPE_CANNOT_DECIDE;
+      int portNum = 80;
+      int tcpTimeout = 3000;
+      SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
+      tcpSocket.setTcpNoDelay(true);
+      tcpSocket.connect(remoteAddr, tcpTimeout);
+    } catch (ConnectException e) {
+      // Server is not reachable due to client not support ipv6
+      Logger.e("Connection exception is " + e.getMessage());
+      return IP_TYPE_UNCOMPATIBLE;
+    } catch (UnknownHostException e) {
+      // Fail to resolve ip address
+      Logger.e("UnknownHostException in checkIPCompatibility() " + e.getMessage());
+      return IP_TYPE_UNCOMPATIBLE;
+    } catch (IOException e) {
+      // Client timer expired
+      Logger.e("Fail to setup TCP in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } catch (InvalidParameterException e) {
+      // MLabNS service lookup fail
+      Logger.e("InvalidParameterException in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } catch (IllegalArgumentException e) {
+      Logger.e("IllegalArgumentException in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } finally {
+      try {
+        tcpSocket.close();
+      } catch (IOException e) {
+        Logger.e("Fail to close TCP in checkIPCompatibility().");
+        return IP_TYPE_CANNOT_DECIDE;
+      }
     }
+    return IP_TYPE_COMPATIBLE;
+  }
+   
+  /** 
+   * Use MLabNS slices to check v4 and v6 connectivity to infer
+   * ip network compatibility
+   * 
+   * @return ipv4, ipv6, ipv4_ipv6, IP_TYPE_NONE or IP_TYPE_UNKNOWN
+   */
+  public String getIpCompatibility() {
+    int v4Comp = checkIPCompatibility("ipv4");
+    int v6Comp = checkIPCompatibility("ipv6");
+    if (v4Comp == IP_TYPE_COMPATIBLE && v6Comp == IP_TYPE_COMPATIBLE)
+      return IP_TYPE_IPV4_IPV6_BOTH;
+    if (v4Comp == IP_TYPE_COMPATIBLE && v6Comp != IP_TYPE_COMPATIBLE)
+      return IP_TYPE_IPV4_ONLY;
+    if (v4Comp != IP_TYPE_COMPATIBLE && v6Comp == IP_TYPE_COMPATIBLE)
+      return IP_TYPE_IPV6_ONLY;
+    if (v4Comp == IP_TYPE_UNCOMPATIBLE && v6Comp == IP_TYPE_UNCOMPATIBLE)
+      return IP_TYPE_NONE;
+    return IP_TYPE_UNKNOWN;
   }
   
   /** Returns the DeviceProperty needed to report the measurement result */
@@ -733,17 +779,18 @@ public class PhoneUtils {
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
-    String activeIp = getIp();
-    if (activeNetwork != null && activeIp.compareTo("") == 0) {
+    String ipCompatability = getIpCompatibility();
+    Logger.w("IP type is " + ipCompatability);
+    if (activeNetwork != null) {
       networkType = activeNetwork.getTypeName();
     }
     String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
 
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
-        System.currentTimeMillis() * 1000, getVersionStr(), activeIp, location.getLongitude(),
-        location.getLatitude(), location.getProvider(), networkType, carrierName, 
-        utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
-        utils.getCurrentRssi());
+        System.currentTimeMillis() * 1000, getVersionStr(), ipCompatability, 
+        location.getLongitude(), location.getLatitude(), location.getProvider(), 
+        networkType, carrierName, utils.getCurrentBatteryLevel(), utils.isCharging(), 
+        utils.getCellInfo(false), utils.getCurrentRssi());
   }  
 }
