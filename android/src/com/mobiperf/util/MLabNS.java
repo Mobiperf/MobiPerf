@@ -35,7 +35,7 @@ import org.json.JSONObject;
 public class MLabNS {
 
   /** Used by measurement tests if MLabNS should be used to retrieve the real server target. */
-  static public final String TARGET = "m-lab";
+  static public final String TARGET = "mlab";
 
   /**
    * Query MLab-NS to get an FQDN for the given tool.

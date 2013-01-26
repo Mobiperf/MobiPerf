@@ -166,8 +166,6 @@ public class TracerouteTask extends MeasurementTask {
     int maxHopCount = task.maxHopCount;
     int ttl = 1;
     String hostIp = null;
-    // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
-    task.pingExe = parent.getString(R.string.ping_executable);
     String target = task.target;
     boolean success = false;
     ArrayList<HopInfo> hopHosts = new ArrayList<HopInfo>();
@@ -176,7 +174,14 @@ public class TracerouteTask extends MeasurementTask {
     
     
     try {
-      hostIp = InetAddress.getByName(target).getHostAddress();
+      InetAddress hostInetAddr = InetAddress.getByName(target);
+      hostIp = hostInetAddr.getHostAddress();
+      // add support for ipv6
+      int ipByteLen = hostInetAddr.getAddress().length;
+      task.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent); 
+      if (task.pingExe == null) {
+        throw new MeasurementError("Unknown IP address byte length");
+      }
     } catch (UnknownHostException e) {
       Logger.e("Cannont resolve host " + target);
       throw new MeasurementError("target " + target + " cannot be resolved");
@@ -190,7 +195,7 @@ public class TracerouteTask extends MeasurementTask {
        * get the exact rtt from the output of the ping command with ttl being set
        * */        
       String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
-        "-s", task.packetSizeByte, "-c 1 ", target);
+        "-s", task.packetSizeByte, "-c 1", target);
       try {
         double rtt = 0;
         long t1;

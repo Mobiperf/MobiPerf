@@ -148,8 +148,11 @@ public class PingTask extends MeasurementTask {
   @Override
   public MeasurementResult call() throws MeasurementError {
     PingDesc desc = (PingDesc) measurementDesc;
+    int ipByteLength;
     try {
       InetAddress addr = InetAddress.getByName(desc.target);
+      // Get the address length
+      ipByteLength = addr.getAddress().length;
       // All ping methods ping against targetIp rather than desc.target
       targetIp = addr.getHostAddress();
     } catch (UnknownHostException e) {
@@ -159,7 +162,7 @@ public class PingTask extends MeasurementTask {
     try {
       Logger.i("running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
-      return executePingCmdTask();
+      return executePingCmdTask(ipByteLength);
     } catch (MeasurementError e) {
       try {
         Logger.i("running java ping");
@@ -263,13 +266,16 @@ public class PingTask extends MeasurementTask {
   }
   
   // Runs when SystemState is IDLE
-  private MeasurementResult executePingCmdTask() throws MeasurementError {
+  private MeasurementResult executePingCmdTask(int ipByteLen) throws MeasurementError {
     Logger.i("Starting executePingCmdTask");
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
-    pingTask.pingExe = parent.getString(R.string.ping_executable);
+    pingTask.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent);
+    if (pingTask.pingExe == null) {
+      throw new MeasurementError("Unknown IP address byte length");
+    }
     try {
       String command = Util.constructCommand(pingTask.pingExe, "-i", 
           Config.DEFAULT_INTERVAL_BETWEEN_ICMP_PACKET_SEC,
