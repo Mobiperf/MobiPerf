@@ -125,8 +125,8 @@ public class PhoneUtils {
   // Indeterministic type due to client side timer expired
   private int IP_TYPE_CANNOT_DECIDE = 2;
   // Cannot resolve the hostname or cannot reach the destination address
-  private int IP_TYPE_UNCOMPATIABLE = 1;
-  private int IP_TYPE_COMPATIABLE = 0;
+  private int IP_TYPE_UNCOMPATIBLE = 1;
+  private int IP_TYPE_COMPATIBLE = 0;
   
   protected PhoneUtils(Context context) {
     this.context = context;
@@ -698,7 +698,7 @@ public class PhoneUtils {
   /**
    * Using MLab service to detect ipv4 or ipv6 compatibility
    * @param ip_detect_type -- "ipv4" or "ipv6"
-   * @return IP_TYPE_CANNOT_DECIDE, IP_TYPE_UNCOMPATIABLE, IP_TYPE_COMPATIABLE
+   * @return IP_TYPE_CANNOT_DECIDE, IP_TYPE_UNCOMPATIBLE, IP_TYPE_COMPATIBLE
    */
   public int checkIPCompatibility(String ip_detect_type) {
     if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
@@ -717,11 +717,11 @@ public class PhoneUtils {
     } catch (ConnectException e) {
       // Server is not reachable due to client not support ipv6
       Logger.e("Connection exception is " + e.getMessage());
-      return IP_TYPE_UNCOMPATIABLE;
+      return IP_TYPE_UNCOMPATIBLE;
     } catch (UnknownHostException e) {
       // Fail to resolve ip address
       Logger.e("UnknownHostException in checkIPCompatibility() " + e.getMessage());
-      return IP_TYPE_UNCOMPATIABLE;
+      return IP_TYPE_UNCOMPATIBLE;
     } catch (IOException e) {
       // Client timer expired
       Logger.e("Fail to setup TCP in checkIPCompatibility(). "
@@ -744,7 +744,7 @@ public class PhoneUtils {
         return IP_TYPE_CANNOT_DECIDE;
       }
     }
-    return IP_TYPE_COMPATIABLE;
+    return IP_TYPE_COMPATIBLE;
   }
    
   /** 
@@ -756,13 +756,13 @@ public class PhoneUtils {
   public String getIpCompatibility() {
     int v4Comp = checkIPCompatibility("ipv4");
     int v6Comp = checkIPCompatibility("ipv6");
-    if (v4Comp == IP_TYPE_COMPATIABLE && v6Comp == IP_TYPE_COMPATIABLE)
+    if (v4Comp == IP_TYPE_COMPATIBLE && v6Comp == IP_TYPE_COMPATIBLE)
       return IP_TYPE_IPV4_IPV6_BOTH;
-    if (v4Comp == IP_TYPE_COMPATIABLE && v6Comp != IP_TYPE_COMPATIABLE)
+    if (v4Comp == IP_TYPE_COMPATIBLE && v6Comp != IP_TYPE_COMPATIBLE)
       return IP_TYPE_IPV4_ONLY;
-    if (v4Comp != IP_TYPE_COMPATIABLE && v6Comp == IP_TYPE_COMPATIABLE)
+    if (v4Comp != IP_TYPE_COMPATIBLE && v6Comp == IP_TYPE_COMPATIBLE)
       return IP_TYPE_IPV6_ONLY;
-    if (v4Comp == IP_TYPE_UNCOMPATIABLE && v6Comp == IP_TYPE_UNCOMPATIABLE)
+    if (v4Comp == IP_TYPE_UNCOMPATIBLE && v6Comp == IP_TYPE_UNCOMPATIBLE)
       return IP_TYPE_NONE;
     return IP_TYPE_UNKNOWN;
   }
