@@ -65,7 +65,7 @@ public class MLabNS {
       
       Logger.d("Creating request GET for mlab-ns");
       String url = "http://mlab-ns.appspot.com/" + tool + "?format=json";
-      if (address_family != null) {
+      if (address_family == "ipv4" || address_family == "ipv6") {
         url += "&address_family=" + address_family;
       }
       HttpGet request = new HttpGet(url);
