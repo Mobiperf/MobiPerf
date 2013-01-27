@@ -41,7 +41,7 @@ public class MLabNS {
    * Query MLab-NS to get an FQDN for the given tool.
    */
   static public String Lookup(Context context, String tool) {
-    return Lookup(context, tool, "ipv4");
+    return Lookup(context, tool, null);
   }
 
   /**
@@ -58,16 +58,16 @@ public class MLabNS {
     InputStream inputStream = null;
 
     try {
-      // TODO(dominic): This should not be done on the UI thread.
       HttpParams httpParameters = new BasicHttpParams();
       HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
       HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
       DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
       
       Logger.d("Creating request GET for mlab-ns");
-      // TODO(dominich): Remove address_family and allow for IPv6.
-      String url = "http://mlab-ns.appspot.com/" + tool +
-          "?format=json&address_family=" + address_family;
+      String url = "http://mlab-ns.appspot.com/" + tool + "?format=json";
+      if (address_family != null) {
+        url += "&address_family=" + address_family;
+      }
       HttpGet request = new HttpGet(url);
       request.setHeader("User-Agent", Util.prepareUserAgent(context));
 
