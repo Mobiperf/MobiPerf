@@ -281,7 +281,7 @@ public class MeasurementResult {
 
       // Append notice for exceeding data limit
       if (dataLimitExceedInJSON.equals("true")) {
-        displayResult += "\n* Task incomplete due to data limit";
+        displayResult += "\n* Task incomplete due to experimental data limit";
       }
       printer.println(displayResult);
     } else {
