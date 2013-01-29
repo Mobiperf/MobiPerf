@@ -183,4 +183,21 @@ public class Util {
     }
     return null;
   }
+  
+  /**
+   * Convert the IPv4/v6 tag into human readable format
+   */
+  public static String convertIPTagintoHumanReadable (String tag) {
+    if (tag.equals(PhoneUtils.IP_TYPE_IPV4_IPV6_BOTH)) {
+      return "Support IPv4 and IPv6";
+    } else if (tag.equals(PhoneUtils.IP_TYPE_IPV4_ONLY)) {
+      return "Support IPv4 only";
+    } else if (tag.equals(PhoneUtils.IP_TYPE_IPV6_ONLY)) {
+      return "Support IPv6 only";
+    } else if (tag.equals(PhoneUtils.IP_TYPE_NONE)) {
+      return "Support neither IPv4 nor IPv6";
+    } else {
+      return "Unknown";
+    }
+  }
 }

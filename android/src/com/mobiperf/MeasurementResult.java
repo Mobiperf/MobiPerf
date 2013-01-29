@@ -29,6 +29,7 @@ import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
 import com.mobiperf.measurements.TCPThroughputTask;
 import com.mobiperf.measurements.TCPThroughputTask.TCPThroughputDesc;
 import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 
 import java.util.Formatter;
@@ -124,6 +125,8 @@ public class MeasurementResult {
     }
     printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printer.println("IPv4/IPv6: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
       float packetLoss = Float.parseFloat(values.get("packet_loss"));
@@ -152,6 +155,8 @@ public class MeasurementResult {
     printer.println("[HTTP]");
     printer.println("URL: " + desc.url);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printer.println("IPv4/IPv6: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
       int headerLen = Integer.parseInt(values.get("headers_len"));
@@ -170,6 +175,8 @@ public class MeasurementResult {
     printer.println("[DNS Lookup]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printer.println("IPv4/IPv6: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
       String ipAddress = removeQuotes(values.get("address"));
@@ -189,6 +196,8 @@ public class MeasurementResult {
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printer.println("IPv4/IPv6: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
       // Manually inject a new line
@@ -240,6 +249,8 @@ public class MeasurementResult {
     if (success) {
       printer.println("PRR: " + values.get("PRR"));
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+      printer.println("IPv4/IPv6: " +
+          Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     } else {
       printer.println("Failed");
     }
@@ -254,10 +265,11 @@ public class MeasurementResult {
       printer.println("[TCP Downlink]");
     }
     printer.println("Target: " + desc.target);
+    printer.println("Timestamp: " +
+        Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printer.println("IPv4/IPv6: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     if (success) {
-      printer.println("Timestamp: " +
-                      Util.getTimeStringFromMicrosecond(properties.timestamp));
-      // printer.println("Server version: " + values.get("server_version"));
       printer.println("");
       // Display result with precision up to 2 digit
       String speedInJSON = values.get("tcp_speed_results");

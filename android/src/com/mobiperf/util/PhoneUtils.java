@@ -76,7 +76,13 @@ public class PhoneUtils {
   private static final String ANDROID_STRING = "Android";
   /** Returned by {@link #getNetwork()}. */
   public static final String NETWORK_WIFI = "Wifi";
-
+  /** IP type */
+  public static final String IP_TYPE_UNKNOWN = "UNKNOWN";
+  public static final String IP_TYPE_NONE = "NONE";
+  public static final String IP_TYPE_IPV4_ONLY = "ipv4";
+  public static final String IP_TYPE_IPV6_ONLY = "ipv6";
+  public static final String IP_TYPE_IPV4_IPV6_BOTH = "ipv4_ipv6";
+  
   /**
    * The app that uses this class. The app must remain alive for longer than
    * PhoneUtils objects are in use.
@@ -115,12 +121,6 @@ public class PhoneUtils {
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
   private DeviceInfo deviceInfo = null;
-  /** IP type */
-  private String IP_TYPE_UNKNOWN = "UNKNOWN";
-  private String IP_TYPE_NONE = "NONE";
-  private String IP_TYPE_IPV4_ONLY = "ipv4";
-  private String IP_TYPE_IPV6_ONLY = "ipv6";
-  private String IP_TYPE_IPV4_IPV6_BOTH = "ipv4_ipv6";
   /** IP type status */
   // Indeterministic type due to client side timer expired
   private int IP_TYPE_CANNOT_DECIDE = 2;
@@ -670,29 +670,6 @@ public class PhoneUtils {
 
   public boolean isTestingServer(String serverUrl) {
     return serverUrl == getTestingServerUrl();
-  }
-  
-  /** Reflection to access private ip address field, working for 4.0.1+*/
-  private int getWifiIpByteLen() {
-    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-    int ipByteLen = 0;
-    try {
-      Field reflectIPField = wifiInfo.getClass().getDeclaredField("mIpAddress");
-      // enforce accessibility
-      reflectIPField.setAccessible(true);
-      InetAddress myIp = (InetAddress)reflectIPField.get(wifiInfo);
-      ipByteLen = myIp.getAddress().length;
-    } catch (IllegalArgumentException e) {
-      Logger.e("Bad arguments when access WifiInfo");
-    } catch (IllegalAccessException e) {
-      Logger.e("Cannot access the mIpAddress field in WifiInfo");
-    } catch (SecurityException e) {
-      Logger.e("Security Exception detected when access WifiInfo");
-    } catch (NoSuchFieldException e) {
-      Logger.e("No mIpAddress field exists in WifiInfo");
-    }
-    return ipByteLen;
   }
   
   /**
