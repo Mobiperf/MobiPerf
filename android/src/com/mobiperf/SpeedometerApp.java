@@ -177,10 +177,10 @@ public class SpeedometerApp extends TabActivity {
     restoreDefaultAccount();
     if (selectedAccount == null) {
       showDialog(DIALOG_ACCOUNT_SELECTOR);
-    }//} else {
+    } else {
     	// double check the user consent selection
     	consentDialogWrapper();
-    //}
+    }
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
      * However, it is known that the current Android OS does not take actions
@@ -304,7 +304,8 @@ public class SpeedometerApp extends TabActivity {
     builder.setTitle("Select Authentication Account");
     final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
 
-    builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+    builder.setCancelable(false)
+           .setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int item) {
         Toast.makeText(getApplicationContext(),
