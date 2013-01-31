@@ -125,7 +125,9 @@ public class MeasurementResult {
     }
     printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6: " +
+    printer.println("IPv4/IPv6 Connectivity: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printer.println("IPv4/IPv6 Domain Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -155,7 +157,9 @@ public class MeasurementResult {
     printer.println("[HTTP]");
     printer.println("URL: " + desc.url);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6: " +
+    printer.println("IPv4/IPv6 Connectivity: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printer.println("IPv4/IPv6 Domain Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -175,7 +179,9 @@ public class MeasurementResult {
     printer.println("[DNS Lookup]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6: " +
+    printer.println("IPv4/IPv6 Connectivity: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printer.println("IPv4/IPv6 Domain Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -196,7 +202,9 @@ public class MeasurementResult {
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6: " +
+    printer.println("IPv4/IPv6 Connectivity: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printer.println("IPv4/IPv6 Domain Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -249,7 +257,9 @@ public class MeasurementResult {
     if (success) {
       printer.println("PRR: " + values.get("PRR"));
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-      printer.println("IPv4/IPv6: " +
+      printer.println("IPv4/IPv6 Connectivity: " +
+          Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+      printer.println("IPv4/IPv6 Domain Resolvability: " +
           Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     } else {
       printer.println("Failed");
@@ -267,8 +277,11 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " +
         Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6: " +
+    printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printer.println("IPv4/IPv6 Domain Resolvability: " +
+        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    
     if (success) {
       printer.println("");
       // Display result with precision up to 2 digit

@@ -41,13 +41,15 @@ public class MLabNS {
    * Query MLab-NS to get an FQDN for the given tool.
    */
   static public String Lookup(Context context, String tool) {
-    return Lookup(context, tool, null);
+    return Lookup(context, tool, null, "fqdn");
   }
 
   /**
-   * Query MLab-NS to get an FQDN for the given tool and address family.
+   * Query MLab-NS to get an FQDN/IP for the given tool and address family.
+   * @param field: fqdn or ip
    */
-  static public String Lookup(Context context, String tool, String address_family) {
+  static public String Lookup(Context context, String tool, 
+                              String address_family, String field) {
     final int maxResponseSize = 1024;
     // Set the timeout in milliseconds until a connection is established.
     final int timeoutConnection = 5000;
@@ -56,7 +58,12 @@ public class MLabNS {
 
     ByteBuffer body = ByteBuffer.allocate(maxResponseSize);
     InputStream inputStream = null;
-
+    
+    // Sanitize for possible returned field
+    if ( field != "fqdn" && field != "ip" ) {
+    	return null;
+    }
+    
     try {
       HttpParams httpParameters = new BasicHttpParams();
       HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
@@ -80,7 +87,7 @@ public class MLabNS {
 
       String body_str = getResponseBody(response);
       JSONObject json = new JSONObject(body_str);
-      return String.valueOf(json.getString("fqdn"));
+      return String.valueOf(json.getString(field));
     } catch (SocketTimeoutException e) {
       Logger.e("SocketTimeoutException trying to contact m-lab-ns");
       // e.getMessage() is null       

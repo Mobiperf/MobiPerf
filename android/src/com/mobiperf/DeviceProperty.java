@@ -28,6 +28,7 @@ public class DeviceProperty {
   public long timestamp;
   public String osVersion;
   public String ipCompatability;
+  public String dnResolvability;
   public GeoLocation location;
   public String locationType;
   public String networkType;
@@ -37,8 +38,9 @@ public class DeviceProperty {
   public String cellInfo;
   public int rssi;
 
-  public DeviceProperty(String deviceId, String appVersion, long timeStamp, String osVersion,
-      String ipCompatability, double longtitude, double latitude, String locationType, 
+  public DeviceProperty(String deviceId, String appVersion, long timeStamp, 
+      String osVersion, String ipCompatability, String dnResolvability, 
+      double longtitude, double latitude, String locationType, 
       String networkType, String carrier, int batteryLevel, boolean isCharging,
       String cellInfo, int rssi) {
     super();
@@ -47,6 +49,7 @@ public class DeviceProperty {
     this.timestamp = timeStamp;
     this.osVersion = osVersion;
     this.ipCompatability = ipCompatability;
+    this.dnResolvability = dnResolvability;
     this.location = new GeoLocation(longtitude, latitude);
     this.locationType = locationType;
     this.networkType = networkType;
