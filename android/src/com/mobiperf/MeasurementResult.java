@@ -272,13 +272,10 @@ public class MeasurementResult {
       String displayResult = "";
 
       double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
-      if (tp < 0) {
-        printer.println("No results available.");
-        return;
-      }
-
       double KB = Math.pow(2, 10);
-      if (tp > KB*KB) {
+      if (tp < 0) {
+      	displayResult = "No results available.";
+      } else if (tp > KB*KB) {
         displayResult = "Speed: " + String.format("%.2f",tp/(KB*KB)) + " Gbps";
       } else if (tp > KB ) {
         displayResult = "Speed: " + String.format("%.2f",tp/KB) + " Mbps";
@@ -289,7 +286,7 @@ public class MeasurementResult {
       // Append notice for exceeding data limit
       if (dataLimitExceedInJSON.equals("true")) {
         displayResult += "\n* Task finishes earlier due to exceeding " +
-                         "maximum "+ ((desc.dir_up) ? "transmitted" : "received") + 
+                         "maximum number of "+ ((desc.dir_up) ? "transmitted" : "received") + 
                          " bytes";
       }
       printer.println(displayResult);
@@ -302,7 +299,7 @@ public class MeasurementResult {
    * Removes the quotes surrounding the string. If |str| is null, returns null.
    */
   private String removeQuotes(String str) {
-    return str != null ? str.replaceAll("^\"|\"$", "") : null;
+    return str != null ? str.replaceAll("^\"|\"", "") : null;
   }
   
   /**
