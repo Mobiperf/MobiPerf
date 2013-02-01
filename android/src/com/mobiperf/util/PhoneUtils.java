@@ -693,9 +693,8 @@ public class PhoneUtils {
       String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type, "ip");
       if (hostname == null || hostname == "" || hostname.length() <= 4)
         return IP_TYPE_CANNOT_DECIDE;
-      // Strip the surrounding braket and double quote
+      // Strip off the surrounding bracket and double quote
       hostname = hostname.substring(2, hostname.length() - 2);
-      Logger.w(hostname);
       SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
       tcpSocket.setTcpNoDelay(true);
       tcpSocket.connect(remoteAddr, tcpTimeout);
@@ -734,22 +733,21 @@ public class PhoneUtils {
    * @return DN_UNRESOLVABLE, DN_RESOLVABLE
    */
   private int checkDomainNameResolvable(String ip_detect_type) {
-  	if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
-  		return DN_UNKNOWN;
-  	}
-  	try {
-  		String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type, "fqdn");
-  		InetAddress inet = InetAddress.getByName(hostname);
-  		if (inet != null)
-  			return DN_RESOLVABLE;
-  		else
-  			return DN_UNKNOWN;
-  	} catch (UnknownHostException e) {
+    if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
+      return DN_UNKNOWN;
+    }
+    try {
+      String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type, "fqdn");
+      InetAddress inet = InetAddress.getByName(hostname);
+      if (inet != null)
+        return DN_RESOLVABLE;
+    } catch (UnknownHostException e) {
       // Fail to resolve domain name
       Logger.e("UnknownHostException in checkDomainNameResolvable() "
                + e.getMessage());
       return DN_UNRESOLVABLE;
     }
+    return DN_UNKNOWN;
   }
   
   /** 
@@ -775,9 +773,9 @@ public class PhoneUtils {
    * @return ipv4, ipv6, ipv4_ipv6, IP_TYPE_NONE or IP_TYPE_UNKNOWN
    */
   public String getDnResolvability() {
-  	int v4Resv = checkDomainNameResolvable("ipv4");
-  	int v6Resv = checkDomainNameResolvable("ipv6");
-  	if (v4Resv == DN_RESOLVABLE && v6Resv == DN_RESOLVABLE)
+    int v4Resv = checkDomainNameResolvable("ipv4");
+    int v6Resv = checkDomainNameResolvable("ipv6");
+    if (v4Resv == DN_RESOLVABLE && v6Resv == DN_RESOLVABLE)
       return IP_TYPE_IPV4_IPV6_BOTH;
     if (v4Resv == DN_RESOLVABLE && v6Resv != DN_RESOLVABLE)
       return IP_TYPE_IPV4_ONLY;

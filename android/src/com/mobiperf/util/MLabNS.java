@@ -61,7 +61,7 @@ public class MLabNS {
     
     // Sanitize for possible returned field
     if ( field != "fqdn" && field != "ip" ) {
-    	return null;
+      return null;
     }
     
     try {

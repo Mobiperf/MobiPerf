@@ -177,8 +177,10 @@ public class Util {
    */
   public static String pingExecutableBasedOnIPType (int ipByteLen, Context context) {
     if (ipByteLen == 4) {
+      Logger.i("Use Ping for current task");
       return context.getString(R.string.ping_executable);
     } else if (ipByteLen == 16) {
+      Logger.i("Use Ping6 for current task");
       return context.getString(R.string.ping6_executable);
     }
     return null;

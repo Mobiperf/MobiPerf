@@ -193,9 +193,10 @@ public class TracerouteTask extends MeasurementTask {
        * One ping every 0.2s is the lower bound before some platforms requires
        * root to run ping. We ping once every time to get a rough rtt as we cannot
        * get the exact rtt from the output of the ping command with ttl being set
-       * */        
+       * */
       String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
         "-s", task.packetSizeByte, "-c 1", target);
+      Logger.w("Current ttl is " + ttl);
       try {
         double rtt = 0;
         long t1;

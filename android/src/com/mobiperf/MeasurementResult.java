@@ -127,7 +127,7 @@ public class MeasurementResult {
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Resolvability: " +
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -159,7 +159,7 @@ public class MeasurementResult {
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Resolvability: " +
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -181,7 +181,7 @@ public class MeasurementResult {
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Resolvability: " +
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -204,7 +204,7 @@ public class MeasurementResult {
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
     printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Resolvability: " +
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {
@@ -259,7 +259,7 @@ public class MeasurementResult {
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
       printer.println("IPv4/IPv6 Connectivity: " +
           Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-      printer.println("IPv4/IPv6 Domain Resolvability: " +
+      printer.println("IPv4/IPv6 Domain Name Resolvability: " +
           Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     } else {
       printer.println("Failed");
@@ -279,7 +279,7 @@ public class MeasurementResult {
         Util.getTimeStringFromMicrosecond(properties.timestamp));
     printer.println("IPv4/IPv6 Connectivity: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Resolvability: " +
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
         Util.convertIPTagintoHumanReadable(properties.ipCompatability));
     
     if (success) {

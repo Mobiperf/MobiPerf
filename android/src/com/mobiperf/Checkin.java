@@ -143,7 +143,10 @@ public class Checkin {
             MeasurementTask task = 
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
             Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
-            schedule.add(task);
+            // TODO (Haokun): remove after testing
+            Logger.w("Checkin type is " + json.get("type"));
+            if (!json.get("type").equals("traceroute"))
+              schedule.add(task);
           } catch (IllegalArgumentException e) {
             Logger.w("Could not create task from JSON: " + e);
             // Just skip it, and try the next one

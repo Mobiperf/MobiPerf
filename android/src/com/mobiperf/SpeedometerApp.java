@@ -178,8 +178,8 @@ public class SpeedometerApp extends TabActivity {
     if (selectedAccount == null) {
       showDialog(DIALOG_ACCOUNT_SELECTOR);
     } else {
-    	// double check the user consent selection
-    	consentDialogWrapper();
+      // double check the user consent selection
+      consentDialogWrapper();
     }
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
@@ -298,8 +298,6 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private Dialog showAccountDialog() {
-    //Dialog dialog;
-  	Logger.w("Account selector called");
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle("Select Authentication Account");
     final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
@@ -451,7 +449,7 @@ public class SpeedometerApp extends TabActivity {
    * and generate one if user haven't agreed on.
    */
   private void consentDialogWrapper() {
-  	restoreConsentState();
+    restoreConsentState();
     if (!userConsented) {
       // Show the consent dialog. After user select the content
       showDialog(DIALOG_CONSENT);
