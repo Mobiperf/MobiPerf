@@ -27,7 +27,7 @@ public class DeviceProperty {
   public String appVersion;
   public long timestamp;
   public String osVersion;
-  public String ipCompatability;
+  public String ipConnectivity;
   public String dnResolvability;
   public GeoLocation location;
   public String locationType;
@@ -39,7 +39,7 @@ public class DeviceProperty {
   public int rssi;
 
   public DeviceProperty(String deviceId, String appVersion, long timeStamp, 
-      String osVersion, String ipCompatability, String dnResolvability, 
+      String osVersion, String ipConnectivity, String dnResolvability, 
       double longtitude, double latitude, String locationType, 
       String networkType, String carrier, int batteryLevel, boolean isCharging,
       String cellInfo, int rssi) {
@@ -48,7 +48,7 @@ public class DeviceProperty {
     this.appVersion = appVersion;
     this.timestamp = timeStamp;
     this.osVersion = osVersion;
-    this.ipCompatability = ipCompatability;
+    this.ipConnectivity = ipConnectivity;
     this.dnResolvability = dnResolvability;
     this.location = new GeoLocation(longtitude, latitude);
     this.locationType = locationType;

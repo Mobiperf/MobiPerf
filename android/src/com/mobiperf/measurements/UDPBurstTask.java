@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -103,10 +104,17 @@ public class UDPBurstTask extends MeasurementTask {
 
       this.target = params.get("target");
       if (!this.target.equals(MLabNS.TARGET)) {
-        throw new InvalidParameterException("Unknown target " + target + " for UDPBurstTask");
+        throw new InvalidParameterException("Unknown target " + target + 
+                                            " for UDPBurstTask");
       }
 
-      this.target = MLabNS.Lookup(context, "mobiperf");
+      ArrayList<String> mlabNSResult = MLabNS.Lookup(context, "mobiperf");
+      if (mlabNSResult.size() == 1) {
+        this.target = mlabNSResult.get(0);
+      } else {
+        throw new InvalidParameterException("Invalid MLabNS query result" +
+                                            " for UDPBurstTask");
+      }
       Logger.i("Setting target to: " + this.target);
 
       try {

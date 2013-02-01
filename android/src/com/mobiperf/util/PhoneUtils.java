@@ -63,6 +63,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -78,10 +79,10 @@ public class PhoneUtils {
   public static final String NETWORK_WIFI = "Wifi";
   /** IP type */
   public static final String IP_TYPE_UNKNOWN = "UNKNOWN";
-  public static final String IP_TYPE_NONE = "NONE";
-  public static final String IP_TYPE_IPV4_ONLY = "ipv4";
-  public static final String IP_TYPE_IPV6_ONLY = "ipv6";
-  public static final String IP_TYPE_IPV4_IPV6_BOTH = "ipv4_ipv6";
+  public static final String IP_TYPE_NONE = "Neither IPv4 nor IPv6";
+  public static final String IP_TYPE_IPV4_ONLY = "IPv4 only";
+  public static final String IP_TYPE_IPV6_ONLY = "IPv6 only";
+  public static final String IP_TYPE_IPV4_IPV6_BOTH = "IPv4 and IPv6";
   
   /**
    * The app that uses this class. The app must remain alive for longer than
@@ -690,11 +691,13 @@ public class PhoneUtils {
     }
     Socket tcpSocket = new Socket();
     try {
-      String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type, "ip");
-      if (hostname == null || hostname == "" || hostname.length() <= 4)
+      ArrayList<String> hostnameList = MLabNS.Lookup(context, "mobiperf", 
+                                                     ip_detect_type, "ip");
+      // MLabNS returns at least one ip address
+      if (hostnameList.isEmpty())
         return IP_TYPE_CANNOT_DECIDE;
-      // Strip off the surrounding bracket and double quote
-      hostname = hostname.substring(2, hostname.length() - 2);
+      // Use the first result in the element
+      String hostname = hostnameList.get(0);
       SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
       tcpSocket.setTcpNoDelay(true);
       tcpSocket.connect(remoteAddr, tcpTimeout);
@@ -737,8 +740,16 @@ public class PhoneUtils {
       return DN_UNKNOWN;
     }
     try {
-      String hostname = MLabNS.Lookup(context, "mobiperf", ip_detect_type, "fqdn");
-      InetAddress inet = InetAddress.getByName(hostname);
+      ArrayList<String> ipAddressList = MLabNS.Lookup(context, "mobiperf", 
+                                                  ip_detect_type, "fqdn");
+      String ipAddress;
+      // MLabNS returns one fqdn each time
+      if (ipAddressList.size() == 1) {
+        ipAddress = ipAddressList.get(0);
+      } else {
+        return DN_UNKNOWN;
+      }
+      InetAddress inet = InetAddress.getByName(ipAddress);
       if (inet != null)
         return DN_RESOLVABLE;
     } catch (UnknownHostException e) {

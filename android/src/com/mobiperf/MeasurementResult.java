@@ -125,10 +125,7 @@ public class MeasurementResult {
     }
     printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6 Connectivity: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printIPTestResult(printer);
     
     if (success) {
       float packetLoss = Float.parseFloat(values.get("packet_loss"));
@@ -157,10 +154,7 @@ public class MeasurementResult {
     printer.println("[HTTP]");
     printer.println("URL: " + desc.url);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6 Connectivity: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printIPTestResult(printer);
     
     if (success) {
       int headerLen = Integer.parseInt(values.get("headers_len"));
@@ -179,10 +173,7 @@ public class MeasurementResult {
     printer.println("[DNS Lookup]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6 Connectivity: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printIPTestResult(printer);
     
     if (success) {
       String ipAddress = removeQuotes(values.get("address"));
@@ -202,10 +193,7 @@ public class MeasurementResult {
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6 Connectivity: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printIPTestResult(printer);
     
     if (success) {
       // Manually inject a new line
@@ -257,10 +245,7 @@ public class MeasurementResult {
     if (success) {
       printer.println("PRR: " + values.get("PRR"));
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
-      printer.println("IPv4/IPv6 Connectivity: " +
-          Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-      printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-          Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+      printIPTestResult(printer);
     } else {
       printer.println("Failed");
     }
@@ -277,10 +262,7 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " +
         Util.getTimeStringFromMicrosecond(properties.timestamp));
-    printer.println("IPv4/IPv6 Connectivity: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
-    printer.println("IPv4/IPv6 Domain Name Resolvability: " +
-        Util.convertIPTagintoHumanReadable(properties.ipCompatability));
+    printIPTestResult(printer);
     
     if (success) {
       printer.println("");
@@ -306,7 +288,9 @@ public class MeasurementResult {
 
       // Append notice for exceeding data limit
       if (dataLimitExceedInJSON.equals("true")) {
-        displayResult += "\n* Task incomplete due to experimental data limit";
+        displayResult += "\n* Task finishes earlier due to exceeding " +
+                         "maximum "+ ((desc.dir_up) ? "transmitted" : "received") + 
+                         " bytes";
       }
       printer.println(displayResult);
     } else {
@@ -319,5 +303,14 @@ public class MeasurementResult {
    */
   private String removeQuotes(String str) {
     return str != null ? str.replaceAll("^\"|\"$", "") : null;
+  }
+  
+  /**
+   * Print ip connectivity and hostname resolvability result
+   */
+  private void printIPTestResult (StringBuilderPrinter printer) {
+    printer.println("IPv4/IPv6 Connectivity: " + properties.ipConnectivity);
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " 
+                    + properties.dnResolvability);
   }
 }

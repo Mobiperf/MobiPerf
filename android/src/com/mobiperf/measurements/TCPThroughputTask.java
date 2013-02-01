@@ -304,7 +304,12 @@ public class TCPThroughputTask extends MeasurementTask {
     }
     
     try {
-      desc.target = MLabNS.Lookup(context, "mobiperf");
+       ArrayList<String> mlabResult = MLabNS.Lookup(context, "mobiperf");
+       if (mlabResult.size() == 1) {
+         desc.target = mlabResult.get(0);
+       } else {
+         throw new MeasurementError("Invalid MLabNS result");
+       }
     } catch (InvalidParameterException e) {
       throw new MeasurementError(e.getMessage());
     }
