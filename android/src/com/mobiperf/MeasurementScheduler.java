@@ -289,8 +289,6 @@ public class MeasurementScheduler extends Service {
         Logger.i("Processing task " + task.toString());
         // Run the head task using the executor
         if (task.getDescription().priority == MeasurementTask.USER_PRIORITY) {
-          // TODO (Haokun): remove after testing
-          Logger.w("Queue length is " + taskQueue.size());
           sendStringMsg("Scheduling user task:\n" + task);
           // User task can override the power policy. So a different task wrapper is used.
           future = measurementExecutor.submit(new UserMeasurementTask(task));

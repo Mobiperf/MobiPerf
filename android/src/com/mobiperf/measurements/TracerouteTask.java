@@ -196,7 +196,7 @@ public class TracerouteTask extends MeasurementTask {
        * */
       String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
         "-s", task.packetSizeByte, "-c 1", target);
-      Logger.w("Current ttl is " + ttl);
+
       try {
         double rtt = 0;
         long t1;
