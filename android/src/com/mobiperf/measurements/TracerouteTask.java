@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
@@ -208,7 +209,27 @@ public class TracerouteTask extends MeasurementTask {
           // Grab the output of the process that runs the ping command
           InputStream is = pingProc.getInputStream();
           BufferedReader br = new BufferedReader(new InputStreamReader(is));
-
+          
+          // Enforce thread timeoute
+          ProcWrapper procwrapper = new ProcWrapper(pingProc);
+          procwrapper.start();
+          try {
+            long pingThreadTimeout = 5000;
+            procwrapper.join(pingThreadTimeout);
+            if (procwrapper.exitStatus == null)
+              throw new TimeoutException();
+          } catch(InterruptedException ex) {
+            procwrapper.interrupt();
+            Thread.currentThread().interrupt();
+            Logger.e("Traceroute process gets interrupted");
+            cleanUp(pingProc);
+            continue;
+          } catch (TimeoutException e) {
+            Logger.e("Traceroute process timeout");
+            cleanUp(pingProc);
+            continue;
+          }
+          
           /* Process each line of the ping output and extracts the intermediate hops into 
            * hostAtThisDistance */ 
           processPingOutput(br, hostsAtThisDistance, hostIp);
@@ -380,5 +401,21 @@ public class TracerouteTask extends MeasurementTask {
   public void stop() {
     stopRequested = true;
     cleanUp(pingProc);
+  }
+  
+  // Traceroute process wrapper for timeout detection
+  private class ProcWrapper extends Thread {
+    private final Process process;
+    private Integer exitStatus = null;
+    private ProcWrapper(Process process) {
+      this.process = process;
+    }
+    public void run() {
+      try { 
+        exitStatus = process.waitFor();
+      } catch (InterruptedException e) {
+        Logger.e("Traceroute thread gets interrupted");
+      }
+    }  
   }
 }

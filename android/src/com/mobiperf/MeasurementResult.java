@@ -274,7 +274,7 @@ public class MeasurementResult {
       double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
       double KB = Math.pow(2, 10);
       if (tp < 0) {
-      	displayResult = "No results available.";
+        displayResult = "No results available.";
       } else if (tp > KB*KB) {
         displayResult = "Speed: " + String.format("%.2f",tp/(KB*KB)) + " Gbps";
       } else if (tp > KB ) {

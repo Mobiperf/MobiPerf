@@ -418,10 +418,11 @@ public class PingTask extends MeasurementTask {
       HttpClient client = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));
       HttpHead headMethod = new HttpHead("http://" + targetIp);
       headMethod.addHeader(new BasicHeader("Connection", "close"));
+      // reset the timer to 3 seconds (Haokun)
       headMethod.setParams(new BasicHttpParams().setParameter(
-          CoreConnectionPNames.CONNECTION_TIMEOUT, 1000));
+          CoreConnectionPNames.CONNECTION_TIMEOUT, 3000));
       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+      int timeOut = (int) (3000 * (double) pingTask.pingTimeoutSec /
           Config.PING_COUNT_PER_MEASUREMENT);
       HttpConnectionParams.setConnectionTimeout(headMethod.getParams(), timeOut);
                       
