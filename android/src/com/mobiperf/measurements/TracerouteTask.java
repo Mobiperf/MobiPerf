@@ -200,17 +200,14 @@ public class TracerouteTask extends MeasurementTask {
 
       try {
         double rtt = 0;
-        long t1;
         HashSet<String> hostsAtThisDistance = new HashSet<String>();
         int effectiveTask = 0;
         for (int i = 0; i < task.pingsPerHop; i++) {
-        	t1 = System.currentTimeMillis();
           pingProc = Runtime.getRuntime().exec(command);
-          // t1 = System.currentTimeMillis();
+          
           // Wait for process to finish
           // Enforce thread timeout if pingProc doesn't respond
-          ProcWrapper procwrapper = new ProcWrapper(pingProc, t1);
-          // ProcWrapper procwrapper = new ProcWrapper(pingProc);
+          ProcWrapper procwrapper = new ProcWrapper(pingProc);
           procwrapper.start();
           try {
             long pingThreadTimeout = 5000;
@@ -228,7 +225,6 @@ public class TracerouteTask extends MeasurementTask {
             cleanUp(pingProc);
             continue;
           }
-          // rtt += System.currentTimeMillis() - t1;
           rtt += procwrapper.duration;
           effectiveTask++;
           
@@ -409,18 +405,17 @@ public class TracerouteTask extends MeasurementTask {
     cleanUp(pingProc);
   }
   
-  // Traceroute process wrapper for timeout detection
+  // Measure the actual ping process execution time
   private class ProcWrapper extends Thread {
     public long duration = 0;
-    private long startTime;
     private final Process process;
     private Integer exitStatus = null;
-    private ProcWrapper(Process process, long startTime) {
+    private ProcWrapper(Process process) {
       this.process = process;
-      this.startTime = startTime;
     }
     public void run() {
       try {
+      	long startTime = System.currentTimeMillis();
         exitStatus = process.waitFor();
         duration = System.currentTimeMillis() - startTime;
       } catch (InterruptedException e) {
