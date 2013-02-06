@@ -202,16 +202,15 @@ public class TracerouteTask extends MeasurementTask {
         double rtt = 0;
         long t1;
         HashSet<String> hostsAtThisDistance = new HashSet<String>();
+        int effectiveTask = 0;
         for (int i = 0; i < task.pingsPerHop; i++) {
-          t1 = System.currentTimeMillis();
+        	t1 = System.currentTimeMillis();
           pingProc = Runtime.getRuntime().exec(command);
-          rtt += System.currentTimeMillis() - t1;
-          // Grab the output of the process that runs the ping command
-          InputStream is = pingProc.getInputStream();
-          BufferedReader br = new BufferedReader(new InputStreamReader(is));
-          
-          // Enforce thread timeoute
-          ProcWrapper procwrapper = new ProcWrapper(pingProc);
+          // t1 = System.currentTimeMillis();
+          // Wait for process to finish
+          // Enforce thread timeout if pingProc doesn't respond
+          ProcWrapper procwrapper = new ProcWrapper(pingProc, t1);
+          // ProcWrapper procwrapper = new ProcWrapper(pingProc);
           procwrapper.start();
           try {
             long pingThreadTimeout = 5000;
@@ -229,7 +228,13 @@ public class TracerouteTask extends MeasurementTask {
             cleanUp(pingProc);
             continue;
           }
+          // rtt += System.currentTimeMillis() - t1;
+          rtt += procwrapper.duration;
+          effectiveTask++;
           
+          // Grab the output of the process that runs the ping command
+          InputStream is = pingProc.getInputStream();
+          BufferedReader br = new BufferedReader(new InputStreamReader(is));
           /* Process each line of the ping output and extracts the intermediate hops into 
            * hostAtThisDistance */ 
           processPingOutput(br, hostsAtThisDistance, hostIp);
@@ -240,7 +245,8 @@ public class TracerouteTask extends MeasurementTask {
             Logger.i("Sleep interrupted between ping intervals");
           }
         }
-        rtt = rtt / task.pingsPerHop;
+        // rtt = rtt / task.pingsPerHop;
+        rtt = (effectiveTask != 0) ? (rtt / effectiveTask) : 0;
 
         hopHosts.add(new HopInfo(hostsAtThisDistance, rtt));
 
@@ -405,14 +411,18 @@ public class TracerouteTask extends MeasurementTask {
   
   // Traceroute process wrapper for timeout detection
   private class ProcWrapper extends Thread {
+    public long duration = 0;
+    private long startTime;
     private final Process process;
     private Integer exitStatus = null;
-    private ProcWrapper(Process process) {
+    private ProcWrapper(Process process, long startTime) {
       this.process = process;
+      this.startTime = startTime;
     }
     public void run() {
-      try { 
+      try {
         exitStatus = process.waitFor();
+        duration = System.currentTimeMillis() - startTime;
       } catch (InterruptedException e) {
         Logger.e("Traceroute thread gets interrupted");
       }
