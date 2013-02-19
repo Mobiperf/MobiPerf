@@ -23,9 +23,15 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.InvalidParameterException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Matcher;
@@ -185,4 +191,49 @@ public class Util {
     }
     return null;
   }
+  
+  /**
+   * Write logcat message to a file
+   * TODO (Haokun): delete after debugging
+   */
+  public static void writeLogcatToFile(String tag, String content) {
+  	String folderPath = Environment.getExternalStorageDirectory().getPath() + "/Mobiperf/";
+  	String filePath = folderPath + "logcat.txt";
+  	File d = new File(folderPath);
+  	File f = new File(filePath);
+    // check if directory exist
+  	if (!d.exists()) {
+  		if (!d.mkdirs()) {
+  			Logger.e("ERROR: fail to create directory " + folderPath);
+  		}
+  	}
+  	
+  	// check file existence
+  	if (!f.exists()) {
+  		try {
+  			f.createNewFile();
+  			// set file to be readable
+  		} catch (IOException e) {
+  			e.printStackTrace();
+  			Logger.e("ERROR: fail to create file " + filePath);
+  		}
+  	}
+  	
+  	// write the content
+  	FileOutputStream out;
+    try {
+      SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy_MM_dd-HH:mm:ss.SSS ");
+      Date today = new Date();
+      String strDate = sdfDate.format(today);
+      content = strDate + tag + "\t" + content + "\n";
+	    out = new FileOutputStream(f, true);
+	    out.write(content.getBytes(), 0, content.length());
+	    out.close();
+    } catch (FileNotFoundException e) {
+	    Logger.e(e.getMessage());
+    } catch (IOException e) {
+    	Logger.e(e.getMessage());
+    }
+  }
+  
 }

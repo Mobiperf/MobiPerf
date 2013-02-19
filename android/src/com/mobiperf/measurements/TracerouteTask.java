@@ -172,19 +172,26 @@ public class TracerouteTask extends MeasurementTask {
     ArrayList<HopInfo> hopHosts = new ArrayList<HopInfo>();
     
     Logger.d("Starting traceroute on host " + task.target);
-    
+    Util.writeLogcatToFile("Debug", "Starting traceroute on host " + task.target);
     
     try {
       InetAddress hostInetAddr = InetAddress.getByName(target);
       hostIp = hostInetAddr.getHostAddress();
       // add support for ipv6
       int ipByteLen = hostInetAddr.getAddress().length;
-      task.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent); 
+      Logger.i("IP address length is " + ipByteLen);
+      Logger.i("IP is " + hostIp);
+      Util.writeLogcatToFile("Info", "IP address length is " + ipByteLen);
+      Util.writeLogcatToFile("Info", "IP is " + hostIp);
+      task.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent);
+      Util.writeLogcatToFile("Info", "Ping executable is " + task.pingExe);
       if (task.pingExe == null) {
+      	Util.writeLogcatToFile("Error", "Unknown IP address byte length");
         throw new MeasurementError("Unknown IP address byte length");
       }
     } catch (UnknownHostException e) {
       Logger.e("Cannont resolve host " + target);
+      Util.writeLogcatToFile("Error", "Cannont resolve host " + target);
       throw new MeasurementError("target " + target + " cannot be resolved");
     }
     MeasurementResult result = null;
@@ -197,7 +204,7 @@ public class TracerouteTask extends MeasurementTask {
        * */
       String command = Util.constructCommand(task.pingExe, "-n", "-t", ttl,
         "-s", task.packetSizeByte, "-c 1", target);
-
+      
       try {
         double rtt = 0;
         HashSet<String> hostsAtThisDistance = new HashSet<String>();
@@ -218,10 +225,12 @@ public class TracerouteTask extends MeasurementTask {
             procwrapper.interrupt();
             Thread.currentThread().interrupt();
             Logger.e("Traceroute process gets interrupted");
+            Util.writeLogcatToFile("Error", "Traceroute process gets interrupted");
             cleanUp(pingProc);
             continue;
           } catch (TimeoutException e) {
             Logger.e("Traceroute process timeout");
+            Util.writeLogcatToFile("Error", "Traceroute process timeout");
             cleanUp(pingProc);
             continue;
           }
@@ -239,11 +248,20 @@ public class TracerouteTask extends MeasurementTask {
             Thread.sleep((long) (task.pingIntervalSec * 1000));
           } catch (InterruptedException e) {
             Logger.i("Sleep interrupted between ping intervals");
+            Util.writeLogcatToFile("Info", "Sleep interrupted between ping intervals");
           }
         }
-        // rtt = rtt / task.pingsPerHop;
-        rtt = (effectiveTask != 0) ? (rtt / effectiveTask) : 0;
-
+        rtt = (effectiveTask != 0) ? (rtt / effectiveTask) : -1;
+        if (rtt == -1) {
+          String Unreachablehost = "";
+          for (int i = 0; i < task.pingsPerHop; i++) {
+            Unreachablehost += "* ";
+          }
+          hostsAtThisDistance.add(Unreachablehost);
+        }
+        
+        Logger.i("RTT is " + rtt);
+        Util.writeLogcatToFile("Info", "RTT is " + rtt);
         hopHosts.add(new HopInfo(hostsAtThisDistance, rtt));
 
         // Process the extracted IPs of intermediate hops
@@ -252,8 +270,10 @@ public class TracerouteTask extends MeasurementTask {
           // If we have reached the final destination hostIp, print it out and clean up
           if (ip.compareTo(hostIp) == 0) {
             Logger.i(ttl + ": " + hostIp);
+            Util.writeLogcatToFile("Info", ttl + ": " + hostIp);
             Logger.i(" Finished! " + target + " reached in " + ttl + " hops");
-
+            Util.writeLogcatToFile("Info", " Finished! " + target + " reached in " + ttl + " hops");
+            
             success = true;
             PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
             result = new MeasurementResult(phoneUtils.getDeviceInfo().deviceId, 
@@ -269,6 +289,7 @@ public class TracerouteTask extends MeasurementTask {
               result.addResult("hop_" + i + "_rtt_ms", String.format("%.3f", hopInfo.rtt));
             }
             Logger.i(MeasurementJsonConvertor.toJsonString(result));
+            Util.writeLogcatToFile("Info", MeasurementJsonConvertor.toJsonString(result));
             return result;
           } else {
             // Otherwise, we aggregate various hosts at a given hop distance for printout
@@ -278,12 +299,16 @@ public class TracerouteTask extends MeasurementTask {
         // Remove the trailing separators
         progressStr.delete(progressStr.length() - 3, progressStr.length());
         Logger.i(progressStr.toString());
+        Util.writeLogcatToFile("Info", progressStr.toString());
 
       } catch (SecurityException e) {
         Logger.e("Does not have the permission to run ping on this device");
+        Util.writeLogcatToFile("Error", "Does not have the permission to run ping on this device");
       } catch (IOException e) {
         Logger.e("The ping program cannot be executed");
+        Util.writeLogcatToFile("Error", "The ping program cannot be executed");
         Logger.e(e.getMessage());
+        Util.writeLogcatToFile("Error", e.getMessage());
       } finally {
         cleanUp(pingProc);
       }
@@ -292,7 +317,9 @@ public class TracerouteTask extends MeasurementTask {
       this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
       broadcastProgressForUser(progress);
     }
-
+    
+    Logger.e("cannot perform traceroute to " + task.target);
+    Util.writeLogcatToFile("Error", "cannot perform traceroute to " + task.target);
     throw new MeasurementError("cannot perform traceroute to " + task.target);
   }
 
@@ -323,6 +350,7 @@ public class TracerouteTask extends MeasurementTask {
     String line = null;
     while ((line = br.readLine()) != null) {
       Logger.d(line);
+      Util.writeLogcatToFile("Debug", line);
       if (line.startsWith("From")) {
         String ip = getHostIp(line);
         if (ip != null && ip.compareTo(hostIp) != 0) {
@@ -342,7 +370,7 @@ public class TracerouteTask extends MeasurementTask {
     String[] tokens = line.split(" ");
     // In most cases, the second element in the array is the IP
     String tempIp = tokens[1];
-    if (isValidIpv4Addr(tempIp)) {
+    if (isValidIpv4Addr(tempIp) || isValidIpv6Addr(tempIp)) {
       return tempIp;
     } else {
       for (int i = 0; i < tokens.length; i++) {
@@ -350,7 +378,7 @@ public class TracerouteTask extends MeasurementTask {
           // Examined already
           continue;
         } else {
-          if (isValidIpv4Addr(tokens[i])) {
+          if (isValidIpv4Addr(tokens[i]) || isValidIpv6Addr(tokens[i])) {
             return tokens[i];
           }
         }
@@ -371,7 +399,8 @@ public class TracerouteTask extends MeasurementTask {
             return false;
           }
         } catch (NumberFormatException e) {
-          Logger.d(ip + " is not a valid IP address");
+          Logger.d(ip + " is not a valid IPv4 address");
+          Util.writeLogcatToFile("Debug", ip + " is not a valid IPv4 address");
           return false;
         }
       }
@@ -380,6 +409,30 @@ public class TracerouteTask extends MeasurementTask {
     return false;
   }  
   
+ //Tells whether the string is an valid IPv6 address
+ private boolean isValidIpv6Addr(String ip) {
+	 int max = Integer.valueOf("FFFF", 16);
+   String[] tokens = ip.split("\\:");
+   if (tokens.length <= 8) {
+     for (int i = 0; i < tokens.length; i++) {
+       try {
+      	 // zeros might get grouped
+      	 if (tokens[i].isEmpty())
+      		 continue;
+         int val = Integer.parseInt(tokens[i], 16); 
+         if (val < 0 || val > max) {
+           return false;
+         }
+       } catch (NumberFormatException e) {
+      	 Logger.d(ip + " is not a valid IPv6 address");
+         return false;
+       }
+     }
+     return true;
+   }
+   return false;
+ }
+ 
   private class HopInfo {
     // The hosts at a given hop distance
     public HashSet<String> hosts;
@@ -415,11 +468,12 @@ public class TracerouteTask extends MeasurementTask {
     }
     public void run() {
       try {
-      	long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         exitStatus = process.waitFor();
         duration = System.currentTimeMillis() - startTime;
       } catch (InterruptedException e) {
         Logger.e("Traceroute thread gets interrupted");
+        Util.writeLogcatToFile("Error", "Traceroute thread gets interrupted");
       }
     }  
   }

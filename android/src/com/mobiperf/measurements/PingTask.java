@@ -153,22 +153,29 @@ public class PingTask extends MeasurementTask {
       InetAddress addr = InetAddress.getByName(desc.target);
       // Get the address length
       ipByteLength = addr.getAddress().length;
+      Logger.i("IP address length is " + ipByteLength);
+      Util.writeLogcatToFile("Info", "IP address length is " + ipByteLength);
       // All ping methods ping against targetIp rather than desc.target
       targetIp = addr.getHostAddress();
+      Logger.i("IP is " + targetIp);
+      Util.writeLogcatToFile("Info", "IP is " + targetIp);
     } catch (UnknownHostException e) {
       throw new MeasurementError("Unknown host " + desc.target);
     }
     
     try {
       Logger.i("running ping command");
+      Util.writeLogcatToFile("Info", "running ping command");
       /* Prevents the phone from going to low-power mode where WiFi turns off */
       return executePingCmdTask(ipByteLength);
     } catch (MeasurementError e) {
       try {
         Logger.i("running java ping");
+        Util.writeLogcatToFile("Info", "running java ping");
         return executeJavaPingTask();
       } catch (MeasurementError ee) {
         Logger.i("running http ping");
+        Util.writeLogcatToFile("Info", "running http ping");
         return executeHttpPingTask();
       }
     }
@@ -240,7 +247,8 @@ public class PingTask extends MeasurementTask {
         proc.destroy();
       }
     } catch (Exception e) { 
-      Logger.w("Unable to kill ping process", e);
+      Logger.w("Unable to kill ping process" + e.getMessage());
+      Util.writeLogcatToFile("Warning", "Unable to kill ping process" + e.getMessage());
     }
   }
   
@@ -268,12 +276,17 @@ public class PingTask extends MeasurementTask {
   // Runs when SystemState is IDLE
   private MeasurementResult executePingCmdTask(int ipByteLen) throws MeasurementError {
     Logger.i("Starting executePingCmdTask");
+    Util.writeLogcatToFile("Info", "Starting executePingCmdTask");
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
     pingTask.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent);
+    Logger.i("Ping executable is " + pingTask.pingExe);
+    Util.writeLogcatToFile("Info", "Ping executable is " + pingTask.pingExe);
     if (pingTask.pingExe == null) {
+    	Logger.e("Unknown IP address byte length");
+    	Util.writeLogcatToFile("Error", "Unknown IP address byte length");
       throw new MeasurementError("Unknown IP address byte length");
     }
     try {
@@ -282,6 +295,7 @@ public class PingTask extends MeasurementTask {
           "-s", pingTask.packetSizeByte, "-w", pingTask.pingTimeoutSec, "-c", 
           Config.PING_COUNT_PER_MEASUREMENT, targetIp);
       Logger.i("Running: " + command);
+      Util.writeLogcatToFile("Info", "Running: " + command);
       pingProc = Runtime.getRuntime().exec(command);
       
       // Grab the output of the process that runs the ping command
@@ -322,6 +336,7 @@ public class PingTask extends MeasurementTask {
         }
         
         Logger.i(line);
+        Util.writeLogcatToFile("Info", line);
       }
       // Use the output from the ping command to compute packet loss. If that's not
       // available, use an estimation.
@@ -330,17 +345,22 @@ public class PingTask extends MeasurementTask {
       }
       measurementResult = constructResult(rrts, packetLoss, packetsSent);
       Logger.i(MeasurementJsonConvertor.toJsonString(measurementResult));
+      Util.writeLogcatToFile("Info", MeasurementJsonConvertor.toJsonString(measurementResult));
     } catch (IOException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (SecurityException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (NumberFormatException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";  
     } catch (InvalidParameterException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } finally {
       // All associated streams with the process will be closed upon destroy()
@@ -349,6 +369,7 @@ public class PingTask extends MeasurementTask {
     
     if (measurementResult == null) {
       Logger.e("Error running ping: " + errorMsg);
+      Util.writeLogcatToFile("Error", "Error running ping: " + errorMsg);
       throw new MeasurementError(errorMsg);
     }
     return measurementResult;
@@ -364,8 +385,11 @@ public class PingTask extends MeasurementTask {
     MeasurementResult result = null;
 
     try {       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+      int timeOut = (int) (3000 * (double) pingTask.pingTimeoutSec /
             Config.PING_COUNT_PER_MEASUREMENT);
+      // TODO (Haokun): delete after testing
+      Logger.w("Timeout value is " + timeOut);
+      Util.writeLogcatToFile("Warning", "Timeout value is " + timeOut);
       int successfulPingCnt = 0;
       long totalPingDelay = 0;
       for (int i = 0; i < Config.PING_COUNT_PER_MEASUREMENT; i++) {
@@ -376,24 +400,31 @@ public class PingTask extends MeasurementTask {
         if (status) {
           totalPingDelay += rrtVal;
           rrts.add((double) rrtVal);
+          // TODO (Haokun): delete after testing
+          Logger.w("Current rtt in Java Ping is " + rrtVal);
+          Util.writeLogcatToFile("Warning", "Current rtt in Java Ping is " + rrtVal);
         }
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
         broadcastProgressForUser(progress);
       }
       Logger.i("java ping succeeds");
+      Util.writeLogcatToFile("Info", "java ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (IllegalArgumentException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (IOException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } 
     if (result != null) {
       return result;
     } else {
       Logger.i("java ping fails");
+      Util.writeLogcatToFile("Info", "java ping fails; " + errorMsg);
       throw new MeasurementError(errorMsg);
     }
   }
@@ -435,19 +466,23 @@ public class PingTask extends MeasurementTask {
         broadcastProgressForUser(progress);
       }
       Logger.i("HTTP get ping succeeds");
+      Util.writeLogcatToFile("Info", "HTTP get ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
     } catch (MalformedURLException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } catch (IOException e) {
       Logger.e(e.getMessage());
+      Util.writeLogcatToFile("Error", e.getMessage());
       errorMsg += e.getMessage() + "\n";
     }
     if (result != null) {
       return result;
     } else {
       Logger.i("HTTP get ping fails");
+      Util.writeLogcatToFile("Error", "HTTP get ping fails");
       throw new MeasurementError(errorMsg);
     }
   }
