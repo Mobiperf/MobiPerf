@@ -34,6 +34,7 @@ import java.security.InvalidParameterException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -179,61 +180,47 @@ public class Util {
   }
   
   /**
+   * Return a list of system environment path 
+   */
+  public static String[] fetchEnvPaths() {
+    String path = "";
+    Map<String, String> env = System.getenv();
+    if (env.containsKey("PATH")) {
+      path = env.get("PATH");
+    }
+    return (path.contains(":")) ? path.split(":") : (new String[]{path});
+  }
+
+  /**
    * Determine the ping executable based on ip address byte length
    */
   public static String pingExecutableBasedOnIPType (int ipByteLen, Context context) {
-    if (ipByteLen == 4) {
-      Logger.i("Use Ping for current task");
-      return context.getString(R.string.ping_executable);
-    } else if (ipByteLen == 16) {
-      Logger.i("Use Ping6 for current task");
-      return context.getString(R.string.ping6_executable);
+    Process testPingProc = null;
+    String[] progList = fetchEnvPaths();
+    String pingExecutable = null;
+    if (progList != null && progList.length != 0) {
+      for (String pingLocation : progList) {
+        try {
+          if (ipByteLen == 4) {
+            pingExecutable = pingLocation + "/" + 
+                             context.getString(R.string.ping_executable);
+          } else if (ipByteLen == 16) {
+            pingExecutable = pingLocation + "/" + 
+                             context.getString(R.string.ping6_executable);
+          }
+          testPingProc = Runtime.getRuntime().exec(pingExecutable);
+        } catch (IOException e) {
+          // reset the executable
+          pingExecutable = null;
+          // The ping command doesn't exist in that path, try another one
+          continue;
+        } finally {
+          if (testPingProc != null)
+            testPingProc.destroy();
+        }
+        break;
+      }
     }
-    return null;
+    return pingExecutable;
   }
-  
-  /**
-   * Write logcat message to a file
-   * TODO (Haokun): delete after debugging
-   */
-  public static void writeLogcatToFile(String tag, String content) {
-  	String folderPath = Environment.getExternalStorageDirectory().getPath() + "/Mobiperf/";
-  	String filePath = folderPath + "logcat.txt";
-  	File d = new File(folderPath);
-  	File f = new File(filePath);
-    // check if directory exist
-  	if (!d.exists()) {
-  		if (!d.mkdirs()) {
-  			Logger.e("ERROR: fail to create directory " + folderPath);
-  		}
-  	}
-  	
-  	// check file existence
-  	if (!f.exists()) {
-  		try {
-  			f.createNewFile();
-  			// set file to be readable
-  		} catch (IOException e) {
-  			e.printStackTrace();
-  			Logger.e("ERROR: fail to create file " + filePath);
-  		}
-  	}
-  	
-  	// write the content
-  	FileOutputStream out;
-    try {
-      SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy_MM_dd-HH:mm:ss.SSS ");
-      Date today = new Date();
-      String strDate = sdfDate.format(today);
-      content = strDate + tag + "\t" + content + "\n";
-	    out = new FileOutputStream(f, true);
-	    out.write(content.getBytes(), 0, content.length());
-	    out.close();
-    } catch (FileNotFoundException e) {
-	    Logger.e(e.getMessage());
-    } catch (IOException e) {
-    	Logger.e(e.getMessage());
-    }
-  }
-  
 }
