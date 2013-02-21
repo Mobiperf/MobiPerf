@@ -238,7 +238,7 @@ public class PingTask extends MeasurementTask {
     result.addResult("packet_loss", packetLoss);
     result.addResult("packets_sent", packetsSent);
     result.addResult("ping_method", pingMethod);
-    Logger.w(MeasurementJsonConvertor.toJsonString(result));
+    Logger.i(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
   
