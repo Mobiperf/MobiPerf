@@ -60,8 +60,8 @@ public class TCPThroughputTask extends MeasurementTask {
 
   // Data related
   private final int KBYTE = 1024;
-  private static final int DATA_LIMIT_MB_UP = 3; 
-  private static final int DATA_LIMIT_MB_DOWN = 5;
+  private static final int DATA_LIMIT_MB_UP = 5; 
+  private static final int DATA_LIMIT_MB_DOWN = 10;
   private boolean DATA_LIMIT_ON = true;
   private boolean DATA_LIMIT_EXCEEDED = false;
   private static final String UPLINK_FINISH_MSG = "*";
@@ -304,7 +304,12 @@ public class TCPThroughputTask extends MeasurementTask {
     }
     
     try {
-      desc.target = MLabNS.Lookup(context, "mobiperf");
+       ArrayList<String> mlabResult = MLabNS.Lookup(context, "mobiperf");
+       if (mlabResult.size() == 1) {
+         desc.target = mlabResult.get(0);
+       } else {
+         throw new MeasurementError("Invalid MLabNS result");
+       }
     } catch (InvalidParameterException e) {
       throw new MeasurementError(e.getMessage());
     }

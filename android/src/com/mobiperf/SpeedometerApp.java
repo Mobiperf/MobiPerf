@@ -177,12 +177,9 @@ public class SpeedometerApp extends TabActivity {
     restoreDefaultAccount();
     if (selectedAccount == null) {
       showDialog(DIALOG_ACCOUNT_SELECTOR);
-    }
-    
-    restoreConsentState();
-    if (!userConsented) {
-      /* Before doing anything, show the consent dialog. */
-      showDialog(DIALOG_CONSENT);
+    } else {
+      // double check the user consent selection
+      consentDialogWrapper();
     }
     
     /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
@@ -301,12 +298,12 @@ public class SpeedometerApp extends TabActivity {
   }
   
   private Dialog showAccountDialog() {
-    //Dialog dialog;
     AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle("Select Authentication Account");
     final CharSequence[] items = AccountSelector.getAccountList(this.getApplicationContext());
 
-    builder.setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+    builder.setCancelable(false)
+           .setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
       @Override
       public void onClick(DialogInterface dialog, int item) {
         Toast.makeText(getApplicationContext(),
@@ -317,6 +314,8 @@ public class SpeedometerApp extends TabActivity {
         editor.putString(Config.PREF_KEY_SELECTED_ACCOUNT, (String) items[item]);
         editor.commit();
         dialog.dismiss();
+        // need consent dialog when user first perform the account selection
+        consentDialogWrapper();
       }
     });
     return builder.create();
@@ -443,5 +442,17 @@ public class SpeedometerApp extends TabActivity {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
         getApplicationContext());
     userConsented = prefs.getBoolean(Config.PREF_KEY_CONSENTED, false);
+  }
+  
+  /**
+   * A wrapper function to check user consent selection, 
+   * and generate one if user haven't agreed on.
+   */
+  private void consentDialogWrapper() {
+    restoreConsentState();
+    if (!userConsented) {
+      // Show the consent dialog. After user select the content
+      showDialog(DIALOG_CONSENT);
+    }
   }
 }

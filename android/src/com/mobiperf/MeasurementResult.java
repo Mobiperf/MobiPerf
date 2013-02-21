@@ -29,6 +29,7 @@ import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
 import com.mobiperf.measurements.TCPThroughputTask;
 import com.mobiperf.measurements.TCPThroughputTask.TCPThroughputDesc;
 import com.mobiperf.util.MeasurementJsonConvertor;
+import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.util.Util;
 
 import java.util.Formatter;
@@ -124,6 +125,7 @@ public class MeasurementResult {
     }
     printer.println("IP address: " + ipAddress);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printIPTestResult(printer);
     
     if (success) {
       float packetLoss = Float.parseFloat(values.get("packet_loss"));
@@ -152,6 +154,7 @@ public class MeasurementResult {
     printer.println("[HTTP]");
     printer.println("URL: " + desc.url);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printIPTestResult(printer);
     
     if (success) {
       int headerLen = Integer.parseInt(values.get("headers_len"));
@@ -170,6 +173,7 @@ public class MeasurementResult {
     printer.println("[DNS Lookup]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printIPTestResult(printer);
     
     if (success) {
       String ipAddress = removeQuotes(values.get("address"));
@@ -189,6 +193,7 @@ public class MeasurementResult {
     printer.println("[Traceroute]");
     printer.println("Target: " + desc.target);
     printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printIPTestResult(printer);
     
     if (success) {
       // Manually inject a new line
@@ -240,6 +245,7 @@ public class MeasurementResult {
     if (success) {
       printer.println("PRR: " + values.get("PRR"));
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+      printIPTestResult(printer);
     } else {
       printer.println("Failed");
     }
@@ -254,10 +260,11 @@ public class MeasurementResult {
       printer.println("[TCP Downlink]");
     }
     printer.println("Target: " + desc.target);
+    printer.println("Timestamp: " +
+        Util.getTimeStringFromMicrosecond(properties.timestamp));
+    printIPTestResult(printer);
+    
     if (success) {
-      printer.println("Timestamp: " +
-                      Util.getTimeStringFromMicrosecond(properties.timestamp));
-      // printer.println("Server version: " + values.get("server_version"));
       printer.println("");
       // Display result with precision up to 2 digit
       String speedInJSON = values.get("tcp_speed_results");
@@ -265,13 +272,10 @@ public class MeasurementResult {
       String displayResult = "";
 
       double tp = desc.calMedianSpeedFromTCPThroughputOutput(speedInJSON);
-      if (tp < 0) {
-        printer.println("No results available.");
-        return;
-      }
-
       double KB = Math.pow(2, 10);
-      if (tp > KB*KB) {
+      if (tp < 0) {
+        displayResult = "No results available.";
+      } else if (tp > KB*KB) {
         displayResult = "Speed: " + String.format("%.2f",tp/(KB*KB)) + " Gbps";
       } else if (tp > KB ) {
         displayResult = "Speed: " + String.format("%.2f",tp/KB) + " Mbps";
@@ -281,7 +285,9 @@ public class MeasurementResult {
 
       // Append notice for exceeding data limit
       if (dataLimitExceedInJSON.equals("true")) {
-        displayResult += "\n* Task incomplete due to data limit";
+        displayResult += "\n* Task finishes earlier due to exceeding " +
+                         "maximum number of "+ ((desc.dir_up) ? "transmitted" : "received") + 
+                         " bytes";
       }
       printer.println(displayResult);
     } else {
@@ -293,6 +299,15 @@ public class MeasurementResult {
    * Removes the quotes surrounding the string. If |str| is null, returns null.
    */
   private String removeQuotes(String str) {
-    return str != null ? str.replaceAll("^\"|\"$", "") : null;
+    return str != null ? str.replaceAll("^\"|\"", "") : null;
+  }
+  
+  /**
+   * Print ip connectivity and hostname resolvability result
+   */
+  private void printIPTestResult (StringBuilderPrinter printer) {
+    printer.println("IPv4/IPv6 Connectivity: " + properties.ipConnectivity);
+    printer.println("IPv4/IPv6 Domain Name Resolvability: " 
+                    + properties.dnResolvability);
   }
 }
