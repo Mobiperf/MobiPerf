@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.mobiperf"
-  android:versionName="v2.1" android:versionCode="100">
+  android:versionName="v2.1" android:versionCode="101">
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.GET_ACCOUNTS" />
   <uses-permission android:name="android.permission.USE_CREDENTIALS" />
@@ -13,7 +13,7 @@
   <uses-permission android:name="android.permission.BATTERY_STATS" />
   <uses-permission android:name="android.permission.WAKE_LOCK" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-  <uses-sdk android:targetSdkVersion="9" android:minSdkVersion="9" />  
+  <uses-sdk android:targetSdkVersion="9" android:minSdkVersion="9" />
 
   <application
     android:debuggable="false"

@@ -16,7 +16,6 @@
 package com.mobiperf.measurements;
 
 import android.content.Context;
-import android.net.http.AndroidHttpClient;
 import android.util.Log;
 
 import org.apache.http.HttpResponse;
@@ -32,8 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InvalidClassException;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -66,6 +67,9 @@ public class PingTask extends MeasurementTask {
   public static final int DEFAULT_PING_TIMEOUT = 10;
   
   private Process pingProc = null;
+  private String PING_METHOD_CMD  = "ping_cmd";
+  private String PING_METHOD_JAVA = "java_ping";
+  private String PING_METHOD_HTTP = "http";
   private String targetIp = null;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
@@ -153,15 +157,17 @@ public class PingTask extends MeasurementTask {
       InetAddress addr = InetAddress.getByName(desc.target);
       // Get the address length
       ipByteLength = addr.getAddress().length;
+      Logger.i("IP address length is " + ipByteLength);
       // All ping methods ping against targetIp rather than desc.target
       targetIp = addr.getHostAddress();
+      Logger.i("IP is " + targetIp);
     } catch (UnknownHostException e) {
       throw new MeasurementError("Unknown host " + desc.target);
     }
     
     try {
       Logger.i("running ping command");
-      /* Prevents the phone from going to low-power mode where WiFi turns off */
+      // Prevents the phone from going to low-power mode where WiFi turns off
       return executePingCmdTask(ipByteLength);
     } catch (MeasurementError e) {
       try {
@@ -190,7 +196,7 @@ public class PingTask extends MeasurementTask {
   }
   
   private MeasurementResult constructResult(ArrayList<Double> rrtVals, double packetLoss,
-                                            int packetsSent) {
+                                            int packetsSent, String pingMethod) {
     double min = Double.MAX_VALUE;
     double max = Double.MIN_VALUE;
     double mdev, avg, filteredAvg;
@@ -231,6 +237,8 @@ public class PingTask extends MeasurementTask {
     }
     result.addResult("packet_loss", packetLoss);
     result.addResult("packets_sent", packetsSent);
+    result.addResult("ping_method", pingMethod);
+    Logger.i(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
   
@@ -240,7 +248,7 @@ public class PingTask extends MeasurementTask {
         proc.destroy();
       }
     } catch (Exception e) { 
-      Logger.w("Unable to kill ping process", e);
+      Logger.w("Unable to kill ping process" + e.getMessage());
     }
   }
   
@@ -273,8 +281,10 @@ public class PingTask extends MeasurementTask {
     MeasurementResult measurementResult = null;
     // TODO(Wenjie): Add a exhaustive list of ping locations for different Android phones
     pingTask.pingExe = Util.pingExecutableBasedOnIPType(ipByteLen, parent);
+    Logger.i("Ping executable is " + pingTask.pingExe);
     if (pingTask.pingExe == null) {
-      throw new MeasurementError("Unknown IP address byte length");
+      Logger.e("Ping executable not found");
+      throw new MeasurementError("Ping executable not found");
     }
     try {
       String command = Util.constructCommand(pingTask.pingExe, "-i", 
@@ -328,8 +338,7 @@ public class PingTask extends MeasurementTask {
       if (packetLoss == Double.MIN_VALUE) {
         packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       }
-      measurementResult = constructResult(rrts, packetLoss, packetsSent);
-      Logger.i(MeasurementJsonConvertor.toJsonString(measurementResult));
+      measurementResult = constructResult(rrts, packetLoss, packetsSent, PING_METHOD_CMD);
     } catch (IOException e) {
       Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -364,7 +373,7 @@ public class PingTask extends MeasurementTask {
     MeasurementResult result = null;
 
     try {       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+      int timeOut = (int) (3000 * (double) pingTask.pingTimeoutSec /
             Config.PING_COUNT_PER_MEASUREMENT);
       int successfulPingCnt = 0;
       long totalPingDelay = 0;
@@ -382,7 +391,7 @@ public class PingTask extends MeasurementTask {
       }
       Logger.i("java ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
-      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
+      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT, PING_METHOD_JAVA);
     } catch (IllegalArgumentException e) {
       Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
@@ -411,31 +420,33 @@ public class PingTask extends MeasurementTask {
     PingDesc pingTask = (PingDesc) this.measurementDesc;
     String errorMsg = "";
     MeasurementResult result = null;
-
+    
     try {
       long totalPingDelay = 0;
       
-      HttpClient client = AndroidHttpClient.newInstance(Util.prepareUserAgent(this.parent));
-      HttpHead headMethod = new HttpHead("http://" + targetIp);
-      headMethod.addHeader(new BasicHeader("Connection", "close"));
-      headMethod.setParams(new BasicHttpParams().setParameter(
-          CoreConnectionPNames.CONNECTION_TIMEOUT, 1000));
+      URL url = new URL("http://"+ pingTask.target);
       
-      int timeOut = (int) (1000 * (double) pingTask.pingTimeoutSec /
+      int timeOut = (int) (3000 * (double) pingTask.pingTimeoutSec /
           Config.PING_COUNT_PER_MEASUREMENT);
-      HttpConnectionParams.setConnectionTimeout(headMethod.getParams(), timeOut);
                       
       for (int i = 0; i < Config.PING_COUNT_PER_MEASUREMENT; i++) {
         pingStartTime = System.currentTimeMillis();
-        HttpResponse response = client.execute(headMethod);  
+        HttpURLConnection httpClient = (HttpURLConnection) url.openConnection();
+        httpClient.setRequestProperty("Connection", "close");
+        httpClient.setRequestMethod("HEAD");
+        httpClient.setReadTimeout(timeOut);
+        httpClient.setConnectTimeout(timeOut);
+        httpClient.connect();
         pingEndTime = System.currentTimeMillis();
+        httpClient.disconnect();
         rrts.add((double) (pingEndTime - pingStartTime));
         this.progress = 100 * i / Config.PING_COUNT_PER_MEASUREMENT;
         broadcastProgressForUser(progress);
       }
       Logger.i("HTTP get ping succeeds");
+      Logger.i("RTT is " + rrts.toString());
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
-      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT);
+      result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT, PING_METHOD_HTTP);
     } catch (MalformedURLException e) {
       Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";

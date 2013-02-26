@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.http.Header;
@@ -29,6 +30,7 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,14 +42,16 @@ public class MLabNS {
   /**
    * Query MLab-NS to get an FQDN for the given tool.
    */
-  static public String Lookup(Context context, String tool) {
-    return Lookup(context, tool, "ipv4");
+  static public ArrayList<String> Lookup(Context context, String tool) {
+    return Lookup(context, tool, null, "fqdn");
   }
 
   /**
-   * Query MLab-NS to get an FQDN for the given tool and address family.
+   * Query MLab-NS to get an FQDN/IP for the given tool and address family.
+   * @param field: fqdn or ip
    */
-  static public String Lookup(Context context, String tool, String address_family) {
+  static public ArrayList<String> Lookup(Context context, String tool, 
+                              String address_family, String field) {
     final int maxResponseSize = 1024;
     // Set the timeout in milliseconds until a connection is established.
     final int timeoutConnection = 5000;
@@ -56,18 +60,23 @@ public class MLabNS {
 
     ByteBuffer body = ByteBuffer.allocate(maxResponseSize);
     InputStream inputStream = null;
-
+    
+    // Sanitize for possible returned field
+    if ( field != "fqdn" && field != "ip" ) {
+      return null;
+    }
+    
     try {
-      // TODO(dominic): This should not be done on the UI thread.
       HttpParams httpParameters = new BasicHttpParams();
       HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
       HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
       DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
       
       Logger.d("Creating request GET for mlab-ns");
-      // TODO(dominich): Remove address_family and allow for IPv6.
-      String url = "http://mlab-ns.appspot.com/" + tool +
-          "?format=json&address_family=" + address_family;
+      String url = "http://mlab-ns.appspot.com/" + tool + "?format=json";
+      if (address_family == "ipv4" || address_family == "ipv6") {
+        url += "&address_family=" + address_family;
+      }
       HttpGet request = new HttpGet(url);
       request.setHeader("User-Agent", Util.prepareUserAgent(context));
 
@@ -80,7 +89,23 @@ public class MLabNS {
 
       String body_str = getResponseBody(response);
       JSONObject json = new JSONObject(body_str);
-      return String.valueOf(json.getString("fqdn"));
+      Logger.d("Field Type is " + json.get(field).getClass().getName());
+      ArrayList<String> mlabNSResult = new ArrayList<String>();
+      if (json.get(field) instanceof JSONArray) {
+        // Convert array value into ArrayList
+        JSONArray jsonArray = (JSONArray)json.get(field);
+        for (int i = 0; i < jsonArray.length(); i++) {
+          mlabNSResult.add(jsonArray.get(i).toString());
+        }
+      } else if (json.get(field) instanceof String) {
+        // Append the string into ArrayList
+        mlabNSResult.add(String.valueOf(json.getString(field)));
+      } else {
+        throw new InvalidParameterException("Unknown type " + 
+                                            json.get(field).getClass().toString() + 
+                                            " of value " + json.get(field));
+      }
+      return mlabNSResult;
     } catch (SocketTimeoutException e) {
       Logger.e("SocketTimeoutException trying to contact m-lab-ns");
       // e.getMessage() is null       
