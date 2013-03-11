@@ -1,8 +1,14 @@
 #!/bin/bash
 
 cd src
-# javac -d ../bin servers/*.java
-javac -target 1.5 -source 1.5 -d ../bin servers/*.java # satisfy server version
+#javac -d ../bin servers/*.java
+mkdir ../bin 2> /dev/null
+javac -target 1.7 -source 1.7 -d ../bin servers/*.java # satisfy server version
+if [ $? -ne 0 ]
+then
+    echo "Fail to compile source code"
+    exit $?
+fi
 cd ..
 
 mkdir mlab 2> /dev/null
@@ -16,5 +22,5 @@ do
 done
 
 rm manifest
-
+echo "Successful compile the TCP server code."
 cd ..
