@@ -72,7 +72,7 @@ public class MeasurementJsonConvertor {
   public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, Context context) 
       throws IllegalArgumentException {  
     try {
-      String type = String.valueOf(json.getString("type"));   
+      String type = String.valueOf(json.getString("type"));
       Class taskClass = MeasurementTask.getTaskClassForMeasurement(type);
       Method getDescMethod = taskClass.getMethod("getDescClass");
       // The getDescClassForMeasurement() is static and takes no arguments

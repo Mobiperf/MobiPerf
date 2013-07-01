@@ -131,12 +131,14 @@ public class Checkin {
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
       sendStringMsg("Checkin got " + jsonArray.length() + " tasks.");
-      
+
       for (int i = 0; i < jsonArray.length(); i++) {
         Logger.d("Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
         Logger.d("Value is " + json);
-        if (json != null) {
+        // checkin task must support 
+        if (json != null && 
+            MeasurementTask.getMeasurementTypes().contains(json.get("type"))) {
           try {
             MeasurementTask task = 
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);

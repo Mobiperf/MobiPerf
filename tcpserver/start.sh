@@ -1,12 +1,26 @@
 #!/bin/bash
-#this script needs to be run from the current directory
 
-cd ~/mobiperf
+cd /home/michigan_1/mobiperf
 
-for i in Downlink Uplink ServerConfig KeepAlive Command
+dl_port=6001
+ul_port=6002
+config_port=6003
+
+for i in Downlink Uplink ServerConfig
 do
-	echo "running $i"
-	sudo java -jar $i.jar mlab &
+	echo "Running $i ..."
+	java -Xmx128M -jar $i.jar &
+        sleep 1
 done
 
-echo "success deploying and running server\n"
+echo "Verifying on ports ..."
+for port in $dl_port $ul_port $config_port
+do
+	is_up=$(netstat -atup | grep "$port" | wc -l)
+	if [ $is_up == 0 ];then
+		echo "Port $port doesn't start properly"
+		echo "Try \"./stop.sh; ./start.sh\" one more time"
+		exit 1
+	fi
+done
+echo "Success deploying and running server"

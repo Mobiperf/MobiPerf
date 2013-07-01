@@ -15,6 +15,7 @@
 package com.mobiperf.util;
 
 import com.mobiperf.Logger;
+import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
 import com.mobiperf.SpeedometerApp;
 
@@ -22,11 +23,18 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.security.InvalidParameterException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -169,5 +177,50 @@ public class Util {
     } catch (NullPointerException e) {    
       return null;
     }
+  }
+  
+  /**
+   * Return a list of system environment path 
+   */
+  public static String[] fetchEnvPaths() {
+    String path = "";
+    Map<String, String> env = System.getenv();
+    if (env.containsKey("PATH")) {
+      path = env.get("PATH");
+    }
+    return (path.contains(":")) ? path.split(":") : (new String[]{path});
+  }
+
+  /**
+   * Determine the ping executable based on ip address byte length
+   */
+  public static String pingExecutableBasedOnIPType (int ipByteLen, Context context) {
+    Process testPingProc = null;
+    String[] progList = fetchEnvPaths();
+    String pingExecutable = null;
+    if (progList != null && progList.length != 0) {
+      for (String pingLocation : progList) {
+        try {
+          if (ipByteLen == 4) {
+            pingExecutable = pingLocation + "/" + 
+                             context.getString(R.string.ping_executable);
+          } else if (ipByteLen == 16) {
+            pingExecutable = pingLocation + "/" + 
+                             context.getString(R.string.ping6_executable);
+          }
+          testPingProc = Runtime.getRuntime().exec(pingExecutable);
+        } catch (IOException e) {
+          // reset the executable
+          pingExecutable = null;
+          // The ping command doesn't exist in that path, try another one
+          continue;
+        } finally {
+          if (testPingProc != null)
+            testPingProc.destroy();
+        }
+        break;
+      }
+    }
+    return pingExecutable;
   }
 }

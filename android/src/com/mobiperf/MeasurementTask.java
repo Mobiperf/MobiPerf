@@ -69,9 +69,14 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(TCPThroughputTask.DESCRIPTOR, TCPThroughputTask.TYPE);
   }
   
-  /** Gets the currently available measurement types*/
+  /** Gets the currently available measurement descriptions*/
   public static Set<String> getMeasurementNames() {
     return measurementDescToType.keySet();
+  }
+  
+  /** Gets the currently available measurement types*/
+  public static Set<String> getMeasurementTypes() {
+    return measurementTypes.keySet();
   }
   
   /** Get the type of a measurement based on its name. Type is for JSON interface only

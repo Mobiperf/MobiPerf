@@ -17,6 +17,7 @@ package com.mobiperf.util;
 import com.mobiperf.DeviceInfo;
 import com.mobiperf.DeviceProperty;
 import com.mobiperf.Logger;
+import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
 import com.mobiperf.SpeedometerApp;
 
@@ -53,12 +54,17 @@ import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.ConnectException;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
@@ -71,7 +77,13 @@ public class PhoneUtils {
   private static final String ANDROID_STRING = "Android";
   /** Returned by {@link #getNetwork()}. */
   public static final String NETWORK_WIFI = "Wifi";
-
+  /** IP type */
+  public static final String IP_TYPE_UNKNOWN = "UNKNOWN";
+  public static final String IP_TYPE_NONE = "Neither IPv4 nor IPv6";
+  public static final String IP_TYPE_IPV4_ONLY = "IPv4 only";
+  public static final String IP_TYPE_IPV6_ONLY = "IPv6 only";
+  public static final String IP_TYPE_IPV4_IPV6_BOTH = "IPv4 and IPv6";
+  
   /**
    * The app that uses this class. The app must remain alive for longer than
    * PhoneUtils objects are in use.
@@ -110,7 +122,20 @@ public class PhoneUtils {
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
   private DeviceInfo deviceInfo = null;
-
+  /** IP compatibility status */
+  // Indeterministic type due to client side timer expired
+  private int IP_TYPE_CANNOT_DECIDE = 2;
+  // Cannot resolve the hostname or cannot reach the destination address
+  private int IP_TYPE_UNCONNECTIVITY = 1;
+  private int IP_TYPE_CONNECTIVITY = 0; 
+  /** Domain name resolution status */
+  private int DN_UNKNOWN = 2;
+  private int DN_UNRESOLVABLE = 1;
+  private int DN_RESOLVABLE = 0;
+  //server configuration port on M-Lab servers 
+  private int portNum = 6003;
+  private int tcpTimeout = 3000;
+  
   protected PhoneUtils(Context context) {
     this.context = context;
     broadcastReceiver = new PowerStateChangeReceiver();
@@ -313,13 +338,16 @@ public class PhoneUtils {
    * TODO(wenjiezeng): As folklore has it and Wenjie has confirmed, we cannot get cell info from
    * Samsung phones.
    */
-  public String getCellInfo() {
+  public String getCellInfo(boolean cidOnly) {
     initNetwork();
     List<NeighboringCellInfo> infos = telephonyManager.getNeighboringCellInfo();
     StringBuffer buf = new StringBuffer();
+    String tempResult = "";
     if (infos.size() > 0) {
       for (NeighboringCellInfo info : infos) {
-        buf.append(info.getLac() + "," + info.getCid() + "," + info.getRssi() + ";");
+        tempResult = cidOnly ? info.getCid() + ";" : info.getLac() + "," 
+                               + info.getCid() + "," + info.getRssi() + ";";
+        buf.append(tempResult);
       }
       // Removes the trailing semicolon
       buf.deleteCharAt(buf.length() - 1);
@@ -651,74 +679,122 @@ public class PhoneUtils {
   public boolean isTestingServer(String serverUrl) {
     return serverUrl == getTestingServerUrl();
   }
-
-  private String getCellularIp() {
-    String ipAddress = null;
-   
+  
+  /**
+   * Using MLab service to detect ipv4 or ipv6 compatibility
+   * @param ip_detect_type -- "ipv4" or "ipv6"
+   * @return IP_TYPE_CANNOT_DECIDE, IP_TYPE_UNCONNECTIVITY, IP_TYPE_CONNECTIVITY
+   */
+  private int checkIPCompatibility(String ip_detect_type) {
+    if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
+      return IP_TYPE_CANNOT_DECIDE;
+    }
+    Socket tcpSocket = new Socket();
     try {
-      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); 
-          en.hasMoreElements();) {
-        NetworkInterface intf = en.nextElement();
-        for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); 
-            enumIpAddr.hasMoreElements();) {
-          InetAddress inetAddress = enumIpAddr.nextElement();
-          if (!inetAddress.isLoopbackAddress()
-              && inetAddress.getHostAddress().compareTo("0.0.0.0") != 0) {
-            return inetAddress.getHostAddress().toString();
-          }
-        }
+      ArrayList<String> hostnameList = MLabNS.Lookup(context, "mobiperf", 
+                                                     ip_detect_type, "ip");
+      // MLabNS returns at least one ip address
+      if (hostnameList.isEmpty())
+        return IP_TYPE_CANNOT_DECIDE;
+      // Use the first result in the element
+      String hostname = hostnameList.get(0);
+      SocketAddress remoteAddr = new InetSocketAddress(hostname, portNum);
+      tcpSocket.setTcpNoDelay(true);
+      tcpSocket.connect(remoteAddr, tcpTimeout);
+    } catch (ConnectException e) {
+      // Server is not reachable due to client not support ipv6
+      Logger.e("Connection exception is " + e.getMessage());
+      return IP_TYPE_UNCONNECTIVITY;
+    } catch (IOException e) {
+      // Client timer expired
+      Logger.e("Fail to setup TCP in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } catch (InvalidParameterException e) {
+      // MLabNS service lookup fail
+      Logger.e("InvalidParameterException in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } catch (IllegalArgumentException e) {
+      Logger.e("IllegalArgumentException in checkIPCompatibility(). "
+               + e.getMessage());
+      return IP_TYPE_CANNOT_DECIDE;
+    } finally {
+      try {
+        tcpSocket.close();
+      } catch (IOException e) {
+        Logger.e("Fail to close TCP in checkIPCompatibility().");
+        return IP_TYPE_CANNOT_DECIDE;
       }
-    } catch (SocketException ex) {
-      return null;
     }
-    return null;
+    return IP_TYPE_CONNECTIVITY;
   }
-
-  /* TODO(Wenjie): It assume that WifiInfo.getIpAddress() always returns an integer in
-   * big endian. Otherwise, the order of the numbers in the IP String will need 
-   * to be reversed.*/
-  private String intToIp(int number) {
-    byte[] bytes = new byte[4];
-    for (int i = 0; i < bytes.length; i++) {
-      bytes[i] = (byte) ((number >> (32 - (4 - i) * 8)) & 0xFF);
+  
+  /**
+   * Use MLabNS slices to check IPv4/IPv6 domain name resolvable
+   * @param ip_detect_type -- "ipv4" or "ipv6"
+   * @return DN_UNRESOLVABLE, DN_RESOLVABLE
+   */
+  private int checkDomainNameResolvable(String ip_detect_type) {
+    if (!ip_detect_type.equals("ipv4") && !ip_detect_type.equals("ipv6")) {
+      return DN_UNKNOWN;
     }
     try {
-       /* 
-       * Integer is encoded in network byte order (big endian), and getByAddress(byte[])
-       * address that endian issue internally.
-       */
-      InetAddress ipAddress = InetAddress.getByAddress(bytes);
-      return ipAddress.getHostAddress();
+      ArrayList<String> ipAddressList = MLabNS.Lookup(context, "mobiperf", 
+                                                  ip_detect_type, "fqdn");
+      String ipAddress;
+      // MLabNS returns one fqdn each time
+      if (ipAddressList.size() == 1) {
+        ipAddress = ipAddressList.get(0);
+      } else {
+        return DN_UNKNOWN;
+      }
+      InetAddress inet = InetAddress.getByName(ipAddress);
+      if (inet != null)
+        return DN_RESOLVABLE;
     } catch (UnknownHostException e) {
-      Logger.e("error when translating the wifi address to string");
-      return null;
+      // Fail to resolve domain name
+      Logger.e("UnknownHostException in checkDomainNameResolvable() "
+               + e.getMessage());
+      return DN_UNRESOLVABLE;
     }
+    return DN_UNKNOWN;
   }
   
-  private String getWifiIp() {
-    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-    if (wifiInfo != null) {
-      int ipAddress = wifiInfo.getIpAddress();
-      return ipAddress == 0 ? null : intToIp(ipAddress);
-    } else {
-      return null;
-    }
+  /** 
+   * Summarize ip connectable cases 
+   * @return ipv4, ipv6, ipv4_ipv6, IP_TYPE_NONE or IP_TYPE_UNKNOWN
+   */
+  public String getIpConnectivity() {
+    int v4Conn = checkIPCompatibility("ipv4");
+    int v6Conn = checkIPCompatibility("ipv6");
+    if (v4Conn == IP_TYPE_CONNECTIVITY && v6Conn == IP_TYPE_CONNECTIVITY)
+      return IP_TYPE_IPV4_IPV6_BOTH;
+    if (v4Conn == IP_TYPE_CONNECTIVITY && v6Conn != IP_TYPE_CONNECTIVITY)
+      return IP_TYPE_IPV4_ONLY;
+    if (v4Conn != IP_TYPE_CONNECTIVITY && v6Conn == IP_TYPE_CONNECTIVITY)
+      return IP_TYPE_IPV6_ONLY;
+    if (v4Conn == IP_TYPE_UNCONNECTIVITY && v6Conn == IP_TYPE_UNCONNECTIVITY)
+      return IP_TYPE_NONE;
+    return IP_TYPE_UNKNOWN;
   }
   
-  /* Wifi and 3G can be both active. We first see if wifi is active and return the wifi IP using
-   * the WifiManager. Otherwise, we search an active network interface and return it as the 3G
-   * network IP*/
-  private String getIp() {
-    String ipStr = getWifiIp();
-    if (ipStr == null) {
-      ipStr = getCellularIp();
-    }
-    if (ipStr == null) {
-      return "";
-    } else {
-      return ipStr;
-    }
+  /**
+   * Summarize Domain Name resolvability cases
+   * @return ipv4, ipv6, ipv4_ipv6, IP_TYPE_NONE or IP_TYPE_UNKNOWN
+   */
+  public String getDnResolvability() {
+    int v4Resv = checkDomainNameResolvable("ipv4");
+    int v6Resv = checkDomainNameResolvable("ipv6");
+    if (v4Resv == DN_RESOLVABLE && v6Resv == DN_RESOLVABLE)
+      return IP_TYPE_IPV4_IPV6_BOTH;
+    if (v4Resv == DN_RESOLVABLE && v6Resv != DN_RESOLVABLE)
+      return IP_TYPE_IPV4_ONLY;
+    if (v4Resv != DN_RESOLVABLE && v6Resv == DN_RESOLVABLE)
+      return IP_TYPE_IPV6_ONLY;
+    if (v4Resv == DN_UNRESOLVABLE && v6Resv == DN_UNRESOLVABLE)
+      return IP_TYPE_NONE;
+    return IP_TYPE_UNKNOWN;
   }
   
   /** Returns the DeviceProperty needed to report the measurement result */
@@ -733,17 +809,21 @@ public class PhoneUtils {
     
     NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
     String networkType = PhoneUtils.getPhoneUtils().getNetwork();
-    String activeIp = getIp();
-    if (activeNetwork != null && activeIp.compareTo("") == 0) {
+    String ipConnectivity = getIpConnectivity();
+    String dnResolvability = getDnResolvability();
+    Logger.w("IP connectivity is " + ipConnectivity);
+    Logger.w("DN resolvability is " + dnResolvability);
+    if (activeNetwork != null) {
       networkType = activeNetwork.getTypeName();
     }
     String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
 
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
-        System.currentTimeMillis() * 1000, getVersionStr(), activeIp, location.getLongitude(),
-        location.getLatitude(), location.getProvider(), networkType, carrierName, 
-        utils.getCurrentBatteryLevel(), utils.isCharging(), utils.getCellInfo(), 
-        utils.getCurrentRssi());
+        System.currentTimeMillis() * 1000, getVersionStr(), ipConnectivity,
+        dnResolvability, location.getLongitude(), location.getLatitude(), 
+        location.getProvider(), networkType, carrierName, 
+        utils.getCurrentBatteryLevel(), utils.isCharging(), 
+        utils.getCellInfo(false), utils.getCurrentRssi());
   }  
 }
