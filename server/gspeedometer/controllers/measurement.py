@@ -36,7 +36,8 @@ from gspeedometer.helpers import util
 MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
-                     ('http', 'HTTP get')]
+                     ('http', 'HTTP get'),
+                     ('tcpthroughput', 'TCP throughput')]
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
@@ -144,7 +145,7 @@ class Measurement(webapp.RequestHandler):
           'templates/measurementdetail.html', template_args))
 
 
-# TODO(drc): Move this to generic measurement class when code from related 
+# TODO(drc): Move this to generic measurement class when code from related
 # branch gets merged into master.
 class MeasurementType:
   """Maps datastore entity and field names to human-readable ones."""
@@ -153,7 +154,7 @@ class MeasurementType:
   kind = "generic_measurement"
   # human-readable name of measurement type
   description = "Generic measurement"
-  # dictionary of field names (as stored in datastore) to human-readable 
+  # dictionary of field names (as stored in datastore) to human-readable
   # descriptions of those fields (for printing in a form)
   field_to_description = SortedDict()
 
@@ -209,5 +210,17 @@ class MeasurementType:
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
           ('headers', 'HTTP headers'), ('method', 'HTTP method')]))
+    elif measurement_type == 'tcpthroughput':
+      return MeasurementType(
+          'tcpthroughput', 'TCP throughput',
+          SortedDict([('dir_up', 'True: Upload; False: Download'),
+          ('target', 'Target (IP or hostname)'),
+          ('data_limit_mb_up', 'Upstream data limit (MB)'),
+          ('data_limit_mb_down', 'Downstream data limit (MB)'),
+          ('duration_period_sec', 'Experiment duration (seconds)'),
+          ('pkt_size_up_bytes', 'Uplink packet size (bytes)'),
+          ('sample_period_sec', 'Interval to sample throughput (seconds)'),
+          ('slow_start_period_sec', 'Waiting period for slow start (seconds)'),
+          ('tcp_timeout_sec', 'TCP connection timeout (seconds)'), ]))
     else:
       raise RuntimeError('Invalid measurement type: %s' % measurement_type)
