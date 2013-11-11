@@ -80,6 +80,9 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementDescToType.put(RRCTask.DESCRIPTOR, RRCTask.TYPE);
     // Currently RRC task is not visible to users
     measurementUIVisibility.put(RRCTask.DESCRIPTOR, false);
+    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);
+    measurementUIVisibility.put(UDPBurstTask.DESCRIPTOR, true);
   }
   
   /** Gets the currently available measurement descriptions*/
@@ -109,6 +112,13 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     return measurementTypes.get(type);
   }
   
+  /**
+   * Get UI visibility for a measurement task
+   */
+  public static boolean getVisibilityForMeasurementName(String name) {
+    return (boolean)(measurementUIVisibility.get(name));
+  }
+
   /* This is put here for consistency that all MeasurementTask should
    * have a getDescClassForMeasurement() method. However, the MeasurementDesc is abstract 
    * and cannot be instantiated */

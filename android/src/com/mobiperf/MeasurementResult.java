@@ -243,9 +243,15 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     printer.println("IP addr: " + values.get("target_ip"));
     if (success) {
-      printer.println("PRR: " + values.get("PRR"));
       printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
       printIPTestResult(printer);
+      printer.println("Packet size: " + desc.packetSizeByte);
+      printer.println("Packets number: " + desc.udpBurstCount);
+      printer.println("Packets interval: " + desc.udpInterval);
+
+      printer.println("\nPRR: " + values.get("PRR"));
+      printer.println("Inversion Number: " + values.get("Inversion_Number"));
+      printer.println("Jitter: " + values.get("jitter"));
     } else {
       printer.println("Failed");
     }
