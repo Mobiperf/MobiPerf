@@ -23,7 +23,9 @@
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
     <string name="UDPBurstTargetLabel">Server name/IP?</string>
     <string name="UDPBurstDirLabel">Direction:</string>
+    <string name="UDPBurstIntervalLabel">Interval(ms): </string>
     <string name="UDPBurstTargetHint">www.google.com</string>
+    <string name="UDPBurstIntervalHint">256</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
     <string name="checkinIntervalPrefKey">KEY_CHECKEDIN_INTERVAL</string>

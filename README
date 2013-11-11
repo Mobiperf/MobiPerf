@@ -29,9 +29,10 @@ measurements, and a data collection server, which runs on AppEngine.
 
 The Android app periodically checks in with the measurement server,
 which sends it a list of measurement tasks to perform. Measurement tasks
-include ping, traceroute, HTTP GET, DNS lookup, and TCP Throughput. Each 
-task has an associated set of measurement parameters (e.g., which host 
-to ping), and a schedule (periodicity at which to take the measurement).
+include ping, traceroute, HTTP GET, DNS lookup, TCP Throughput, IPv4/v6 
+compatability check and UDP Burst. Each task has an associated set of 
+measurement parameters (e.g., which host to ping), and a schedule
+(periodicity at which to take the measurement).
 
 The device runs the measurements in the background, and uploads the
 measurement results on its next checkin cycle. By default, devices

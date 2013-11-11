@@ -278,7 +278,7 @@ public class TCPThroughputTask extends MeasurementTask {
       resp = "[TCP Downlink]\n";
     }
  
-    resp += " Target: " + desc.target + "\n  Interval (sec): " + 
+    resp += "Target: " + desc.target + "\n  Interval (sec): " + 
     desc.intervalSec + "\n  Next run: " + desc.startTime;
 
     return resp;
