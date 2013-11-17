@@ -249,8 +249,8 @@ public class MeasurementResult {
       printer.println("Packets number: " + desc.udpBurstCount);
       printer.println("Packets interval: " + desc.udpInterval);
 
-      printer.println("\nPRR: " + values.get("PRR"));
-      printer.println("Inversion Number: " + values.get("Inversion_Number"));
+      printer.println("\nLoss Rate: " + values.get("loss_rate"));
+      printer.println("Inversion Number: " + values.get("inversion_number"));
       printer.println("Jitter: " + values.get("jitter"));
     } else {
       printer.println("Failed");

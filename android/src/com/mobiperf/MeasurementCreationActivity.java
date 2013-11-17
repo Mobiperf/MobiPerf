@@ -152,6 +152,8 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE) == 0) {
       this.findViewById(R.id.UDPBurstDirView).setVisibility(View.VISIBLE);
+      this.findViewById(R.id.UDPBurstPacketSizeView).setVisibility(View.VISIBLE);
+      this.findViewById(R.id.UDPBurstPacketCountView).setVisibility(View.VISIBLE);
       this.findViewById(R.id.UDPBurstIntervalView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TCPThroughputTask.TYPE) == 0) {
       this.findViewById(R.id.TCPThroughputDirView).setVisibility(View.VISIBLE);
@@ -245,7 +247,12 @@ public class MeasurementCreationActivity extends Activity {
           // m-lab.
           params.put("target", MLabNS.TARGET);
           params.put("direction", udpDir);
-          params.put("packet_burst", "16");
+          // Get UDP Burst packet size
+          EditText UDPBurstPacketSizeText = (EditText) findViewById(R.id.UDPBurstPacketSizeText);
+          params.put("packet_size_byte", UDPBurstPacketSizeText.getText().toString());
+          // Get UDP Burst packet count
+          EditText UDPBurstPacketCountText = (EditText) findViewById(R.id.UDPBurstPacketCountText);
+          params.put("packet_burst", UDPBurstPacketCountText.getText().toString());
           // Get UDP Burst interval
           EditText UDPBurstIntervalText = (EditText) findViewById(R.id.UDPBurstIntervalText);
           params.put("udp_interval", UDPBurstIntervalText.getText().toString());
@@ -256,8 +263,7 @@ public class MeasurementCreationActivity extends Activity {
               Config.DEFAULT_USER_MEASUREMENT_INTERVAL_SEC,
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
-              params,
-              MeasurementCreationActivity.this.getApplicationContext());
+              params);
           newTask =
               new UDPBurstTask(desc, MeasurementCreationActivity.this.getApplicationContext());
         } else if (measurementTypeUnderEdit.equals(TCPThroughputTask.TYPE)) {

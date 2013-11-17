@@ -70,7 +70,7 @@ public class TestProcessPacket {
   }
   
   @Test(expected = MeasurementError.class)
-  public void TestProcessPacket_Request_shortPacket() 
+  public void TestProcessPacketRequestShortPacket() 
       throws Throwable {
     init();
     
@@ -89,7 +89,7 @@ public class TestProcessPacket {
   }
 
   @Test(expected = MeasurementError.class)
-  public void TestProcessPacket_Request_longPacket() 
+  public void TestProcessPacketRequestLongPacket() 
       throws Throwable {
     init();
     
@@ -108,7 +108,7 @@ public class TestProcessPacket {
   }
 
   @Test(expected = MeasurementError.class)
-  public void TestProcessPacket_Request_NegBurst() 
+  public void TestProcessPacketRequestNegBurst() 
       throws Throwable {
     init();
     
@@ -129,7 +129,7 @@ public class TestProcessPacket {
   
 
   @Test(expected = MeasurementError.class)
-  public void TestProcessPacket_Request_HugeBurst() 
+  public void TestProcessPacketRequestHugeBurst() 
       throws Throwable {
     init();
     
@@ -151,7 +151,7 @@ public class TestProcessPacket {
   
 
   @Test(expected = MeasurementError.class)
-  public void TestProcessPacket_Data_SeqChange() 
+  public void TestProcessPacketDataSeqChange() 
       throws Throwable {
     init();
     
