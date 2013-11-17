@@ -48,14 +48,12 @@ public class TestMeasurementPacket {
     try {
       packet = new MeasurementPacket(id1, rawData);
     } catch (MeasurementError e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     byte[] newData = null;
     try {
       newData = packet.getByteArray();
     } catch (MeasurementError e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     for ( int i = 0; i < newData.length; i++ ) {

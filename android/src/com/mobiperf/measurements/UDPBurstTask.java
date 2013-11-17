@@ -14,6 +14,7 @@
  */
 package com.mobiperf.measurements;
 
+import com.mobiperf.Config;
 import com.mobiperf.Logger;
 import com.mobiperf.MeasurementDesc;
 import com.mobiperf.MeasurementError;
@@ -54,11 +55,12 @@ public class UDPBurstTask extends MeasurementTask {
   public static final String DESCRIPTOR = "UDP Burst";
 
   private static final int DEFAULT_UDP_PACKET_SIZE = 100;
-  private static final int DEFAULT_UDP_BURST = 16;
-  private static final int DEFAULT_UDP_INTERVAL = 256;
+  private static final int DEFAULT_UDP_BURST = 10;
+  private static final int DEFAULT_UDP_INTERVAL = 500;
 
-  // Min packet size =  (int type) + (int burstCount) + (int packetNum) + (int intervalNum) +
-  //                    (long timestamp) + (int packetSize) + (int seq) + (int udpInterval)
+  // Min packet size =  (int type) + (int burstCount) + (int packetNum)
+  //                  + (int intervalNum) + (long timestamp) + (int packetSize)
+  //                  + (int seq) + (int udpInterval)
   //                 =  36
   private static final int MIN_PACKETSIZE = 36;
   
@@ -401,6 +403,11 @@ public class UDPBurstTask extends MeasurementTask {
       Logger.i("Sent packet pnum:" + i + " to " + desc.target + ": "
           + targetIp);
 
+      // Update progress bar, leave the last grid for receiving response
+      this.progress = 100 * i / (desc.udpBurstCount + 1);
+      this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
+      broadcastProgressForUser(this.progress);
+      
       try {
         Thread.sleep(desc.udpInterval);
         Logger.i("UDP Burst sleep " + desc.udpInterval + "ms");
@@ -476,6 +483,10 @@ public class UDPBurstTask extends MeasurementTask {
         + " burst:" + burstsize + " pktnum:" + pktnum + " invnum: "
         + invnum + " jitter: " + jitter);
 
+    // Update the last grid in progress bar
+    this.progress = Config.MAX_PROGRESS_BAR_VALUE;
+    broadcastProgressForUser(this.progress);
+    
     udpResult.packetNumber = pktnum;
     udpResult.InversionNumber = invnum;
     udpResult.jitter = jitter;
@@ -546,6 +557,12 @@ public class UDPBurstTask extends MeasurementTask {
           + desc.target);
     }
 
+
+    // Update the first grid of progress bar for sending request
+    this.progress = 100 * 1 / (desc.udpBurstCount + 1);
+    this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
+    broadcastProgressForUser(this.progress);
+    
     return sock;
   }
 
@@ -608,6 +625,11 @@ public class UDPBurstTask extends MeasurementTask {
       Logger.i("Recv UDP response from " + desc.target + " type:" + ptype
           + " burst:" + burstsize + " pktnum:" + pktnum
           + " timestamp:" + timestamp);
+
+      // Update progress bar, the first grid is taken by client request
+      this.progress = 100 * (i + 1) / (desc.udpBurstCount + 1);
+      this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
+      broadcastProgressForUser(this.progress);
 
       if (ptype == UDPBurstTask.PKT_DATA) {
         pktrecv++;
@@ -694,8 +716,9 @@ public class UDPBurstTask extends MeasurementTask {
         this.measurementDesc);
 
     result.addResult("target_ip", targetIp);
-    result.addResult("PRR", response);
-    result.addResult("Inversion_Number", udpResult.InversionNumber);
+    // It is more reasonable to show loss rate othen then packet received rate
+    result.addResult("loss_rate", 1.0 - response);  
+    result.addResult("inversion_number", udpResult.InversionNumber);
     result.addResult("jitter", udpResult.jitter);
     // Update the sequence number to be used by the next burst
     seq++;
