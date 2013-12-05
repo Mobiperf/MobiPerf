@@ -197,7 +197,90 @@ public class Checkin {
     Logger.i("TaskSchedule.uploadMeasurementResult() complete");
     sendStringMsg("Result upload complete.");
   }
-  
+
+  /**
+   * This is necessary to avoid a rare bug where the RRC task may attempt to access accountSelected
+   * early
+   */
+  public void initializeForRRC() {
+    Logger.w("Fetching cookie...");
+    getCookie();
+    int NUM_RETRIES = 5;
+    int retry_len = 1000;
+    for (int i = 0; i < NUM_RETRIES; i++) {
+      try {
+        if (accountSelector != null && authCookie != null
+            && accountSelector.getCheckinFuture() != null) {
+          Logger.w("Cookie fetched!");
+          return;
+        }
+        Thread.sleep(retry_len * i);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+
+  /**
+   * Send the RRC data to the server in order to update the model.
+   * 
+   * This is the only place the model gets updated
+   * 
+   * @param data
+   * @throws IOException
+   */
+  public void updateModel(RRCTask.RrcTestData data) throws IOException {
+    DeviceInfo info = phoneUtils.getDeviceInfo();
+    String network_id = phoneUtils.getNetwork();
+    String[] parameters = data.toJSON(network_id, info.deviceId);
+    try {
+      for (String parameter : parameters) {
+        Logger.w("Uploading RRC raw data: " + parameter);
+        String response = serviceRequest("rrc/uploadRRCInference", parameter);
+        Logger.w("Response from GAE: " + response);
+
+        Logger.i("TaskSchedule.uploadMeasurementResult() complete");
+        sendStringMsg("Result upload complete.");
+      }
+      JSONObject parameter = new JSONObject();
+      parameter.put("phone_id", info.deviceId);
+      Logger.w("Trigger server to generate the model: " + parameter);
+      String response =
+          serviceRequest("rrc/generateModel", parameter.toString());
+      Logger.w("Response from GAE: " + response);
+    } catch (IOException e) {
+      throw new IOException(e.getMessage());
+    } catch (NumberFormatException e) {
+      e.printStackTrace();
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Impact of packet sizes on rrc inference results
+   * 
+   * @param sizeData
+   */
+  public void updateSizeData(RRCTask.RrcTestData sizeData) {
+    DeviceInfo info = phoneUtils.getDeviceInfo();
+    String network_id = phoneUtils.getNetwork();
+    String[] sizeParameters =
+        sizeData.sizeDataToJSON(network_id, info.deviceId);
+
+    try {
+      for (String parameter : sizeParameters) {
+        Logger.w("Uploading RRC size data: " + parameter);
+        String response =
+            serviceRequest("rrc/uploadRRCInferenceSizes", parameter);
+        Logger.w("Response from GAE: " + response);
+      }
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
   
   /**
    * Used to generate SSL sockets.

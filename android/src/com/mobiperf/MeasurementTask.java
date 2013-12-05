@@ -23,6 +23,7 @@ import com.mobiperf.measurements.PingTask;
 import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.TCPThroughputTask;
+import com.mobiperf.measurements.RRCTask;
 
 import java.io.InvalidClassException;
 import java.util.HashMap;
@@ -51,22 +52,37 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   private static HashMap<String, Class> measurementTypes;
   // Maps between the type of task and its readable name
   private static HashMap<String, String> measurementDescToType;
+  // Maps between the type of task and its visibility to UI
+  private static HashMap<String, Boolean> measurementUIVisibility;
   
   // TODO(Wenjie): Static initializer for type -> Measurement map
   // Add new measurement types here to enable them 
   static {    
     measurementTypes = new HashMap<String, Class>();
     measurementDescToType = new HashMap<String, String>();
+    measurementUIVisibility = new HashMap<String, Boolean>();
     measurementTypes.put(PingTask.TYPE, PingTask.class);
     measurementDescToType.put(PingTask.DESCRIPTOR, PingTask.TYPE);
+    measurementUIVisibility.put(PingTask.DESCRIPTOR, true);
     measurementTypes.put(HttpTask.TYPE, HttpTask.class);
     measurementDescToType.put(HttpTask.DESCRIPTOR, HttpTask.TYPE);
+    measurementUIVisibility.put(HttpTask.DESCRIPTOR, true);
     measurementTypes.put(TracerouteTask.TYPE, TracerouteTask.class);
     measurementDescToType.put(TracerouteTask.DESCRIPTOR, TracerouteTask.TYPE);
+    measurementUIVisibility.put(TracerouteTask.DESCRIPTOR, true);
     measurementTypes.put(DnsLookupTask.TYPE, DnsLookupTask.class);
     measurementDescToType.put(DnsLookupTask.DESCRIPTOR, DnsLookupTask.TYPE);
+    measurementUIVisibility.put(DnsLookupTask.DESCRIPTOR, true);
     measurementTypes.put(TCPThroughputTask.TYPE, TCPThroughputTask.class);
     measurementDescToType.put(TCPThroughputTask.DESCRIPTOR, TCPThroughputTask.TYPE);
+    measurementUIVisibility.put(TCPThroughputTask.DESCRIPTOR, true);
+    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
+    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);
+    measurementUIVisibility.put(UDPBurstTask.DESCRIPTOR, true);
+    measurementTypes.put(RRCTask.TYPE, RRCTask.class);
+    measurementDescToType.put(RRCTask.DESCRIPTOR, RRCTask.TYPE);
+    // Currently RRC task is not visible to users
+    measurementUIVisibility.put(RRCTask.DESCRIPTOR, false);
   }
   
   /** Gets the currently available measurement descriptions*/
@@ -83,6 +99,13 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
    * where as measurement name is a readable string for the UI */
   public static String getTypeForMeasurementName(String name) {
     return measurementDescToType.get(name);
+  }
+  
+  /**
+   * Get UI visibility for a measurement task
+   */
+  public static boolean getVisibilityForMeasurementName(String name) {
+  	return (boolean)(measurementUIVisibility.get(name));
   }
   
   public static Class getTaskClassForMeasurement(String type) {
