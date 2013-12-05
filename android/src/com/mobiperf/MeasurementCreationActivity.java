@@ -44,6 +44,8 @@ import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.measurements.UDPBurstTask.UDPBurstDesc;
 import com.mobiperf.measurements.TCPThroughputTask;
 import com.mobiperf.measurements.TCPThroughputTask.TCPThroughputDesc;
+import com.mobiperf.measurements.RRCTask;
+import com.mobiperf.measurements.RRCTask.RRCDesc;
 import com.mobiperf.util.MLabNS;
 import com.mobiperf.R;
 
@@ -79,7 +81,10 @@ public class MeasurementCreationActivity extends Activity {
     Spinner spinner = (Spinner) findViewById(R.id.measurementTypeSpinner);
     spinnerValues = new ArrayAdapter<String>(this.getApplicationContext(), R.layout.spinner_layout);
     for (String name : MeasurementTask.getMeasurementNames()) {
-      spinnerValues.add(name);
+      // adding list of visible measurements
+      if (MeasurementTask.getVisibilityForMeasurementName(name)) {
+        spinnerValues.add(name);
+      }
     }
     spinnerValues.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
     spinner.setAdapter(spinnerValues);
