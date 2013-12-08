@@ -17,8 +17,8 @@ package com.mobiperf;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The purpose of this class is to prevent periodic Checkin activity from interfering with 
- * ongoing RRC inference measurements.
+ * The purpose of this class is to prevent periodic Checkin activity from interfering with ongoing
+ * RRC inference measurements.
  */
 public class RRCTrafficControl {
   private static ReentrantLock trafficLock;
