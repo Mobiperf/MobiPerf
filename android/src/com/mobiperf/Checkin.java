@@ -253,7 +253,6 @@ public class Checkin {
     }
   }
 
-  
   /**
    * Used to generate SSL sockets.
    */
