@@ -1132,6 +1132,8 @@ public class RRCTask extends MeasurementTask {
           startTime = System.currentTimeMillis();
 
           // Create a random URL, to avoid the caching problem
+          UUID uuid = UUID.randomUUID();
+          ///String host = uuid.toString() + ".com";
           serverAddr = InetAddress.getByName(desc.target);
           // three-way handshake done when socket created
           Socket socket = new Socket(serverAddr, 80);
