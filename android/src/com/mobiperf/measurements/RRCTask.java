@@ -614,6 +614,8 @@ public class RRCTask extends MeasurementTask {
         Logger.d("No competing traffic, continue");
         return false;
       }
+      Logger.d("Competing traffic, retry");
+
       return true;
     }
 
@@ -930,10 +932,6 @@ public class RRCTask extends MeasurementTask {
 
             waitTime(times[i] * desc.GRANULARITY, true);
 
-            if (!packetmonitor.isTrafficInterfering(1, 1)) {
-              break;
-            }
-
           } catch (InterruptedException e1) {
             e1.printStackTrace();
             continue;
@@ -948,7 +946,7 @@ public class RRCTask extends MeasurementTask {
           HttpClient client = new DefaultHttpClient();
           HttpGet request = new HttpGet();
 
-          request.setURI(new URI("http://" + desc.target));
+          request.setURI(new URI("http://" + desc.target+"?dummy="+i + "" +j));
 
           HttpResponse response = client.execute(request);
           endTime = System.currentTimeMillis();
@@ -964,6 +962,13 @@ public class RRCTask extends MeasurementTask {
             sb.append(line + "\n");
           }
           in.close();
+
+          // not really accurate
+          if (!packetmonitor.isTrafficInterfering(100, 100)) {
+            break;
+          } 
+          startTime = 0;
+          endTime = 0;
 
         }
 
@@ -1066,11 +1071,10 @@ public class RRCTask extends MeasurementTask {
         // Check how many packets were sent again. If the expected number
         // of packets were sent, we can finish and go to the next task.
         // Otherwise, we have to try again.
-        if (!packetmonitor.isTrafficInterfering(3, 3)) {
+        if (!packetmonitor.isTrafficInterfering(5, 5)) {
           break;
         }
 
-        Logger.d("Time: " + (endTime - startTime));
         startTime = 0;
         endTime = 0;
       }
@@ -1126,6 +1130,10 @@ public class RRCTask extends MeasurementTask {
 
           // begin test. We test the time to do a 3-way handshake only.
           startTime = System.currentTimeMillis();
+
+          // Create a random URL, to avoid the caching problem
+          UUID uuid = UUID.randomUUID();
+          ///String host = uuid.toString() + ".com";
           serverAddr = InetAddress.getByName(desc.target);
           // three-way handshake done when socket created
           Socket socket = new Socket(serverAddr, 80);
