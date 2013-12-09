@@ -37,8 +37,7 @@ MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('dns_lookup', 'DNS lookup'),
                      ('traceroute', 'traceroute'),
                      ('http', 'HTTP get'),
-                     ('tcpthroughput', 'TCP throughput'),
-                     ('rrc', 'RRC inference')]
+                     ('tcpthroughput', 'TCP throughput')]
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
@@ -223,25 +222,5 @@ class MeasurementType:
           ('sample_period_sec', 'Interval to sample throughput (seconds)'),
           ('slow_start_period_sec', 'Waiting period for slow start (seconds)'),
           ('tcp_timeout_sec', 'TCP connection timeout (seconds)'), ]))
-    elif measurement_type == 'rrc':
-      return MeasurementType(
-          'rrc', 'RRC inference', SortedDict([
-          ('echo_host', "Local server hostname for RTT measurement"),
-          ('port', 'Local server port'),
-          ('giveup_threshhold', "Maximum retries"),
-          ('min', 'Min packet size'), ('max', 'Max packet size'),
-          ('target', 'Target (IP or hostname) for extra tests'),
-          ('size', 'The number of intervals (every 0.5s) for inference'),
-          ('rrc', 'Run RRC Inference test (true/false)'),
-          ('dns', 'Run Extra DNS lookup test (true/false)'),
-          ('http', 'Run Extra HTTP download test (true/false)'),
-          ('tcp', 'Run Extra TCP handshake test (true/false)'),
-          ('measure_sizes', 'Run tests on parameter sizes (true/false)'),
-          ('default_extra_test_timers', 'A list of timers, as comma-separated \
-          integers, to be used for the TCP, DNS and HTTP tests'),
-          ('size_granularity', "For parameter size tests, the size in bytes by \
-          which to increment each packet"),
-          ('result_visibility', 'Whether RRC result visible to users \
-          (true/false)')]))
     else:
       raise RuntimeError('Invalid measurement type: %s' % measurement_type)
