@@ -273,7 +273,8 @@ public class MeasurementScheduler extends Service {
       Logger.i("Skipping checkin - User has not consented");
       return;
     }
-
+    
+    // New addition: check if the RRC task has paused other tasks.
     if ((!force && isPauseRequested()) || RRCTrafficControl.checkIfPaused()) {
       sendStringMsg("Skipping checkin - app is paused");
       return;
@@ -675,6 +676,8 @@ public class MeasurementScheduler extends Service {
 
   private void getTasksFromServer() throws IOException {
     Logger.i("Downloading tasks from the server");
+    // Do not download new tasks while the RRC task is running
+    // to avoid interference
     if (RRCTrafficControl.checkIfPaused()) {
       return;
     }

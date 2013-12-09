@@ -76,9 +76,6 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
     measurementTypes.put(TCPThroughputTask.TYPE, TCPThroughputTask.class);
     measurementDescToType.put(TCPThroughputTask.DESCRIPTOR, TCPThroughputTask.TYPE);
     measurementUIVisibility.put(TCPThroughputTask.DESCRIPTOR, true);
-    measurementTypes.put(UDPBurstTask.TYPE, UDPBurstTask.class);
-    measurementDescToType.put(UDPBurstTask.DESCRIPTOR, UDPBurstTask.TYPE);
-    measurementUIVisibility.put(UDPBurstTask.DESCRIPTOR, true);
     measurementTypes.put(RRCTask.TYPE, RRCTask.class);
     measurementDescToType.put(RRCTask.DESCRIPTOR, RRCTask.TYPE);
     // Currently RRC task is not visible to users

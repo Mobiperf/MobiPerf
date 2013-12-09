@@ -786,7 +786,7 @@ public class RRCTask extends MeasurementTask {
         this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, 40);
         try {
           Logger.w("RRC: update the model on the GAE datastore");
-          checkin.updateModel(data);
+          checkin.uploadRrcInferenceData(data);
           Logger.d("Saving data complete");
         } catch (IOException e) {
           e.printStackTrace();
@@ -818,7 +818,7 @@ public class RRCTask extends MeasurementTask {
         if (desc.SIZES) {
           Logger.w("Start size dependence task");
           runSizeThresholdTest(desc.times, desc, data, utils, desc.testId);
-          checkin.updateSizeData(data);
+          checkin.uploadRrcInferenceSizeData(data);
         }
       }
 
