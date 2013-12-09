@@ -201,14 +201,15 @@ public class Checkin {
   }
 
   /**
-   * Send the RRC data to the server in order to update the model.
+   * Send the RRC data to the server.  
    * 
-   * This is the only place the model gets updated
+   * Sent as a separate call because the data is formatted in a different, 
+   * more complicated way than other measurement tasks.
    * 
    * @param data
    * @throws IOException
    */
-  public void updateModel(RRCTask.RrcTestData data) throws IOException {
+  public void uploadRrcInferenceData(RRCTask.RrcTestData data) throws IOException {
     DeviceInfo info = phoneUtils.getDeviceInfo();
     String network_id = phoneUtils.getNetwork();
     String[] parameters = data.toJSON(network_id, info.deviceId);
@@ -221,27 +222,19 @@ public class Checkin {
         Logger.i("TaskSchedule.uploadMeasurementResult() complete");
         sendStringMsg("Result upload complete.");
       }
-      JSONObject parameter = new JSONObject();
-      parameter.put("phone_id", info.deviceId);
-      Logger.w("Trigger server to generate the model: " + parameter);
-      String response =
-          serviceRequest("rrc/generateModel", parameter.toString());
-      Logger.w("Response from GAE: " + response);
     } catch (IOException e) {
       throw new IOException(e.getMessage());
     } catch (NumberFormatException e) {
-      e.printStackTrace();
-    } catch (JSONException e) {
       e.printStackTrace();
     }
   }
 
   /**
-   * Impact of packet sizes on rrc inference results
+   * Impact of packet sizes on rrc inference results.
    * 
    * @param sizeData
    */
-  public void updateSizeData(RRCTask.RrcTestData sizeData) {
+  public void uploadRrcInferenceSizeData(RRCTask.RrcTestData sizeData) {
     DeviceInfo info = phoneUtils.getDeviceInfo();
     String network_id = phoneUtils.getNetwork();
     String[] sizeParameters =
