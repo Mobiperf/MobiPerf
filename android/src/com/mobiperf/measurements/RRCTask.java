@@ -618,6 +618,7 @@ public class RRCTask extends MeasurementTask {
         return false;
       }
       Logger.d("Competing traffic, retry");
+
       return true;
     }
 
