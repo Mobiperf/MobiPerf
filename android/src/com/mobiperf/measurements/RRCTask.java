@@ -78,12 +78,11 @@ public class RRCTask extends MeasurementTask {
   public static final String DESCRIPTOR = "rrc";
   public static String TAG = "MobiPerf_RRC_INFERENCE";
   private boolean stop = false;
-  // public static boolean pause_traffic = false;
   private Context context;
 
   /**
    * Stores parameters for the RRC inference task
-   * @author sanae
+   * @author sanae@umich.edu (Sanae Rosen)
    *
    */
   public static class RRCDesc extends MeasurementDesc {
@@ -155,7 +154,6 @@ public class RRCTask extends MeasurementTask {
       if (TCP) result.addResult("tcp", tcpTest);
       if (DNS) result.addResult("dns", dnsTest);
       result.addResult("times", times);
-
       return result;
     }
 
@@ -320,9 +318,9 @@ public class RRCTask extends MeasurementTask {
         // of numbers.
         if ((val = params.get("default_extra_test_timers")) != null
             && val.length() > 0) {
-          String[] times_string = val.split("\\s*,\\s*");
+          String[] timesString = val.split("\\s*,\\s*");
           List<String> stringList =
-              new ArrayList<String>(Arrays.asList(times_string));
+              new ArrayList<String>(Arrays.asList(timesString));
           List<Integer> intList = new ArrayList<Integer>();
           Iterator<String> iterator = stringList.iterator();
           while (iterator.hasNext()) {
@@ -343,12 +341,13 @@ public class RRCTask extends MeasurementTask {
         // 31 tests, by default. From 0s to 15s inclusive, in half-second intervals.
         size = 31;
       }
-
     }
 
     /**
      * For the arrays holding the results for the upper layer tests, we need to initialize them to
      * be the same size as the number of tests we run. -1 means uninitialized.
+     * 
+     * @param size Number of results to store
      */
     public void initializeExtraTaskResults(int size) {
       httpTest = new int[size];
@@ -365,73 +364,75 @@ public class RRCTask extends MeasurementTask {
     /**
      * Given an interpacket interval and a round trip time from an HTTP test, store that value.
      * 
-     * @param i Index into measurement result array, corresponding to an interpacket interval
-     * @param val Time for HTTP test to complete, in milliseconds
+     * @param index Index into measurement result array, corresponding to an interpacket interval
+     * @param rtt Time for HTTP test to complete, in milliseconds
      * @throws MeasurementError
      */
-    public void setHttp(int i, int val) throws MeasurementError {
+    public void setHttp(int index, int rtt) throws MeasurementError {
       if (!runUpperLayerTests) {
         throw new MeasurementError("Data class not initialized");
       }
-      httpTest[i] = val;
+      httpTest[index] = rtt;
     }
 
     /**
      * Given an interpacket interval and a round trip time from a TCP test, store that value.
      * 
-     * @param i Index into measurement result array, corresponding to an interpacket interval
-     * @param val Time for the TCP test to complete, in milliseconds
+     * @param index Index into measurement result array, corresponding to an interpacket interval
+     * @param rtt Time for the TCP test to complete, in milliseconds
      * @throws MeasurementError
      */
-    public void setTcp(int i, int val) throws MeasurementError {
+    public void setTcp(int index, int rtt) throws MeasurementError {
       if (!runUpperLayerTests) {
         throw new MeasurementError("Data class not initialized");
       }
-      tcpTest[i] = val;
+      tcpTest[index] = rtt;
     }
 
     /**
      * Given an interpacket interval and a round trip time from a DNS test, store that value.
      * 
-     * @param i Index into measurement result array, corresponding to an interpacket interval
-     * @param val Time for the DNS test to complete, in milliseconds
+     * @param index Index into measurement result array, corresponding to an interpacket interval
+     * @param rtt Time for the DNS test to complete, in milliseconds
      * @throws MeasurementError
      */
-    public void setDns(int i, int val) throws MeasurementError {
+    public void setDns(int index, int rtt) throws MeasurementError {
       if (!runUpperLayerTests) {
         throw new MeasurementError("Data class not initialized");
       }
-      dnsTest[i] = val;
+      dnsTest[index] = rtt;
     }
-
 
   }
 
+  /**
+   * Stores data from the tests on the effect of packet size on RRC state related delays
+   * 
+   * @author sanae@umich.edu (Sanae Rosen)   
+   */
   public static class RrcSizeTestData {
-    int time;
-    int size;
-    long result;
-    long testId;
-    boolean initialized;
+    int time; // Interval between packets
+    int size; // Size of packets sent
+    long result; // Round trip time, in milliseconds
+    long testId; // A unique id associated with a set of measurements
 
+    /**
+     * 
+     * @param time The inter-packet interval
+     * @param size The packet size, in bytes
+     * @param result The round trip time for that packet size and inter-packet interval
+     * @param testId The unique id for this set of tests
+     */
     public RrcSizeTestData(int time, int size, long result, long testId) {
       this.time = time;
       this.size = size;
       this.result = result;
       this.testId = testId;
-      initialized = true;
     }
 
-    public RrcSizeTestData() {
-      initialized = false;
-    }
-
-    public JSONObject toJSON(String networktype, String phone_id)
+    public JSONObject toJSON(String networktype, String phoneId)
         throws JSONException {
       JSONObject entry = new JSONObject();
-      if (!initialized) {
-        return entry;
-      }
       entry.put("network_type", networktype);
       entry.put("phone_id", networktype);
       entry.put("test_id", testId);
@@ -450,10 +451,10 @@ public class RRCTask extends MeasurementTask {
    * Data is stored as a list of results indexed by the test number. Tests are performed in order
    * with increasing inter-packet intervals and results and data about the tests are stored here.
    * 
-   * @author sanae
+   * @author sanae@umich.edu (Sanae Rosen)
    * 
    */
-  public static class RrcTestData {
+  public static class RRCTestData {
 
     // Round-trip times, in ms
     int[] rttsSmall;
@@ -473,7 +474,12 @@ public class RRCTask extends MeasurementTask {
     // Unique incrementing value that identifies this set of tests.
     long testId;
 
-    public RrcTestData(int size, Context context, long testId) {
+    /**
+     * @param size Number of tests to run (each corresponding to an interpacket interval, 
+     * increasing in increments of 500 ms)
+     * @param testId Unique ID for this set ot tests
+     */
+    public RRCTestData(int size, long testId) {
       size = size + 1;
 
 
@@ -509,7 +515,7 @@ public class RRCTask extends MeasurementTask {
       return testId;
     }
 
-    public String[] toJSON(String networktype, String phone_id) {
+    public String[] toJSON(String networktype, String phoneId) {
       String[] returnval = new String[rttsSmall.length];
       try {
         for (int i = 0; i < rttsSmall.length; i++) {
@@ -525,7 +531,7 @@ public class RRCTask extends MeasurementTask {
           subtest.put("network_type", networktype);
           subtest.put("time_delay", i);
           subtest.put("test_id", testId);
-          subtest.put("phone_id", phone_id);
+          subtest.put("phone_id", phoneId);
           returnval[i] = subtest.toString();
           Logger.w("Test ID for rrc inference test was " + this.testId);
         }
@@ -537,43 +543,56 @@ public class RRCTask extends MeasurementTask {
 
     /**
      * Erase all data corresponding to a set of results with a particular interpacket interval
-     * @param i Index into the array of results.
+     * @param index Index into the array of results.
      */
-    public void deleteItem(int i) {
-      rttsSmall[i] = -1;
-      rttsLarge[i] = -1;
-      packetsLostSmall[i] = -1;
-      packetsLostLarge[i] = -1;
-      signalStrengthSmall[i] = -1;
-      signalStrengthLarge[i] = -1;
-      errorCountSmall[i] = -1;
-      errorCountLarge[i] = -1;
+    public void deleteItem(int index) {
+      rttsSmall[index] = -1;
+      rttsLarge[index] = -1;
+      packetsLostSmall[index] = -1;
+      packetsLostLarge[index] = -1;
+      signalStrengthSmall[index] = -1;
+      signalStrengthLarge[index] = -1;
+      errorCountSmall[index] = -1;
+      errorCountLarge[index] = -1;
     }
 
-    public void updateAll(int index, int rtt_max, int rtt_min,
-        int num_packets_lost_max, int num_packets_lost_min, int error_high,
-        int error_low, int signal_high, int signal_low) {
-      this.rttsLarge[index] = (int) rtt_max;
-      this.rttsSmall[index] = (int) rtt_min;
-      this.packetsLostLarge[index] = num_packets_lost_max;
-      this.packetsLostSmall[index] = num_packets_lost_min;
-      this.errorCountLarge[index] = error_high;
-      this.errorCountSmall[index] = error_low;
-      this.signalStrengthLarge[index] = signal_high;
-      this.signalStrengthSmall[index] = signal_low;
+    /**
+     * Save the data resulting from a given test.
+     * 
+     * @param index Index into the array of results.
+     * @param rttMax Round trip time for large packets (generally 1KB)
+     * @param rttMin Round time time for small packets (generally empty)
+     * @param numPacketsLostMax Number of packets lost for the set of large packets, out of 10
+     * @param numPacketsLostMin Likewise, for the small packets
+     * @param errorHigh Error count for the set of large packets
+     * @param errorLow Likewise, for the small packets
+     * @param signalHigh The signal strength when sending the large packets
+     * @param signalLow Likewise, for the small packets
+     */
+    public void updateAll(int index, int rttMax, int rttMin,
+        int numPacketsLostMax, int numPacketsLostMin, int errorHigh,
+        int errorLow, int signalHigh, int signalLow) {
+      this.rttsLarge[index] = (int) rttMax;
+      this.rttsSmall[index] = (int) rttMin;
+      this.packetsLostLarge[index] = numPacketsLostMax;
+      this.packetsLostSmall[index] = numPacketsLostMin;
+      this.errorCountLarge[index] = errorHigh;
+      this.errorCountSmall[index] = errorLow;
+      this.signalStrengthLarge[index] = signalHigh;
+      this.signalStrengthSmall[index] = signalLow;
     }
 
-    public void setRrcSizeTestData(int i, int size, long result, long testId)
+    public void setRrcSizeTestData(int index, int size, long result, long testId)
         throws MeasurementError {
-      packetSizes.add(new RrcSizeTestData(i, size, result, testId));
+      packetSizes.add(new RrcSizeTestData(index, size, result, testId));
     }
 
-    public String[] sizeDataToJSON(String networktype, String phone_id) {
+    public String[] sizeDataToJSON(String networkType, String phoneId) {
       String[] returnval = new String[packetSizes.size()];
       try {
         for (int i = 0; i < packetSizes.size(); i++) {
           returnval[i] =
-              packetSizes.get(i).toJSON(networktype, phone_id).toString();
+              packetSizes.get(i).toJSON(networkType, phoneId).toString();
         }
       } catch (JSONException e) {
         Logger.e("Error converting RRC data to JSON");
@@ -588,13 +607,13 @@ public class RRCTask extends MeasurementTask {
    * We need to know how many packets are expected. We can then use the global packet counters to
    * see if more packets are sent than expected.
    * 
-   * @author sanae
+   * @author sanae@umich.edu (Sanae Rosen)
    * 
    */
   public static class PacketMonitor {
-    private long[] packets_first;
-    private long[] packets_last;
-    boolean by_size = false;
+    private long[] packetsFirst;
+    private long[] packetsLast;
+    boolean bySize = false;
 
     /**
      * Initialize immediately before use. Values are time-sensitive.
@@ -604,24 +623,28 @@ public class RRCTask extends MeasurementTask {
     }
 
     void setBySize() {
-      by_size = true;
+      bySize = true;
     }
 
     void readCurrentPacketValues() {
-      packets_first = getPacketsSent();
+      packetsFirst = getPacketsSent();
     }
 
     /**
      * Call this to determine if packets have been sent since initializing.
      * 
+     * @param expectedRcv Number of packets expected to be received by the device since 
+     * initialization
+     * @param expectedSent Number of packets expected to be sent by the device since 
+     * initialization
      * @return Whether or not there is interfering traffic
      */
     boolean isTrafficInterfering(int expectedRcv, int expectedSent) {
-      packets_last = getPacketsSent();
+      packetsLast = getPacketsSent();
 
-      long rcv_packets = (packets_last[0] - packets_first[0]);
-      long sent_packets = (packets_last[1] - packets_first[1]);
-      if (rcv_packets <= expectedRcv && sent_packets <= expectedSent) {
+      long rcvPackets = (packetsLast[0] - packetsFirst[0]);
+      long sentPackets = (packetsLast[1] - packetsFirst[1]);
+      if (rcvPackets <= expectedRcv && sentPackets <= expectedSent) {
         Logger.d("No competing traffic, continue");
         return false;
       }
@@ -639,7 +662,7 @@ public class RRCTask extends MeasurementTask {
      */
     public long[] getPacketsSent() {
       long[] retval = {-1, -1};
-      if (by_size) {
+      if (bySize) {
         retval[0] = TrafficStats.getMobileRxBytes();
         retval[1] = TrafficStats.getMobileTxBytes();
 
@@ -675,10 +698,7 @@ public class RRCTask extends MeasurementTask {
 
   @Override
   public MeasurementResult call() throws MeasurementError {
-    // TODO(Haokun): delete after debugging
-    Logger.w("RRC result: before run inference tests");
     RRCDesc desc = runInferenceTests();
-    Logger.w("RRC result: after run inference tests");
     return constructResultStandard(desc);
   }
 
@@ -724,11 +744,14 @@ public class RRCTask extends MeasurementTask {
 
   /**
    * The core RRC inference functionality is in this function. The steps involved can be summarized
-   * as follows: 1. Fetch the last model generated by the server, if it exists. 2. Check we are on a
-   * cellular network, otherwise abort. 3. Inform all other tasks that they should delay network
-   * traffic until later. 4. For every upper layer test, if upper layer tests and that test
-   * specifically are enabled, run that test.
-   * 
+   * as follows:
+   * <ol> 
+   * <li> Fetch the last model generated by the server, if it exists.</li> 
+   * <li> Check we are on a cellular network, otherwise abort. </li>
+   * <li> Inform all other tasks that they should delay network traffic until later. </li>
+   * <li> For every upper layer test, if upper layer tests and that test specifically are enabled,
+   * run that test.</li> 
+   * </ol> 
    * @return A data structure containing all the results and metadata surrounding the RRC inference tests 
    * performed.
    * @throws MeasurementError
@@ -760,7 +783,7 @@ public class RRCTask extends MeasurementTask {
        */
       RRCTrafficControl.PauseTraffic();
 
-      RrcTestData data = new RrcTestData(desc.size, context, desc.testId);
+      RRCTestData data = new RRCTestData(desc.size, desc.testId);
 
       // If the RRC task is enabled
       if (desc.RRC) {
@@ -829,7 +852,6 @@ public class RRCTask extends MeasurementTask {
     return desc;
   }
 
-
   /**
    * Determines the packet size dependence of the RRC task.
    * 
@@ -842,7 +864,7 @@ public class RRCTask extends MeasurementTask {
    * @param testId A unique ID identifying this set of tests
    */
   private void runSizeThresholdTest(final Integer[] times, RRCDesc desc,
-      RrcTestData data, long testId) {
+      RRCTestData data, long testId) {
 
     InetAddress serverAddr;
     try {
@@ -870,9 +892,9 @@ public class RRCTask extends MeasurementTask {
   }
 
   /**
-   * Due to problems with how we detect interfering traffic, this test currently does not work and
-   * results are, in general, discarded. I am keeping this test around, though, as we can still get
-   * data on how much HTTP handshakes vary in time - just without much insight into why.
+   * Due to problems with how we detect interfering traffic, this test does not always work and
+   * results should be treated with caution. I am keeping this test around, though, as we can still 
+   * get data on how much HTTP handshakes vary in how long they take.
    * 
    * The "times" are the inter-packet intervals at which to run the test. Ideally these should be
    * based on the model constructed by the server, a default assumed value is used in their absence.
@@ -911,11 +933,8 @@ public class RRCTask extends MeasurementTask {
           /*
            * We keep track of the packets sent at the beginning and end of the test so we can detect
            * if there is competing traffic anywhere on the phone.
-           * 
-           * BEcause of the indeterminate number of packets and sizes of traffic sent over HTTP, we
-           * measure until we begin the HTTP connection.
            */
-          PacketMonitor packetmonitor = new PacketMonitor();
+          PacketMonitor packetMonitor = new PacketMonitor();
 
           // Initiate the desired RRC state by sending a large enough packet
           // to go to DCH and waiting for the specified amount of time
@@ -957,8 +976,8 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
-          // not really accurate
-          if (!packetmonitor.isTrafficInterfering(100, 100)) {
+          // not really accurate, just rules out the worst cases of interference
+          if (!packetMonitor.isTrafficInterfering(100, 100)) {
             break;
           } 
           startTime = 0;
@@ -987,12 +1006,16 @@ public class RRCTask extends MeasurementTask {
    * The "times" are the inter-packet intervals at which to run the test. Ideally these should be
    * based on the model constructed by the server, a default assumed value is used in their absence.
    * 
-   * 1. Send a packet to initiate the RRC state desired. 2. Create a randomly generated host name
-   * (to ensure that the host name is not cached). I found on some devices that even when you clear
-   * the cache manually, the data remains in the cache. 3. Time how long it took to look it up. 4.
-   * Count the total packets sent, globally on the phone. If more packets were sent than expected,
-   * abort and try again. 5. Otherwise, save the data for that test and move to the next
-   * inter-packet interval.
+   * <ol>
+   * <li> vSend a packet to initiate the RRC state desired. </li>
+   * <li>Create a randomly generated host name (to ensure that the host name is not cached). I 
+   * found on some devices that even when you clear the cache manually, the data remains in 
+   * the cache.</li>
+   * <li> Time how long it took to look it up.</li> 
+   * <li> Count the total packets sent, globally on the phone. If more packets were sent than </li>
+   * expected,  abort and try again. </li> 
+   * <li> Otherwise, save the data for that test and move to the next inter-packet interval.</li>
+   * </ol>
    * 
    * Test is similar to the approach taken in DnsLookUpTask.java.
    * 
@@ -1028,7 +1051,7 @@ public class RRCTask extends MeasurementTask {
          * if there is competing traffic anywhere on the phone.
          */
 
-        PacketMonitor packetmonitor = new PacketMonitor();
+        PacketMonitor packetMonitor = new PacketMonitor();
 
 
         // Initiate the desired RRC state by sending a large enough packet
@@ -1066,7 +1089,7 @@ public class RRCTask extends MeasurementTask {
         // Check how many packets were sent again. If the expected number
         // of packets were sent, we can finish and go to the next task.
         // Otherwise, we have to try again.
-        if (!packetmonitor.isTrafficInterfering(5, 5)) {
+        if (!packetMonitor.isTrafficInterfering(5, 5)) {
           break;
         }
 
@@ -1089,10 +1112,14 @@ public class RRCTask extends MeasurementTask {
   /**
    * Time how long it takes to do a TCP 3-way handshake, starting from the induced RRC state.
    * 
-   * 1. Send a packet to initiate the RRC state desired. 2. Open a TCP connection to the echo host
-   * server. 3. Time how long it took to look it up. 4. Count the total packets sent, globally on
-   * the phone. If more packets were sent than expected, abort and try again. 5. Otherwise, save the
-   * data for that test and move to the next inter-packet interval.
+   * <ol>
+   * <li> Send a packet to initiate the RRC state desired. </li>
+   * <li> Open a TCP connection to the echo host server. </li>
+   * <li> Time how long it took to look it up. </li>
+   * <li> Count the total packets sent, globally on  the phone. If more packets were sent than 
+   * expected, abort and try again. </li>
+   * <li> Otherwise, save the data for that test and move to the next inter-packet interval.
+   * </ol>
    * 
    * @param times List of inter-packet intervals, in half-second increments, at which to run the 
    * test
@@ -1116,7 +1143,7 @@ public class RRCTask extends MeasurementTask {
             return;
           }
 
-          PacketMonitor packetmonitor = new PacketMonitor();
+          PacketMonitor packetMonitor = new PacketMonitor();
 
           // Induce DCH then wait for specified time
           InetAddress serverAddr;
@@ -1138,7 +1165,7 @@ public class RRCTask extends MeasurementTask {
           // Check how many packets were sent again. If the expected number
           // of packets were sent, we can finish and go to the next task.
           // Otherwise, we have to try again.
-          if (!packetmonitor.isTrafficInterfering(5, 4)) {
+          if (!packetMonitor.isTrafficInterfering(5, 4)) {
             socket.close();
             break;
           }
@@ -1166,12 +1193,16 @@ public class RRCTask extends MeasurementTask {
   /**
    * 
    * For all time intervals specified, go through and perform the RRC inference test.
-   * 
-   * The way this test works, at a high level, is: 1. Send a large packet to induce DCH (or the
-   * equivalent) 2. Wait for an amount of time, t 3. Send a large packet and measure the round-trip
-   * time 4. Wait for another amount of time, t 5. Send a small packet and measure the round-trip
-   * time 6. Repeat for all specified values of t. These start at 0 and increase by GRANULARITY,
-   * "size" times.
+   *  
+   * The way this test works, at a high level, is: 
+   * <ol>
+   * <li> Send a large packet to induce DCH (or the equivalent) </li>
+   * <li> Wait for an amount of time, t </li>
+   * <li> Send a large packet and measure the round-trip time </li>
+   * <li> Wait for another amount of time, t </li>
+   * <li> Send a small packet and measure the round-trip time 6. Repeat for all specified values 
+   * of t. These start at 0 and increase by GRANULARITY, "size" times. </li>
+   * </ol>
    * 
    * The size of "small" and "large" packets are defined in the parameters. We observe the total
    * packets sent to make sure there is no interfering traffic.
@@ -1189,14 +1220,14 @@ public class RRCTask extends MeasurementTask {
    * @param desc Stores the parameters for the RRC tests
    * @param data Stores the results of the RRC tests
    * @param utils For fetching the signal strength when the test is performed
-   * @return
+   * @return The parameters for the RRC tests
    * @throws InterruptedException
    * @throws IOException
    */
   private RRCDesc inferDemotion(InetAddress serverAddr, RRCDesc desc,
-      RrcTestData data, PhoneUtils utils) throws InterruptedException,
+      RRCTestData data, PhoneUtils utils) throws InterruptedException,
       IOException {
-    Logger.d("3G demotion basic test");
+    Logger.d("Demotion basic test");
 
     for (int i = 0; i <= desc.size; i++) {
       this.progress =
@@ -1241,8 +1272,6 @@ public class RRCTask extends MeasurementTask {
    */
   public static void waitTime(int timeToSleep, boolean useMs)
       throws InterruptedException {
-    /**
-     */
     Logger.d("Wait for n ms: " + timeToSleep);
 
     if (!useMs) {
@@ -1310,7 +1339,15 @@ public class RRCTask extends MeasurementTask {
 
     return retval;
   }
-
+  
+  /**
+   * Helper function that sends a single packet and receives an empty packet back. 
+   * @param serverAddr Echo server to calculate round trip
+   * @param size size of packet to send in bytes
+   * @param desc Holds parameters for the RRC inference task
+   * @return
+   * @throws IOException
+   */
   private static long sendPacket(InetAddress serverAddr, int size, RRCDesc desc)
       throws IOException {
     return sendPacket(serverAddr, size, desc.MIN, desc.port);
@@ -1355,17 +1392,24 @@ public class RRCTask extends MeasurementTask {
     }
     long endTime = System.currentTimeMillis();
     Logger.d("Sending complete: " + endTime);
-    // Log.w(TAG, "ending " + end_time);
 
     return endTime - startTime;
   }
 
-  private long[] inferDemotionHelper(InetAddress serverAddr, int wait,
-      RrcTestData data, RRCDesc desc, PhoneUtils utils) throws IOException,
-      InterruptedException {
-    return inferDemotionHelper(serverAddr, wait, data, desc, wait, utils);
-  }
-
+  /**
+   * Performs a single RRC inference test to account for packet sizes.
+   * 
+   * Sends a packet, waits for the specified length of time, then sends a cluster of packets of 
+   * the specified size.
+   * 
+   * @param serverAddr  Echo server to calculate round trip
+   * @param wait Time to wait between packets, in milliseconds.
+   * @param desc  Holds parameters for the RRC inference task
+   * @param size Size, in bytes, of the packet to send.
+   * @return
+   * @throws IOException
+   * @throws InterruptedException
+   */
   public static long inferDemotionPacketSize(InetAddress serverAddr, int wait,
       RRCDesc desc, int size) throws IOException,
       InterruptedException {
@@ -1373,7 +1417,6 @@ public class RRCTask extends MeasurementTask {
     for (int j = 0; j < desc.GIVEUP_THRESHHOLD; j++) {
       Logger.d("Active inference: determine packet size, size " + size
           + " interval " + wait);
-
 
       // Induce the highest power state
       sendPacket(serverAddr, desc.MAX, desc.MIN, desc.port);
@@ -1385,8 +1428,8 @@ public class RRCTask extends MeasurementTask {
       long[] rtts = sendMultiPackets(serverAddr, size, 1, desc.MIN, desc.port);
       long rttPacket = rtts[0];
 
-      PacketMonitor packetmonitor = new PacketMonitor();
-      if (!packetmonitor.isTrafficInterfering(3, 3)) {
+      PacketMonitor packetMonitor = new PacketMonitor();
+      if (!packetMonitor.isTrafficInterfering(3, 3)) {
         retval = rttPacket;
         break;
       }
@@ -1394,13 +1437,24 @@ public class RRCTask extends MeasurementTask {
     return retval;
   }
 
-
+  private long[] inferDemotionHelper(InetAddress serverAddr, int wait,
+      RRCTestData data, RRCDesc desc, PhoneUtils utils) throws IOException,
+      InterruptedException {
+    return inferDemotionHelper(serverAddr, wait, data, desc, wait, utils);
+  }
+  
   /**
-   * One component of the RRC inference task. 1. induce the highest-power RRC state by sending a
-   * large packet. 2. wait the indicated number of seconds. 3. send a series of 10 large packets at
-   * once. Measure: a) Time for all packets to be echoed back b) number of packets lost, if any c)
-   * associated signal strength d) error rate is currently not implemented 4. Check if the expected
-   * number of packets were sent while performing a test. If too many packets were sent, abort.
+   * One component of the RRC inference task. 
+   * 
+   * <ol>
+   * <li> Induce the highest-power RRC state by sending a large packet. </li>
+   * <li> Wait the indicated number of seconds. </li>
+   * <li> Send a series of 10 large packets at once. Measure: a) Time for all packets to be 
+   * echoed back b) number of packets lost, if any c) associated signal strength d) error rate 
+   * is currently not implemented. </li>
+   * <li> Check if the expected number of packets were sent while performing a test. If too many
+   *  packets were sent, abort. </li>
+   * </ol>
    * 
    * @param serverAddr Echo server to calculate round trip
    * @param wait Time in milliseconds to pause between packets sent
@@ -1414,7 +1468,7 @@ public class RRCTask extends MeasurementTask {
    * @throws InterruptedException
    */
   public static long[] inferDemotionHelper(InetAddress serverAddr, int wait,
-      RrcTestData data, RRCDesc desc, int index, PhoneUtils utils)
+      RRCTestData data, RRCDesc desc, int index, PhoneUtils utils)
       throws IOException, InterruptedException {
     /**
      * Once we generalize the RRC state inference problem, this is what we will use (since in
@@ -1438,7 +1492,7 @@ public class RRCTask extends MeasurementTask {
     for (int j = 0; j < desc.GIVEUP_THRESHHOLD; j++) {
       Logger.d("Active inference: about to begin helper");
 
-      PacketMonitor packetmonitor = new PacketMonitor();
+      PacketMonitor packetMonitor = new PacketMonitor();
 
       // Induce the highest power state
       sendPacket(serverAddr, desc.MAX, desc.MIN, desc.port);
@@ -1462,7 +1516,7 @@ public class RRCTask extends MeasurementTask {
       packetsLostLarge = (int) retval[1];
       rttSmallPacket = retval[0];
 
-      if (!packetmonitor.isTrafficInterfering(21, 21)) {
+      if (!packetMonitor.isTrafficInterfering(21, 21)) {
         break;
       }
       Logger.d("Try again.");

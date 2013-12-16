@@ -149,8 +149,6 @@ m.connect('/admin/archive/cron',
           controller='archive:Archive',
           action='ArchiveToGoogleStorage')
 
-# New RRCInference START
-
 # to upload data on packet size impact for rrc inference
 m.connect('/rrc/uploadRRCInferenceSizes',
             controller='RRCstates:RRCStates',
@@ -164,8 +162,6 @@ m.connect('/anonymous/rrc/uploadRRCInferenceSizes',
 m.connect('/anonymous/rrc/uploadRRCInference',
             controller='RRCstates:RRCStates',
             action='uploadRRCInference')
-
-# New RRCInference END
 
 # For backend instance, give it something that won't
 # return a 500 error.
