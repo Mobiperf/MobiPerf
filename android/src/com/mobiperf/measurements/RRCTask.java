@@ -68,8 +68,7 @@ import com.mobiperf.util.PhoneUtils;
  * See "Characterizing Radio Resource Allocation for 3G Networks" by Feng et. al, IMC 2010 for a
  * full explanation of the methodology and goals.
  * 
- * TODO: (longer term) Add a tab for the user to view the model (if created). Add in a limit to how
- * much data can be sent per day in scheduled tasks.
+ * @author sanae@umich.edu (Sanae Rosen)
  * 
  */
 public class RRCTask extends MeasurementTask {
@@ -82,6 +81,11 @@ public class RRCTask extends MeasurementTask {
   // public static boolean pause_traffic = false;
   private Context context;
 
+  /**
+   * Stores parameters for the RRC inference task
+   * @author sanae
+   *
+   */
   public static class RRCDesc extends MeasurementDesc {
     private static String HOST = "www.google.com";
 
@@ -121,7 +125,7 @@ public class RRCTask extends MeasurementTask {
      * All must be the same size.
      */
     Integer[] times; // The times where the above tests were made, in units of GRANULARITY.
-    int size_granularity = 200; // the spacing between sizes to test
+    int sizeGranularity = 200; // the spacing between sizes to test
     int[] httpTest; // The results of the HTTP test performed at each time
     int[] dnsTest; // likewise, for the DNS test
     int[] tcpTest; // likewise, for the TCP test
@@ -271,9 +275,9 @@ public class RRCTask extends MeasurementTask {
         // When testing size dependence, increase the
         if ((val = params.get("size_granularity")) != null && val.length() > 0
             && Integer.parseInt(val) > 0) {
-          this.size_granularity = Integer.parseInt(val);
+          this.sizeGranularity = Integer.parseInt(val);
         }
-        Logger.d("param: size_granularity " + this.size_granularity);
+        Logger.d("param: size_granularity " + this.sizeGranularity);
         // Whether or not to run the DNS test
         if ((val = params.get("dns")) != null && val.length() > 0) {
           this.DNS = Boolean.parseBoolean(val);
@@ -361,8 +365,8 @@ public class RRCTask extends MeasurementTask {
     /**
      * Given an interpacket interval and a round trip time from an HTTP test, store that value.
      * 
-     * @param i
-     * @param val
+     * @param i Index into measurement result array, corresponding to an interpacket interval
+     * @param val Time for HTTP test to complete, in milliseconds
      * @throws MeasurementError
      */
     public void setHttp(int i, int val) throws MeasurementError {
@@ -375,8 +379,8 @@ public class RRCTask extends MeasurementTask {
     /**
      * Given an interpacket interval and a round trip time from a TCP test, store that value.
      * 
-     * @param i
-     * @param val
+     * @param i Index into measurement result array, corresponding to an interpacket interval
+     * @param val Time for the TCP test to complete, in milliseconds
      * @throws MeasurementError
      */
     public void setTcp(int i, int val) throws MeasurementError {
@@ -389,8 +393,8 @@ public class RRCTask extends MeasurementTask {
     /**
      * Given an interpacket interval and a round trip time from a DNS test, store that value.
      * 
-     * @param i
-     * @param val
+     * @param i Index into measurement result array, corresponding to an interpacket interval
+     * @param val Time for the DNS test to complete, in milliseconds
      * @throws MeasurementError
      */
     public void setDns(int i, int val) throws MeasurementError {
@@ -531,6 +535,10 @@ public class RRCTask extends MeasurementTask {
       return returnval;
     }
 
+    /**
+     * Erase all data corresponding to a set of results with a particular interpacket interval
+     * @param i Index into the array of results.
+     */
     public void deleteItem(int i) {
       rttsSmall[i] = -1;
       rttsLarge[i] = -1;
@@ -606,7 +614,7 @@ public class RRCTask extends MeasurementTask {
     /**
      * Call this to determine if packets have been sent since initializing.
      * 
-     * @return
+     * @return Whether or not there is interfering traffic
      */
     boolean isTrafficInterfering(int expectedRcv, int expectedSent) {
       packets_last = getPacketsSent();
@@ -626,45 +634,22 @@ public class RRCTask extends MeasurementTask {
      * a global value. We use this to determine if any other app anywhere on the phone may have sent
      * interfering traffic that might have changed the RRC state without our knowledge.
      * 
-     * @return
+     * @return Two values: number of bytes or packets received at index 0, followed by the number 
+     * sent at index 1.  
      */
     public long[] getPacketsSent() {
       long[] retval = {-1, -1};
       if (by_size) {
-        retval[0] = TrafficStats.getMobileTxBytes();
+        retval[0] = TrafficStats.getMobileRxBytes();
         retval[1] = TrafficStats.getMobileTxBytes();
 
       } else {
         retval[0] = TrafficStats.getMobileRxPackets();
         retval[1] = TrafficStats.getMobileTxPackets();
-
       }
 
       return retval;
     }
-
-    /**
-     * Determine how many packets the current thread has sent.
-     * 
-     * @param serverAddr
-     * @param wait
-     * @param data
-     * @param desc
-     * @param utils
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
-     */
-
-    public long[] getMyPacketsSent() {
-      long[] retval = {-1, -1};
-      Logger.d("My uid" + android.os.Process.myUid());
-      retval[0] = TrafficStats.getUidRxBytes(android.os.Process.myUid());
-      retval[1] = TrafficStats.getUidTxBytes(android.os.Process.myUid());
-      return retval;
-
-    }
-
   }
 
 
@@ -715,8 +700,11 @@ public class RRCTask extends MeasurementTask {
   /**
    * Helper function to construct MeasurementResults to submit to the server
    * 
-   * @param desc
-   * @return
+   * @param desc The data collected for the RRC test to be converted into something understandable 
+   * by the server. 
+   * @return A data structure that can be sent to the server.  Contains only the results of the 
+   * TCP, DNS and HTTP tests: the others are sent via a separate mechanism as they are stored 
+   * separately. 
    */
   private MeasurementResult constructResultStandard(RRCDesc desc) {
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
@@ -741,7 +729,8 @@ public class RRCTask extends MeasurementTask {
    * traffic until later. 4. For every upper layer test, if upper layer tests and that test
    * specifically are enabled, run that test.
    * 
-   * @return
+   * @return A data structure containing all the results and metadata surrounding the RRC inference tests 
+   * performed.
    * @throws MeasurementError
    */
   private RRCDesc runInferenceTests() throws MeasurementError {
@@ -819,7 +808,7 @@ public class RRCTask extends MeasurementTask {
 
         if (desc.SIZES) {
           Logger.w("Start size dependence task");
-          runSizeThresholdTest(desc.times, desc, data, utils, desc.testId);
+          runSizeThresholdTest(desc.times, desc, data, desc.testId);
           checkin.uploadRrcInferenceSizeData(data);
         }
       }
@@ -840,17 +829,20 @@ public class RRCTask extends MeasurementTask {
     return desc;
   }
 
+
   /**
    * Determines the packet size dependence of the RRC task.
    * 
    * Given a specified list of inter-packet intervals, perform the RRC inference measurement for
    * packets of sizes incremented by the size granularity specified.
    * 
-   * @param times inter-packet intervals to test
-   * @param desc
+   * @param times  Inter-packet intervals to test
+   * @param desc Parameters for the RRC inference task
+   * @param data Stores results of the RRC inference task
+   * @param testId A unique ID identifying this set of tests
    */
   private void runSizeThresholdTest(final Integer[] times, RRCDesc desc,
-      RrcTestData data, PhoneUtils utils, long testId) {
+      RrcTestData data, long testId) {
 
     InetAddress serverAddr;
     try {
@@ -861,10 +853,10 @@ public class RRCTask extends MeasurementTask {
       return;
     }
     for (int i = 0; i < times.length; i++) {
-      for (int j = desc.size_granularity; j <= 1024; j += desc.size_granularity) {
+      for (int j = desc.sizeGranularity; j <= 1024; j += desc.sizeGranularity) {
         try {
           long result =
-              inferDemotionPacketSize(serverAddr, times[i], desc, j, utils);
+              inferDemotionPacketSize(serverAddr, times[i], desc, j);
           data.setRrcSizeTestData(times[i], j, result, testId);
         } catch (IOException e) {
           e.printStackTrace();
@@ -890,9 +882,9 @@ public class RRCTask extends MeasurementTask {
    * This test is not currently as accurate as the other tests, for reasons described below, and has
    * thus been disabled.
    * 
-   * 
-   * @param times
-   * @param desc
+   * @param times List of inter-packet intervals, in half-second increments, at which to run the 
+   * tests
+   * @param desc Stores parameters for the RRC inference tests in general
    */
   private void runHTTPTest(final Integer[] times, RRCDesc desc) {
     /*
@@ -1004,8 +996,9 @@ public class RRCTask extends MeasurementTask {
    * 
    * Test is similar to the approach taken in DnsLookUpTask.java.
    * 
-   * @param times
-   * @param desc
+   * @param times List of inter-packet intervals, in half-second increments, at which to run the 
+   * test
+   * @param desc Stores parameters for the RRC inference tests in general
    * @throws MeasurementError
    */
 
@@ -1101,8 +1094,9 @@ public class RRCTask extends MeasurementTask {
    * the phone. If more packets were sent than expected, abort and try again. 5. Otherwise, save the
    * data for that test and move to the next inter-packet interval.
    * 
-   * @param times
-   * @param desc
+   * @param times List of inter-packet intervals, in half-second increments, at which to run the 
+   * test
+   * @param desc Stores parameters for the RRC inference tests in general
    */
   public void runTCPHandshakeTest(final Integer[] times, RRCDesc desc) {
     Logger.d("Active inference TCP test: about to begin");
@@ -1191,10 +1185,10 @@ public class RRCTask extends MeasurementTask {
    * 
    * FACH is characterized by different state promotion times for large and small packets.
    * 
-   * @param serverAddr
-   * @param desc
-   * @param data
-   * @param utils
+   * @param serverAddr Address of the echo server
+   * @param desc Stores the parameters for the RRC tests
+   * @param data Stores the results of the RRC tests
+   * @param utils For fetching the signal strength when the test is performed
    * @return
    * @throws InterruptedException
    * @throws IOException
@@ -1240,8 +1234,7 @@ public class RRCTask extends MeasurementTask {
    * 
    * Sleep for the amount of time indicated.
    * 
-   * 
-   * @param timeToSleep
+   * @param timeToSleep Time for which we pause the current thread
    * @param useMs Toggles between units of milliseconds for the first parameter (true) and
    *        seconds(false).
    * @throws InterruptedException
@@ -1323,19 +1316,17 @@ public class RRCTask extends MeasurementTask {
     return sendPacket(serverAddr, size, desc.MIN, desc.port);
   }
 
-  /**
+  /** 
    * Send a single packet of the size indicated and wait for a response.
    * 
    * After 7000 ms, time out and return a value of -1 (meaning no response). Otherwise, return the
    * time from when the packet was sent to when a response was returned by the echo server.
    * 
-   * @param serverAddr
-   * @param size
-   * @param MAX
+   * @param serverAddr Echo server to calculate round trip
+   * @param size size of packet to send in bytes
    * @param rcvSize size of packets sent from the echo server
-   * @param port
-   * @param data
-   * @return
+   * @param port where the echo server is listening
+   * @return The round trip time for the packet
    * @throws IOException
    */
   public static long sendPacket(InetAddress serverAddr, int size, int rcvSize,
@@ -1376,7 +1367,7 @@ public class RRCTask extends MeasurementTask {
   }
 
   public static long inferDemotionPacketSize(InetAddress serverAddr, int wait,
-      RRCDesc desc, int size, PhoneUtils utils) throws IOException,
+      RRCDesc desc, int size) throws IOException,
       InterruptedException {
     long retval = -1;
     for (int j = 0; j < desc.GIVEUP_THRESHHOLD; j++) {
@@ -1403,6 +1394,7 @@ public class RRCTask extends MeasurementTask {
     return retval;
   }
 
+
   /**
    * One component of the RRC inference task. 1. induce the highest-power RRC state by sending a
    * large packet. 2. wait the indicated number of seconds. 3. send a series of 10 large packets at
@@ -1410,16 +1402,13 @@ public class RRCTask extends MeasurementTask {
    * associated signal strength d) error rate is currently not implemented 4. Check if the expected
    * number of packets were sent while performing a test. If too many packets were sent, abort.
    * 
-   * 
-   * @param serverAddr
-   * @param wait delay between packets
-   * @param data
-   * @param MAX size of the large packets
-   * @param MIN size of the small packets
-   * @param port
-   * @param granularity
-   * @param index
-   * @param utils
+   * @param serverAddr Echo server to calculate round trip
+   * @param wait Time in milliseconds to pause between packets sent
+   * @param data Stores the results of the RRC inference tests 
+   * @param desc Stores parameters for the RRC inference tests
+   * @param index Index of the current test, corresponds to the inter-packet time in intervals of 
+   * half milliseconds
+   * @param utils Used to retrieve the phone's RSSI at the time of collecting the data
    * @return
    * @throws IOException
    * @throws InterruptedException
@@ -1502,7 +1491,7 @@ public class RRCTask extends MeasurementTask {
   /**
    * Keep a global counter that labels each test with a unique, increasing integer.
    * 
-   * @param context
+   * @param context Any context instance, needed to fetch the last test id from permanent storage
    * @return
    */
   public static synchronized int getTestId(Context context) {
