@@ -172,6 +172,11 @@ public class MeasurementScheduler extends Service {
 
     broadcastReceiver = new BroadcastReceiver() {
       // Handles various broadcast intents.
+
+      // If traffic is paused by RRCTrafficControl (because a RRC test is 
+      // running), we do not perform the checkin, since sending interfering
+      // traffic makes the RRC inference task abort and restart the current
+      // test as the traffic may have altered the phone's RRC state.
       @Override
       public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(UpdateIntent.PREFERENCE_ACTION)) {
@@ -208,7 +213,6 @@ public class MeasurementScheduler extends Service {
     this.registerReceiver(broadcastReceiver, filter);
     // TODO(mdw): Make this a user-selectable option
     addIconToStatusBar();
-    // startMobiperfInForeground();
   }
 
   public boolean hasBatteryToScheduleExperiment() {
