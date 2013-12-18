@@ -68,6 +68,9 @@ import com.mobiperf.util.PhoneUtils;
  * See "Characterizing Radio Resource Allocation for 3G Networks" by Feng et. al, IMC 2010 for a
  * full explanation of the methodology and goals.
  * 
+ * TODO (sanae): Pause the RRC tasks when a checkin is performed, rather than pausing the checkin
+ * while the RRC task is performed. 
+ * 
  * @author sanae@umich.edu (Sanae Rosen)
  * 
  */
@@ -1155,9 +1158,6 @@ public class RRCTask extends MeasurementTask {
           // begin test. We test the time to do a 3-way handshake only.
           startTime = System.currentTimeMillis();
 
-          // Create a random URL, to avoid the caching problem
-          UUID uuid = UUID.randomUUID();
-          ///String host = uuid.toString() + ".com";
           serverAddr = InetAddress.getByName(desc.target);
           // three-way handshake done when socket created
           Socket socket = new Socket(serverAddr, 80);
@@ -1346,7 +1346,7 @@ public class RRCTask extends MeasurementTask {
    * @param serverAddr Echo server to calculate round trip
    * @param size size of packet to send in bytes
    * @param desc Holds parameters for the RRC inference task
-   * @return
+   * @return The round trip time for the packet
    * @throws IOException
    */
   private static long sendPacket(InetAddress serverAddr, int size, RRCDesc desc)
@@ -1407,7 +1407,7 @@ public class RRCTask extends MeasurementTask {
    * @param wait Time to wait between packets, in milliseconds.
    * @param desc  Holds parameters for the RRC inference task
    * @param size Size, in bytes, of the packet to send.
-   * @return
+   * @return The amount of time to send all packets and get a response.
    * @throws IOException
    * @throws InterruptedException
    */
@@ -1464,7 +1464,8 @@ public class RRCTask extends MeasurementTask {
    * @param index Index of the current test, corresponds to the inter-packet time in intervals of 
    * half milliseconds
    * @param utils Used to retrieve the phone's RSSI at the time of collecting the data
-   * @return
+   * @return first value: the amount of time to send all small packets and get a response. 
+   * Second value: time to send all large packets and get a response.
    * @throws IOException
    * @throws InterruptedException
    */
@@ -1547,7 +1548,7 @@ public class RRCTask extends MeasurementTask {
    * Keep a global counter that labels each test with a unique, increasing integer.
    * 
    * @param context Any context instance, needed to fetch the last test id from permanent storage
-   * @return
+   * @return The unique (for this device) test ID generated.
    */
   public static synchronized int getTestId(Context context) {
     SharedPreferences prefs =
@@ -1564,7 +1565,6 @@ public class RRCTask extends MeasurementTask {
    * to calculate the wait time, with a limit of 500 s. Once the limit is reached, unpause other
    * tasks. Repause traffic if we are good to resume again.
    * 
-   * @return
    */
   public void checkIfWifi() {
     PhoneUtils phoneUtils = PhoneUtils.getPhoneUtils();
