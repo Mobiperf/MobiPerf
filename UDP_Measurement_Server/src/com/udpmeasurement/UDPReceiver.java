@@ -101,16 +101,12 @@ public class UDPReceiver implements Runnable {
    */
   private void processPacket(MeasurementPacket packet)
       throws MeasurementError {
-    if ( packet.type != Config.PKT_REQUEST && packet.type != Config.PKT_DATA ) {
-      // Send error packet back
-      Config.logmsg("Received malformed packet! Type " + packet.type);
-      sendPacket(Config.PKT_ERROR, packet.clientId, null);
-    }
-    else if ( packet.type == Config.PKT_REQUEST ) {
+    if ( packet.type == Config.PKT_REQUEST ) {
       // Create a new thread to burst udp packets
       Config.logmsg("Receive packet request");      
 
       ClientRecord clientRecord = new ClientRecord();
+      clientRecord.seq = packet.seq;
       clientRecord.burstCount = packet.burstCount;
       clientRecord.packetSize = packet.packetSize;
       clientRecord.udpInterval = packet.udpInterval;     
@@ -141,7 +137,7 @@ public class UDPReceiver implements Runnable {
         socket, packet.clientId, clientRecord);
       new Thread(respHandle).start();
     }
-    else  { // packetType == PKT_DATA
+    else if ( packet.type == Config.PKT_DATA )  { 
       // Look up the client map to find the corresponding recorder
       // , or create a new one. Then record the packet's content
       // After received all the packets in a burst or timeout,
@@ -170,7 +166,7 @@ public class UDPReceiver implements Runnable {
               clientRecord.seq);
         }
       }
-      else {
+      else {    // Receive UDP burst from a new client 
         clientRecord = new ClientRecord();
         clientRecord.burstCount = packet.burstCount;
         clientRecord.receivedNumberList.add(packet.packetNum);
@@ -198,6 +194,11 @@ public class UDPReceiver implements Runnable {
         }
       }
     }
+    else {
+      // Not data or request packet, send error packet back
+      Config.logmsg("Received malformed packet! Type " + packet.type);
+      sendPacket(Config.PKT_ERROR, packet.clientId, null);
+    }
   }
 
   /**
@@ -222,15 +223,18 @@ public class UDPReceiver implements Runnable {
       dataPacket.packetNum = clientRecord.packetReceived;
       dataPacket.timestamp = System.currentTimeMillis(); 
       dataPacket.packetSize = clientRecord.packetSize;
+      dataPacket.seq = clientRecord.seq;
     }
     else if ( type == Config.PKT_RESPONSE ) {
       MeasurementPacket responsePacket = packet;
       responsePacket.type = Config.PKT_RESPONSE;
       responsePacket.burstCount = clientRecord.burstCount;
-      responsePacket.intervalNum = clientRecord.calculateInversionNumber();
+      responsePacket.inversionNum = clientRecord.calculateInversionNumber(); 
+      // Store jitter in the field timestamp
       responsePacket.timestamp = clientRecord.calculateJitter();
       responsePacket.packetNum = clientRecord.receivedNumberList.size();
       responsePacket.packetSize = clientRecord.packetSize;
+      responsePacket.seq = clientRecord.seq;
     }
 
     byte[] sendBuffer = packet.getByteArray();
@@ -245,7 +249,7 @@ public class UDPReceiver implements Runnable {
     }
 
     Config.logmsg("Sent response to " + clientId.toString() + " type:" + type + " b:" +
-        packet.burstCount + " p:" + packet.packetNum + " i:" + packet.intervalNum +
+        packet.burstCount + " p:" + packet.packetNum + " i:" + packet.inversionNum +
         " j:" + packet.timestamp + " s:" + packet.packetSize);
   }
 

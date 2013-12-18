@@ -24,6 +24,7 @@ public class UDPServer {
    * Check the port and create the receiver thread  
    * @param args port used by server 
    */
+  private static final String VERSION = "2.1";
   public static void main(String[] args) {
     UDPReceiver deamon;
     int port = 0;
@@ -38,7 +39,7 @@ public class UDPServer {
     else {
       port = Config.DEFAULT_PORT;
     }
-    System.out.println("UDP Burst server(Ver 2.0) runs on port " + port);
+    System.out.println("UDP Burst server(Ver " + VERSION + ") runs on port " + port);
     try {
       deamon = new UDPReceiver(port);
       new Thread(deamon).start();

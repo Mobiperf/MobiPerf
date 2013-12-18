@@ -26,7 +26,7 @@ public class MeasurementPacket {
   public int type;
   public int burstCount;
   public int packetNum;
-  public int intervalNum;
+  public int inversionNum;
   public long timestamp;
   public int packetSize;
   public int seq;
@@ -57,7 +57,7 @@ public class MeasurementPacket {
       type = dataIn.readInt();
       burstCount = dataIn.readInt();
       packetNum  = dataIn.readInt();
-      intervalNum = dataIn.readInt();
+      inversionNum = dataIn.readInt();
       timestamp = dataIn.readLong();
       packetSize = dataIn.readInt();
       seq = dataIn.readInt();
@@ -87,7 +87,7 @@ public class MeasurementPacket {
       dataOut.writeInt(type);
       dataOut.writeInt(burstCount);
       dataOut.writeInt(packetNum);
-      dataOut.writeInt(intervalNum);
+      dataOut.writeInt(inversionNum);
       dataOut.writeLong(timestamp);
       dataOut.writeInt(packetSize);
       dataOut.writeInt(seq);
