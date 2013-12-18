@@ -34,11 +34,10 @@ public class Config {
   public static final int MIN_PACKETSIZE = 36;
   // Leave enough margin for min MTU in the link and IP options
   public static final int MAX_PACKETSIZE = 512;
-  // Todo(Hongyi): Arbitrary value, need further discuss
+  
   public static final int DEFAULT_UDP_PACKET_SIZE = 100;
   // Todo(Hongyi): Arbitrary timeout value, need further discuss
   public static final int DEFAULT_TIMEOUT = 3000;
-  // Todo(Hongyi): Arbitrary value, need further discuss
   public static final int MAX_BURSTCOUNT = 100;
 
   public static final int PKT_ERROR = 1;

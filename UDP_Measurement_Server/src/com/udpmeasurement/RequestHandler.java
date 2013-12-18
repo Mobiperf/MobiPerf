@@ -17,6 +17,7 @@ package com.udpmeasurement;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 
 /**
  * @author Hongyi Yao (hyyao@umich.edu)
@@ -37,7 +38,7 @@ public class RequestHandler implements Runnable {
    */
   public RequestHandler(DatagramSocket socket, ClientIdentifier clientId,
                         ClientRecord  clientRecord) {
-    this.socket = socket;
+    //this.socket = socket;
     this.clientId = clientId;
     this.clientRecord = clientRecord;
   }
@@ -54,6 +55,7 @@ public class RequestHandler implements Runnable {
     dataPacket.packetNum = clientRecord.packetReceived;
     dataPacket.timestamp = System.currentTimeMillis(); 
     dataPacket.packetSize = clientRecord.packetSize;
+    dataPacket.seq = clientRecord.seq;
 
     byte[] sendBuffer = packet.getByteArray();
     DatagramPacket sendPacket = new DatagramPacket(
@@ -68,8 +70,8 @@ public class RequestHandler implements Runnable {
 
     Config.logmsg("Sent response to " + clientId.toString() + " type: PKT_DATA b:" +
         packet.burstCount + " p:" + packet.packetNum + " i:" +
-        packet.intervalNum + " j:" + packet.timestamp + " s:" +
-        packet.packetSize);
+        packet.inversionNum + " j:" + packet.timestamp + " s:" +
+        packet.packetSize + " seq:" + packet.seq);
   }
   
   /* (non-Javadoc)
@@ -78,6 +80,12 @@ public class RequestHandler implements Runnable {
    */
   @Override
   public void run() {
+    try {
+      socket = new DatagramSocket();
+    } catch (SocketException e1) {
+      Config.logmsg("Socket creation failed when sending data packets");
+    }
+    
     for ( int i = 0; i < clientRecord.burstCount; i++ ) {
       clientRecord.packetReceived = i;
       try {
@@ -93,6 +101,8 @@ public class RequestHandler implements Runnable {
         Config.logmsg("sleep is interrupted: " + e.getMessage());
       }
     }
+    // Recycle socket resource
+    socket.close();
   }
 
 }

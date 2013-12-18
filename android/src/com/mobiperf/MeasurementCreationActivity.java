@@ -124,6 +124,12 @@ public class MeasurementCreationActivity extends Activity {
     text.setOnFocusChangeListener(textFocusChangeListener);
     text = (EditText) findViewById(R.id.dnsLookupText);
     text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.UDPBurstIntervalText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.UDPBurstPacketCountText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
+    text = (EditText) findViewById(R.id.UDPBurstPacketSizeText);
+    text.setOnFocusChangeListener(textFocusChangeListener);
   }
 
   @Override

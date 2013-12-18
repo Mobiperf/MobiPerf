@@ -25,7 +25,7 @@
     <string name="UDPBurstDirLabel">Direction:</string>
     <string name="UDPBurstIntervalLabel">Interval(ms): </string>
     <string name="UDPBurstTargetHint">www.google.com</string>
-    <string name="UDPBurstIntervalHint">256</string>
+    <string name="UDPBurstIntervalHint">1</string>
     <string name="UDPBurstPacketSizeLabel">Packet Size(byte): </string>
     <string name="UDPBurstPacketSizeHint">100</string>
     <string name="UDPBurstPacketCountLabel">Packet Number: </string>

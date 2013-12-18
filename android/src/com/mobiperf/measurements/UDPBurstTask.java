@@ -55,8 +55,8 @@ public class UDPBurstTask extends MeasurementTask {
   public static final String DESCRIPTOR = "UDP Burst";
 
   private static final int DEFAULT_UDP_PACKET_SIZE = 100;
-  private static final int DEFAULT_UDP_BURST = 10;
-  private static final int DEFAULT_UDP_INTERVAL = 500;
+  private static final int DEFAULT_UDP_BURST = 16;
+  private static final int DEFAULT_UDP_INTERVAL = 1;
 
   // Min packet size =  (int type) + (int burstCount) + (int packetNum)
   //                  + (int intervalNum) + (long timestamp) + (int packetSize)
@@ -66,7 +66,7 @@ public class UDPBurstTask extends MeasurementTask {
   
   private static final int MAX_PACKETSIZE = 500;
   private static final int DEFAULT_PORT = 31341;
-  // Todo(Hongyi): choose a proper timeout period
+  // TODO(Hongyi): choose a proper timeout period
   private static final int RCV_TIMEOUT = 16000; // in msec.
 
   private static final int PKT_ERROR = 1;
@@ -146,7 +146,7 @@ public class UDPBurstTask extends MeasurementTask {
           this.dstPort = Integer.parseInt(val);
         }
         if ((val = params.get("udp_interval")) != null
-            && val.length() > 0 && Integer.parseInt(val) > 0) {
+            && val.length() > 0 && Integer.parseInt(val) >= 0) {
           this.udpInterval = Integer.parseInt(val);
         }
       } catch (NumberFormatException e) {
@@ -335,6 +335,94 @@ public class UDPBurstTask extends MeasurementTask {
   }
 
   /**
+   * @author Hongyi Yao (hyyao@umich.edu)
+   * A helper structure for packing and unpacking network message
+   */
+  private class UDPPacket {
+    public int type;
+    public int burstCount;
+    public int packetNum;
+    public int inversionNum;
+    // Data packet: local timestamp
+    // Response packet: jitter
+    public long timestamp;
+    public int packetSize;
+    public int seq;
+    public int udpInterval;
+
+    /**
+     * Create an empty structure
+     * @param cliId corresponding client identifier
+     */
+    public UDPPacket() {}
+    
+    /**
+     * Unpack received message and fill the structure
+     * @param cliId corresponding client identifier
+     * @param rawdata network message
+     * @throws MeasurementError stream reader failed
+     */
+    public UDPPacket(byte[] rawdata)
+        throws MeasurementError{
+      ByteArrayInputStream byteIn = new ByteArrayInputStream(rawdata);
+      DataInputStream dataIn = new DataInputStream(byteIn);
+      
+      try {
+        type = dataIn.readInt();
+        burstCount = dataIn.readInt();
+        packetNum  = dataIn.readInt();
+        inversionNum = dataIn.readInt();
+        timestamp = dataIn.readLong();
+        packetSize = dataIn.readInt();
+        seq = dataIn.readInt();
+        udpInterval = dataIn.readInt();
+      } catch (IOException e) {
+        throw new MeasurementError("Fetch payload failed! " + e.getMessage());
+      }
+      
+      try {
+        byteIn.close();
+      } catch (IOException e) {
+        throw new MeasurementError("Error closing inputstream!");
+      }
+    }
+    
+    /**
+     * Pack the structure to the network message
+     * @return the network message in byte[]
+     * @throws MeasurementError stream writer failed
+     */
+    public byte[] getByteArray() throws MeasurementError {
+
+      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+      DataOutputStream dataOut = new DataOutputStream(byteOut);
+      
+      try {
+        dataOut.writeInt(type);
+        dataOut.writeInt(burstCount);
+        dataOut.writeInt(packetNum);
+        dataOut.writeInt(inversionNum);
+        dataOut.writeLong(timestamp);
+        dataOut.writeInt(packetSize);
+        dataOut.writeInt(seq);
+        dataOut.writeInt(udpInterval);
+      } catch (IOException e) {
+        throw new MeasurementError("Create rawpacket failed! " + e.getMessage());
+      }
+      
+      byte[] rawPacket = byteOut.toByteArray();
+      
+      try {
+        byteOut.close();
+      } catch (IOException e) {
+        throw new MeasurementError("Error closing outputstream!");
+      }
+      return rawPacket; 
+    }
+
+  }
+  
+  /**
    * Opens a Datagram socket to the server included in the UDPDesc and sends a
    * burst of UDPBurstCount packets, each of size packetSizeByte.
    * 
@@ -347,10 +435,6 @@ public class UDPBurstTask extends MeasurementTask {
   private DatagramSocket sendUpBurst() throws MeasurementError {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
     InetAddress addr = null;
-    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-    DataOutputStream dataOut = new DataOutputStream(byteOut);
-    DatagramSocket sock = null;
-
     // Resolve the server's name
     try {
       addr = InetAddress.getByName(desc.target);
@@ -359,40 +443,24 @@ public class UDPBurstTask extends MeasurementTask {
       throw new MeasurementError("Unknown host " + desc.target);
     }
 
+    DatagramSocket sock = null;
     sock = openSocket();
-    byte[] data = byteOut.toByteArray();
-    DatagramPacket packet = new DatagramPacket(data, data.length, addr,
-        desc.dstPort);
+    
+    UDPPacket dataPacket = new UDPPacket();
     // Send burst
     for (int i = 0; i < desc.udpBurstCount; i++) {
-      byteOut.reset();
-      try {
-        dataOut.writeInt(UDPBurstTask.PKT_DATA);
-        dataOut.writeInt(desc.udpBurstCount);
-        dataOut.writeInt(i);
+      dataPacket.type = UDPBurstTask.PKT_DATA;
+      dataPacket.burstCount = desc.udpBurstCount;
+      dataPacket.packetNum = i;
+      dataPacket.timestamp = System.currentTimeMillis();
+      dataPacket.packetSize = desc.packetSizeByte;
+      dataPacket.seq = seq;
+      // Flatten UDP packet
+      byte[] data = dataPacket.getByteArray();
 
-        dataOut.writeInt(-1); // left for inversion number
-        // Sender: timestamp when sending
-        // Receiver: jitter
-        dataOut.writeLong(System.currentTimeMillis());
-
-        dataOut.writeInt(desc.packetSizeByte);
-        dataOut.writeInt(seq);
-        dataOut.writeInt(0);  // udp interval invalid 
-        for (int j = 0; j < desc.packetSizeByte
-            - UDPBurstTask.MIN_PACKETSIZE; j++) {
-          // Fill in the rest of the packet with zeroes.
-          // TODO(aterzis): There has to be a better way to do this
-          dataOut.write(0);
-        }
-      } catch (IOException e) {
-        sock.close();
-        throw new MeasurementError("Error creating message to "
-            + desc.target);
-      }
-      data = byteOut.toByteArray();
-      packet.setData(data);
-
+      DatagramPacket packet = new DatagramPacket(data, data.length, addr,
+          desc.dstPort);
+      
       try {
         dataConsumed += packet.getLength();
         sock.send(packet);
@@ -408,22 +476,14 @@ public class UDPBurstTask extends MeasurementTask {
       this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
       broadcastProgressForUser(this.progress);
       
+      // Sleep udpInterval millisecond
       try {
         Thread.sleep(desc.udpInterval);
         Logger.i("UDP Burst sleep " + desc.udpInterval + "ms");
       } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        Logger.e("Error: sleep interrupted!");
       }
     } // for()
-
-    try {
-      byteOut.close();
-    } catch (IOException e) {
-      sock.close();
-      throw new MeasurementError("Error closing outputstream to: "
-          + desc.target);
-    }
     return sock;
   }
 
@@ -441,8 +501,6 @@ public class UDPBurstTask extends MeasurementTask {
   private UDPResult recvUpResponse(DatagramSocket sock)
       throws MeasurementError {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
-    int ptype, burstsize, pktnum, invnum;
-    long jitter;
 
     UDPResult udpResult = new UDPResult();
     // Receive response
@@ -462,35 +520,32 @@ public class UDPBurstTask extends MeasurementTask {
       sock.close();
       throw new MeasurementError("Error reading from " + desc.target);
     }
+    // Reconstruct UDP packet from flattened network data
+    UDPPacket responsePacket = new UDPPacket(recvpacket.getData());
 
-    ByteArrayInputStream byteIn = new ByteArrayInputStream(
-        recvpacket.getData(), 0, recvpacket.getLength());
-    DataInputStream dataIn = new DataInputStream(byteIn);
-    dataConsumed += recvpacket.getLength();
-    try {
-      ptype = dataIn.readInt();
-      burstsize = dataIn.readInt();
-      pktnum = dataIn.readInt();
-      invnum = dataIn.readInt();
-      jitter = dataIn.readLong();
-    } catch (IOException e) {
-      sock.close();
-      throw new MeasurementError("Error parsing response from "
-          + desc.target);
+    if ( responsePacket.type == PKT_RESPONSE ) {
+      // Received seq number must be same with client seq
+      if ( responsePacket.seq != seq ) {
+        Logger.e("Error: Server send response packet with different seq, old "
+            + seq + " => new " + responsePacket.seq);
+      }
+
+      Logger.i("Recv UDP resp from " + desc.target + " type:" + responsePacket.type
+        + " burst:" + responsePacket.burstCount + " pktnum:" + responsePacket.packetNum + " invnum: "
+        + responsePacket.inversionNum + " jitter: " + responsePacket.timestamp);
+
+      // Update the last grid in progress bar
+      this.progress = Config.MAX_PROGRESS_BAR_VALUE;
+      broadcastProgressForUser(this.progress);
+
+      udpResult.packetNumber = responsePacket.packetNum;
+      udpResult.InversionNumber = responsePacket.inversionNum;
+      udpResult.jitter = responsePacket.timestamp;
+      return udpResult;
     }
-
-    Logger.i("Recv UDP resp from " + desc.target + " type:" + ptype
-        + " burst:" + burstsize + " pktnum:" + pktnum + " invnum: "
-        + invnum + " jitter: " + jitter);
-
-    // Update the last grid in progress bar
-    this.progress = Config.MAX_PROGRESS_BAR_VALUE;
-    broadcastProgressForUser(this.progress);
-    
-    udpResult.packetNumber = pktnum;
-    udpResult.InversionNumber = invnum;
-    udpResult.jitter = jitter;
-    return udpResult;
+    else {
+      throw new MeasurementError("Error: not a response packet! seq: " + seq);
+    }
   }
 
   /**
@@ -506,9 +561,6 @@ public class UDPBurstTask extends MeasurementTask {
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
     DatagramPacket packet;
     InetAddress addr = null;
-    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-    DataOutputStream dataOut = new DataOutputStream(byteOut);
-    DatagramSocket sock = null;
 
     // Resolve the server's name
     try {
@@ -518,27 +570,20 @@ public class UDPBurstTask extends MeasurementTask {
       throw new MeasurementError("Unknown host " + desc.target);
     }
 
+    DatagramSocket sock = null;
     sock = openSocket();
 
     Logger.i("Requesting UDP burst:" + desc.udpBurstCount + " pktsize: "
         + desc.packetSizeByte + " to " + desc.target + ": " + targetIp);
 
-    try {
-      dataOut.writeInt(UDPBurstTask.PKT_REQUEST);
-      dataOut.writeInt(desc.udpBurstCount);
-      dataOut.writeInt(0);
-      dataOut.writeInt(-1); // inv number is not used
-      dataOut.writeLong(-1L); // timestamp is not used
-      dataOut.writeInt(desc.packetSizeByte);
-      dataOut.writeInt(seq);
-      dataOut.writeInt(desc.udpInterval);  // set udp interval
-    } catch (IOException e) {
-      sock.close();
-      throw new MeasurementError("Error creating message to "
-          + desc.target);
-    }
-
-    byte[] data = byteOut.toByteArray();
+    UDPPacket requestPacket = new UDPPacket();
+    requestPacket.type = PKT_REQUEST;
+    requestPacket.burstCount = desc.udpBurstCount;
+    requestPacket.packetSize = desc.packetSizeByte;
+    requestPacket.seq = seq;
+    requestPacket.udpInterval = desc.udpInterval;
+    // Flatten UDP packet
+    byte[] data = requestPacket.getByteArray();
     packet = new DatagramPacket(data, data.length, addr, desc.dstPort);
 
     try { 
@@ -548,16 +593,7 @@ public class UDPBurstTask extends MeasurementTask {
       sock.close();
       throw new MeasurementError("Error sending " + desc.target);
     }
-
-    try {
-      byteOut.close();
-    } catch (IOException e) {
-      sock.close();
-      throw new MeasurementError("Error closing Output Stream to:"
-          + desc.target);
-    }
-
-
+    
     // Update the first grid of progress bar for sending request
     this.progress = 100 * 1 / (desc.udpBurstCount + 1);
     this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
@@ -583,19 +619,12 @@ public class UDPBurstTask extends MeasurementTask {
     int pktrecv = 0;
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
 
-    MetricCalculator metricCalculator = new MetricCalculator(
-        desc.udpBurstCount);
-
-    // Receive response
-    Logger.i("Waiting for UDP burst from " + desc.target);
-
+    // Reconstruct UDP packet from flattened network data
     byte buffer[] = new byte[desc.packetSizeByte];
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
-
+    MetricCalculator metricCalculator = new MetricCalculator(
+      desc.udpBurstCount);
     for (int i = 0; i < desc.udpBurstCount; i++) {
-      int ptype, burstsize, pktnum;
-      long timestamp;
-
       try {
         sock.setSoTimeout(RCV_TIMEOUT);
         sock.receive(recvpacket);
@@ -603,45 +632,31 @@ public class UDPBurstTask extends MeasurementTask {
         break;
       }
 
-      ByteArrayInputStream byteIn = new ByteArrayInputStream(
-          recvpacket.getData(), 0, recvpacket.getLength());
-      DataInputStream dataIn = new DataInputStream(byteIn);
-
-
       dataConsumed += recvpacket.getLength();
-      
-      try {
-        ptype = dataIn.readInt();
-        burstsize = dataIn.readInt();
-        pktnum = dataIn.readInt();
-        dataIn.readInt(); // we do not need inversion number
-        timestamp = dataIn.readLong(); // Get timestamp
-      } catch (IOException e) {
-        sock.close();
-        throw new MeasurementError("Error parsing response from "
-            + desc.target);
-      }
 
-      Logger.i("Recv UDP response from " + desc.target + " type:" + ptype
-          + " burst:" + burstsize + " pktnum:" + pktnum
-          + " timestamp:" + timestamp);
+      UDPPacket dataPacket = new UDPPacket(recvpacket.getData());
+      if (dataPacket.type == UDPBurstTask.PKT_DATA) {
+        // Received seq number must be same with client seq
+        if ( dataPacket.seq != seq ) {
+          Logger.e("Error: Server send data packets with different seq, old "
+              + seq + " => new " + dataPacket.seq);
+          break;
+        }
 
-      // Update progress bar, the first grid is taken by client request
-      this.progress = 100 * (i + 1) / (desc.udpBurstCount + 1);
-      this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
-      broadcastProgressForUser(this.progress);
+        Logger.i("Recv UDP response from " + desc.target + " type:" + dataPacket.type
+          + " burst:" + dataPacket.burstCount + " pktnum:" + dataPacket.packetNum
+          + " timestamp:" + dataPacket.timestamp);
 
-      if (ptype == UDPBurstTask.PKT_DATA) {
+        // Update progress bar, the first grid is taken by client request
+        this.progress = 100 * (i + 1) / (desc.udpBurstCount + 1);
+        this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
+        broadcastProgressForUser(this.progress);
+
         pktrecv++;
-        metricCalculator.addPacket(pktnum, timestamp);
+        metricCalculator.addPacket(dataPacket.packetNum, dataPacket.timestamp);
       }
-      
-      try {
-        byteIn.close();
-      } catch (IOException e) {
-        sock.close();
-        throw new MeasurementError("Error closing input stream from "
-            + desc.target);
+      else {
+        throw new MeasurementError("Error: not a data packet! seq: " + seq);
       }
     } // for()
 
@@ -706,6 +721,11 @@ public class UDPBurstTask extends MeasurementTask {
     } catch (MeasurementError e) {
       throw e;
     } finally {
+      // Update the sequence number to be used by the next burst.
+      // Hongyi: we should update seq number no matter the measurement is
+      //    succeeded or not. It ensures previous last UDP burst's packets
+      //    will not affect the current one.
+      seq++;
       socket.close();
     }
 
@@ -720,8 +740,6 @@ public class UDPBurstTask extends MeasurementTask {
     result.addResult("loss_rate", 1.0 - response);  
     result.addResult("inversion_number", udpResult.InversionNumber);
     result.addResult("jitter", udpResult.jitter);
-    // Update the sequence number to be used by the next burst
-    seq++;
     return result;
   }
 
