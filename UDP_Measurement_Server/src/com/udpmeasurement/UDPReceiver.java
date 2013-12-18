@@ -134,7 +134,7 @@ public class UDPReceiver implements Runnable {
       // Create a new thread for downlink burst. Otherwise the uplink burst
       // at the same time may be blocked and lead to wrong delay estimation 
       RequestHandler respHandle = new RequestHandler(
-        socket, packet.clientId, clientRecord);
+        packet.clientId, clientRecord);
       new Thread(respHandle).start();
     }
     else if ( packet.type == Config.PKT_DATA )  { 

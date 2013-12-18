@@ -36,9 +36,8 @@ public class RequestHandler implements Runnable {
    * @param clientId corresponding client identifier
    * @param clientRecord the downlink request
    */
-  public RequestHandler(DatagramSocket socket, ClientIdentifier clientId,
+  public RequestHandler(ClientIdentifier clientId,
                         ClientRecord  clientRecord) {
-    //this.socket = socket;
     this.clientId = clientId;
     this.clientRecord = clientRecord;
   }
