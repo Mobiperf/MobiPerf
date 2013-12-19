@@ -1,19 +1,19 @@
-/* Copyright 2012 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ * Copyright 2012 Google Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package com.mobiperf;
 
+import com.mobiperf.measurements.RRCTask;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
@@ -78,7 +78,7 @@ public class Checkin {
   private volatile Cookie authCookie = null;
   private AccountSelector accountSelector = null;
   PhoneUtils phoneUtils;
-  
+
   public Checkin(Context context) {
     phoneUtils = PhoneUtils.getPhoneUtils();
     this.context = context;
@@ -90,43 +90,44 @@ public class Checkin {
       this.accountSelector.shutDown();
     }
   }
-  
+
   /** Return a fake authentication cookie for a test server instance */
   private Cookie getFakeAuthCookie() {
-    BasicClientCookie cookie = new BasicClientCookie(
-        "dev_appserver_login",
-        "test@nobody.com:False:185804764220139124118");
+    BasicClientCookie cookie =
+        new BasicClientCookie("dev_appserver_login",
+            "test@nobody.com:False:185804764220139124118");
     cookie.setDomain(".google.com");
     cookie.setVersion(1);
     cookie.setPath("/");
     cookie.setSecure(false);
     return cookie;
   }
-  
+
   public Date lastCheckinTime() {
     return this.lastCheckin;
   }
-  
+
   public List<MeasurementTask> checkin() throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
     try {
       JSONObject status = new JSONObject();
       DeviceInfo info = phoneUtils.getDeviceInfo();
-      // TODO(Wenjie): There is duplicated info here, such as device ID. 
+      // TODO(Wenjie): There is duplicated info here, such as device ID.
       status.put("id", info.deviceId);
       status.put("manufacturer", info.manufacturer);
       status.put("model", info.model);
       status.put("os", info.os);
-      status.put("properties", 
-          MeasurementJsonConvertor.encodeToJson(phoneUtils.getDeviceProperty()));
-      
+      status
+          .put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils
+              .getDeviceProperty()));
+
       Logger.d(status.toString());
       sendStringMsg("Checking in");
-      
+
       String result = serviceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
-      
+
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
       JSONArray jsonArray = new JSONArray(result);
@@ -136,13 +137,15 @@ public class Checkin {
         Logger.d("Parsing index " + i);
         JSONObject json = jsonArray.optJSONObject(i);
         Logger.d("Value is " + json);
-        // checkin task must support 
-        if (json != null && 
-            MeasurementTask.getMeasurementTypes().contains(json.get("type"))) {
+        // checkin task must support
+        if (json != null
+            && MeasurementTask.getMeasurementTypes().contains(json.get("type"))) {
           try {
-            MeasurementTask task = 
-                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json, this.context);
-            Logger.i(MeasurementJsonConvertor.toJsonString(task.measurementDesc));
+            MeasurementTask task =
+                MeasurementJsonConvertor.makeMeasurementTaskFromJson(json,
+                    this.context);
+            Logger.i(MeasurementJsonConvertor
+                .toJsonString(task.measurementDesc));
             schedule.add(task);
           } catch (IllegalArgumentException e) {
             Logger.w("Could not create task from JSON: " + e);
@@ -150,10 +153,9 @@ public class Checkin {
           }
         }
       }
-      
+
       this.lastCheckin = new Date();
-      Logger.i("Checkin complete, got " + schedule.size() +
-          " new tasks");
+      Logger.i("Checkin complete, got " + schedule.size() + " new tasks");
       checkinSuccess = true;
       return schedule;
     } catch (JSONException e) {
@@ -170,9 +172,9 @@ public class Checkin {
       }
     }
   }
-  
+
   public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
-      throws IOException {    
+      throws IOException {
     JSONArray resultArray = new JSONArray();
     for (MeasurementResult result : finishedTasks) {
       try {
@@ -181,10 +183,10 @@ public class Checkin {
         Logger.e("Error when adding " + result);
       }
     }
-    
+
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
-    Logger.i("TaskSchedule.uploadMeasurementResult() uploading: " + 
-        resultArray.toString());
+    Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
+        + resultArray.toString());
     String response = serviceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
@@ -197,8 +199,60 @@ public class Checkin {
     Logger.i("TaskSchedule.uploadMeasurementResult() complete");
     sendStringMsg("Result upload complete.");
   }
-  
-  
+
+  /**
+   * Send the RRC data to the server.  
+   * 
+   * Sent as a separate call because the data is formatted in a different, 
+   * more complicated way than other measurement tasks.
+   * 
+   * @param data Contains data to upload
+   * @throws IOException
+   */
+  public void uploadRrcInferenceData(RRCTask.RRCTestData data) throws IOException {
+    DeviceInfo info = phoneUtils.getDeviceInfo();
+    String network_id = phoneUtils.getNetwork();
+    String[] parameters = data.toJSON(network_id, info.deviceId);
+    try {
+      for (String parameter : parameters) {
+        Logger.w("Uploading RRC raw data: " + parameter);
+        String response = serviceRequest("rrc/uploadRRCInference", parameter);
+        Logger.w("Response from GAE: " + response);
+
+        Logger.i("TaskSchedule.uploadMeasurementResult() complete");
+        sendStringMsg("Result upload complete.");
+      }
+    } catch (IOException e) {
+      throw new IOException(e.getMessage());
+    } catch (NumberFormatException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Impact of packet sizes on rrc inference results.
+   * 
+   * @param sizeData Contains data to upload
+   */
+  public void uploadRrcInferenceSizeData(RRCTask.RRCTestData sizeData) {
+    DeviceInfo info = phoneUtils.getDeviceInfo();
+    String network_id = phoneUtils.getNetwork();
+    String[] sizeParameters =
+        sizeData.sizeDataToJSON(network_id, info.deviceId);
+
+    try {
+      for (String parameter : sizeParameters) {
+        Logger.w("Uploading RRC size data: " + parameter);
+        String response =
+            serviceRequest("rrc/uploadRRCInferenceSizes", parameter);
+        Logger.w("Response from GAE: " + response);
+      }
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
   /**
    * Used to generate SSL sockets.
    */
@@ -228,7 +282,7 @@ public class Checkin {
         }
       };
 
-      sslContext.init(null, new TrustManager[] { tm }, null);
+      sslContext.init(null, new TrustManager[] {tm}, null);
     }
 
     @Override
@@ -259,7 +313,7 @@ public class Checkin {
       HttpParams params = new BasicHttpParams();
       HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
       HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
-      
+
       HttpConnectionParams.setConnectionTimeout(params, POST_TIMEOUT_MILLISEC);
       HttpConnectionParams.setSoTimeout(params, POST_TIMEOUT_MILLISEC);
 
@@ -268,14 +322,14 @@ public class Checkin {
           .getSocketFactory(), 80));
       registry.register(new Scheme("https", sf, 443));
 
-      ClientConnectionManager ccm = new ThreadSafeClientConnManager(params,
-          registry);
+      ClientConnectionManager ccm =
+          new ThreadSafeClientConnManager(params, registry);
       client = new DefaultHttpClient(ccm, params);
     } catch (Exception e) {
       Logger.w("Unable to create SSL HTTP client", e);
       client = new DefaultHttpClient();
     }
-    
+
     // TODO(mdw): For some reason this is not sending the cookie to the
     // test server, probably because the cookie itself is not properly
     // initialized. Below I manually set the Cookie header instead.
@@ -284,13 +338,14 @@ public class Checkin {
     client.setCookieStore(store);
     return client;
   }
-  
-  private String serviceRequest(String url, String jsonString) 
+
+  private String serviceRequest(String url, String jsonString)
       throws IOException {
-    
+
     if (this.accountSelector == null) {
       accountSelector = new AccountSelector(context);
     }
+
     if (!accountSelector.isAnonymous()) {
       synchronized (this) {
         if (authCookie == null) {
@@ -300,14 +355,15 @@ public class Checkin {
         }
       }
     }
-    
+
     HttpClient client = getNewHttpClient();
-    String fullurl = (accountSelector.isAnonymous() ?
-                      phoneUtils.getAnonymousServerUrl() :
-                      phoneUtils.getServerUrl()) + "/" + url;
+    String fullurl =
+        (accountSelector.isAnonymous()
+            ? phoneUtils.getAnonymousServerUrl()
+            : phoneUtils.getServerUrl()) + "/" + url;
     Logger.i("Checking in to " + fullurl);
     HttpPost postMethod = new HttpPost(fullurl);
-    
+
     StringEntity se;
     try {
       se = new StringEntity(jsonString);
@@ -319,7 +375,8 @@ public class Checkin {
     postMethod.setHeader("Content-type", "application/json");
     if (!accountSelector.isAnonymous()) {
       // TODO(mdw): This should not be needed
-      postMethod.setHeader("Cookie", authCookie.getName() + "=" + authCookie.getValue());
+      postMethod.setHeader("Cookie",
+          authCookie.getName() + "=" + authCookie.getValue());
     }
 
     ResponseHandler<String> responseHandler = new BasicResponseHandler();
@@ -327,10 +384,10 @@ public class Checkin {
     String result = client.execute(postMethod, responseHandler);
     return result;
   }
-  
+
   /**
-   * Initiates the process to get the authentication cookie for the user account.
-   * Returns immediately.
+   * Initiates the process to get the authentication cookie for the user account. Returns
+   * immediately.
    */
   public synchronized void getCookie() {
     if (phoneUtils.isTestingServer(phoneUtils.getServerUrl())) {
@@ -341,7 +398,7 @@ public class Checkin {
     if (this.accountSelector == null) {
       accountSelector = new AccountSelector(context);
     }
-    
+
     try {
       // Authenticates if there are no ongoing ones
       if (accountSelector.getCheckinFuture() == null) {
@@ -355,7 +412,7 @@ public class Checkin {
       Logger.e("Unable to get auth cookie", e);
     }
   }
-  
+
   /**
    * Resets the checkin variables in AccountSelector
    * */
@@ -363,7 +420,7 @@ public class Checkin {
     accountSelector.resetCheckinFuture();
     accountSelector.setAuthImmediately(false);
   }
-  
+
   private synchronized boolean checkGetCookie() {
     if (phoneUtils.isTestingServer(phoneUtils.getServerUrl())) {
       authCookie = getFakeAuthCookie();
@@ -391,9 +448,9 @@ public class Checkin {
       return false;
     }
   }
-  
+
   private void sendStringMsg(String str) {
     UpdateIntent intent = new UpdateIntent(str, UpdateIntent.MSG_ACTION);
-    context.sendBroadcast(intent);    
+    context.sendBroadcast(intent);
   }
 }

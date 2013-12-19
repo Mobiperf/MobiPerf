@@ -45,6 +45,7 @@ from gspeedometer.controllers import measurement
 from gspeedometer.controllers import schedule
 from gspeedometer.controllers import timeseries
 import routes
+from gspeedometer import config
 
 m = routes.Mapper()
 m.connect('/',
@@ -147,6 +148,20 @@ m.connect('/admin/archive/file',
 m.connect('/admin/archive/cron',
           controller='archive:Archive',
           action='ArchiveToGoogleStorage')
+
+# to upload data on packet size impact for rrc inference
+m.connect('/rrc/uploadRRCInferenceSizes',
+            controller='RRCstates:RRCStates',
+            action='uploadRRCSizes')
+
+m.connect('/anonymous/rrc/uploadRRCInferenceSizes',
+            controller='RRCstates:RRCStates',
+            action='uploadRRCInferenceSizes')
+
+# raw data for performing RRC inference
+m.connect('/anonymous/rrc/uploadRRCInference',
+            controller='RRCstates:RRCStates',
+            action='uploadRRCInference')
 
 # For backend instance, give it something that won't
 # return a 500 error.
