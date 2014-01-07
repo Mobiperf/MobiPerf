@@ -111,8 +111,8 @@ public class UDPReceiver implements Runnable {
       clientRecord.packetSize = packet.packetSize;
       clientRecord.udpInterval = packet.udpInterval;     
 
-      // Todo(Hongyi): setup similar check in the client side
-      if ( clientRecord.burstCount < 1 ) {
+      // TODO(Hongyi): setup similar check in the client side
+      if ( clientRecord.burstCount <= 0 ) {
         throw new MeasurementError("Burst count should be positive, not " +
             clientRecord.burstCount);
       }  
@@ -130,6 +130,16 @@ public class UDPReceiver implements Runnable {
             clientRecord.packetSize + " longer than max packet size " +
             Config.MAX_PACKETSIZE);
       }
+      if ( clientRecord.udpInterval < 0 ) {
+        throw new MeasurementError("Request interval " +
+            clientRecord.udpInterval + " should be not negtive, not " +
+            clientRecord.udpInterval);
+      }
+      if ( clientRecord.udpInterval > Config.MAX_INTERVAL ) {
+        throw new MeasurementError("Request interval " +
+            clientRecord.udpInterval + " longer than max interval " +
+            Config.MAX_INTERVAL);
+      }
       
       // Create a new thread for downlink burst. Otherwise the uplink burst
       // at the same time may be blocked and lead to wrong delay estimation 
@@ -146,19 +156,17 @@ public class UDPReceiver implements Runnable {
       ClientRecord clientRecord;
       if ( clientMap.containsKey(packet.clientId) ) {
         clientRecord = clientMap.get(packet.clientId);
-        int packetNumber = packet.packetNum;
-        long offsetedDelay = System.currentTimeMillis() - packet.timestamp;
         int seq = packet.seq;
 
         // seq must stay the same for one burst
         if ( seq == clientRecord.seq ) {
-          clientRecord.receivedNumberList.add(packetNumber);
-          clientRecord.offsetedDelayList.add(offsetedDelay);
-          clientRecord.lastTimestamp = System.currentTimeMillis();
+          long timeNow = System.currentTimeMillis();
+          clientRecord.addPacketInfo(packet.packetNum, 
+            timeNow - packet.timestamp, timeNow);
         }
         else {
           Config.logmsg("client sent a different sequence number! old " + 
-        clientRecord.seq + " => " + "new " + seq);
+            clientRecord.seq + " => " + "new " + seq);
           sendPacket(Config.PKT_ERROR, packet.clientId, null);
           clientMap.remove(packet.clientId);
           throw new MeasurementError( packet.clientId.toString() + 
@@ -167,30 +175,39 @@ public class UDPReceiver implements Runnable {
         }
       }
       else {    // Receive UDP burst from a new client 
+        long timeNow = System.currentTimeMillis();
         clientRecord = new ClientRecord();
         clientRecord.burstCount = packet.burstCount;
-        clientRecord.receivedNumberList.add(packet.packetNum);
-        clientRecord.offsetedDelayList.add(
-          System.currentTimeMillis() - packet.timestamp);
         clientRecord.packetSize = packet.packetSize;
         clientRecord.seq = packet.seq;
-        clientRecord.lastTimestamp = System.currentTimeMillis();
+        clientRecord.addPacketInfo(packet.packetNum, 
+          timeNow - packet.timestamp, timeNow);
 
         clientMap.put(packet.clientId, clientRecord);
       }
 
-      int numberReceived = clientRecord.receivedNumberList.size() - 1;
       Config.logmsg("Receive data packet s:" + clientRecord.seq + " b:" +
-          clientRecord.burstCount + " p:" + 
-          clientRecord.receivedNumberList.get(numberReceived));
+          clientRecord.burstCount + " p:" + packet.packetNum);
 
-      if (clientRecord.receivedNumberList.size() == clientRecord.burstCount) {
+      if (clientRecord.packetCount == clientRecord.burstCount) {
         try {
           sendPacket(Config.PKT_RESPONSE, packet.clientId, clientRecord);
         } catch (MeasurementError e) {
           throw e;
         } finally {
           clientMap.remove(packet.clientId);
+        }
+      }
+      
+      // Checking whether other ClientRecords were timeout
+      // TODO(Hongyi): this method is not scalable, need discussion
+      for(Map.Entry<ClientIdentifier, ClientRecord> entry : clientMap.entrySet()){
+        if ( !entry.getKey().equals(packet.clientId) ) {
+          long timeNow = System.currentTimeMillis();
+          long timePrev = entry.getValue().lastTimestamp;
+          if ( timeNow - timePrev > Config.DEFAULT_TIMEOUT ) {
+            sendPacket(Config.PKT_RESPONSE, entry.getKey(), entry.getValue());
+          }
         }
       }
     }
@@ -229,10 +246,10 @@ public class UDPReceiver implements Runnable {
       MeasurementPacket responsePacket = packet;
       responsePacket.type = Config.PKT_RESPONSE;
       responsePacket.burstCount = clientRecord.burstCount;
-      responsePacket.inversionNum = clientRecord.calculateInversionNumber(); 
+      responsePacket.outOfOrderNum = clientRecord.calculateOutOfOrderNum(); 
       // Store jitter in the field timestamp
       responsePacket.timestamp = clientRecord.calculateJitter();
-      responsePacket.packetNum = clientRecord.receivedNumberList.size();
+      responsePacket.packetNum = clientRecord.packetCount;
       responsePacket.packetSize = clientRecord.packetSize;
       responsePacket.seq = clientRecord.seq;
     }
@@ -248,13 +265,14 @@ public class UDPReceiver implements Runnable {
         "Fail to send UDP packet to " + clientId.toString());
     }
 
-    Config.logmsg("Sent response to " + clientId.toString() + " type:" + type + " b:" +
-        packet.burstCount + " p:" + packet.packetNum + " i:" + packet.inversionNum +
-        " j:" + packet.timestamp + " s:" + packet.packetSize);
+    Config.logmsg("Sent response to " + clientId.toString() + " type:" + type
+      + " b:" + packet.burstCount + " p:" + packet.packetNum + " out_of_order:"
+      + packet.outOfOrderNum + " j:" + packet.timestamp + " s:" 
+      + packet.packetSize);
   }
 
   private void removeOldRecord() throws MeasurementError {
-    for ( Map.Entry<ClientIdentifier, ClientRecord> entry : clientMap.entrySet() ) {
+    for(Map.Entry<ClientIdentifier, ClientRecord> entry : clientMap.entrySet()){
       sendPacket(Config.PKT_RESPONSE, entry.getKey(), entry.getValue());
     }
     clientMap.clear();

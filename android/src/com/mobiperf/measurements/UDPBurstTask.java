@@ -50,24 +50,37 @@ import java.util.Map;
  * of each packet is packetSizeByte
  */
 public class UDPBurstTask extends MeasurementTask {
-
   public static final String TYPE = "udp_burst";
   public static final String DESCRIPTOR = "UDP Burst";
-
-  private static final int DEFAULT_UDP_PACKET_SIZE = 100;
-  private static final int DEFAULT_UDP_BURST = 16;
-  private static final int DEFAULT_UDP_INTERVAL = 1;
-
-  // Min packet size =  (int type) + (int burstCount) + (int packetNum)
-  //                  + (int intervalNum) + (long timestamp) + (int packetSize)
-  //                  + (int seq) + (int udpInterval)
-  //                 =  36
-  private static final int MIN_PACKETSIZE = 36;
   
-  private static final int MAX_PACKETSIZE = 500;
   private static final int DEFAULT_PORT = 31341;
+
+  /**
+   *  Min packet size =  (int type) + (int burstCount) + (int packetNum) +
+   *                     (int intervalNum) + (long timestamp) +
+   *                     (int packetSize) + (int seq) + (int udpInterval)
+   *                  =  36
+   */
+  private static final int MIN_PACKETSIZE = 36;
+  // Leave enough margin for min MTU in the link and IP options
+  private static final int MAX_PACKETSIZE = 500;
+  private static final int DEFAULT_UDP_PACKET_SIZE = 100;
+  /**
+   * Default number of packets to be sent
+   */
+  private static final int DEFAULT_UDP_BURST = 16;
+  private static final int MAX_BURSTCOUNT = 100;
+  /**
+   *  TODO(Hongyi): Interval between packets in millisecond level seems too long
+   *  for regular UDP transmission. Microsecond level may be better.
+   *  Need Discussion
+   */
+  private static final int DEFAULT_UDP_INTERVAL = 1;
+  private static final int MAX_INTERVAL = 1;
+  
   // TODO(Hongyi): choose a proper timeout period
-  private static final int RCV_TIMEOUT = 16000; // in msec.
+  private static final int RCV_UP_TIMEOUT = 2000; // round-trip delay, in msec.
+  private static final int RCV_DOWN_TIMEOUT = 1000; // one-way delay, in msec
 
   private static final int PKT_ERROR = 1;
   private static final int PKT_RESPONSE = 2;
@@ -127,6 +140,10 @@ public class UDPBurstTask extends MeasurementTask {
 
       try {
         String val = null;
+        if ((val = params.get("dst_port")) != null && val.length() > 0
+            && Integer.parseInt(val) > 0) {
+          this.dstPort = Integer.parseInt(val);
+        }
         if ((val = params.get("packet_size_byte")) != null
             && val.length() > 0 && Integer.parseInt(val) > 0) {
           this.packetSizeByte = Integer.parseInt(val);
@@ -140,14 +157,16 @@ public class UDPBurstTask extends MeasurementTask {
         if ((val = params.get("packet_burst")) != null
             && val.length() > 0 && Integer.parseInt(val) > 0) {
           this.udpBurstCount = Integer.parseInt(val);
-        }
-        if ((val = params.get("dst_port")) != null && val.length() > 0
-            && Integer.parseInt(val) > 0) {
-          this.dstPort = Integer.parseInt(val);
+          if ( this.udpBurstCount > MAX_BURSTCOUNT ) {
+            this.udpBurstCount = MAX_BURSTCOUNT;
+          }
         }
         if ((val = params.get("udp_interval")) != null
             && val.length() > 0 && Integer.parseInt(val) >= 0) {
           this.udpInterval = Integer.parseInt(val);
+          if ( this.udpInterval > MAX_INTERVAL ) {
+            this.udpInterval = MAX_INTERVAL;
+          }
         }
       } catch (NumberFormatException e) {
         throw new InvalidParameterException("UDPTask invalid params");
@@ -216,113 +235,79 @@ public class UDPBurstTask extends MeasurementTask {
    * This class encapsulates the results of UDP burst measurement
    */
   private class UDPResult {
-    public int packetNumber;
-    public int InversionNumber;
+    public int packetCount;
+    public double outOfOrderRatio;
     public long jitter;
     
     public UDPResult () {
-      packetNumber = 0;
-      InversionNumber = 0;
+      packetCount = 0;
+      outOfOrderRatio = 0.0;
       jitter = 0L;
     }
   }
 
   /**
    * @author Hongyi Yao (hyyao@umich.edu)
-   * This class calculates the number of inversion and delay jitter
+   * This class calculates the out-of-order ratio and delay jitter
    * in the array of received UDP packets
    */
   private class MetricCalculator {
-
-    private int[] packetNumList;
-    private long[] offsetedDelayList;
-    private int size;
-    private int inversionCounter;
+    private int maxPacketNum;
+    private ArrayList<Long> offsetedDelayList;
+    private int packetCount;
+    private int outOfOrderCount;
 
     public MetricCalculator(int burstSize) {
-      packetNumList = new int[burstSize];
-      offsetedDelayList = new long[burstSize];
-      size = 0;
-      inversionCounter = 0;
-    }
-
-    public void addPacket(int packetNumber, long timestamp) {
-      packetNumList[size] = packetNumber;
-      offsetedDelayList[size] = System.currentTimeMillis()
-          - timestamp;
-      size++;
+      maxPacketNum = -1;
+      offsetedDelayList = new ArrayList<Long>();
+      packetCount = 0;
+      outOfOrderCount = 0;
     }
 
     /**
-     * Leverage the combine process during merge-sort to calculate inversion
-     * number
-     * @param start start point of the first array
-     * @param mid the next to the end point of the first array 
-   *            and the start point of the second one
-     * @param end the next to the end point of the second array
+     * Out-of-order packets is defined as arriving packets with sequence numbers
+     * smaller than their predecessors.
+     * @param packetNum: packet number in burst sequence
+     * @param timestamp: estimated one-way delay(contains clock offset)
      */
-    private void combine(int start, int mid, int end) {
-      int[] tmp = new int[end - start + 1];
-      int pf = start;
-      int ps = mid + 1;
-      int pt = 0;// the number of sorted elements
-      while (pf <= mid && ps <= end)
-        if (packetNumList[pf] > packetNumList[ps]) {
-          for (int t = pf; t <= mid; t++)
-            inversionCounter++;
-          tmp[pt++] = packetNumList[ps++];
-        } else {
-          tmp[pt++] = packetNumList[pf++];
-        }
-      while (pf <= mid)
-        tmp[pt++] = packetNumList[pf++];
-      while (ps <= end)
-        tmp[pt++] = packetNumList[ps++];
-      for (int i = start; i <= end; i++)
-        packetNumList[i] = tmp[i - start];
-    }
-
-    /**
-     * Recursively accumulate the inversion number  
-     * @param start start point of the current array
-     * @param end the next to end point of the current array
-     */
-    private void merge(int start, int end) {
-      if (start < end) {
-        int mid = (start + end) / 2;
-        merge(start, mid);
-        merge(mid + 1, end);
-        combine(start, mid, end);
+    public void addPacket(int packetNum, long timestamp) {
+      if ( packetNum > maxPacketNum ) {
+        maxPacketNum = packetNum;
       }
+      else {
+        outOfOrderCount++;
+      }
+      offsetedDelayList.add(System.currentTimeMillis() - timestamp);
+      packetCount++;
     }
-
     /**
-     * Get inversion number as the metric of UDP out-of-order count
+     * Out-of-order ratio is defined as the ratio between the number of 
+     * out-of-order packets and the total number of packets. 
      * @return the inversion number of the current UDP burst
      */
-    public int calculateInversionNumber() {
-      inversionCounter = 0;
-      merge(0, size - 1);
-      return inversionCounter;
+    public double calculateOutOfOrderRatio() {
+      return (double)outOfOrderCount / packetCount;
     }
 
     /**
-     * Calculate jitter as the standard deviation of one-way delays. 
-     * Clock sync between client and server is not required since the clock
-     * offset will be cancelled out during the calculation process
+     * Calculate jitter as the standard deviation of one-way delays[RFC3393]
+     * We can assume the clock offset between server and client is constant in
+     * a short period(several milliseconds) since typical oscillators have no 
+     * more than 100ppm of frequency error , then it will be cancelled out
+     * during the calculation process
      * @return the jitter of UDP burst
      */
     public long calculateJitter() {
-      if ( size > 1 ) {
+      if ( packetCount > 1 ) {
         double offsetedDelay_mean = 0;
         for ( long offsetedDelay : offsetedDelayList ) {
-          offsetedDelay_mean += (double)offsetedDelay / size;
+          offsetedDelay_mean += (double)offsetedDelay / packetCount;
         }
 
         double jitter = 0;
         for ( long offsetedDelay : offsetedDelayList ) {
           jitter += ((double)offsetedDelay - offsetedDelay_mean)
-              * ((double)offsetedDelay - offsetedDelay_mean)  / (size - 1);
+              * ((double)offsetedDelay - offsetedDelay_mean)  / (packetCount - 1);
         }
         jitter = Math.sqrt(jitter);
         
@@ -342,7 +327,7 @@ public class UDPBurstTask extends MeasurementTask {
     public int type;
     public int burstCount;
     public int packetNum;
-    public int inversionNum;
+    public int outOfOrderNum;
     // Data packet: local timestamp
     // Response packet: jitter
     public long timestamp;
@@ -371,7 +356,7 @@ public class UDPBurstTask extends MeasurementTask {
         type = dataIn.readInt();
         burstCount = dataIn.readInt();
         packetNum  = dataIn.readInt();
-        inversionNum = dataIn.readInt();
+        outOfOrderNum = dataIn.readInt();
         timestamp = dataIn.readLong();
         packetSize = dataIn.readInt();
         seq = dataIn.readInt();
@@ -401,7 +386,7 @@ public class UDPBurstTask extends MeasurementTask {
         dataOut.writeInt(type);
         dataOut.writeInt(burstCount);
         dataOut.writeInt(packetNum);
-        dataOut.writeInt(inversionNum);
+        dataOut.writeInt(outOfOrderNum);
         dataOut.writeLong(timestamp);
         dataOut.writeInt(packetSize);
         dataOut.writeInt(seq);
@@ -511,7 +496,7 @@ public class UDPBurstTask extends MeasurementTask {
     DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
 
     try {
-      sock.setSoTimeout(RCV_TIMEOUT);
+      sock.setSoTimeout(RCV_UP_TIMEOUT);
       sock.receive(recvpacket);
     } catch (SocketException e1) {
       sock.close();
@@ -530,16 +515,18 @@ public class UDPBurstTask extends MeasurementTask {
             + seq + " => new " + responsePacket.seq);
       }
 
-      Logger.i("Recv UDP resp from " + desc.target + " type:" + responsePacket.type
-        + " burst:" + responsePacket.burstCount + " pktnum:" + responsePacket.packetNum + " invnum: "
-        + responsePacket.inversionNum + " jitter: " + responsePacket.timestamp);
+      Logger.i("Recv UDP resp from " + desc.target + " type:"
+        + responsePacket.type + " burst:" + responsePacket.burstCount
+        + " pktnum:" + responsePacket.packetNum + " out_of_order_num: "
+        + responsePacket.outOfOrderNum + " jitter: " + responsePacket.timestamp);
 
       // Update the last grid in progress bar
       this.progress = Config.MAX_PROGRESS_BAR_VALUE;
       broadcastProgressForUser(this.progress);
 
-      udpResult.packetNumber = responsePacket.packetNum;
-      udpResult.InversionNumber = responsePacket.inversionNum;
+      udpResult.packetCount = responsePacket.packetNum;
+      udpResult.outOfOrderRatio = 
+          (double)responsePacket.outOfOrderNum / responsePacket.packetNum;
       udpResult.jitter = responsePacket.timestamp;
       return udpResult;
     }
@@ -616,7 +603,7 @@ public class UDPBurstTask extends MeasurementTask {
    */
   private UDPResult recvDownResponse(DatagramSocket sock)
       throws MeasurementError {    
-    int pktrecv = 0;
+    int pktRecv = 0;
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
 
     // Reconstruct UDP packet from flattened network data
@@ -626,7 +613,7 @@ public class UDPBurstTask extends MeasurementTask {
       desc.udpBurstCount);
     for (int i = 0; i < desc.udpBurstCount; i++) {
       try {
-        sock.setSoTimeout(RCV_TIMEOUT);
+        sock.setSoTimeout(RCV_DOWN_TIMEOUT);
         sock.receive(recvpacket);
       } catch (IOException e) {
         break;
@@ -643,16 +630,16 @@ public class UDPBurstTask extends MeasurementTask {
           break;
         }
 
-        Logger.i("Recv UDP response from " + desc.target + " type:" + dataPacket.type
-          + " burst:" + dataPacket.burstCount + " pktnum:" + dataPacket.packetNum
-          + " timestamp:" + dataPacket.timestamp);
+        Logger.i("Recv UDP response from " + desc.target + " type:"
+          + dataPacket.type + " burst:" + dataPacket.burstCount + " pktnum:"
+          + dataPacket.packetNum + " timestamp:" + dataPacket.timestamp);
 
         // Update progress bar, the first grid is taken by client request
         this.progress = 100 * (i + 1) / (desc.udpBurstCount + 1);
         this.progress = Math.min(Config.MAX_PROGRESS_BAR_VALUE, progress);
         broadcastProgressForUser(this.progress);
 
-        pktrecv++;
+        pktRecv++;
         metricCalculator.addPacket(dataPacket.packetNum, dataPacket.timestamp);
       }
       else {
@@ -661,8 +648,8 @@ public class UDPBurstTask extends MeasurementTask {
     } // for()
 
     UDPResult udpResult = new UDPResult();
-    udpResult.packetNumber = pktrecv;
-    udpResult.InversionNumber = metricCalculator.calculateInversionNumber();
+    udpResult.packetCount = pktRecv;
+    udpResult.outOfOrderRatio = metricCalculator.calculateOutOfOrderRatio();
     udpResult.jitter = metricCalculator.calculateJitter();
     return udpResult;
   }
@@ -708,13 +695,13 @@ public class UDPBurstTask extends MeasurementTask {
       if (desc.dirUp == true) {
         socket = sendUpBurst();
         udpResult = recvUpResponse(socket);
-        pktrecv = udpResult.packetNumber;
+        pktrecv = udpResult.packetCount;
         response = pktrecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       } else {
         socket = sendDownRequest();
         udpResult = recvDownResponse(socket);
-        pktrecv = udpResult.packetNumber;
+        pktrecv = udpResult.packetCount;
         response = pktrecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       }
@@ -736,9 +723,8 @@ public class UDPBurstTask extends MeasurementTask {
         this.measurementDesc);
 
     result.addResult("target_ip", targetIp);
-    // It is more reasonable to show loss rate othen then packet received rate
-    result.addResult("loss_rate", 1.0 - response);  
-    result.addResult("inversion_number", udpResult.InversionNumber);
+    result.addResult("loss_ratio", 1.0 - response);  
+    result.addResult("out_of_order_ratio", udpResult.outOfOrderRatio);
     result.addResult("jitter", udpResult.jitter);
     return result;
   }
