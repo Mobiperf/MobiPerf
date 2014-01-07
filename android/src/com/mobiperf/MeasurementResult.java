@@ -243,15 +243,20 @@ public class MeasurementResult {
     printer.println("Target: " + desc.target);
     printer.println("IP addr: " + values.get("target_ip"));
     if (success) {
-      printer.println("Timestamp: " + Util.getTimeStringFromMicrosecond(properties.timestamp));
+      printer.println("Timestamp: " + 
+        Util.getTimeStringFromMicrosecond(properties.timestamp));
       printIPTestResult(printer);
-      printer.println("Packet size: " + desc.packetSizeByte);
-      printer.println("Packets number: " + desc.udpBurstCount);
-      printer.println("Packets interval: " + desc.udpInterval);
+      printer.println("Packet size: " + desc.packetSizeByte + "B");
+      printer.println("Number of packets to be sent: " + desc.udpBurstCount);
+      printer.println("Interval between packets: " + desc.udpInterval + "ms");
 
-      printer.println("\nLoss Rate: " + values.get("loss_rate"));
-      printer.println("Inversion Number: " + values.get("inversion_number"));
-      printer.println("Jitter: " + values.get("jitter"));
+      String lossRatio = String.format("%.2f"
+        , Double.parseDouble(values.get("loss_ratio")) * 100);
+      String outOfOrderRatio = String.format("%.2f"
+        , Double.parseDouble(values.get("out_of_order_ratio")) * 100);
+      printer.println("\nLoss ratio: " + lossRatio + "%");
+      printer.println("Out of order ratio: " + outOfOrderRatio + "%");
+      printer.println("Jitter: " + values.get("jitter") + "ms");
     } else {
       printer.println("Failed");
     }

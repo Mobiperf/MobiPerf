@@ -23,23 +23,31 @@ import java.text.SimpleDateFormat;
  * which will probabaly be used in other classes
  */
 public class Config {
-  //Todo(Hongyi): Arbitrary port number, need further discuss
+  // TODO(Hongyi): Arbitrary port number, need further discuss
   public static final int DEFAULT_PORT = 31341;
   // Larger then normal Ethernet MTU, leave enough margin
   public static final int BUFSIZE = 1500;
-  // Min packet size =  (int type) + (int burstCount) + (int packetNum) +
-  //                    (int intervalNum) + (long timestamp) +
-  //                    (int packetSize) + (int seq) + (int udpInterval)
-  //                 =  36
+  /**
+   *  Min packet size =  (int type) + (int burstCount) + (int packetNum) +
+   *                     (int intervalNum) + (long timestamp) +
+   *                     (int packetSize) + (int seq) + (int udpInterval)
+   *                  =  36
+   */
   public static final int MIN_PACKETSIZE = 36;
   // Leave enough margin for min MTU in the link and IP options
   public static final int MAX_PACKETSIZE = 512;
-  
   public static final int DEFAULT_UDP_PACKET_SIZE = 100;
-  // Todo(Hongyi): Arbitrary timeout value, need further discuss
-  public static final int DEFAULT_TIMEOUT = 3000;
+  
   public static final int MAX_BURSTCOUNT = 100;
+  /**
+   *  TODO(Hongyi): Interval between packets in millisecond level seems too long
+   *  for regular UDP transmission. Microsecond level may be better.
+   *  Need Discussion
+   */
+  public static final int MAX_INTERVAL = 1;
 
+  public static final int DEFAULT_TIMEOUT = 1000; // Max one-way delay, in msec
+  
   public static final int PKT_ERROR = 1;
   public static final int PKT_RESPONSE = 2;
   public static final int PKT_DATA = 3;

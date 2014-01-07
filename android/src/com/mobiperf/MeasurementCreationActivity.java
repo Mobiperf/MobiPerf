@@ -109,6 +109,9 @@ public class MeasurementCreationActivity extends Activity {
     radioUDPUp.setOnClickListener(new UDPRadioOnClickListener());
     radioUDPDown.setOnClickListener(new UDPRadioOnClickListener());
     
+    Button udpSettings = (Button)findViewById(R.id.UDPSettingsButton);
+    udpSettings.setOnClickListener(new UDPSettingsOnClickListener());
+    
     radioTCPUp.setChecked(true);
     radioTCPUp.setOnClickListener(new TCPRadioOnClickListener());
     radioTCPDown.setOnClickListener(new TCPRadioOnClickListener());
@@ -158,9 +161,10 @@ public class MeasurementCreationActivity extends Activity {
       this.findViewById(R.id.dnsTargetView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(UDPBurstTask.TYPE) == 0) {
       this.findViewById(R.id.UDPBurstDirView).setVisibility(View.VISIBLE);
-      this.findViewById(R.id.UDPBurstPacketSizeView).setVisibility(View.VISIBLE);
-      this.findViewById(R.id.UDPBurstPacketCountView).setVisibility(View.VISIBLE);
-      this.findViewById(R.id.UDPBurstIntervalView).setVisibility(View.VISIBLE);
+      this.findViewById(R.id.UDPSettingsButton).setVisibility(View.VISIBLE);
+//      this.findViewById(R.id.UDPBurstPacketSizeView).setVisibility(View.VISIBLE);
+//      this.findViewById(R.id.UDPBurstPacketCountView).setVisibility(View.VISIBLE);
+//      this.findViewById(R.id.UDPBurstIntervalView).setVisibility(View.VISIBLE);
     } else if (this.measurementTypeUnderEdit.compareTo(TCPThroughputTask.TYPE) == 0) {
       this.findViewById(R.id.TCPThroughputDirView).setVisibility(View.VISIBLE);
     }
@@ -172,7 +176,28 @@ public class MeasurementCreationActivity extends Activity {
       imm.hideSoftInputFromWindow(textBox.getWindowToken(), 0);
     }
   }
-
+  private class UDPSettingsOnClickListener implements OnClickListener {
+    private boolean isShowSettings = false;
+    @Override
+    public void onClick(View v) {
+      Button b = (Button)v;
+      if ( isShowSettings == false ) {
+        isShowSettings = true;
+        b.setText("Collapse Advanced Settings");
+        findViewById(R.id.UDPBurstPacketSizeView).setVisibility(View.VISIBLE);
+        findViewById(R.id.UDPBurstPacketCountView).setVisibility(View.VISIBLE);
+        findViewById(R.id.UDPBurstIntervalView).setVisibility(View.VISIBLE);
+      }
+      else {
+        isShowSettings = false;
+        b.setText("Expand Advanced Settings");
+        findViewById(R.id.UDPBurstPacketSizeView).setVisibility(View.GONE);
+        findViewById(R.id.UDPBurstPacketCountView).setVisibility(View.GONE);
+        findViewById(R.id.UDPBurstIntervalView).setVisibility(View.GONE);
+      }
+    }
+  }
+  
   private class UDPRadioOnClickListener implements OnClickListener {
     @Override
     public void onClick(View v) {
@@ -254,14 +279,20 @@ public class MeasurementCreationActivity extends Activity {
           params.put("target", MLabNS.TARGET);
           params.put("direction", udpDir);
           // Get UDP Burst packet size
-          EditText UDPBurstPacketSizeText = (EditText) findViewById(R.id.UDPBurstPacketSizeText);
-          params.put("packet_size_byte", UDPBurstPacketSizeText.getText().toString());
+          EditText UDPBurstPacketSizeText = 
+              (EditText) findViewById(R.id.UDPBurstPacketSizeText);
+          params.put("packet_size_byte"
+            , UDPBurstPacketSizeText.getText().toString());
           // Get UDP Burst packet count
-          EditText UDPBurstPacketCountText = (EditText) findViewById(R.id.UDPBurstPacketCountText);
-          params.put("packet_burst", UDPBurstPacketCountText.getText().toString());
+          EditText UDPBurstPacketCountText = 
+              (EditText) findViewById(R.id.UDPBurstPacketCountText);
+          params.put("packet_burst"
+            , UDPBurstPacketCountText.getText().toString());
           // Get UDP Burst interval
-          EditText UDPBurstIntervalText = (EditText) findViewById(R.id.UDPBurstIntervalText);
-          params.put("udp_interval", UDPBurstIntervalText.getText().toString());
+          EditText UDPBurstIntervalText = 
+              (EditText) findViewById(R.id.UDPBurstIntervalText);
+          params.put("udp_interval"
+            , UDPBurstIntervalText.getText().toString());
    
           UDPBurstDesc desc = new UDPBurstDesc(null,
               Calendar.getInstance().getTime(),
@@ -270,8 +301,8 @@ public class MeasurementCreationActivity extends Activity {
               Config.DEFAULT_USER_MEASUREMENT_COUNT,
               MeasurementTask.USER_PRIORITY,
               params);
-          newTask =
-              new UDPBurstTask(desc, MeasurementCreationActivity.this.getApplicationContext());
+          newTask = new UDPBurstTask(desc
+            , MeasurementCreationActivity.this.getApplicationContext());
         } else if (measurementTypeUnderEdit.equals(TCPThroughputTask.TYPE)) {
             Map<String, String> params = new HashMap<String, String>();
             params.put("target", MLabNS.TARGET);

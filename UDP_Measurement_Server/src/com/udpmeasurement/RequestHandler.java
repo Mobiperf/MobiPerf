@@ -46,16 +46,11 @@ public class RequestHandler implements Runnable {
    * Send a downlink packet according to ClientRecord
    * @throws MeasurementError send failed
    */
-  private void sendPacket() throws MeasurementError {
-    MeasurementPacket packet = new MeasurementPacket(clientId);
-    MeasurementPacket dataPacket = packet;
-    dataPacket.type = Config.PKT_DATA;
-    dataPacket.burstCount = clientRecord.burstCount;
-    dataPacket.packetNum = clientRecord.packetReceived;
-    dataPacket.timestamp = System.currentTimeMillis(); 
-    dataPacket.packetSize = clientRecord.packetSize;
-    dataPacket.seq = clientRecord.seq;
-
+  private void sendPacket(MeasurementPacket packet, int packetNum) 
+      throws MeasurementError {
+    packet.packetNum = packetNum;
+    packet.timestamp = System.currentTimeMillis();
+    
     byte[] sendBuffer = packet.getByteArray();
     DatagramPacket sendPacket = new DatagramPacket(
       sendBuffer, sendBuffer.length, clientId.addr, clientId.port); 
@@ -67,10 +62,10 @@ public class RequestHandler implements Runnable {
         "Fail to send UDP packet to " + clientId.toString());
     }
 
-    Config.logmsg("Sent response to " + clientId.toString() + " type: PKT_DATA b:" +
-        packet.burstCount + " p:" + packet.packetNum + " i:" +
-        packet.inversionNum + " j:" + packet.timestamp + " s:" +
-        packet.packetSize + " seq:" + packet.seq);
+    Config.logmsg("Sent response to " + clientId.toString()
+      + " type: PKT_DATA b:" + packet.burstCount + " p:" + packet.packetNum 
+      + " timestamp:" + packet.timestamp + " s:" + packet.packetSize
+      + " seq:" + packet.seq);
   }
   
   /* (non-Javadoc)
@@ -84,11 +79,16 @@ public class RequestHandler implements Runnable {
     } catch (SocketException e1) {
       Config.logmsg("Socket creation failed when sending data packets");
     }
+
+    MeasurementPacket dataPacket = new MeasurementPacket(clientId);
+    dataPacket.type = Config.PKT_DATA;
+    dataPacket.burstCount = clientRecord.burstCount;
+    dataPacket.packetSize = clientRecord.packetSize;
+    dataPacket.seq = clientRecord.seq;
     
     for ( int i = 0; i < clientRecord.burstCount; i++ ) {
-      clientRecord.packetReceived = i;
       try {
-        sendPacket();
+        sendPacket(dataPacket, i);
       } catch (MeasurementError e) {
         Config.logmsg("Error processing message: " + e.getMessage());
         break;

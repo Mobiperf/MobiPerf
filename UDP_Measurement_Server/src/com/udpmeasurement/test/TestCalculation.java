@@ -30,17 +30,17 @@ public class TestCalculation {
    * Inversion number is 5
    */
   @Test
-  public void testNormalInversion() {
+  public void testOutOfOrderNum() {
 
     ClientRecord cliRec = new ClientRecord();
-    cliRec.receivedNumberList.add(2);
-    cliRec.receivedNumberList.add(3);
-    cliRec.receivedNumberList.add(8);
-    cliRec.receivedNumberList.add(6);
-    cliRec.receivedNumberList.add(1);
-    int result = cliRec.calculateInversionNumber();
-    assertEquals ( "Inversion pair of <2,3,8,6,1> should be 5, not " + result,
-        5, result );
+    cliRec.addPacketInfo(2, 0, 0);
+    cliRec.addPacketInfo(3, 0, 0);
+    cliRec.addPacketInfo(8, 0, 0);
+    cliRec.addPacketInfo(6, 0, 0);
+    cliRec.addPacketInfo(1, 0, 0);
+    int result = cliRec.calculateOutOfOrderNum();
+    assertEquals ( "Out-of-order number of <2,3,8,6,1> should be 2, not "
+        + result, 2, result );
   }
 
   /**
@@ -49,8 +49,8 @@ public class TestCalculation {
   @Test
   public void testInversionSingleInput() {
     ClientRecord cliRec = new ClientRecord();
-    cliRec.receivedNumberList.add(1);
-    int result = cliRec.calculateInversionNumber();
+    cliRec.addPacketInfo(1, 0, 0);
+    int result = cliRec.calculateOutOfOrderNum();
     assertEquals( "Inversion number of <1> should be 0, not " + result,
         0, result);
   }
