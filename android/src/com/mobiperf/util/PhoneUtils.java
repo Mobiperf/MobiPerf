@@ -17,9 +17,8 @@ package com.mobiperf.util;
 import com.mobiperf.DeviceInfo;
 import com.mobiperf.DeviceProperty;
 import com.mobiperf.Logger;
-import com.mobiperf.MeasurementError;
 import com.mobiperf.R;
-import com.mobiperf.SpeedometerApp;
+
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -49,13 +48,11 @@ import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
 import android.webkit.WebView;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -118,8 +115,15 @@ public class PhoneUtils {
   /** Current battery level in percentage */ 
   private int curBatteryLevel;
   /** Receiver that handles battery change broadcast intents */
-  private BroadcastReceiver broadcastReceiver;
+  private BroadcastReceiver powerBroadcastReceiver;
+  private BroadcastReceiver networkBroadcastReceiver;
+  
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
+  
+  public static int TYPE_WIFI = 1;
+  public static int TYPE_MOBILE = 2;
+  public static int TYPE_NOT_CONNECTED = 0;
+  private int currentNetworkConnection= TYPE_NOT_CONNECTED; 
   
   private DeviceInfo deviceInfo = null;
   /** IP compatibility status */
@@ -138,11 +142,17 @@ public class PhoneUtils {
   
   protected PhoneUtils(Context context) {
     this.context = context;
-    broadcastReceiver = new PowerStateChangeReceiver();
+    powerBroadcastReceiver = new PowerStateChangeReceiver();
     // Registers a receiver for battery change events.
-    Intent powerIntent = globalContext.registerReceiver(broadcastReceiver, 
+    Intent powerIntent = globalContext.registerReceiver(powerBroadcastReceiver, 
         new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     updateBatteryStat(powerIntent);
+    
+    networkBroadcastReceiver = new ConnectivityChangeReceiver();
+    // Registers a receiver for battery change events.
+    Intent connectivityIntent = globalContext.registerReceiver(networkBroadcastReceiver, 
+        new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+    updateConnectivityInfo();
   }
 
   /**
@@ -258,7 +268,8 @@ public class PhoneUtils {
     telephonyManager.listen(new SignalStrengthChangeListener(), 
         PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
   }
-
+  
+  
   /** Returns the network that the phone is on (e.g. Wifi, Edge, GPRS, etc). */
   public String getNetwork() {
     initNetwork();
@@ -461,7 +472,8 @@ public class PhoneUtils {
       wakeLock.setReferenceCounted(false);
       wakeLock.release();
     }
-    context.unregisterReceiver(broadcastReceiver);
+    context.unregisterReceiver(powerBroadcastReceiver);
+    context.unregisterReceiver(networkBroadcastReceiver);
     releaseGlobalContext();
   }
 
@@ -629,6 +641,35 @@ public class PhoneUtils {
         setCurrentRssi(signalStrength.getGsmSignalStrength());
       }
     }
+  }
+  
+  private synchronized void updateConnectivityInfo() {
+	  ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+      NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+      if (activeNetwork!=null) {
+          if(activeNetwork.getType() == ConnectivityManager.TYPE_WIFI){
+              PhoneUtils.this.currentNetworkConnection=TYPE_WIFI;
+          }
+          if(activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE){
+              PhoneUtils.this.currentNetworkConnection=TYPE_MOBILE;
+          }
+      }
+      else{
+          PhoneUtils.this.currentNetworkConnection=TYPE_NOT_CONNECTED;
+      }  
+  }
+  
+  private class ConnectivityChangeReceiver extends BroadcastReceiver {
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		updateConnectivityInfo();
+		
+	}
+  }
+  
+  public synchronized int getCurrentNetworkConnection(){
+	  return currentNetworkConnection;
   }
   
   private String getVersionStr() {
