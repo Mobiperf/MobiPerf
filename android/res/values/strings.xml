@@ -31,6 +31,7 @@
     <string name="batteryMinThresPrefKey">KEY_BATTERY_THRES</string>
     <string name="startOnBootPrefKey">KEY_START_ON_BOOT</string>
     <string name="accountPrefKey">PREF_KEY_ACCOUNT</string>
+    <string name="dataLimitPrefKey">PREF_KEY_DATA_LIMIT</string>
     <string name="notificationSchedulerStarted">MobiPerf service has started</string>
     <string name="notificationServiceRunning">MobiPerf service is running</string>
     <string name="userMeasurementSuccessToast">Measurement is running. Results will show up shortly.</string>
