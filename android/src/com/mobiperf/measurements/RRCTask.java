@@ -82,6 +82,8 @@ public class RRCTask extends MeasurementTask {
   public static String TAG = "MobiPerf_RRC_INFERENCE";
   private boolean stop = false;
   private Context context;
+  
+  public static final int AVG_DATA_USAGE_KBYTE=600;
 
   /**
    * Stores parameters for the RRC inference task

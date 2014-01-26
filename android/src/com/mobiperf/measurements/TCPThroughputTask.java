@@ -360,6 +360,7 @@ public class TCPThroughputTask extends MeasurementTask {
     result.addResult("data_limit_exceeded", this.DATA_LIMIT_EXCEEDED);
     result.addResult("duration", this.taskDuration);
     result.addResult("server_version", this.serverVersion);
+    result.addResult("total_data_sent_received",this.totalSendSize+this.totalRevSize );
     Logger.i(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
