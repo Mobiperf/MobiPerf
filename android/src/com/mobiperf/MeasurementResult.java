@@ -81,6 +81,10 @@ public class MeasurementResult {
     this.values.put(resultType, MeasurementJsonConvertor.toJsonString(resultVal));
   }
   
+  public Object getResult(String resultType) {
+	return this.values.get(resultType);
+  }
+  
   /* Returns a string representation of the result */
   @Override
   public String toString() {
