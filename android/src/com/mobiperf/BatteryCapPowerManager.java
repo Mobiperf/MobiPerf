@@ -15,9 +15,13 @@
 
 package com.mobiperf;
 
+import com.mobiperf.measurements.DnsLookupTask;
 import com.mobiperf.measurements.HttpTask;
+import com.mobiperf.measurements.PingTask;
 import com.mobiperf.measurements.RRCTask;
 import com.mobiperf.measurements.TCPThroughputTask;
+import com.mobiperf.measurements.TracerouteTask;
+import com.mobiperf.measurements.UDPBurstTask;
 import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
@@ -92,11 +96,15 @@ public class BatteryCapPowerManager {
 
 	private boolean isOverDataLimit(String nextTaskType) throws IOException{
 		
-		if(getDataLimit()==0 ){
+		if(nextTaskType.equals(PingTask.TYPE) || nextTaskType.equals(DnsLookupTask.TYPE) ||
+				nextTaskType.equals(TracerouteTask.TYPE) || nextTaskType.equals(UDPBurstTask.TYPE)){
+			return false;
+		}else if(getDataLimit()==0 ){
 			return true;
 		}else if(getDataLimit()==50*1024*1024 && nextTaskType.equals(TCPThroughputTask.TYPE)){
 			return true;
 		}
+		
 		long usageStartTimeSec=-1;
 		long dataUsed=-1;
 
@@ -115,7 +123,7 @@ public class BatteryCapPowerManager {
 		}
 		if(dataUsed==-1 || usageStartTimeSec==-1){
 			return false;
-		}else if((System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_HOUR*60*60){
+		}else if((System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_HOUR*24*60*60){
 			return false;
 		}else if(dataUsed>=getDataLimit()){
 			return true;
