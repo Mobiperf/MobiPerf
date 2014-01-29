@@ -89,7 +89,7 @@ public interface Config {
   public static final String PREF_KEY_DATA_LIMIT = "PREF_KEY_DATA_LIMIT";
   
   
-  public static final int DEFAULT_DATA_MONITOR_PERIOD_HOUR= 3;
+  public static final int DEFAULT_DATA_MONITOR_PERIOD_DAY= 1;
   
   
   
