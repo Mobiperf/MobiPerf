@@ -109,7 +109,7 @@ public class PingTask extends MeasurementTask {
         String val = null;
         if ((val = params.get("packet_size_byte")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {
-          this.packetSizeByte = Integer.parseInt(val);  
+        	this.packetSizeByte = Integer.parseInt(val);  
         }
         if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {

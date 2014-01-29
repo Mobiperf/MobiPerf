@@ -612,8 +612,12 @@ public class MeasurementScheduler extends Service {
           getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
       
+      int prevDataLimit=powerManager.getDataLimit();
       powerManager.setDataUsageLimit(prefs.getString(getString(R.string.dataLimitPrefKey),"Unlimited"));
-          
+      int newDataLimit=powerManager.getDataLimit();
+      if(prevDataLimit!=newDataLimit){
+    	  powerManager.resetDataUsaage(); 
+      }    
 
       this.setCheckinInterval(Integer.parseInt(prefs.getString(
           getString(R.string.checkinIntervalPrefKey),

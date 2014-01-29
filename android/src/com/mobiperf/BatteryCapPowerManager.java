@@ -71,13 +71,8 @@ public class BatteryCapPowerManager {
 	}
 
 	public synchronized void setDataUsageLimit(String dataLimitStr){
-		if(dataLimitStr.equals("0 MB")){
-			dataLimit=0;
-
-		}else if(dataLimitStr.equals("50 MB")){
+		if(dataLimitStr.equals("50 MB")){
 			dataLimit=50*1024*1024;
-		}else if(dataLimitStr.equals("100 MB")){
-			dataLimit=100*1024*1024;
 		}else if(dataLimitStr.equals("250 MB")){
 			dataLimit=250*1024*1024;
 		}else if(dataLimitStr.equals("500 GB")){
@@ -89,18 +84,37 @@ public class BatteryCapPowerManager {
 		}
 
 	}
+	
+	
 
 	public synchronized int getDataLimit() {
 		return this.dataLimit;
 	}
+	
+	public void resetDataUsaage(){
+		File file = new File(context.getFilesDir(), "datausage");
+		if(file.exists()){
+			try {
+			file.createNewFile();
+			FileOutputStream outputStream;
+			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
+			long dataUsed=0;
+			long usageStartTimeSec=(System.currentTimeMillis()/1000);
+			String usageStat=usageStartTimeSec+"_"+dataUsed;
+			outputStream.write(usageStat.getBytes());
+			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
+			outputStream.close();
+			} catch (IOException e) {
+				Logger.e("Error in creating data usage file");
+				e.printStackTrace();
+			}
+		}
+	}
 
 	private boolean isOverDataLimit(String nextTaskType) throws IOException{
 		
-		if(nextTaskType.equals(PingTask.TYPE) || nextTaskType.equals(DnsLookupTask.TYPE) ||
-				nextTaskType.equals(TracerouteTask.TYPE) || nextTaskType.equals(UDPBurstTask.TYPE)){
+		if(getDataLimit()==-1){
 			return false;
-		}else if(getDataLimit()==0 ){
-			return true;
 		}else if(getDataLimit()==50*1024*1024 && nextTaskType.equals(TCPThroughputTask.TYPE)){
 			return true;
 		}
@@ -119,29 +133,36 @@ public class BatteryCapPowerManager {
 			String[] toks = content.split("_");
 			usageStartTimeSec=Long.parseLong(toks[0]);
 			dataUsed=Long.parseLong(toks[1]);
+			Logger.i(dataUsed+" Byte used from "+usageStartTimeSec);
 			br.close();
 		}
 		if(dataUsed==-1 || usageStartTimeSec==-1){
 			return false;
-		}else if((System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_HOUR*24*60*60){
+		}else if((System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60){
 			return false;
-		}else if(dataUsed>=getDataLimit()){
+		}else if(dataUsed>=((getDataLimit()*Config.DEFAULT_DATA_MONITOR_PERIOD_DAY)/30)){
 			return true;
 		}
 		return false;
 	}
 
-	private void updateDataUsage(MeasurementResult result, String taskType) throws IOException {
+	private void updateDataUsage(MeasurementResult result, String taskType) throws IOException { 
 		int taskDataUsed=0;
 		if(taskType.equals(TCPThroughputTask.TYPE) &&
 				result.getResult("total_data_sent_received")!=null){
-			taskDataUsed=(Integer)(result.getResult("total_data_sent_received"));
+			taskDataUsed=Integer.parseInt(result.getResult("total_data_sent_received")+"");
 		}else if(taskType.equals(RRCTask.TYPE)){
-			taskDataUsed=RRCTask.AVG_DATA_USAGE_KBYTE*1024;
+			taskDataUsed=RRCTask.AVG_DATA_USAGE_BYTE;
+		}else if(taskType.equals(DnsLookupTask.TYPE)){
+			taskDataUsed=DnsLookupTask.AVG_DATA_USAGE_BYTE;
 		}else if(taskType.equals(HttpTask.TYPE) && 
 				result.getResult("headers_len")!=null && 
 				result.getResult("body_len")!=null){
-			taskDataUsed=((Integer)(result.getResult("headers_len"))+((Integer)(result.getResult("body_len"))));
+				taskDataUsed=(int) (Long.parseLong(result.getResult("headers_len")+"")+(Integer.parseInt(result.getResult("body_len")+"")));
+		}else if(taskType.equals(PingTask.TYPE)){
+			taskDataUsed=PingTask.DEFAULT_PING_PACKET_SIZE*Config.PING_COUNT_PER_MEASUREMENT*2;
+		}else if(taskType.equals(TracerouteTask.TYPE)){
+			taskDataUsed=TracerouteTask.DEFAULT_MAX_HOP_CNT*TracerouteTask.DEFAULT_PING_PACKET_SIZE*TracerouteTask.DEFAULT_PINGS_PER_HOP*2;
 		}
 
 
@@ -162,7 +183,7 @@ public class BatteryCapPowerManager {
 			FileOutputStream outputStream;
 			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
 
-			if((long)(System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_HOUR*60*60){
+			if((long)(System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60){
 				dataUsed=taskDataUsed;
 				usageStartTimeSec=(System.currentTimeMillis()/1000);
 			}else{
@@ -170,6 +191,7 @@ public class BatteryCapPowerManager {
 			}
 			String usageStat=usageStartTimeSec+"_"+dataUsed;
 			outputStream.write(usageStat.getBytes());
+			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
 			outputStream.close();
 
 		}else{
@@ -180,6 +202,7 @@ public class BatteryCapPowerManager {
 			long usageStartTimeSec=(System.currentTimeMillis()/1000);
 			String usageStat=usageStartTimeSec+"_"+dataUsed;
 			outputStream.write(usageStat.getBytes());
+			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
 			outputStream.close();
 		}
 

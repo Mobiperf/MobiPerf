@@ -83,7 +83,7 @@ public class RRCTask extends MeasurementTask {
   private boolean stop = false;
   private Context context;
   
-  public static final int AVG_DATA_USAGE_KBYTE=600;
+  public static final int AVG_DATA_USAGE_BYTE=600*1024;
 
   /**
    * Stores parameters for the RRC inference task

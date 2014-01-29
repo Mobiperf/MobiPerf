@@ -116,14 +116,12 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     });
     
     ListPreference dataLimitLp = (ListPreference)findPreference(Config.PREF_KEY_DATA_LIMIT);
-    final CharSequence[] dataLimitItems=new CharSequence[7];
-    dataLimitItems[0]="0 MB";
-    dataLimitItems[1]="50 MB";
-    dataLimitItems[2]="100 MB";
-    dataLimitItems[3]="250 MB";
-    dataLimitItems[4]="500 MB";
-    dataLimitItems[5]="1 GB";
-    dataLimitItems[6]="Unlimited";
+    final CharSequence[] dataLimitItems=new CharSequence[5];
+    dataLimitItems[0]="50 MB";
+    dataLimitItems[1]="250 MB";
+    dataLimitItems[2]="500 MB";
+    dataLimitItems[3]="1 GB";
+    dataLimitItems[4]="Unlimited";
     dataLimitLp.setEntries(dataLimitItems);
     dataLimitLp.setEntryValues(dataLimitItems);
    
