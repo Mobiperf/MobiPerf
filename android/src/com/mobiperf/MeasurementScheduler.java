@@ -39,8 +39,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -107,6 +110,7 @@ public class MeasurementScheduler extends Service {
   private ArrayList<String> userResults;
   private ArrayList<String> systemResults;
   private ArrayList<String> systemConsole;
+  private Hashtable<String, MeasurementTask> currentSchedule;
 
   private PhoneUtils phoneUtils;
 
@@ -151,6 +155,8 @@ public class MeasurementScheduler extends Service {
             new TaskComparator());
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>>();
+    // expect it to be the same size as the queue
+    this.currentSchedule = new Hashtable<String, MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE);
 
     this.notificationManager =
         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -608,18 +614,18 @@ public class MeasurementScheduler extends Service {
     SharedPreferences prefs =
         PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     try {
-      powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
-          getString(R.string.batteryMinThresPrefKey),
-          String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
-      
-      int prevDataLimit=powerManager.getDataLimit();
-      powerManager.setDataUsageLimit(prefs.getString(getString(R.string.dataLimitPrefKey),"Unlimited"));
-      int newDataLimit=powerManager.getDataLimit();
-      if(prevDataLimit!=newDataLimit){
-    	  powerManager.resetDataUsaage(); 
-      }    
+        powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
+            getString(R.string.batteryMinThresPrefKey),
+            String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
+        
+        int prevDataLimit=powerManager.getDataLimit();
+        powerManager.setDataUsageLimit(prefs.getString(getString(R.string.dataLimitPrefKey),"Unlimited"));
+        int newDataLimit=powerManager.getDataLimit();
+        if(prevDataLimit!=newDataLimit){
+      	  powerManager.resetDataUsaage(); 
+        }    
 
-      this.setCheckinInterval(Integer.parseInt(prefs.getString(
+        this.setCheckinInterval(Integer.parseInt(prefs.getString(
           getString(R.string.checkinIntervalPrefKey),
           String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
 
@@ -694,13 +700,79 @@ public class MeasurementScheduler extends Service {
     }
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
-    // The new task schedule overrides the old one
-    removeAllUnscheduledTasks();
-
+    
+    updateSchedule(tasksFromServer);
+    
     for (MeasurementTask task : tasksFromServer) {
       Logger.i("added task: " + task.toString());
       this.submitTask(task);
     }
+  }
+
+  /**
+   * For the new set of tasks:
+   * 
+   * @param newTasks
+   */
+  private void updateSchedule(List<MeasurementTask> newTasks) {    
+    /**
+     * Design:
+     * Have a structure with keys pointing to tasks.
+     * Go through new list.  Do the following:
+     *  - Compare sets of keys.  Remove tasks whose keys are gone, add tasks whose keys are new.
+     *  - For all tasks, compare parameters. If parameters are different, remove and add the new task.
+     * Add tasks back into the queue
+     * 
+     * Currently, any changes to server-side parameters get updated immediately, otherwise
+     * 
+     */
+      // Keep track of what tasks to change
+      Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
+
+      // Keep track of what keys are not being used
+      Set<String> scheduleKeys = new HashSet<String>(currentSchedule.keySet());
+      Set<String> keysToRemove = new HashSet<String>();
+      Logger.i("Attempting to add new tasks");
+     
+      for (MeasurementTask newTask: newTasks) {
+        String newKey = newTask.getDescription().key;
+        if (!scheduleKeys.contains(newKey)) {
+          tasksToAdd.add(newTask);
+        } else {
+          // check for changes
+          if (!currentSchedule.get(newKey).getDescription().
+              equals(newTask.getDescription())) {
+            keysToRemove.add(newKey);
+            tasksToAdd.add(newTask);            
+          }          
+          scheduleKeys.remove(newKey);         
+        }        
+      }
+      
+      // scheduleKeys now contain all keys that do not exist
+      keysToRemove.addAll(scheduleKeys);
+      
+      // remove all bad tasks from the queue and schedule
+      PriorityBlockingQueue<MeasurementTask> newQueue = new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE,
+          new TaskComparator());
+
+      Logger.i("Tasks to remove:" + keysToRemove.size());
+      for (MeasurementTask task: this.taskQueue) {
+        String taskKey = task.getDescription().key;
+        if (!keysToRemove.contains(taskKey)) {
+          newQueue.add(task);
+        } else {          
+          Logger.w("Removing task with key" + taskKey);
+          currentSchedule.remove(taskKey);
+        }
+      }
+      this.taskQueue = newQueue;
+      // add all new tasks
+      Logger.i("New tasks added:" + tasksToAdd.size());
+      for (MeasurementTask task: tasksToAdd) {
+        this.taskQueue.add(task);
+        currentSchedule.put(task.getDescription().key, task);
+      }
   }
 
   @SuppressWarnings("unchecked")

@@ -61,7 +61,9 @@ public abstract class MeasurementDesc {
     this.type = type;
     this.key = key;
     if (startTime == null) {
-      this.startTime = Calendar.getInstance().getTime();
+      Calendar now = Calendar.getInstance();
+      now.add(Calendar.SECOND, (int)intervalSec);
+      this.startTime = now.getTime();
     } else {
       this.startTime = new Date(startTime.getTime());
     }
@@ -93,4 +95,21 @@ public abstract class MeasurementDesc {
     return "<MeasurementTask> " + this.type + " deadline:" + endTime +
       " params:" + parameters;
   }  
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof MeasurementDesc)) return false;
+    
+    MeasurementDesc otherDesc = (MeasurementDesc) obj;
+    if (!this.type.equals(otherDesc.type)) return false;
+    if (!this.key.equals(otherDesc.key)) return false;
+    if (this.intervalSec != otherDesc.intervalSec) return false;
+    if (this.count != otherDesc.count) return false;
+    if (this.priority != otherDesc.priority) return false;
+    Logger.i("Comparing parameters for equality"); // XXX remove when done debugging
+    if (!this.parameters.equals(otherDesc.parameters))return false; 
+    Logger.i("Parameters are equal, return true"); // XXX remove when done debugging
+    
+    return true;
+  }
 }
