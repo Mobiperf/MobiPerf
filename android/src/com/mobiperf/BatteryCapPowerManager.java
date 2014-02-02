@@ -42,16 +42,24 @@ import java.util.concurrent.Callable;
  * is lower than a threshold.
  */
 public class BatteryCapPowerManager {
+	
+	public enum DataUsageProfile {
+	    PROFILE1, PROFILE2, PROFILE3, PROFILE4, UNLIMITED
+	  }
+	
 	/** The minimum threshold below which no measurements will be scheduled */
 	private int minBatteryThreshold;
 	private Context context = null;
 	private int dataLimit;//in Byte
+	private DataUsageProfile dataUsageProfile;
 
 
 	public BatteryCapPowerManager(int batteryThresh, Context context) {
 		this.minBatteryThreshold = batteryThresh;
 		this.dataLimit=-1;
 		this.context=context;
+		this.dataUsageProfile=DataUsageProfile.UNLIMITED;
+		
 	}
 
 	/** 
@@ -73,14 +81,19 @@ public class BatteryCapPowerManager {
 	public synchronized void setDataUsageLimit(String dataLimitStr){
 		if(dataLimitStr.equals("50 MB")){
 			dataLimit=50*1024*1024;
+			dataUsageProfile=DataUsageProfile.PROFILE1;
 		}else if(dataLimitStr.equals("250 MB")){
 			dataLimit=250*1024*1024;
+			dataUsageProfile=DataUsageProfile.PROFILE2;
 		}else if(dataLimitStr.equals("500 GB")){
 			dataLimit=500*1024*1024;
+			dataUsageProfile=DataUsageProfile.PROFILE3;
 		}else if(dataLimitStr.equals("1 GB")){
 			dataLimit=1024*1024*1024;
+			dataUsageProfile=DataUsageProfile.PROFILE4;
 		}else{
 			dataLimit=-1;
+			dataUsageProfile=DataUsageProfile.UNLIMITED;
 		}
 
 	}
@@ -89,6 +102,10 @@ public class BatteryCapPowerManager {
 
 	public synchronized int getDataLimit() {
 		return this.dataLimit;
+	}
+	
+	public synchronized DataUsageProfile getDataUsageProfile(){
+		return this.dataUsageProfile;
 	}
 	
 	public void resetDataUsaage(){
