@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -55,6 +56,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import com.google.myjson.reflect.TypeToken;
+import com.mobiperf.BatteryCapPowerManager.DataUsageProfile;
 import com.mobiperf.BatteryCapPowerManager.PowerAwareTask;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
@@ -705,9 +707,24 @@ public class MeasurementScheduler extends Service {
     
     for (MeasurementTask task : tasksFromServer) {
       Logger.i("added task: " + task.toString());
+      adjustInterval(task);
       this.submitTask(task);
     }
   }
+  
+  
+  private void adjustInterval(MeasurementTask task){
+	  Map<String, String> params=task.getDescription().parameters;
+	  if(params.containsKey("profile_1_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE1){
+		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_1_freq")));
+	  }else if(params.containsKey("profile_2_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE2){
+		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_2_freq")));
+	  }else if(params.containsKey("profile_3_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE3){
+		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_3_freq")));
+	  }else if(params.containsKey("profile_4_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE4){
+		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_4_freq")));
+	  }
+  } 
 
   /**
    * For the new set of tasks:
