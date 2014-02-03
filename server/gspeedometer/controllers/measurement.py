@@ -189,10 +189,11 @@ class MeasurementType:
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
           ('ping_timeout_sec', 'Ping timeout (seconds)'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)'),
           ('packet_size_byte', 'Ping packet size (bytes)')]))
     elif measurement_type == 'dns_lookup':
       return MeasurementType(
@@ -200,10 +201,11 @@ class MeasurementType:
           SortedDict([('target', 'Target (IP or hostname)'),
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)'),
            ('server', 'DNS server')]))
     elif measurement_type == 'traceroute':
       return MeasurementType(
@@ -212,20 +214,22 @@ class MeasurementType:
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
           ('max_hop_count', 'Traceroute max hop count'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)'),
           ('pings_per_hop', 'Traceroute pings per hop')]))
     elif measurement_type == 'http':
       return MeasurementType(
           'http', 'HTTP get', SortedDict([('url', 'HTTP URL'),
           ('location_update_distance', 'Location update distance (m)'),
           ('trigger_location_update', 'Trigger location update (bool)'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)'),
           ('headers', 'HTTP headers'), ('method', 'HTTP method')]))
     elif measurement_type == 'tcpthroughput':
       return MeasurementType(
@@ -239,10 +243,11 @@ class MeasurementType:
           ('sample_period_sec', 'Interval to sample throughput (seconds)'),
           ('slow_start_period_sec', 'Waiting period for slow start (seconds)'),
           ('tcp_timeout_sec', 'TCP connection timeout (seconds)'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)') ]))
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)') ]))
     elif measurement_type == 'rrc':
       return MeasurementType(
           'rrc', 'RRC inference', SortedDict([
@@ -257,10 +262,11 @@ class MeasurementType:
           ('http', 'Run Extra HTTP download test (true/false)'),
           ('tcp', 'Run Extra TCP handshake test (true/false)'),
           ('measure_sizes', 'Run tests on parameter sizes (true/false)'),
-          ('profile_1_freq', 'Profile 1 frequency (int)'),
-          ('profile_2_freq', 'Profile 2 frequency (int)'),
-          ('profile_3_freq', 'Profile 3 frequency (int)'),
-          ('profile_4_freq', 'Profile 4 frequency (int)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)'),
           ('default_extra_test_timers', 'A list of timers, as comma-separated \
           integers, to be used for the TCP, DNS and HTTP tests'),
           ('size_granularity', "For parameter size tests, the size in bytes by \
