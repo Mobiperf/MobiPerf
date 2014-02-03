@@ -331,7 +331,9 @@ public class BatteryCapPowerManager {
 					Logger.i("Calling PowerAwareTask " + realTask);
 					result = realTask.call(); 
 					Logger.i("Got result " + result);
-					pManager.updateDataUsage(result,realTask.getDescription().type);
+					if (PhoneUtils.getPhoneUtils().getCurrentNetworkConnection()==PhoneUtils.TYPE_MOBILE){
+						pManager.updateDataUsage(result,realTask.getDescription().type);
+					}
 					broadcastMeasurementEnd(result, null);
 					return result;
 				} catch (MeasurementError e) {
