@@ -201,14 +201,21 @@ public class BatteryCapPowerManager {
 			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
 
 			if((long)(System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60){
-				dataUsed=taskDataUsed;
-				usageStartTimeSec=(System.currentTimeMillis()/1000);
+				
+				dataUsed=taskDataUsed+dataUsed;
+				float periods=((float)((long)(System.currentTimeMillis()/1000)-usageStartTimeSec))/
+						(float)(Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60);
+				
+				
+				usageStartTimeSec+=((int)(periods))*(Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60);
+				
+				dataUsed=dataUsed-(((int)(periods))*dataLimit);
 			}else{
 				dataUsed+=taskDataUsed;
 			}
 			String usageStat=usageStartTimeSec+"_"+dataUsed;
 			outputStream.write(usageStat.getBytes());
-			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
+			Logger.e("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
 			outputStream.close();
 
 		}else{
