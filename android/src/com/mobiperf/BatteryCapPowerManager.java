@@ -85,7 +85,7 @@ public class BatteryCapPowerManager {
 		}else if(dataLimitStr.equals("250 MB")){
 			dataLimit=250*1024*1024;
 			dataUsageProfile=DataUsageProfile.PROFILE2;
-		}else if(dataLimitStr.equals("500 GB")){
+		}else if(dataLimitStr.equals("500 MB")){
 			dataLimit=500*1024*1024;
 			dataUsageProfile=DataUsageProfile.PROFILE3;
 		}else if(dataLimitStr.equals("1 GB")){
