@@ -158,7 +158,8 @@ public class MeasurementScheduler extends Service {
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>>();
     // expect it to be the same size as the queue
-    this.currentSchedule = new Hashtable<String, MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE);
+    this.currentSchedule =
+        new Hashtable<String, MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE);
 
     this.notificationManager =
         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -181,7 +182,7 @@ public class MeasurementScheduler extends Service {
     broadcastReceiver = new BroadcastReceiver() {
       // Handles various broadcast intents.
 
-      // If traffic is paused by RRCTrafficControl (because a RRC test is 
+      // If traffic is paused by RRCTrafficControl (because a RRC test is
       // running), we do not perform the checkin, since sending interfering
       // traffic makes the RRC inference task abort and restart the current
       // test as the traffic may have altered the phone's RRC state.
@@ -285,7 +286,7 @@ public class MeasurementScheduler extends Service {
       Logger.i("Skipping checkin - User has not consented");
       return;
     }
-    
+
     // New addition: check if the RRC task has paused other tasks.
     if ((!force && isPauseRequested()) || RRCTrafficControl.checkIfPaused()) {
       sendStringMsg("Skipping checkin - app is paused");
@@ -332,14 +333,14 @@ public class MeasurementScheduler extends Service {
         }
 
         MeasurementDesc desc = task.getDescription();
-        
+
         // The RRC task should run no more than once an hour.
         // It can take a long time to run, due to all the pauses.
         if (desc.type == "rrc" && desc.intervalSec <= 3600) {
           desc.intervalSec = 3600;
-          Logger.i("Interval set too long for rrc task, setting to one hour");          
+          Logger.i("Interval set too long for rrc task, setting to one hour");
         }
-        
+
         long newStartTime =
             desc.startTime.getTime() + (long) desc.intervalSec * 1000;
 
@@ -616,18 +617,19 @@ public class MeasurementScheduler extends Service {
     SharedPreferences prefs =
         PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     try {
-        powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
-            getString(R.string.batteryMinThresPrefKey),
-            String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
-        
-        int prevDataLimit=powerManager.getDataLimit();
-        powerManager.setDataUsageLimit(prefs.getString(getString(R.string.dataLimitPrefKey),"Unlimited"));
-        int newDataLimit=powerManager.getDataLimit();
-        if(prevDataLimit!=newDataLimit){
-      	  powerManager.resetDataUsaage(); 
-        }    
+      powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
+          getString(R.string.batteryMinThresPrefKey),
+          String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
 
-        this.setCheckinInterval(Integer.parseInt(prefs.getString(
+      int prevDataLimit = powerManager.getDataLimit();
+      powerManager.setDataUsageLimit(prefs.getString(
+          getString(R.string.dataLimitPrefKey), "No limit"));
+      int newDataLimit = powerManager.getDataLimit();
+      if (prevDataLimit != newDataLimit) {
+        powerManager.resetDataUsaage();
+      }
+
+      this.setCheckinInterval(Integer.parseInt(prefs.getString(
           getString(R.string.checkinIntervalPrefKey),
           String.valueOf(Config.DEFAULT_CHECKIN_INTERVAL_SEC / 3600))) * 3600);
 
@@ -702,94 +704,126 @@ public class MeasurementScheduler extends Service {
     }
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
-    
+
     updateSchedule(tasksFromServer);
-    
-    for (MeasurementTask task : tasksFromServer) {
+
+    /*for (MeasurementTask task : tasksFromServer) {
       Logger.i("added task: " + task.toString());
-      adjustInterval(task);
       this.submitTask(task);
-    }
+    }*/
   }
-  
-  
-  private void adjustInterval(MeasurementTask task){
-	  Map<String, String> params=task.getDescription().parameters;
-	  if(params.containsKey("profile_1_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE1){
-		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_1_freq")));
-	  }else if(params.containsKey("profile_2_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE2){
-		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_2_freq")));
-	  }else if(params.containsKey("profile_3_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE3){
-		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_3_freq")));
-	  }else if(params.containsKey("profile_4_freq") && powerManager.getDataUsageProfile()==DataUsageProfile.PROFILE4){
-		  task.getDescription().intervalSec=task.getDescription().intervalSec*(Integer.parseInt(params.get("profile_4_freq")));
-	  }
-  } 
+
+/**
+ * Adjusts the frequency of the task based on the profile passed from the server.
+ * 
+ * Alternately, disregards the task altogether, if a -1 is passed. 
+ * 
+ * @param task The task to adjust
+ * @return false if the task is to be ignored
+ */
+  private boolean adjustInterval(MeasurementTask task) {
+    
+    Map<String, String> params = task.getDescription().parameters;
+    float adjust = 1; // default
+    if (params.containsKey("profile_1_freq")
+        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE1) {
+      adjust = Float.parseFloat(params.get("profile_1_freq"));  
+      Logger.i("Task " + task.getDescription().key + " adjusted using profile 1");
+    } else if (params.containsKey("profile_2_freq")
+        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE2) {
+      adjust = Float.parseFloat(params.get("profile_2_freq"));  
+      Logger.i("Task " + task.getDescription().key + " adjusted using profile 2");    
+    } else if (params.containsKey("profile_3_freq")
+        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE3) {
+      adjust = Float.parseFloat(params.get("profile_3_freq"));
+      Logger.i("Task " + task.getDescription().key + " adjusted using profile 3");
+    } else if (params.containsKey("profile_4_freq")
+        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE4) {
+      adjust = Float.parseFloat(params.get("profile_4_freq"));
+      Logger.i("Task " + task.getDescription().key + " adjusted using profile 4");
+    } else if (params.containsKey("profile_unlimited")
+        && powerManager.getDataUsageProfile() == DataUsageProfile.UNLIMITED) {
+      adjust = Float.parseFloat(params.get("profile_unlimited"));
+      Logger.i("Task " + task.getDescription().key + " adjusted using unlimited profile");
+    }
+    if (adjust <= 0) {
+      Logger.i("Task " + task.getDescription().key + "marked for removal");
+      return false;
+    }    
+    task.getDescription().intervalSec *= adjust;
+    return true;
+    
+  }
 
   /**
    * For the new set of tasks:
    * 
    * @param newTasks
    */
-  private void updateSchedule(List<MeasurementTask> newTasks) {    
+  private void updateSchedule(List<MeasurementTask> newTasks) {
     /**
-     * Design:
-     * Have a structure with keys pointing to tasks.
-     * Go through new list.  Do the following:
-     *  - Compare sets of keys.  Remove tasks whose keys are gone, add tasks whose keys are new.
-     *  - For all tasks, compare parameters. If parameters are different, remove and add the new task.
-     * Add tasks back into the queue
+     * Design: Have a structure with keys pointing to tasks. Go through new list. Do the following:
+     * - Compare sets of keys. Remove tasks whose keys are gone, add tasks whose keys are new. - For
+     * all tasks, compare parameters. If parameters are different, remove and add the new task. Add
+     * tasks back into the queue
      * 
      * Currently, any changes to server-side parameters get updated immediately, otherwise
      * 
      */
-      // Keep track of what tasks to change
-      Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
+    // Keep track of what tasks to change
+    Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
 
-      // Keep track of what keys are not being used
-      Set<String> scheduleKeys = new HashSet<String>(currentSchedule.keySet());
-      Set<String> keysToRemove = new HashSet<String>();
-      Logger.i("Attempting to add new tasks");
-     
-      for (MeasurementTask newTask: newTasks) {
-        String newKey = newTask.getDescription().key;
-        if (!scheduleKeys.contains(newKey)) {
+    // Keep track of what keys are not being used
+    Set<String> scheduleKeys = new HashSet<String>(currentSchedule.keySet());
+    Set<String> keysToRemove = new HashSet<String>();
+    Logger.i("Attempting to add new tasks");
+
+    for (MeasurementTask newTask : newTasks) {
+      
+      // Adjust the frequency of the new task, or ignore it if requested.
+      if (!adjustInterval(newTask)) {
+        continue;
+      }
+      
+      String newKey = newTask.getDescription().key;
+      if (!scheduleKeys.contains(newKey)) {
+        tasksToAdd.add(newTask);
+      } else {
+        // check for changes
+        if (!currentSchedule.get(newKey).getDescription()
+            .equals(newTask.getDescription())) {
+          keysToRemove.add(newKey);
           tasksToAdd.add(newTask);
-        } else {
-          // check for changes
-          if (!currentSchedule.get(newKey).getDescription().
-              equals(newTask.getDescription())) {
-            keysToRemove.add(newKey);
-            tasksToAdd.add(newTask);            
-          }          
-          scheduleKeys.remove(newKey);         
-        }        
-      }
-      
-      // scheduleKeys now contain all keys that do not exist
-      keysToRemove.addAll(scheduleKeys);
-      
-      // remove all bad tasks from the queue and schedule
-      PriorityBlockingQueue<MeasurementTask> newQueue = new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE,
-          new TaskComparator());
-
-      Logger.i("Tasks to remove:" + keysToRemove.size());
-      for (MeasurementTask task: this.taskQueue) {
-        String taskKey = task.getDescription().key;
-        if (!keysToRemove.contains(taskKey)) {
-          newQueue.add(task);
-        } else {          
-          Logger.w("Removing task with key" + taskKey);
-          currentSchedule.remove(taskKey);
         }
+        scheduleKeys.remove(newKey);
       }
-      this.taskQueue = newQueue;
-      // add all new tasks
-      Logger.i("New tasks added:" + tasksToAdd.size());
-      for (MeasurementTask task: tasksToAdd) {
-        this.taskQueue.add(task);
-        currentSchedule.put(task.getDescription().key, task);
+    }
+
+    // scheduleKeys now contain all keys that do not exist
+    keysToRemove.addAll(scheduleKeys);
+
+    // remove all bad tasks from the queue and schedule
+    PriorityBlockingQueue<MeasurementTask> newQueue =
+        new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE,
+            new TaskComparator());
+
+    Logger.i("Tasks to remove:" + keysToRemove.size());
+    for (MeasurementTask task : this.taskQueue) {
+      String taskKey = task.getDescription().key;
+      if (!keysToRemove.contains(taskKey)) {
+        newQueue.add(task);
+      } else {
+        Logger.w("Removing task with key" + taskKey);
+        currentSchedule.remove(taskKey);
       }
+    }
+    this.taskQueue = newQueue;
+    // add all new tasks
+    Logger.i("New tasks added:" + tasksToAdd.size());
+    for (MeasurementTask task : tasksToAdd) {
+      this.taskQueue.add(task);
+      currentSchedule.put(task.getDescription().key, task);
+    }
   }
 
   @SuppressWarnings("unchecked")
