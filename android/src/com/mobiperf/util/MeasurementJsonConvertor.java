@@ -69,6 +69,12 @@ public class MeasurementJsonConvertor {
     dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
   }
   
+  /*public static JSONObject makeJsonFromMeasurementTask(MeasurementTask task) {
+    JSONObject object = new JSONObject();
+    object.put("target", task.getDescription().target);
+    return object;
+  }*/
+  
   public static MeasurementTask makeMeasurementTaskFromJson(JSONObject json, Context context) 
       throws IllegalArgumentException {  
     try {

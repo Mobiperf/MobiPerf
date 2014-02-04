@@ -28,7 +28,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -54,6 +59,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.myjson.reflect.TypeToken;
 import com.mobiperf.BatteryCapPowerManager.DataUsageProfile;
@@ -705,7 +713,7 @@ public class MeasurementScheduler extends Service {
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
 
-    updateSchedule(tasksFromServer);
+    updateSchedule(tasksFromServer, true);
 
     /*for (MeasurementTask task : tasksFromServer) {
       Logger.i("added task: " + task.toString());
@@ -761,7 +769,7 @@ public class MeasurementScheduler extends Service {
    * 
    * @param newTasks
    */
-  private void updateSchedule(List<MeasurementTask> newTasks) {
+  private void updateSchedule(List<MeasurementTask> newTasks, boolean saveToDisk) {
     /**
      * Design: Have a structure with keys pointing to tasks. Go through new list. Do the following:
      * - Compare sets of keys. Remove tasks whose keys are gone, add tasks whose keys are new. - For
@@ -807,25 +815,97 @@ public class MeasurementScheduler extends Service {
     PriorityBlockingQueue<MeasurementTask> newQueue =
         new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE,
             new TaskComparator());
+    
+    synchronized(currentSchedule) {
+      Logger.i("Tasks to remove:" + keysToRemove.size());
+      for (MeasurementTask task : this.taskQueue) {
+        String taskKey = task.getDescription().key;
+        if (!keysToRemove.contains(taskKey)) {
+          newQueue.add(task);
+        } else {
+          Logger.w("Removing task with key" + taskKey);
+          currentSchedule.remove(taskKey);
+        }
+      }
+      this.taskQueue = newQueue;
+      // add all new tasks
+      Logger.i("New tasks added:" + tasksToAdd.size());
+      for (MeasurementTask task : tasksToAdd) {
+        submitTask(task);
+        currentSchedule.put(task.getDescription().key, task);
+      }      
+    }
 
-    Logger.i("Tasks to remove:" + keysToRemove.size());
-    for (MeasurementTask task : this.taskQueue) {
-      String taskKey = task.getDescription().key;
-      if (!keysToRemove.contains(taskKey)) {
-        newQueue.add(task);
-      } else {
-        Logger.w("Removing task with key" + taskKey);
-        currentSchedule.remove(taskKey);
+    if (saveToDisk && (!tasksToAdd.isEmpty() || !keysToRemove.isEmpty())) {
+      saveSchedulerState();
+    }
+    
+  }
+  
+  private void saveSchedulerState() {
+    synchronized(currentSchedule) {
+      try {
+        BufferedOutputStream writer = new BufferedOutputStream(
+            openFileOutput("schedule", Context.MODE_PRIVATE));
+
+        Logger.i("Saving schedule to disk...");
+        for (Map.Entry<String, MeasurementTask> entry : currentSchedule.entrySet()) {
+          try {                     
+            JSONObject task = MeasurementJsonConvertor.encodeToJson(
+                entry.getValue().getDescription());
+            String taskstring = task.toString() + "\n";
+            Logger.i(taskstring); // XXX debug
+            writer.write(taskstring.getBytes());
+          } catch (JSONException e) {
+            e.printStackTrace();
+          }
+        }
+        writer.close();
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     }
-    this.taskQueue = newQueue;
-    // add all new tasks
-    Logger.i("New tasks added:" + tasksToAdd.size());
-    for (MeasurementTask task : tasksToAdd) {
-      submitTask(task);
-      currentSchedule.put(task.getDescription().key, task);
-    }
   }
+  
+  private void loadSchedulerState() {
+    Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
+    synchronized(currentSchedule) {
+      try {
+        Logger.i("Restoring schedule from disk...");
+        FileInputStream inputstream = openFileInput("schedule");
+        InputStreamReader streamreader = new InputStreamReader(inputstream);
+        BufferedReader bufferedreader = new BufferedReader(streamreader);
+
+        String line;
+        while ((line = bufferedreader.readLine()) != null) {
+            JSONObject jsonTask;
+            try {
+              jsonTask = new JSONObject(line);
+              Logger.i(line.toString()); // XXX debug
+              MeasurementTask newTask = MeasurementJsonConvertor.
+                  makeMeasurementTaskFromJson(jsonTask, getApplicationContext());
+              tasksToAdd.add(newTask);
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+        }
+        
+        
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
+    
+    updateSchedule(tasksToAdd, false);
+  }
+  
+  
 
   @SuppressWarnings("unchecked")
   private void uploadResults() {
@@ -1071,6 +1151,7 @@ public class MeasurementScheduler extends Service {
     Logger.d("Service restoreState called");
     initializeConsoles();
     restoreStats();
+    loadSchedulerState();
   }
 
 
