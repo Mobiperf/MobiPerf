@@ -115,6 +115,9 @@ public abstract class MeasurementDesc {
     if (this.count != otherDesc.count) return false;
     if (this.priority != otherDesc.priority) return false;
     Logger.i("Comparing parameters for equality"); // XXX remove when done debugging
+    if (this.parameters == null) {
+      return false;
+    }
     if (!this.parameters.equals(otherDesc.parameters))return false; 
     Logger.i("Parameters are equal, return true"); // XXX remove when done debugging
     
