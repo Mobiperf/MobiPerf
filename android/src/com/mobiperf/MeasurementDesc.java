@@ -61,9 +61,7 @@ public abstract class MeasurementDesc {
     this.type = type;
     this.key = key;
     if (startTime == null) {
-      Calendar now = Calendar.getInstance();
-      now.add(Calendar.SECOND, (int)intervalSec);
-      this.startTime = now.getTime();
+      updateStartTime();
     } else {
       this.startTime = new Date(startTime.getTime());
     }
@@ -82,6 +80,16 @@ public abstract class MeasurementDesc {
     this.count = count;
     this.priority = priority;
     this.parameters = params;
+  }
+  
+  /**
+   * When we update the interval, we also need to change the start time accordingly
+   */
+  public void updateStartTime() {
+    Calendar now = Calendar.getInstance();
+    now.add(Calendar.SECOND, (int)intervalSec);
+    this.startTime = now.getTime();
+    
   }
   
   /** Return the type of the measurement (DNS, Ping, Traceroute, etc.)*/

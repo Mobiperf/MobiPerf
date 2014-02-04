@@ -751,6 +751,7 @@ public class MeasurementScheduler extends Service {
       return false;
     }    
     task.getDescription().intervalSec *= adjust;
+    task.getDescription().updateStartTime(); // Needed because the start time is set on creation
     return true;
     
   }
@@ -821,7 +822,7 @@ public class MeasurementScheduler extends Service {
     // add all new tasks
     Logger.i("New tasks added:" + tasksToAdd.size());
     for (MeasurementTask task : tasksToAdd) {
-      this.taskQueue.add(task);
+      submitTask(task);
       currentSchedule.put(task.getDescription().key, task);
     }
   }
