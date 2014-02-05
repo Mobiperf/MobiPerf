@@ -28,6 +28,7 @@ import com.mobiperf.util.PhoneUtils;
 import android.content.Context;
 import android.content.Intent;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -55,14 +56,19 @@ public class BatteryCapPowerManager {
 	private Context context = null;
 	private int dataLimit;//in Byte
 	private DataUsageProfile dataUsageProfile;
-
+	
+	// Constants for how much data can be consumed under each profile
+	private static int UNLIMITED_LIMIT = -1;
+	private static int PROFILE1_LIMIT = 50 * 1024 * 1024;
+    private static int PROFILE2_LIMIT = 100 * 1024 * 1024;
+    private static int PROFILE3_LIMIT = 250 * 1024 * 1024;
+    private static int PROFILE4_LIMIT = 500 * 1024 * 1024;
 
 	public BatteryCapPowerManager(int batteryThresh, Context context) {
 		this.minBatteryThreshold = batteryThresh;
-		this.dataLimit=-1;
+		this.dataLimit=PROFILE3_LIMIT;
 		this.context=context;
-		this.dataUsageProfile=DataUsageProfile.UNLIMITED;
-		
+		this.dataUsageProfile=DataUsageProfile.PROFILE2;		
 	}
 
 	/** 
@@ -81,161 +87,275 @@ public class BatteryCapPowerManager {
 		return this.minBatteryThreshold;
 	}
 
-	public synchronized void setDataUsageLimit(String dataLimitStr){
-		if(dataLimitStr.equals("50 MB")){
-			dataLimit=50*1024*1024;
-			dataUsageProfile=DataUsageProfile.PROFILE1;
-		}else if(dataLimitStr.equals("100 MB")){
-			dataLimit=100*1024*1024;
-			dataUsageProfile=DataUsageProfile.PROFILE2;
-		}else if(dataLimitStr.equals("250 MB")){
-			dataLimit=250*1024*1024;
-			dataUsageProfile=DataUsageProfile.PROFILE3;
-		}else if(dataLimitStr.equals("500 MB")){
-			dataLimit=500*1024*1024;
-			dataUsageProfile=DataUsageProfile.PROFILE4;
-		}else{
-			dataLimit=-1;
-			dataUsageProfile=DataUsageProfile.UNLIMITED;
-		}
-
-	}
+	/**
+	 * Given a data profile string, set the data limit and profile code accordingly.
+	 * 
+	 * If an invalid code is given, leave as default and print a warning.
+	 * 
+	 * @param dataLimitStr String describing the profile
+	 */
+    public synchronized void setDataUsageLimit(String dataLimitStr) {
+        if (dataLimitStr.equals("50 MB")) {
+            dataLimit = PROFILE1_LIMIT;
+            dataUsageProfile = DataUsageProfile.PROFILE1;
+        } else if (dataLimitStr.equals("100 MB")) {
+            dataLimit = PROFILE2_LIMIT;
+            dataUsageProfile = DataUsageProfile.PROFILE2;
+        } else if (dataLimitStr.equals("250 MB")) {
+            dataLimit = PROFILE3_LIMIT;
+            dataUsageProfile = DataUsageProfile.PROFILE3;
+        } else if (dataLimitStr.equals("500 MB")) {
+            dataLimit = PROFILE4_LIMIT;
+            dataUsageProfile = DataUsageProfile.PROFILE4;
+        } else if (dataLimitStr.equals("Unlimited MB")) {
+            dataLimit = UNLIMITED_LIMIT;
+            dataUsageProfile = DataUsageProfile.UNLIMITED;
+        } else {
+            Logger.w("Specified limit " + dataLimitStr + " not found!");
+        }
+    }	
 	
-	
-
+    /**
+     * @return The current data limit in bytes.
+     */
 	public synchronized int getDataLimit() {
 		return this.dataLimit;
 	}
 	
+	/**
+	 * @return An enum representing the data usage limit.
+	 */
 	public synchronized DataUsageProfile getDataUsageProfile(){
 		return this.dataUsageProfile;
 	}
 	
-	public void resetDataUsaage(){
-		File file = new File(context.getFilesDir(), "datausage");
-		if(file.exists()){
-			try {
-			file.createNewFile();
-			FileOutputStream outputStream;
-			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
-			long dataUsed=0;
-			long usageStartTimeSec=(System.currentTimeMillis()/1000);
-			String usageStat=usageStartTimeSec+"_"+dataUsed;
-			outputStream.write(usageStat.getBytes());
-			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
-			outputStream.close();
-			} catch (IOException e) {
-				Logger.e("Error in creating data usage file");
-				e.printStackTrace();
-			}
-		}
-	}
+	/**
+     * Reset the data used in the data usage file to 0.
+     * This should never be done unless the file does not exist.
+     */
+    private void resetDataUsage() {
+        File file = new File(context.getFilesDir(), "datausage");
+        if (file.exists()) {
+            Logger.e("Attempting to overwrite a file that exists!!!!");
+        }
+        long usageStartTimeSec = (System.currentTimeMillis() / 1000);
+        writeDataUsageToFile(0, usageStartTimeSec);
+    }
+    
+    
+    /**
+     * Store the data used this period and the beginning of the period in a file,
+     * in the format [time reset, in seconds]_[bytes used].
+     * 
+     * Note that the data used can be negative, due to a underused data budget
+     * from last period.
+     * 
+     * @param dataUsed The updated amount of data to write
+     * @param time The updated time to write
+     */
+    private synchronized void writeDataUsageToFile(long dataUsed, long time) {
+        try {
+            FileOutputStream outputStream =
+                    context.openFileOutput("datausage", Context.MODE_PRIVATE);
+            String usageStat = time + "_" + dataUsed;
+            outputStream.write(usageStat.getBytes());
+            Logger.i("Updating data usage: " + dataUsed + " Byte used from "
+                    + time);
+            outputStream.close();
+        } catch (IOException e) {
+            Logger.e("Error in creating data usage file");
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Read the usage data (start of usage period and quantity used in bytes)
+     * from the usage data file.
+     * 
+     * @return An array consisting of the start of the usage period, then the data 
+     * used so far.  If the file does not exist, returns -1 in each argument.
+     */
+    private synchronized long[] readUsageFromFile() {
+        long[] retval = {-1, -1};
+        File file = new File(context.getFilesDir(), "datausage");
+        if (!file.exists()) {
+            return retval;
+        }
+        try {
+            String content = "";
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = br.readLine()) != null) {
+                content += line;
+            }
+            String[] toks = content.split("_");
+            long usageStartTimeSec = Long.parseLong(toks[0]);
+            long dataUsed = Long.parseLong(toks[1]);  
 
-	private boolean isOverDataLimit(String nextTaskType) throws IOException{
-		
-		if(getDataLimit()==-1){
-			return false;
-		}else if(getDataLimit()==50*1024*1024 && nextTaskType.equals(TCPThroughputTask.TYPE)){
-			return true;
-		}
-		
-		long usageStartTimeSec=-1;
-		long dataUsed=-1;
+            retval[0] = usageStartTimeSec;
+            retval[1] = dataUsed;
+            
+            br.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return retval;
+    }    
+    
+    /**
+     * Updates the data consumption period: using the current time move ahead to the
+     * correct data consumption period, and also update the data used so far.
+     * 
+     * Data assigned to a previous data period is subtracted; this can go below zero,
+     * effectively crediting unused data to future tasks.
+     * 
+     * @param dataUsed Data consumed since the start of the last period
+     * @param usageStartTimeSec Time since the start of the last period
+     * @return
+     */
+    private long setNewDataConsumptionPeriod(long dataUsed, long usageStartTimeSec) {
+        long time_per_period = Config.DEFAULT_DATA_MONITOR_PERIOD_DAY * 24 * 60 * 60;
+        
+        // Figure out how many periods have passed 
+        int periods = (int) (((float) ((long) (System.currentTimeMillis() / 1000) - usageStartTimeSec))
+                / (float) time_per_period);
+        
+        // Update usageStarTimeSec to the appropriate period
+        usageStartTimeSec += periods * time_per_period;
+        
+        // Discount from the data used data that is budgeted to previous periods.
+        // Note that this could go less than zero if we are below budget.
+        long datalimit_per_period = (getDataLimit() * 
+                Config.DEFAULT_DATA_MONITOR_PERIOD_DAY) / 30;
+        dataUsed = dataUsed - (((int) (periods)) * datalimit_per_period);
+        
+        writeDataUsageToFile(dataUsed, usageStartTimeSec);
+        return dataUsed;
+        
+    }
+    
+    /**
+     * Helper function: given the beginning of the data usage period currrently 
+     * under consideration, determine if we're still in that period.
+     * 
+     * @param usageStartTimeSec The start of the last stored data usage period
+     * @return True if we are still in the same data usage period.
+     */
+    private boolean isInDataLimitPeriod(long usageStartTimeSec) {
+        long timeSoFar = (System.currentTimeMillis() / 1000) - usageStartTimeSec;
+        return timeSoFar <= Config.DEFAULT_DATA_MONITOR_PERIOD_DAY * 24 * 60 * 60;        
+    }
 
-		File file = new File(context.getFilesDir(), "datausage");
-		if(file.exists()){
-			String content="";
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String line;
-			while ((line = br.readLine()) != null) {
-				content+=line;
-			}
-			String[] toks = content.split("_");
-			usageStartTimeSec=Long.parseLong(toks[0]);
-			dataUsed=Long.parseLong(toks[1]);
-			Logger.i(dataUsed+" Byte used from "+usageStartTimeSec);
-			br.close();
-		}
-		if(dataUsed==-1 || usageStartTimeSec==-1){
-			return false;
-		}else if((System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60){
-			return false;
-		}else if(dataUsed>=((getDataLimit()*Config.DEFAULT_DATA_MONITOR_PERIOD_DAY)/30)){
-			return true;
-		}
-		return false;
-	}
+    /**
+     * Determines if the data limit has been exceeded.
+     * 
+     * If there is no data limit, always returns false.
+     * If there is no valid data usage file,
+     * creates a new one and returns false.
+     * 
+     * Otherwise, checks if we are over the limit yet or if we can run another task.
+     * If a new data period needs to be started, we do that too.     * 
+     * 
+     * @param nextTaskType In the case of a TCP throughput task, we only run it if there is
+     * enough data left.
+     * @return True if over the data limit
+     * @throws IOException
+     */
+    private boolean isOverDataLimit(String nextTaskType) throws IOException {
 
-	private void updateDataUsage(MeasurementResult result, String taskType) throws IOException { 
-		int taskDataUsed=0;
-		if(taskType.equals(TCPThroughputTask.TYPE) &&
-				result.getResult("total_data_sent_received")!=null){
-			taskDataUsed=Integer.parseInt(result.getResult("total_data_sent_received")+"");
-		}else if(taskType.equals(RRCTask.TYPE)){
-			taskDataUsed=RRCTask.AVG_DATA_USAGE_BYTE;
-		}else if(taskType.equals(DnsLookupTask.TYPE)){
-			taskDataUsed=DnsLookupTask.AVG_DATA_USAGE_BYTE;
-		}else if(taskType.equals(HttpTask.TYPE) && 
-				result.getResult("headers_len")!=null && 
-				result.getResult("body_len")!=null){
-				taskDataUsed=(int) (Long.parseLong(result.getResult("headers_len")+"")+(Integer.parseInt(result.getResult("body_len")+"")));
-		}else if(taskType.equals(PingTask.TYPE)){
-			taskDataUsed=PingTask.DEFAULT_PING_PACKET_SIZE*Config.PING_COUNT_PER_MEASUREMENT*2;
-		}else if(taskType.equals(TracerouteTask.TYPE)){
-			taskDataUsed=TracerouteTask.DEFAULT_MAX_HOP_CNT*TracerouteTask.DEFAULT_PING_PACKET_SIZE*TracerouteTask.DEFAULT_PINGS_PER_HOP*2;
-		}
+        if (getDataLimit() == UNLIMITED_LIMIT) {            
+            return false;
+        } 
+        
+        long[] usagedata = readUsageFromFile();
+        long usageStartTimeSec = usagedata[0];
+        long dataUsed = usagedata[1];
+        
+        if (usageStartTimeSec != -1) {
+            if (!isInDataLimitPeriod(usageStartTimeSec)) {
+                // Update our file to the next period, and update our data usage 
+                // budget accordingly.
+                dataUsed = setNewDataConsumptionPeriod(dataUsed, usageStartTimeSec);
+            }            
+            
+            long dataLimit = (getDataLimit() * Config.DEFAULT_DATA_MONITOR_PERIOD_DAY) / 30;
+            if (dataUsed >= dataLimit) {
+                Logger.i("Exceeded data limit: Data used: " + dataUsed + 
+                    " Data limit this period: " + dataLimit + " Total data limit:"
+                    + getDataLimit());
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // If the file wasn't there we need to reset the data limit period.
+        resetDataUsage();
+        return false;
+    }
 
-
-		File file = new File(context.getFilesDir(), "datausage");
-		if(file.exists()){
-			String content="";
-			BufferedReader br = new BufferedReader(new FileReader(file));
-			String line;
-			while ((line = br.readLine()) != null) {
-				content+=line;
-			}
-			String[] toks = content.split("_");
-			long usageStartTimeSec=Long.parseLong(toks[0]);
-			long dataUsed=Long.parseLong(toks[1]);
-			br.close();
-
-			file.createNewFile();
-			FileOutputStream outputStream;
-			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
-
-			if((long)(System.currentTimeMillis()/1000)-usageStartTimeSec>Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60){
-				
-				dataUsed=taskDataUsed+dataUsed;
-				float periods=((float)((long)(System.currentTimeMillis()/1000)-usageStartTimeSec))/
-						(float)(Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60);
-				
-				
-				usageStartTimeSec+=((int)(periods))*(Config.DEFAULT_DATA_MONITOR_PERIOD_DAY*24*60*60);
-				
-				dataUsed=dataUsed-(((int)(periods))*dataLimit);
-			}else{
-				dataUsed+=taskDataUsed;
-			}
-			String usageStat=usageStartTimeSec+"_"+dataUsed;
-			outputStream.write(usageStat.getBytes());
-			Logger.e("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
-			outputStream.close();
-
-		}else{
-			file.createNewFile();
-			FileOutputStream outputStream;
-			outputStream = context.openFileOutput("datausage", Context.MODE_PRIVATE);
-			long dataUsed=taskDataUsed;
-			long usageStartTimeSec=(System.currentTimeMillis()/1000);
-			String usageStat=usageStartTimeSec+"_"+dataUsed;
-			outputStream.write(usageStat.getBytes());
-			Logger.i("Updating data usage: "+dataUsed+" Byte used from "+usageStartTimeSec);
-			outputStream.close();
-		}
-
-	}
-
-
+    /**
+     * Determine how much data was consumed by a task and update the 
+     * data usage accordingly.
+     * 
+     * @param result Structure holding the measurement result from which we can extract data usage.
+     * @param taskType The type of measurement task completed
+     * @throws IOException
+     */
+    private void updateDataUsage(MeasurementResult result, String taskType)
+            throws IOException {
+        
+        int taskDataUsed = 0;
+        
+        // Figure out the amount of data that this task has consumed
+        if (taskType.equals(TCPThroughputTask.TYPE)
+                && result.getResult("total_data_sent_received") != null) {
+            taskDataUsed = Integer.parseInt(result
+                    .getResult("total_data_sent_received") + "");            
+        } else if (taskType.equals(RRCTask.TYPE)) {
+            // a very hacky approach XXX
+            taskDataUsed = (int) RRCTask.data_consumed;            
+        } else if (taskType.equals(DnsLookupTask.TYPE)) {
+            taskDataUsed = DnsLookupTask.AVG_DATA_USAGE_BYTE;            
+        } else if (taskType.equals(HttpTask.TYPE)
+                && result.getResult("headers_len") != null
+                && result.getResult("body_len") != null) {
+            taskDataUsed =
+                    (int) (Long.parseLong(result.getResult("headers_len") + "") + (Integer
+                            .parseInt(result.getResult("body_len") + "")));            
+        } else if (taskType.equals(PingTask.TYPE)) {
+            taskDataUsed =
+                    PingTask.DEFAULT_PING_PACKET_SIZE
+                            * Config.PING_COUNT_PER_MEASUREMENT * 2;            
+        } else if (taskType.equals(TracerouteTask.TYPE)) {
+            taskDataUsed =
+                    TracerouteTask.DEFAULT_MAX_HOP_CNT
+                            * TracerouteTask.DEFAULT_PING_PACKET_SIZE
+                            * TracerouteTask.DEFAULT_PINGS_PER_HOP * 2;
+        }
+        
+        long[] usagedata = readUsageFromFile();
+        long usageStartTimeSec = usagedata[0];
+        long dataUsed = usagedata[1];
+        // If we have a valid file
+        if (usageStartTimeSec != -1) {
+            dataUsed += taskDataUsed;
+            if (! isInDataLimitPeriod(usageStartTimeSec)) {
+                // If we are in a new data consumption period, update it
+                setNewDataConsumptionPeriod(dataUsed, usageStartTimeSec);
+            } else {
+                // Otherwise just write to a file
+                writeDataUsageToFile(dataUsed, usageStartTimeSec);   
+            }
+        } else {
+            // If we don't have a data usage file, initialize it with the data just used
+            usageStartTimeSec = (System.currentTimeMillis() / 1000);
+            dataUsed = taskDataUsed;
+            writeDataUsageToFile(dataUsed, usageStartTimeSec);
+        }
+    }
+    
+    
 	/** 
 	 * Returns whether a measurement can be run.
 	 */
@@ -344,6 +464,7 @@ public class BatteryCapPowerManager {
 					Logger.i("Calling PowerAwareTask " + realTask);
 					result = realTask.call(); 
 					Logger.i("Got result " + result);
+					// We only care about the data usage when on the mobile network
 					if (PhoneUtils.getPhoneUtils().getCurrentNetworkConnection()==PhoneUtils.TYPE_MOBILE){
 						pManager.updateDataUsage(result,realTask.getDescription().type);
 					}
