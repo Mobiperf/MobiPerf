@@ -22,6 +22,7 @@ import com.mobiperf.measurements.RRCTask;
 import com.mobiperf.measurements.TCPThroughputTask;
 import com.mobiperf.measurements.TracerouteTask;
 import com.mobiperf.measurements.UDPBurstTask;
+import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 
 import android.content.Context;
@@ -35,6 +36,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.concurrent.Callable;
+
+import org.json.JSONException;
 
 /**
  * A basic power manager implementation that decides whether a measurement can be scheduled
@@ -282,7 +285,7 @@ public class BatteryCapPowerManager {
 
 
 				if (result != null) {
-					intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());
+					intent.putExtra(UpdateIntent.STRING_PAYLOAD, result.toString());					
 				} else {
 					String errorString = "Measurement " + realTask.toString() + " failed. ";
 					errorString += "\n\nTimestamp: " + Calendar.getInstance().getTime();
@@ -291,6 +294,16 @@ public class BatteryCapPowerManager {
 					} 
 					intent.putExtra(UpdateIntent.ERROR_STRING_PAYLOAD, errorString);
 				}
+				
+                // We now store results as strings to disk immediately to avoid data
+                // losses on a crash, so convert to a JSON and sent back
+                try {
+                    intent.putExtra(UpdateIntent.RESULT_PAYLOAD, 
+                        MeasurementJsonConvertor.encodeToJson(result).toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+				
 				scheduler.sendBroadcast(intent);
 			}
 			scheduler.updateStatus();

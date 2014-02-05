@@ -173,16 +173,8 @@ public class Checkin {
     }
   }
 
-  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
+  public void uploadMeasurementResult(JSONArray resultArray)
       throws IOException {
-    JSONArray resultArray = new JSONArray();
-    for (MeasurementResult result : finishedTasks) {
-      try {
-        resultArray.put(MeasurementJsonConvertor.encodeToJson(result));
-      } catch (JSONException e1) {
-        Logger.e("Error when adding " + result);
-      }
-    }
 
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
