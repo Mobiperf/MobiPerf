@@ -60,6 +60,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -215,7 +216,12 @@ public class MeasurementScheduler extends Service {
             if (intent.getStringExtra(UpdateIntent.ERROR_STRING_PAYLOAD) != null) {
               failedMeasurementCnt++;
             } else {
+              // Process result
               completedMeasurementCnt++;
+            }
+            if (intent.getStringExtra(UpdateIntent.RESULT_PAYLOAD) != null) {
+              saveResultToFile(intent.getStringExtra(UpdateIntent.RESULT_PAYLOAD));
+              
             }
             updateResultsConsole(intent);
           }
@@ -769,7 +775,7 @@ public class MeasurementScheduler extends Service {
    * 
    * @param newTasks
    */
-  private void updateSchedule(List<MeasurementTask> newTasks, boolean saveToDisk) {
+  private void updateSchedule(List<MeasurementTask> newTasks, boolean reLoad) {
     /**
      * Design: Have a structure with keys pointing to tasks. Go through new list. Do the following:
      * - Compare sets of keys. Remove tasks whose keys are gone, add tasks whose keys are new. - For
@@ -790,8 +796,12 @@ public class MeasurementScheduler extends Service {
     for (MeasurementTask newTask : newTasks) {
       
       // Adjust the frequency of the new task, or ignore it if requested.
-      if (!adjustInterval(newTask)) {
-        continue;
+      // If we are loading again, don't re-adjust task frequencies.
+      if (!reLoad) {
+        if (!adjustInterval(newTask)) {
+          continue;
+        }
+        
       }
       
       String newKey = newTask.getDescription().key;
@@ -836,10 +846,66 @@ public class MeasurementScheduler extends Service {
       }      
     }
 
-    if (saveToDisk && (!tasksToAdd.isEmpty() || !keysToRemove.isEmpty())) {
+    if (!reLoad && (!tasksToAdd.isEmpty() || !keysToRemove.isEmpty())) {
       saveSchedulerState();
     }
     
+  }
+  
+  private synchronized void saveResultToFile(String result) {
+    try {
+      Logger.i("Saving result to file...");
+      //Logger.i(result);
+      BufferedOutputStream writer = new BufferedOutputStream(
+          openFileOutput("results", Context.MODE_PRIVATE | Context.MODE_APPEND));
+      //JSONObject jsonResult = MeasurementJsonConvertor.encodeToJson(string);
+      //writer.write(jsonResult.toString().getBytes());
+      result += "\n";
+      writer.write(result.getBytes());
+      writer.close();
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }    
+  }
+  
+  private synchronized JSONArray readResultsFromFile() {
+
+    JSONArray results = new JSONArray();
+      try {
+        Logger.i("Loading results from disk");
+        FileInputStream inputstream = openFileInput("results");
+        InputStreamReader streamreader = new InputStreamReader(inputstream);
+        BufferedReader bufferedreader = new BufferedReader(streamreader);
+
+        String line;
+        while ((line = bufferedreader.readLine()) != null) {
+            JSONObject jsonTask;
+            try {
+              jsonTask = new JSONObject(line);
+              //Logger.i(line);
+              //Logger.i(jsonTask.toString());
+              results.put(jsonTask);
+            } catch (JSONException e) {
+              e.printStackTrace();
+            }
+        }        
+
+        bufferedreader.close();
+        streamreader.close();
+        inputstream.close();
+        
+        // delete file once done
+        deleteFile("results");
+        
+        
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      return results;
   }
   
   private void saveSchedulerState() {
@@ -854,7 +920,6 @@ public class MeasurementScheduler extends Service {
             JSONObject task = MeasurementJsonConvertor.encodeToJson(
                 entry.getValue().getDescription());
             String taskstring = task.toString() + "\n";
-            Logger.i(taskstring); // XXX debug
             writer.write(taskstring.getBytes());
           } catch (JSONException e) {
             e.printStackTrace();
@@ -883,35 +948,33 @@ public class MeasurementScheduler extends Service {
             JSONObject jsonTask;
             try {
               jsonTask = new JSONObject(line);
-              Logger.i(line.toString()); // XXX debug
               MeasurementTask newTask = MeasurementJsonConvertor.
                   makeMeasurementTaskFromJson(jsonTask, getApplicationContext());
               tasksToAdd.add(newTask);
             } catch (JSONException e) {
               e.printStackTrace();
             }
-        }
-        
+        }      
+        bufferedreader.close();
+        streamreader.close();
+        inputstream.close();
         
       } catch (FileNotFoundException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       } catch (IOException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
       }
-    }
-    
+    }    
     updateSchedule(tasksToAdd, false);
-  }
-  
+  }  
   
 
   @SuppressWarnings("unchecked")
   private void uploadResults() {
-    Vector<MeasurementResult> finishedTasks = new Vector<MeasurementResult>();
+    //Vector<MeasurementResult> finishedTasks = new Vector<MeasurementResult>();
     MeasurementResult result;
     Future<MeasurementResult> future;
+    JSONArray results = readResultsFromFile();
 
     synchronized (this.pendingTasks) {
       try {
@@ -922,14 +985,17 @@ public class MeasurementScheduler extends Service {
             if (future.isDone()) {
               try {
                 this.pendingTasks.remove(task);
+
                 if (!future.isCancelled()) {
                   result = future.get();
-                  finishedTasks.add(result);
                 } else {
                   Logger.e("Task execution was canceled");
-                  finishedTasks.add(this.getFailureResult(task,
+                  JSONObject cancelledResult = MeasurementJsonConvertor.
+                      encodeToJson(this.getFailureResult(task,
                       new CancellationException("Task cancelled")));
+                  results.put(cancelledResult);
                 }
+
               } catch (InterruptedException e) {
                 Logger.e("Task execution interrupted", e);
               } catch (ExecutionException e) {
@@ -943,7 +1009,8 @@ public class MeasurementScheduler extends Service {
                   sendStringMsg("Task failed - " + e.getCause().toString()
                       + "\n" + task);
                   Logger.e("Task execution failed", e.getCause());
-                  finishedTasks.add(this.getFailureResult(task, e.getCause()));
+                  // Was already sent
+                  //finishedTasks.add(this.getFailureResult(task, e.getCause()));
                 }
               } catch (CancellationException e) {
                 Logger.e("Task cancelled", e);
@@ -955,8 +1022,10 @@ public class MeasurementScheduler extends Service {
                */
               this.pendingTasks.remove(task);
               future.cancel(true);
-              finishedTasks.add(this.getFailureResult(task,
+              JSONObject cancelledResult = MeasurementJsonConvertor.
+                  encodeToJson(this.getFailureResult(task,
                   new RuntimeException("Deadline passed before execution")));
+              results.put(cancelledResult);
             }
           }
 
@@ -965,8 +1034,10 @@ public class MeasurementScheduler extends Service {
              * Tasks that are scheduled after deadline are put into pendingTasks with a null future.
              */
             this.pendingTasks.remove(task);
-            finishedTasks.add(this.getFailureResult(task, new RuntimeException(
-                "Task scheduled after deadline")));
+            JSONObject cancelledResult = MeasurementJsonConvertor.
+                encodeToJson(this.getFailureResult(task, new RuntimeException(
+                    "Task scheduled after deadline")));
+            results.put(cancelledResult);
           }
         }
       } catch (ConcurrentModificationException e) {
@@ -976,19 +1047,21 @@ public class MeasurementScheduler extends Service {
          * this should not happen.
          */
         Logger.e("Pending tasks is changed during measurement upload");
+      } catch (JSONException e) {
+        e.printStackTrace();
       }
     }
 
-    if (finishedTasks.size() > 0) {
+    if (results.length() > 0) {
       try {
-        this.checkin.uploadMeasurementResult(finishedTasks);
+        this.checkin.uploadMeasurementResult(results);
       } catch (IOException e) {
         Logger.e("Error when uploading message");
       }
     }
 
-    Logger.i("A total of " + finishedTasks.size() + " uploaded");
-    Logger.i("A total of " + this.pendingTasks.size() + " is in pendingTasks");
+    Logger.i("A total of " + results.length() + " uploaded");
+    Logger.i("A total of " + results.length() + " is in the results list");
   }
 
   private class CheckinTask implements Runnable {
