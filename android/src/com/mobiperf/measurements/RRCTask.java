@@ -439,7 +439,7 @@ public class RRCTask extends MeasurementTask {
         throws JSONException {
       JSONObject entry = new JSONObject();
       entry.put("network_type", networktype);
-      entry.put("phone_id", networktype);
+      entry.put("phone_id", phoneId);
       entry.put("test_id", testId);
       entry.put("time_delay", time);
       entry.put("size", size);
