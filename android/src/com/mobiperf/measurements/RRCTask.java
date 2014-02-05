@@ -82,6 +82,7 @@ public class RRCTask extends MeasurementTask {
   public static String TAG = "MobiPerf_RRC_INFERENCE";
   private boolean stop = false;
   private Context context;
+  public static long data_consumed = 0;
   
   public static final int AVG_DATA_USAGE_BYTE=600*1024;
 
@@ -763,6 +764,7 @@ public class RRCTask extends MeasurementTask {
    * @throws MeasurementError
    */
   private RRCDesc runInferenceTests() throws MeasurementError {
+    data_consumed = 0;
 
     Checkin checkin = new Checkin(context);
 
@@ -982,6 +984,9 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
+          data_consumed += sb.length();
+          data_consumed += 1000; // approximate size of headers, etc
+
           // not really accurate, just rules out the worst cases of interference
           if (!packetMonitor.isTrafficInterfering(100, 100)) {
             break;
@@ -1089,6 +1094,7 @@ public class RRCTask extends MeasurementTask {
         } catch (UnknownHostException e) {
           // we do this on purpose! Since it's a fake URL the lookup will fail
         }
+        data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
         // When we fail to find the URL, we stop timing
         endTime = System.currentTimeMillis();
 
@@ -1164,6 +1170,9 @@ public class RRCTask extends MeasurementTask {
           // three-way handshake done when socket created
           Socket socket = new Socket(serverAddr, 80);
           endTime = System.currentTimeMillis();
+          
+          // Not exact, but also a smallish task...
+          data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
 
           // Check how many packets were sent again. If the expected number
           // of packets were sent, we can finish and go to the next task.
@@ -1310,12 +1319,15 @@ public class RRCTask extends MeasurementTask {
     long[] retval = {-1, -1};
     long numLost = 0;
     int i = 0;
-
+    
+            
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
     DatagramPacket packet =
         new DatagramPacket(buf, buf.length, serverAddr, port);
 
+    data_consumed += num * (size + packetSize);
+    
     try {
       socket.setSoTimeout(7000);
       startTime = System.currentTimeMillis();
@@ -1377,6 +1389,9 @@ public class RRCTask extends MeasurementTask {
 
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
+    
+    data_consumed += (size + rcvSize);
+
 
     DatagramPacket packet =
         new DatagramPacket(buf, buf.length, serverAddr, port);

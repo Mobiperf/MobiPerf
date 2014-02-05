@@ -197,6 +197,7 @@ public class Checkin {
    * 
    * Sent as a separate call because the data is formatted in a different, 
    * more complicated way than other measurement tasks.
+   * TODO do this on checkin
    * 
    * @param data Contains data to upload
    * @throws IOException
@@ -223,6 +224,7 @@ public class Checkin {
 
   /**
    * Impact of packet sizes on rrc inference results.
+   * TODO do this on checkin
    * 
    * @param sizeData Contains data to upload
    */
