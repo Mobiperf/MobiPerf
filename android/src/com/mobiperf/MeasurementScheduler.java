@@ -348,12 +348,12 @@ public class MeasurementScheduler extends Service {
 
         MeasurementDesc desc = task.getDescription();
 
-        // The RRC task should run no more than once an hour.
+        /*// The RRC task should run no more than once an hour.
         // It can take a long time to run, due to all the pauses.
         if (desc.type == "rrc" && desc.intervalSec <= 3600) {
           desc.intervalSec = 3600;
           Logger.i("Interval set too long for rrc task, setting to one hour");
-        }
+        }*/
 
         long newStartTime =
             desc.startTime.getTime() + (long) desc.intervalSec * 1000;
@@ -717,7 +717,7 @@ public class MeasurementScheduler extends Service {
       return;
     }
     checkin.getCookie();
-    List<MeasurementTask> tasksFromServer = checkin.checkin();
+    List<MeasurementTask> tasksFromServer = checkin.checkin(powerManager);
 
     updateSchedule(tasksFromServer, false);
 
@@ -981,6 +981,20 @@ public class MeasurementScheduler extends Service {
             MeasurementTask newTask =
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(jsonTask,
                     getApplicationContext());
+            // If the task is scheduled in the past, re-schedule it in the future
+            
+            long curtime = System.currentTimeMillis();
+            if (curtime > newTask.getDescription().startTime.getTime()) {
+                long timediff = curtime - newTask.getDescription().startTime.getTime();               
+                
+                timediff = (long) (timediff % (newTask.getDescription().intervalSec * 1000));
+                Calendar now = Calendar.getInstance();
+                now.add(Calendar.SECOND, (int) timediff/1000);
+                newTask.getDescription().startTime.setTime(now.getTimeInMillis());
+                Logger.i("Rescheduled task " + newTask.getDescription().key + 
+                    " at time " + now.getTimeInMillis());
+            }
+            
             tasksToAdd.add(newTask);
           } catch (JSONException e) {
             e.printStackTrace();
@@ -1088,7 +1102,7 @@ public class MeasurementScheduler extends Service {
 
     if (results.length() > 0) {
       try {
-        this.checkin.uploadMeasurementResult(results);
+        this.checkin.uploadMeasurementResult(results, powerManager);
       } catch (IOException e) {
         Logger.e("Error when uploading message");
       }

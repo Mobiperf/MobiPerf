@@ -107,7 +107,7 @@ public class Checkin {
     return this.lastCheckin;
   }
 
-  public List<MeasurementTask> checkin() throws IOException {
+  public List<MeasurementTask> checkin(BatteryCapPowerManager powerManager) throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
     try {
@@ -127,6 +127,7 @@ public class Checkin {
 
       String result = serviceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
+      powerManager.updateDataUsage(result.length());
 
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
@@ -173,12 +174,13 @@ public class Checkin {
     }
   }
 
-  public void uploadMeasurementResult(JSONArray resultArray)
+  public void uploadMeasurementResult(JSONArray resultArray, BatteryCapPowerManager powerManager)
       throws IOException {
 
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
         + resultArray.toString());
+    powerManager.updateDataUsage(resultArray.toString().length());
     String response = serviceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
