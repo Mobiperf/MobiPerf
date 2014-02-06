@@ -216,7 +216,9 @@ public class BatteryCapPowerManager {
      */
     private long setNewDataConsumptionPeriod(long dataUsed, long usageStartTimeSec) {
         long time_per_period = Config.DEFAULT_DATA_MONITOR_PERIOD_DAY * 24 * 60 * 60;
-        Logger.i("Exceeded data consumption period that began at time:" + usageStartTimeSec);
+        
+        Logger.i("Finished data consumption period that began at time:" + usageStartTimeSec + 
+        		" having " +dataUsed + " consumed");
         
         // Figure out how many periods have passed 
         int periods = (int) (((float) ((long) (System.currentTimeMillis() / 1000) - usageStartTimeSec))
@@ -230,6 +232,7 @@ public class BatteryCapPowerManager {
         long datalimit_per_period = (getDataLimit() * 
                 Config.DEFAULT_DATA_MONITOR_PERIOD_DAY) / 30;
         dataUsed = dataUsed - (((int) (periods)) * datalimit_per_period);
+        Logger.i("Net data usage at start of period: " + dataUsed);
         
         writeDataUsageToFile(dataUsed, usageStartTimeSec);
         return dataUsed;
@@ -245,6 +248,7 @@ public class BatteryCapPowerManager {
      */
     private boolean isInDataLimitPeriod(long usageStartTimeSec) {
         long timeSoFar = (System.currentTimeMillis() / 1000) - usageStartTimeSec;
+        Logger.i("Time passed since data period last changed: " + timeSoFar);
         return timeSoFar <= Config.DEFAULT_DATA_MONITOR_PERIOD_DAY * 24 * 60 * 60;        
     }
 
@@ -264,11 +268,12 @@ public class BatteryCapPowerManager {
      * @throws IOException
      */
     private boolean isOverDataLimit(String nextTaskType) throws IOException {
+        Logger.i("Checking data limit...");
 
-        if (getDataLimit() == UNLIMITED_LIMIT) {            
+        if (getDataLimit() == UNLIMITED_LIMIT) {
+        	Logger.i("No data limit!");
             return false;
         } 
-        
         long[] usagedata = readUsageFromFile();
         long usageStartTimeSec = usagedata[0];
         long dataUsed = usagedata[1];
@@ -279,11 +284,10 @@ public class BatteryCapPowerManager {
                 // budget accordingly.
                 dataUsed = setNewDataConsumptionPeriod(dataUsed, usageStartTimeSec);
             }            
-            
             long dataLimit = (getDataLimit() * Config.DEFAULT_DATA_MONITOR_PERIOD_DAY) / 30;
+            Logger.i("Data limit is: " + dataLimit + " Data used is:" + dataUsed);
             if (dataUsed >= dataLimit) {
-                Logger.i("Exceeded data limit: Data used: " + dataUsed + 
-                    " Data limit this period: " + dataLimit + " Total data limit:"
+                Logger.i("Exceeded data limit:  Total data limit:"
                     + getDataLimit());
                 return true;
             } else {
