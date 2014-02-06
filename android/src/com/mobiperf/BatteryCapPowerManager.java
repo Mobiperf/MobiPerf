@@ -307,37 +307,8 @@ public class BatteryCapPowerManager {
      * @param taskType The type of measurement task completed
      * @throws IOException
      */
-    private void updateDataUsage(MeasurementResult result, String taskType)
+    private void updateDataUsage(long taskDataUsed)
             throws IOException {
-        
-        int taskDataUsed = 0;
-        Logger.i("Updating data used");
-        // Figure out the amount of data that this task has consumed
-        if (taskType.equals(TCPThroughputTask.TYPE)
-                && result.getResult("total_data_sent_received") != null) {
-            taskDataUsed = Integer.parseInt(result
-                    .getResult("total_data_sent_received") + "");            
-        } else if (taskType.equals(RRCTask.TYPE)) {
-            // a very hacky approach XXX
-            taskDataUsed = (int) RRCTask.data_consumed;            
-        } else if (taskType.equals(DnsLookupTask.TYPE)) {
-            taskDataUsed = DnsLookupTask.AVG_DATA_USAGE_BYTE;            
-        } else if (taskType.equals(HttpTask.TYPE)
-                && result.getResult("headers_len") != null
-                && result.getResult("body_len") != null) {
-            taskDataUsed =
-                    (int) (Long.parseLong(result.getResult("headers_len") + "") + (Integer
-                            .parseInt(result.getResult("body_len") + "")));            
-        } else if (taskType.equals(PingTask.TYPE)) {
-            taskDataUsed =
-                    PingTask.DEFAULT_PING_PACKET_SIZE
-                            * Config.PING_COUNT_PER_MEASUREMENT * 2;            
-        } else if (taskType.equals(TracerouteTask.TYPE)) {
-            taskDataUsed =
-                    TracerouteTask.DEFAULT_MAX_HOP_CNT
-                            * TracerouteTask.DEFAULT_PING_PACKET_SIZE
-                            * TracerouteTask.DEFAULT_PINGS_PER_HOP * 2;
-        }
 
         Logger.i("Amount of data used in the last task: " + taskDataUsed);
         
@@ -474,7 +445,7 @@ public class BatteryCapPowerManager {
 					Logger.i("Got result " + result);
 					// We only care about the data usage when on the mobile network
 					if (PhoneUtils.getPhoneUtils().getCurrentNetworkConnection()==PhoneUtils.TYPE_MOBILE){
-						pManager.updateDataUsage(result,realTask.getDescription().type);
+						pManager.updateDataUsage(realTask.getDataConsumed());
 					}
 					broadcastMeasurementEnd(result, null);
 					return result;

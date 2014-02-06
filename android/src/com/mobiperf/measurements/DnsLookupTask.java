@@ -164,4 +164,10 @@ public class DnsLookupTask extends MeasurementTask {
   public void stop() {
     //There is nothing we need to do to stop the DNS measurement
   }
+
+    @Override
+    public long getDataConsumed() {
+        // TODO figure out how to calculate
+        return AVG_DATA_USAGE_BYTE;
+    }
 }
