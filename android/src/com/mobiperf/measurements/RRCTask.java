@@ -942,7 +942,8 @@ public class RRCTask extends MeasurementTask {
            * We keep track of the packets sent at the beginning and end of the test so we can detect
            * if there is competing traffic anywhere on the phone.
            */
-          PacketMonitor packetMonitor = new PacketMonitor();
+          PacketMonitor packetMonitor;
+          
 
           // Initiate the desired RRC state by sending a large enough packet
           // to go to DCH and waiting for the specified amount of time
@@ -950,6 +951,7 @@ public class RRCTask extends MeasurementTask {
             InetAddress serverAddr;
             serverAddr = InetAddress.getByName(desc.echoHost);
             sendPacket(serverAddr, desc.MAX, desc);
+            packetMonitor = new PacketMonitor();
 
             waitTime(times[i] * desc.GRANULARITY, true);
 
@@ -964,6 +966,7 @@ public class RRCTask extends MeasurementTask {
             continue;
           }
           startTime = System.currentTimeMillis();
+          boolean success = !packetMonitor.isTrafficInterfering(0, 0);
           HttpClient client = new DefaultHttpClient();
           HttpGet request = new HttpGet();
 
@@ -987,8 +990,7 @@ public class RRCTask extends MeasurementTask {
           data_consumed += sb.length();
           data_consumed += 1000; // approximate size of headers, etc
 
-          // not really accurate, just rules out the worst cases of interference
-          if (!packetMonitor.isTrafficInterfering(100, 100)) {
+          if (success) {
             break;
           } 
           startTime = 0;
