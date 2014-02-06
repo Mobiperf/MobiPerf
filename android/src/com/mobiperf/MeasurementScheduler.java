@@ -719,12 +719,8 @@ public class MeasurementScheduler extends Service {
     checkin.getCookie();
     List<MeasurementTask> tasksFromServer = checkin.checkin();
 
-    updateSchedule(tasksFromServer, true);
+    updateSchedule(tasksFromServer, false);
 
-    /*
-     * for (MeasurementTask task : tasksFromServer) { Logger.i("added task: " + task.toString());
-     * this.submitTask(task); }
-     */
   }
 
   /**
@@ -775,21 +771,24 @@ public class MeasurementScheduler extends Service {
 
   }
 
-  /**
-   * For the new set of tasks:
-   * 
-   * @param newTasks
-   */
+/**
+ * Update the schedule based on a set of tasks from the server.
+ * <p>
+ * The current tasks to schedule are in a hash table indexed by a unique task key.
+ * <p>
+ * Remove all tasks from the schedule that are not in the new list or that have changed.
+ * Then, add all tasks from the new list that were not in the schedule, or have changed.
+ * Then, the schedule will match the one in the server, and unchanged tasks are left as they are.
+ * 
+ * <p>
+ * If the state has changed and the schedule was received from the server, save it to disk
+ * so it can be recovered in case of a crash. 
+ * 
+ * @param newTasks List of MeasurementTasks from the server
+ * @param reLoad if it's True, we're loading from disk: don't adjust frequencies or save to disk.
+ */
   private void updateSchedule(List<MeasurementTask> newTasks, boolean reLoad) {
-    /**
-     * Design: Have a structure with keys pointing to tasks. Go through new list. Do the following:
-     * - Compare sets of keys. Remove tasks whose keys are gone, add tasks whose keys are new. - For
-     * all tasks, compare parameters. If parameters are different, remove and add the new task. Add
-     * tasks back into the queue
-     * 
-     * Currently, any changes to server-side parameters get updated immediately, otherwise
-     * 
-     */
+
     // Keep track of what tasks to change
     Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
 
@@ -857,6 +856,11 @@ public class MeasurementScheduler extends Service {
 
   }
 
+  /**
+   * Save the results of a task to a file, for later uploading.
+   * 
+   * @param result A string from the JSON representation of a result
+   */
   private synchronized void saveResultToFile(String result) {
     try {
       Logger.i("Saving result to file...");
@@ -876,6 +880,11 @@ public class MeasurementScheduler extends Service {
     }
   }
 
+  /**
+   * Read in the results of tasks completed to date from a file, then clear the file.
+   * 
+   * @return The results as a JSONArray, ready for sending to the server.
+   */
   private synchronized JSONArray readResultsFromFile() {
 
     JSONArray results = new JSONArray();
@@ -914,6 +923,12 @@ public class MeasurementScheduler extends Service {
     return results;
   }
 
+  /**
+   * Save the entire current schedule to a file, in JSON format, like how
+   * tasks are recieved from the server.
+   * 
+   * One item per line.
+   */
   private void saveSchedulerState() {
     synchronized (currentSchedule) {
       try {
@@ -943,6 +958,12 @@ public class MeasurementScheduler extends Service {
     }
   }
 
+  /**
+   * Load the schedule from the schedule file, if it exists.
+   * 
+   * This is to be run when the app first starts up, so scheduled items
+   * are not lost.
+   */
   private void loadSchedulerState() {
     Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
     synchronized (currentSchedule) {
@@ -975,7 +996,7 @@ public class MeasurementScheduler extends Service {
         e.printStackTrace();
       }
     }
-    updateSchedule(tasksToAdd, false);
+    updateSchedule(tasksToAdd, true);
   }
 
 
