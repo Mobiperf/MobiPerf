@@ -307,7 +307,7 @@ public class BatteryCapPowerManager {
      * @param taskType The type of measurement task completed
      * @throws IOException
      */
-    private void updateDataUsage(long taskDataUsed)
+    protected void updateDataUsage(long taskDataUsed)
             throws IOException {
 
         Logger.i("Amount of data used in the last task: " + taskDataUsed);
@@ -333,6 +333,7 @@ public class BatteryCapPowerManager {
             writeDataUsageToFile(dataUsed, usageStartTimeSec);
         }
     }
+    
     
     
 	/** 
