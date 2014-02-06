@@ -71,10 +71,13 @@ public class HttpTask extends MeasurementTask {
   public static final int DEFAULT_STATUS_CODE = 0;
   
   private AndroidHttpClient httpClient = null;
+  
+  private long dataConsumed;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+    dataConsumed = 0;
   }
   
   /**
@@ -165,13 +168,19 @@ public class HttpTask extends MeasurementTask {
         request = new HttpPost(urlStr);
         HttpPost postRequest = (HttpPost) request;
         postRequest.setEntity(new StringEntity(task.body));
+        dataConsumed += task.body.length();
       } else {
         // Use GET by default
         request = new HttpGet(urlStr);
       }
       
+      for (Header header: request.getAllHeaders()) {
+          dataConsumed+= header.getName().length() + header.getValue().length();
+      }
+      
       if (task.headers != null && task.headers.trim().length() > 0) {
         for (String headerLine : task.headers.split("\r\n")) {
+          dataConsumed += headerLine.length();
           String tokens[] = headerLine.split(":");
           if (tokens.length == 2) {
             request.addHeader(tokens[0], tokens[1]);
@@ -180,6 +189,7 @@ public class HttpTask extends MeasurementTask {
           }
         }
       }
+      
       
       
       byte[] readBuffer = new byte[HttpTask.READ_BUFFER_SIZE];
@@ -254,6 +264,9 @@ public class HttpTask extends MeasurementTask {
       
       result.addResult("code", statusCode);
       
+      dataConsumed += originalHeadersLen;
+      dataConsumed += totalBodyLen;
+      
       if (success) {
         result.addResult("time_ms", duration);
         result.addResult("headers_len", originalHeadersLen);
@@ -314,5 +327,10 @@ public class HttpTask extends MeasurementTask {
     if (httpClient != null) {
       httpClient.close();
     }
+  }
+
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
   }
 }

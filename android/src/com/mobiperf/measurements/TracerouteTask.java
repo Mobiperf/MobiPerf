@@ -39,7 +39,6 @@ import com.mobiperf.MeasurementDesc;
 import com.mobiperf.MeasurementError;
 import com.mobiperf.MeasurementResult;
 import com.mobiperf.MeasurementTask;
-import com.mobiperf.R;
 
 /**
  * A Callable task that handles Traceroute measurements
@@ -60,6 +59,9 @@ public class TracerouteTask extends MeasurementTask {
   
   private Process pingProc = null;
   private boolean stopRequested = false;
+  
+  private long dataConsumed;
+
   /**
    * The description of the Traceroute measurement 
    */
@@ -146,7 +148,8 @@ public class TracerouteTask extends MeasurementTask {
   
   public TracerouteTask(MeasurementDesc desc, Context parent) {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
-      desc.count, desc.priority, desc.parameters), parent);
+      desc.count, desc.priority, desc.parameters), parent);    
+    dataConsumed = 0;
   }
   
   /**
@@ -208,6 +211,7 @@ public class TracerouteTask extends MeasurementTask {
         for (int i = 0; i < task.pingsPerHop; i++) {
           pingProc = Runtime.getRuntime().exec(command);
           
+          dataConsumed += (task.packetSizeByte + 8) * 2;
           // Wait for process to finish
           // Enforce thread timeout if pingProc doesn't respond
           ProcWrapper procwrapper = new ProcWrapper(pingProc);
@@ -458,4 +462,9 @@ public class TracerouteTask extends MeasurementTask {
       }
     }  
   }
+
+    @Override
+    public long getDataConsumed() {
+        return dataConsumed;
+    }
 }

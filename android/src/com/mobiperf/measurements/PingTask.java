@@ -71,6 +71,8 @@ public class PingTask extends MeasurementTask {
   private String PING_METHOD_JAVA = "java_ping";
   private String PING_METHOD_HTTP = "http";
   private String targetIp = null;
+  
+  private long dataConsumed;
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
    * @author wenjiezeng@google.com (Steve Zeng)
@@ -134,6 +136,7 @@ public class PingTask extends MeasurementTask {
   public PingTask(MeasurementDesc desc, Context parent) {
     super(new PingDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+    dataConsumed = 0;
   }
   
   /**
@@ -293,6 +296,8 @@ public class PingTask extends MeasurementTask {
           Config.PING_COUNT_PER_MEASUREMENT, targetIp);
       Logger.i("Running: " + command);
       pingProc = Runtime.getRuntime().exec(command);
+      
+      dataConsumed += pingTask.packetSizeByte * Config.PING_COUNT_PER_MEASUREMENT * 2;
       
       // Grab the output of the process that runs the ping command
       InputStream is = pingProc.getInputStream();
@@ -473,4 +478,9 @@ public class PingTask extends MeasurementTask {
   public void stop() {
     cleanUp(pingProc);
   }
+
+    @Override
+    public long getDataConsumed() {
+        return dataConsumed;
+    }
 }

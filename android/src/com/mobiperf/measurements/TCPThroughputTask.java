@@ -82,6 +82,8 @@ public class TCPThroughputTask extends MeasurementTask {
   private int totalSendSize = 0;
   // downlink accumulative data
   private int totalRevSize = 0;
+  
+  
 
   // class constructor
   public TCPThroughputTask(MeasurementDesc desc, Context context) {
@@ -628,4 +630,9 @@ public class TCPThroughputTask extends MeasurementTask {
     array.add(i,item);
     return array;
   }
+
+    @Override
+    public long getDataConsumed() {
+        return totalSendSize + totalRevSize;
+    }
 }

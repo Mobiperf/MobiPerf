@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -650,6 +651,7 @@ public class RRCTask extends MeasurementTask {
 
       long rcvPackets = (packetsLast[0] - packetsFirst[0]);
       long sentPackets = (packetsLast[1] - packetsFirst[1]);
+      Logger.d("Packets received: " + rcvPackets + " Packets sent: " + sentPackets);
       if (rcvPackets <= expectedRcv && sentPackets <= expectedSent) {
         Logger.d("No competing traffic, continue");
         return false;
@@ -927,6 +929,7 @@ public class RRCTask extends MeasurementTask {
     }
     long startTime = 0;
     long endTime = 0;
+    long dataConsumedThisTask = 0;
     try {
       for (int i = 0; i < times.length; i++) {
         // We try until we reach a threshhold or until there is no
@@ -948,6 +951,9 @@ public class RRCTask extends MeasurementTask {
           // Initiate the desired RRC state by sending a large enough packet
           // to go to DCH and waiting for the specified amount of time
           try {
+              
+
+            waitTime(1, false); // Give time for any extraneous data sending to complete
             InetAddress serverAddr;
             serverAddr = InetAddress.getByName(desc.echoHost);
             sendPacket(serverAddr, desc.MAX, desc);
@@ -966,7 +972,9 @@ public class RRCTask extends MeasurementTask {
             continue;
           }
           startTime = System.currentTimeMillis();
-          boolean success = !packetMonitor.isTrafficInterfering(0, 0);
+          // Somewhat approximte: we can pick up packets sent by our request.
+          // Our request seems to never send more than 24 packets when there is no interference.
+          boolean success = !packetMonitor.isTrafficInterfering(3, 70);
           HttpClient client = new DefaultHttpClient();
           HttpGet request = new HttpGet();
 
@@ -987,8 +995,13 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
-          data_consumed += sb.length();
-          data_consumed += 1000; // approximate size of headers, etc
+          dataConsumedThisTask += sb.length();
+          for (Header header: response.getAllHeaders()) {
+              dataConsumedThisTask += header.getName().length() + header.getValue().length();
+          }
+          for (Header header: request.getAllHeaders()) {
+              dataConsumedThisTask += header.getName().length() + header.getValue().length();
+          }
 
           if (success) {
             break;
@@ -1013,6 +1026,7 @@ public class RRCTask extends MeasurementTask {
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
+    incrementData(dataConsumedThisTask);
   }
 
   /**
@@ -1044,6 +1058,7 @@ public class RRCTask extends MeasurementTask {
     if (times.length != desc.dnsTest.length) {
       desc.dnsTest = new int[times.length];
     }
+    long dataConsumedThisTask = 0;
 
     long startTime = 0;
     long endTime = 0;
@@ -1096,7 +1111,7 @@ public class RRCTask extends MeasurementTask {
         } catch (UnknownHostException e) {
           // we do this on purpose! Since it's a fake URL the lookup will fail
         }
-        data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
+        dataConsumedThisTask += DnsLookupTask.AVG_DATA_USAGE_BYTE;
         // When we fail to find the URL, we stop timing
         endTime = System.currentTimeMillis();
 
@@ -1121,6 +1136,7 @@ public class RRCTask extends MeasurementTask {
       }
       Logger.d("Time for DNS" + rtt);
     }
+    incrementData(dataConsumedThisTask);
   }
 
   /**
@@ -1146,6 +1162,7 @@ public class RRCTask extends MeasurementTask {
     }
     long startTime = 0;
     long endTime = 0;
+    long dataConsumedThisTask = 0;
 
     try {
       // For each inter-packet interval...
@@ -1174,7 +1191,7 @@ public class RRCTask extends MeasurementTask {
           endTime = System.currentTimeMillis();
           
           // Not exact, but also a smallish task...
-          data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
+          dataConsumedThisTask += DnsLookupTask.AVG_DATA_USAGE_BYTE;
 
           // Check how many packets were sent again. If the expected number
           // of packets were sent, we can finish and go to the next task.
@@ -1202,6 +1219,7 @@ public class RRCTask extends MeasurementTask {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    incrementData(dataConsumedThisTask);
   }
 
   /**
@@ -1321,14 +1339,14 @@ public class RRCTask extends MeasurementTask {
     long[] retval = {-1, -1};
     long numLost = 0;
     int i = 0;
-    
+    long dataConsumedThisTask = 0;
             
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
     DatagramPacket packet =
         new DatagramPacket(buf, buf.length, serverAddr, port);
 
-    data_consumed += num * (size + packetSize);
+    dataConsumedThisTask += num * (size + packetSize);
     
     try {
       socket.setSoTimeout(7000);
@@ -1353,7 +1371,8 @@ public class RRCTask extends MeasurementTask {
 
     retval[0] = endTime - startTime;
     retval[1] = numLost;
-
+    
+    incrementData(dataConsumedThisTask);
     return retval;
   }
   
@@ -1388,11 +1407,12 @@ public class RRCTask extends MeasurementTask {
     long startTime = 0;
     byte[] buf = new byte[size];
     byte[] rcvBuf = new byte[rcvSize];
+    long dataConsumedThisTask = 0;
 
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
     
-    data_consumed += (size + rcvSize);
+    dataConsumedThisTask += (size + rcvSize);
 
 
     DatagramPacket packet =
@@ -1412,7 +1432,7 @@ public class RRCTask extends MeasurementTask {
     }
     long endTime = System.currentTimeMillis();
     Logger.d("Sending complete: " + endTime);
-
+    incrementData(dataConsumedThisTask);
     return endTime - startTime;
   }
 
@@ -1614,4 +1634,13 @@ public class RRCTask extends MeasurementTask {
       }
     }
   }
+  
+  private synchronized static void incrementData(long data_increment) {
+      data_consumed += data_increment;
+  }
+
+    @Override
+    public long getDataConsumed() {
+        return data_consumed;
+    }
 }

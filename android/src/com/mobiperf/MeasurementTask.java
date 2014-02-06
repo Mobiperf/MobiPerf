@@ -197,6 +197,8 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
    */
   public abstract void stop();
   
+  public abstract long getDataConsumed();
+  
   public void broadcastProgressForUser(int progress) {
     if (measurementDesc.priority == MeasurementTask.USER_PRIORITY) {
       Intent intent = new Intent();
