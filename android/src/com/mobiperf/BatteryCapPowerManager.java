@@ -107,7 +107,7 @@ public class BatteryCapPowerManager {
         } else if (dataLimitStr.equals("500 MB")) {
             dataLimit = PROFILE4_LIMIT;
             dataUsageProfile = DataUsageProfile.PROFILE4;
-        } else if (dataLimitStr.equals("Unlimited MB")) {
+        } else if (dataLimitStr.equals("Unlimited")) {
             dataLimit = UNLIMITED_LIMIT;
             dataUsageProfile = DataUsageProfile.UNLIMITED;
         } else {
@@ -216,6 +216,7 @@ public class BatteryCapPowerManager {
      */
     private long setNewDataConsumptionPeriod(long dataUsed, long usageStartTimeSec) {
         long time_per_period = Config.DEFAULT_DATA_MONITOR_PERIOD_DAY * 24 * 60 * 60;
+        Logger.i("Exceeded data consumption period that began at time:" + usageStartTimeSec);
         
         // Figure out how many periods have passed 
         int periods = (int) (((float) ((long) (System.currentTimeMillis() / 1000) - usageStartTimeSec))
@@ -306,7 +307,7 @@ public class BatteryCapPowerManager {
             throws IOException {
         
         int taskDataUsed = 0;
-        
+        Logger.i("Updating data used");
         // Figure out the amount of data that this task has consumed
         if (taskType.equals(TCPThroughputTask.TYPE)
                 && result.getResult("total_data_sent_received") != null) {
@@ -333,6 +334,8 @@ public class BatteryCapPowerManager {
                             * TracerouteTask.DEFAULT_PING_PACKET_SIZE
                             * TracerouteTask.DEFAULT_PINGS_PER_HOP * 2;
         }
+
+        Logger.i("Amount of data used in the last task: " + taskDataUsed);
         
         long[] usagedata = readUsageFromFile();
         long usageStartTimeSec = usagedata[0];
@@ -349,6 +352,7 @@ public class BatteryCapPowerManager {
             }
         } else {
             // If we don't have a data usage file, initialize it with the data just used
+            Logger.i("Data usage file not found, creating a new one...");
             usageStartTimeSec = (System.currentTimeMillis() / 1000);
             dataUsed = taskDataUsed;
             writeDataUsageToFile(dataUsed, usageStartTimeSec);
