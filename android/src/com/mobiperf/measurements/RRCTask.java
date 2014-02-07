@@ -682,6 +682,13 @@ public class RRCTask extends MeasurementTask {
 
       return retval;
     }
+    
+    public long getPacketsSentDiff() {
+        packetsLast = getPacketsSent();
+        long rcvPackets = (packetsLast[0] - packetsFirst[0]);
+        long sentPackets = (packetsLast[1] - packetsFirst[1]);
+        return rcvPackets + sentPackets;
+    }
   }
 
 
@@ -929,7 +936,8 @@ public class RRCTask extends MeasurementTask {
     }
     long startTime = 0;
     long endTime = 0;
-    long dataConsumedThisTask = 0;
+
+    
     try {
       for (int i = 0; i < times.length; i++) {
         // We try until we reach a threshhold or until there is no
@@ -946,6 +954,13 @@ public class RRCTask extends MeasurementTask {
            * if there is competing traffic anywhere on the phone.
            */
           PacketMonitor packetMonitor;
+          
+          /*
+           * We also keep track of the data consumed
+           */
+          PacketMonitor datamonitor = new PacketMonitor();
+          datamonitor.setBySize();
+          datamonitor.readCurrentPacketValues();
           
 
           // Initiate the desired RRC state by sending a large enough packet
@@ -995,13 +1010,7 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
-          dataConsumedThisTask += sb.length();
-          for (Header header: response.getAllHeaders()) {
-              dataConsumedThisTask += header.getName().length() + header.getValue().length();
-          }
-          for (Header header: request.getAllHeaders()) {
-              dataConsumedThisTask += header.getName().length() + header.getValue().length();
-          }
+          data_consumed += datamonitor.getPacketsSentDiff();
 
           if (success) {
             break;
@@ -1026,7 +1035,6 @@ public class RRCTask extends MeasurementTask {
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
-    incrementData(dataConsumedThisTask);
   }
 
   /**
