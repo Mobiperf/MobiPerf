@@ -396,6 +396,9 @@ public class PingTask extends MeasurementTask {
       }
       Logger.i("java ping succeeds");
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
+      
+      dataConsumed += pingTask.packetSizeByte * Config.PING_COUNT_PER_MEASUREMENT * 2;
+      
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT, PING_METHOD_JAVA);
     } catch (IllegalArgumentException e) {
       Logger.e(e.getMessage());
@@ -404,6 +407,7 @@ public class PingTask extends MeasurementTask {
       Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";
     } 
+
     if (result != null) {
       return result;
     } else {
@@ -452,6 +456,8 @@ public class PingTask extends MeasurementTask {
       Logger.i("RTT is " + rrts.toString());
       double packetLoss = 1 - ((double) rrts.size() / (double) Config.PING_COUNT_PER_MEASUREMENT);
       result = constructResult(rrts, packetLoss, Config.PING_COUNT_PER_MEASUREMENT, PING_METHOD_HTTP);
+      dataConsumed += pingTask.packetSizeByte * Config.PING_COUNT_PER_MEASUREMENT * 2;
+      
     } catch (MalformedURLException e) {
       Logger.e(e.getMessage());
       errorMsg += e.getMessage() + "\n";

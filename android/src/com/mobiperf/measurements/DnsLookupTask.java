@@ -41,7 +41,7 @@ public class DnsLookupTask extends MeasurementTask {
   // Human readable name for the task
   public static final String DESCRIPTOR = "DNS lookup";
   
-  public static final int AVG_DATA_USAGE_BYTE=250;
+  public static final int AVG_DATA_USAGE_BYTE=2000;
 
   /**
    * The description of DNS lookup measurement 

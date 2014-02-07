@@ -211,7 +211,7 @@ public class TracerouteTask extends MeasurementTask {
         for (int i = 0; i < task.pingsPerHop; i++) {
           pingProc = Runtime.getRuntime().exec(command);
           
-          dataConsumed += (task.packetSizeByte + 8) * 2;
+          dataConsumed += (task.packetSizeByte + 28) * 2 * 3;
           // Wait for process to finish
           // Enforce thread timeout if pingProc doesn't respond
           ProcWrapper procwrapper = new ProcWrapper(pingProc);

@@ -63,6 +63,11 @@ public class BatteryCapPowerManager {
     private static int PROFILE2_LIMIT = 100 * 1024 * 1024;
     private static int PROFILE3_LIMIT = 250 * 1024 * 1024;
     private static int PROFILE4_LIMIT = 500 * 1024 * 1024;
+    
+    // Looking up various phone util data uses the network. 
+    // It's hard to measure how much.
+    // The good news is that this value is basically constant!
+    public static int PHONEUTILCOST = 3 * 1024;
 
 	public BatteryCapPowerManager(int batteryThresh, Context context) {
 		this.minBatteryThreshold = batteryThresh;
@@ -307,7 +312,7 @@ public class BatteryCapPowerManager {
      * @param taskType The type of measurement task completed
      * @throws IOException
      */
-    protected void updateDataUsage(long taskDataUsed)
+    public void updateDataUsage(long taskDataUsed)
             throws IOException {
 
         Logger.i("Amount of data used in the last task: " + taskDataUsed);
@@ -442,6 +447,7 @@ public class BatteryCapPowerManager {
 				broadcastMeasurementStart();
 				try {
 					Logger.i("Calling PowerAwareTask " + realTask);
+					pManager.updateDataUsage(PHONEUTILCOST);
 					result = realTask.call(); 
 					Logger.i("Got result " + result);
 					// We only care about the data usage when on the mobile network

@@ -151,6 +151,14 @@ public class HttpTask extends MeasurementTask {
     String errorMsg = "";
     InputStream inputStream = null;
     
+    // This is not the ideal way of doing things, as we can pick up data
+    // from other processes and be overly cautious in running measurements.
+    // However, taking the packet sizes is completely inaccurate, and it's hard to
+    // come up with a consistent expected value, unlike with DNS
+    RRCTask.PacketMonitor packetmonitor = new RRCTask.PacketMonitor();
+    packetmonitor.setBySize();
+    packetmonitor.readCurrentPacketValues();
+    
     try {
       // set the download URL, a URL that points to a file on the Internet
       // this is the file to be downloaded
@@ -168,19 +176,13 @@ public class HttpTask extends MeasurementTask {
         request = new HttpPost(urlStr);
         HttpPost postRequest = (HttpPost) request;
         postRequest.setEntity(new StringEntity(task.body));
-        dataConsumed += task.body.length();
       } else {
         // Use GET by default
         request = new HttpGet(urlStr);
-      }
-      
-      for (Header header: request.getAllHeaders()) {
-          dataConsumed+= header.getName().length() + header.getValue().length();
-      }
+      }      
       
       if (task.headers != null && task.headers.trim().length() > 0) {
         for (String headerLine : task.headers.split("\r\n")) {
-          dataConsumed += headerLine.length();
           String tokens[] = headerLine.split(":");
           if (tokens.length == 2) {
             request.addHeader(tokens[0], tokens[1]);
@@ -188,9 +190,7 @@ public class HttpTask extends MeasurementTask {
             throw new MeasurementError("Incorrect header line: " + headerLine);
           }
         }
-      }
-      
-      
+      } 
       
       byte[] readBuffer = new byte[HttpTask.READ_BUFFER_SIZE];
       int readLen;      
@@ -262,10 +262,9 @@ public class HttpTask extends MeasurementTask {
           phoneUtils.getDeviceProperty(), HttpTask.TYPE, System.currentTimeMillis() * 1000,
           success, this.measurementDesc);
       
-      result.addResult("code", statusCode);
-      
-      dataConsumed += originalHeadersLen;
-      dataConsumed += totalBodyLen;
+      result.addResult("code", statusCode);      
+     
+      dataConsumed = packetmonitor.getPacketsSentDiff();
       
       if (success) {
         result.addResult("time_ms", duration);
@@ -294,7 +293,8 @@ public class HttpTask extends MeasurementTask {
       if (httpClient != null) {
         httpClient.close();
       }
-      
+
+      Logger.d("DATA USED: " + dataConsumed); // XXX
     }
     throw new MeasurementError("Cannot get result from HTTP measurement because " + 
       errorMsg);

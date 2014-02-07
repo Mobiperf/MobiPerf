@@ -121,6 +121,7 @@ public class Checkin {
       status
           .put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils
               .getDeviceProperty()));
+      powerManager.updateDataUsage(BatteryCapPowerManager.PHONEUTILCOST);
 
       Logger.d(status.toString());
       sendStringMsg("Checking in");

@@ -1175,6 +1175,13 @@ public class MeasurementScheduler extends Service {
 
   private MeasurementResult getFailureResult(MeasurementTask task,
       Throwable error) {
+      
+    try {
+        powerManager.updateDataUsage(BatteryCapPowerManager.PHONEUTILCOST);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    
     MeasurementResult result =
         new MeasurementResult(phoneUtils.getDeviceInfo().deviceId,
             phoneUtils.getDeviceProperty(), task.getType(),
