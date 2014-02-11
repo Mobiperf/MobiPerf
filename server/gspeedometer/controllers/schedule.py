@@ -59,15 +59,11 @@ class Schedule(webapp.RequestHandler):
         logging.warning('Type in POST is invalid: %s', error)
         self.error(501)
         return
-        
       
       # dynamically creates a form based on the specified fields
       add_to_schedule_form = type(
           'AddToScheduleForm', (forms.BaseForm,),
           {'base_fields': self._BuildFields(measurement)})()
-
-        
-          
 
     else:
       # data was submitted for a new measurement schedule item
@@ -106,8 +102,6 @@ class Schedule(webapp.RequestHandler):
         p2 = add_to_schedule_form.cleaned_data['profile_2_freq']
         p3 = add_to_schedule_form.cleaned_data['profile_3_freq']
         p4 = add_to_schedule_form.cleaned_data['profile_4_freq']
-        
-        
 
         logging.info('Got TYPE: ' + thetype)
 
@@ -127,22 +121,6 @@ class Schedule(webapp.RequestHandler):
         for name, value in params.items():
           setattr(task, 'mparam_' + name, value)
         task.put()
-        
-
-#         task_profile=model.TaskProfile()
-#         task_profile.task=task
-#         if p1:
-#           task_profile.p1_freq=int(p1)
-#         if p2:
-#           task_profile.p2_freq=int(p2)
-#         if p1:
-#           task_profile.p3_freq=int(p3)
-#         if p1:
-#           task_profile.p4_freq=int(p4)
-#         
-#         logging.debug("Putting task profile into db")
-#         task_profile.put()
-            
 
     schedule = model.Task.all()
     schedule.order('-created')

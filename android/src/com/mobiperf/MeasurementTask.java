@@ -197,6 +197,13 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
    */
   public abstract void stop();
   
+  /**
+   * All measurement tasks must provide measurements of how much data they have
+   * used to be fetched when the task completes.  This allows us to make sure we
+   * stay under the data limit.
+   * 
+   * @return Data consumed, in bytes
+   */
   public abstract long getDataConsumed();
   
   public void broadcastProgressForUser(int progress) {

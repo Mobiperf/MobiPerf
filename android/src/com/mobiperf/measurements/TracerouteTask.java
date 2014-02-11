@@ -60,6 +60,7 @@ public class TracerouteTask extends MeasurementTask {
   private Process pingProc = null;
   private boolean stopRequested = false;
   
+  // Track data consumption for this task to avoid exceeding user's limit
   private long dataConsumed;
 
   /**
@@ -211,7 +212,10 @@ public class TracerouteTask extends MeasurementTask {
         for (int i = 0; i < task.pingsPerHop; i++) {
           pingProc = Runtime.getRuntime().exec(command);
           
+          // Actual packet is 28 bytes larger than the size specified.
+          // Three packets are sent in each direction
           dataConsumed += (task.packetSizeByte + 28) * 2 * 3;
+          
           // Wait for process to finish
           // Enforce thread timeout if pingProc doesn't respond
           ProcWrapper procwrapper = new ProcWrapper(pingProc);
@@ -463,8 +467,11 @@ public class TracerouteTask extends MeasurementTask {
     }  
   }
 
-    @Override
-    public long getDataConsumed() {
-        return dataConsumed;
-    }
+  /**
+   * Based on counting the number of pings sent
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
+  }
 }

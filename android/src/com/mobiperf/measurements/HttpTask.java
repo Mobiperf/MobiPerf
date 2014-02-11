@@ -72,6 +72,7 @@ public class HttpTask extends MeasurementTask {
   
   private AndroidHttpClient httpClient = null;
   
+  // Track data consumption for this task to avoid exceeding user's limit  
   private long dataConsumed;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
@@ -294,7 +295,6 @@ public class HttpTask extends MeasurementTask {
         httpClient.close();
       }
 
-      Logger.d("DATA USED: " + dataConsumed); // XXX
     }
     throw new MeasurementError("Cannot get result from HTTP measurement because " + 
       errorMsg);
@@ -329,6 +329,15 @@ public class HttpTask extends MeasurementTask {
     }
   }
 
+  /**
+   * Data used so far by the task.
+   * 
+   * To calculate this, we measure <i>all</i> data sent while the task
+   * is running. This will tend to overestimate the data consumed, but due
+   * to retransmissions, etc, especially when signal strength is poor, attempting
+   * to calculate the size directly will tend to greatly underestimate the data
+   * consumed.
+   */
   @Override
   public long getDataConsumed() {
     return dataConsumed;

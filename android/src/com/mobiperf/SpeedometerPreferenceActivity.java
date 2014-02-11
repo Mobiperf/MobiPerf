@@ -38,8 +38,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
-    
-    
+        
     /* This should never occur. */
     if (intervalPref == null || batteryPref == null) {
       Logger.w("Cannot find some of the preferences");
@@ -115,6 +114,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
       }
     });
     
+    // Restore current data limit settings
     ListPreference dataLimitLp = (ListPreference)findPreference(Config.PREF_KEY_DATA_LIMIT);
     final CharSequence[] dataLimitItems=new CharSequence[5];
     dataLimitItems[0]="50 MB";
@@ -124,9 +124,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     dataLimitItems[4]="Unlimited";
     dataLimitLp.setEntries(dataLimitItems);
     dataLimitLp.setEntryValues(dataLimitItems);
-   
-    // Restore current settings.
-    
+ 
     String selectedDataLimitAccount = prefs.getString(Config.PREF_KEY_SELECTED_DATA_LIMIT, null);
     if (selectedDataLimitAccount != null) {
     	dataLimitLp.setValue(selectedDataLimitAccount);
@@ -134,6 +132,9 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     	dataLimitLp.setValue("Unlimited");
     }
     
+    /**
+     * If the data limit changes, update it immediately
+     */
     dataLimitLp.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
       @Override
       public boolean onPreferenceChange(Preference preference, Object newValue) {

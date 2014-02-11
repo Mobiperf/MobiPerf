@@ -175,6 +175,13 @@ public class Checkin {
     }
   }
 
+  /**
+   * Upload results from non-RRC measurements to the server
+   * 
+   * @param resultArray a JSON array of results to date
+   * @param powerManager used to update data consumption based on traffic from the checkin
+   * @throws IOException
+   */
   public void uploadMeasurementResult(JSONArray resultArray, BatteryCapPowerManager powerManager)
       throws IOException {
 

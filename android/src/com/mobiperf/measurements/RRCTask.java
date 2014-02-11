@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -83,9 +82,9 @@ public class RRCTask extends MeasurementTask {
   public static String TAG = "MobiPerf_RRC_INFERENCE";
   private boolean stop = false;
   private Context context;
-  public static long data_consumed = 0;
   
-  public static final int AVG_DATA_USAGE_BYTE=600*1024;
+  // Track data consumption for this task to avoid exceeding user's limit
+  public static long data_consumed = 0;
 
   /**
    * Stores parameters for the RRC inference task
@@ -651,7 +650,6 @@ public class RRCTask extends MeasurementTask {
 
       long rcvPackets = (packetsLast[0] - packetsFirst[0]);
       long sentPackets = (packetsLast[1] - packetsFirst[1]);
-      Logger.d("Packets received: " + rcvPackets + " Packets sent: " + sentPackets);
       if (rcvPackets <= expectedRcv && sentPackets <= expectedSent) {
         Logger.d("No competing traffic, continue");
         return false;
@@ -683,11 +681,16 @@ public class RRCTask extends MeasurementTask {
       return retval;
     }
     
+    /**
+     * The total traffic sent and received since getPacketsSent was run.
+     * 
+     * @return The total packets (or data) sent and received, as a sum
+     */
     public long getPacketsSentDiff() {
-        packetsLast = getPacketsSent();
-        long rcvPackets = (packetsLast[0] - packetsFirst[0]);
-        long sentPackets = (packetsLast[1] - packetsFirst[1]);
-        return rcvPackets + sentPackets;
+      packetsLast = getPacketsSent();
+      long rcvPackets = (packetsLast[0] - packetsFirst[0]);
+      long sentPackets = (packetsLast[1] - packetsFirst[1]);
+      return rcvPackets + sentPackets;
     }
   }
 
@@ -956,7 +959,8 @@ public class RRCTask extends MeasurementTask {
           PacketMonitor packetMonitor;
           
           /*
-           * We also keep track of the data consumed
+           * We also keep track of the data consumed in order to remain within
+           * the data limit
            */
           PacketMonitor datamonitor = new PacketMonitor();
           datamonitor.setBySize();
@@ -965,10 +969,9 @@ public class RRCTask extends MeasurementTask {
 
           // Initiate the desired RRC state by sending a large enough packet
           // to go to DCH and waiting for the specified amount of time
-          try {
-              
-
-            waitTime(1, false); // Give time for any extraneous data sending to complete
+          try {              
+            // Wait for 1 second. Give time for any extraneous data sending to complete
+            waitTime(1, false); 
             InetAddress serverAddr;
             serverAddr = InetAddress.getByName(desc.echoHost);
             sendPacket(serverAddr, desc.MAX, desc);
@@ -987,6 +990,7 @@ public class RRCTask extends MeasurementTask {
             continue;
           }
           startTime = System.currentTimeMillis();
+          
           // Somewhat approximte: we can pick up packets sent by our request.
           // Our request seems to never send more than 24 packets when there is no interference.
           boolean success = !packetMonitor.isTrafficInterfering(3, 70);
@@ -1010,6 +1014,8 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
+          // This may overestimate the data consumed, but there's no good way
+          // to tell what was us and what was another app
           data_consumed += datamonitor.getPacketsSentDiff();
 
           if (success) {
@@ -1042,7 +1048,7 @@ public class RRCTask extends MeasurementTask {
    * based on the model constructed by the server, a default assumed value is used in their absence.
    * 
    * <ol>
-   * <li> vSend a packet to initiate the RRC state desired. </li>
+   * <li> Send a packet to initiate the RRC state desired. </li>
    * <li>Create a randomly generated host name (to ensure that the host name is not cached). I 
    * found on some devices that even when you clear the cache manually, the data remains in 
    * the cache.</li>
@@ -1354,6 +1360,7 @@ public class RRCTask extends MeasurementTask {
     DatagramPacket packet =
         new DatagramPacket(buf, buf.length, serverAddr, port);
 
+    // number * (packet sent + packet received)
     dataConsumedThisTask += num * (size + packetSize);
     
     try {
@@ -1647,8 +1654,18 @@ public class RRCTask extends MeasurementTask {
       data_consumed += data_increment;
   }
 
-    @Override
-    public long getDataConsumed() {
-        return data_consumed;
-    }
+  /**  
+   * For RRC inference, we calculate this precisely based on the number and size
+   * of packets sent.  For the TCP handshake and DNS tasks, we use small, fixed 
+   * values based on the average data consumption measured for those tasks.
+   * 
+   * For the HTTP task, we count <i>all</i> data sent during the task time towards
+   * the budget.  This will tend to overestimate the data used, but due to 
+   * retransmissions, etc, it is impossible to get a remotely accurate estimate 
+   * otherwise, I found.
+   */
+  @Override
+  public long getDataConsumed() {
+    return data_consumed;
+  }
 }

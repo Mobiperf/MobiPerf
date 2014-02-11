@@ -631,8 +631,12 @@ public class TCPThroughputTask extends MeasurementTask {
     return array;
   }
 
-    @Override
-    public long getDataConsumed() {
-        return totalSendSize + totalRevSize;
-    }
+  /**
+   * Based on the measured total data sent and received, the same returned as
+   * a measurement result
+   */
+  @Override
+  public long getDataConsumed() {
+    return totalSendSize + totalRevSize;
+  }
 }
