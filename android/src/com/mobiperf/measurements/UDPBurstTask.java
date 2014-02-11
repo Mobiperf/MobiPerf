@@ -60,6 +60,9 @@ public class UDPBurstTask extends MeasurementTask {
   private Context context = null;
 
   private static int seq = 1;
+  
+  // Track data consumption for this task to avoid exceeding user's limit
+  private long dataConsumed;
 
   /**
    * Encode UDP specific parameters, along with common parameters 
@@ -166,6 +169,7 @@ public class UDPBurstTask extends MeasurementTask {
         desc.intervalSec, desc.count, desc.priority, desc.parameters, context),
         context);
     this.context = context;
+    dataConsumed = 0;
   }
 
   /**
@@ -249,6 +253,7 @@ public class UDPBurstTask extends MeasurementTask {
       packet.setData(data);
  
       try {
+        dataConsumed += packet.getLength();
         sock.send(packet);
       } catch (IOException e) {
         sock.close();
@@ -299,6 +304,8 @@ public class UDPBurstTask extends MeasurementTask {
     ByteArrayInputStream byteIn =
         new ByteArrayInputStream(recvpacket.getData(), 0, recvpacket.getLength());
     DataInputStream dataIn = new DataInputStream(byteIn);
+    dataConsumed += recvpacket.getLength();
+
  
     try {
       ptype = dataIn.readInt();
@@ -359,6 +366,8 @@ public class UDPBurstTask extends MeasurementTask {
     packet = new DatagramPacket(data, data.length, addr, desc.dstPort);
 
     try { 
+
+      dataConsumed += packet.getLength();
       sock.send(packet);
     } catch (IOException e) {
       sock.close();
@@ -410,6 +419,9 @@ public class UDPBurstTask extends MeasurementTask {
               recvpacket.getLength ());
       DataInputStream dataIn = new DataInputStream (byteIn);
 
+
+      dataConsumed += recvpacket.getLength();
+      
       try {
         ptype = dataIn.readInt();
         burstsize = dataIn.readInt();
@@ -536,5 +548,13 @@ public class UDPBurstTask extends MeasurementTask {
     desc.intervalSec + "\n  Next run: " + desc.startTime;
     
     return resp;
+  }
+
+  /**
+   * Based on a direct accounting of UDP packet sizes.
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
   }
 }

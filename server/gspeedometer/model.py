@@ -379,17 +379,3 @@ class RRCInferenceSizesRawData(db.Model):
   result = db.IntegerProperty()
   size = db.IntegerProperty()
   
-# class TaskProfile(db.Model):
-#   """Represents a frequency values for four profiles for each measurement task"""
-# 
-#   # Measurement type
-# #   task = db.ReferenceProperty(Task, required=True)
-#   task = db.ReferenceProperty(Task)
-#   p1_freq = db.IntegerProperty()
-#   p2_freq = db.IntegerProperty()
-#   p3_freq = db.IntegerProperty()
-#   p4_freq = db.IntegerProperty()
-  
-  
-  
-

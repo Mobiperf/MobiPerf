@@ -82,9 +82,9 @@ public class RRCTask extends MeasurementTask {
   public static String TAG = "MobiPerf_RRC_INFERENCE";
   private boolean stop = false;
   private Context context;
-  public static long data_consumed = 0;
   
-  public static final int AVG_DATA_USAGE_BYTE=600*1024;
+  // Track data consumption for this task to avoid exceeding user's limit
+  public static long data_consumed = 0;
 
   /**
    * Stores parameters for the RRC inference task
@@ -680,6 +680,18 @@ public class RRCTask extends MeasurementTask {
 
       return retval;
     }
+    
+    /**
+     * The total traffic sent and received since getPacketsSent was run.
+     * 
+     * @return The total packets (or data) sent and received, as a sum
+     */
+    public long getPacketsSentDiff() {
+      packetsLast = getPacketsSent();
+      long rcvPackets = (packetsLast[0] - packetsFirst[0]);
+      long sentPackets = (packetsLast[1] - packetsFirst[1]);
+      return rcvPackets + sentPackets;
+    }
   }
 
 
@@ -927,6 +939,8 @@ public class RRCTask extends MeasurementTask {
     }
     long startTime = 0;
     long endTime = 0;
+
+    
     try {
       for (int i = 0; i < times.length; i++) {
         // We try until we reach a threshhold or until there is no
@@ -944,10 +958,20 @@ public class RRCTask extends MeasurementTask {
            */
           PacketMonitor packetMonitor;
           
+          /*
+           * We also keep track of the data consumed in order to remain within
+           * the data limit
+           */
+          PacketMonitor datamonitor = new PacketMonitor();
+          datamonitor.setBySize();
+          datamonitor.readCurrentPacketValues();
+          
 
           // Initiate the desired RRC state by sending a large enough packet
           // to go to DCH and waiting for the specified amount of time
-          try {
+          try {              
+            // Wait for 1 second. Give time for any extraneous data sending to complete
+            waitTime(1, false); 
             InetAddress serverAddr;
             serverAddr = InetAddress.getByName(desc.echoHost);
             sendPacket(serverAddr, desc.MAX, desc);
@@ -966,7 +990,10 @@ public class RRCTask extends MeasurementTask {
             continue;
           }
           startTime = System.currentTimeMillis();
-          boolean success = !packetMonitor.isTrafficInterfering(0, 0);
+          
+          // Somewhat approximte: we can pick up packets sent by our request.
+          // Our request seems to never send more than 24 packets when there is no interference.
+          boolean success = !packetMonitor.isTrafficInterfering(3, 70);
           HttpClient client = new DefaultHttpClient();
           HttpGet request = new HttpGet();
 
@@ -987,8 +1014,9 @@ public class RRCTask extends MeasurementTask {
           }
           in.close();
 
-          data_consumed += sb.length();
-          data_consumed += 1000; // approximate size of headers, etc
+          // This may overestimate the data consumed, but there's no good way
+          // to tell what was us and what was another app
+          data_consumed += datamonitor.getPacketsSentDiff();
 
           if (success) {
             break;
@@ -1020,7 +1048,7 @@ public class RRCTask extends MeasurementTask {
    * based on the model constructed by the server, a default assumed value is used in their absence.
    * 
    * <ol>
-   * <li> vSend a packet to initiate the RRC state desired. </li>
+   * <li> Send a packet to initiate the RRC state desired. </li>
    * <li>Create a randomly generated host name (to ensure that the host name is not cached). I 
    * found on some devices that even when you clear the cache manually, the data remains in 
    * the cache.</li>
@@ -1044,6 +1072,7 @@ public class RRCTask extends MeasurementTask {
     if (times.length != desc.dnsTest.length) {
       desc.dnsTest = new int[times.length];
     }
+    long dataConsumedThisTask = 0;
 
     long startTime = 0;
     long endTime = 0;
@@ -1096,7 +1125,7 @@ public class RRCTask extends MeasurementTask {
         } catch (UnknownHostException e) {
           // we do this on purpose! Since it's a fake URL the lookup will fail
         }
-        data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
+        dataConsumedThisTask += DnsLookupTask.AVG_DATA_USAGE_BYTE;
         // When we fail to find the URL, we stop timing
         endTime = System.currentTimeMillis();
 
@@ -1121,6 +1150,7 @@ public class RRCTask extends MeasurementTask {
       }
       Logger.d("Time for DNS" + rtt);
     }
+    incrementData(dataConsumedThisTask);
   }
 
   /**
@@ -1146,6 +1176,7 @@ public class RRCTask extends MeasurementTask {
     }
     long startTime = 0;
     long endTime = 0;
+    long dataConsumedThisTask = 0;
 
     try {
       // For each inter-packet interval...
@@ -1174,7 +1205,7 @@ public class RRCTask extends MeasurementTask {
           endTime = System.currentTimeMillis();
           
           // Not exact, but also a smallish task...
-          data_consumed += DnsLookupTask.AVG_DATA_USAGE_BYTE;
+          dataConsumedThisTask += DnsLookupTask.AVG_DATA_USAGE_BYTE;
 
           // Check how many packets were sent again. If the expected number
           // of packets were sent, we can finish and go to the next task.
@@ -1202,6 +1233,7 @@ public class RRCTask extends MeasurementTask {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    incrementData(dataConsumedThisTask);
   }
 
   /**
@@ -1321,14 +1353,15 @@ public class RRCTask extends MeasurementTask {
     long[] retval = {-1, -1};
     long numLost = 0;
     int i = 0;
-    
+    long dataConsumedThisTask = 0;
             
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
     DatagramPacket packet =
         new DatagramPacket(buf, buf.length, serverAddr, port);
 
-    data_consumed += num * (size + packetSize);
+    // number * (packet sent + packet received)
+    dataConsumedThisTask += num * (size + packetSize);
     
     try {
       socket.setSoTimeout(7000);
@@ -1353,7 +1386,8 @@ public class RRCTask extends MeasurementTask {
 
     retval[0] = endTime - startTime;
     retval[1] = numLost;
-
+    
+    incrementData(dataConsumedThisTask);
     return retval;
   }
   
@@ -1388,11 +1422,12 @@ public class RRCTask extends MeasurementTask {
     long startTime = 0;
     byte[] buf = new byte[size];
     byte[] rcvBuf = new byte[rcvSize];
+    long dataConsumedThisTask = 0;
 
     DatagramSocket socket = new DatagramSocket();
     DatagramPacket packetRcv = new DatagramPacket(rcvBuf, rcvBuf.length);
     
-    data_consumed += (size + rcvSize);
+    dataConsumedThisTask += (size + rcvSize);
 
 
     DatagramPacket packet =
@@ -1412,7 +1447,7 @@ public class RRCTask extends MeasurementTask {
     }
     long endTime = System.currentTimeMillis();
     Logger.d("Sending complete: " + endTime);
-
+    incrementData(dataConsumedThisTask);
     return endTime - startTime;
   }
 
@@ -1613,5 +1648,24 @@ public class RRCTask extends MeasurementTask {
         e.printStackTrace();
       }
     }
+  }
+  
+  private synchronized static void incrementData(long data_increment) {
+      data_consumed += data_increment;
+  }
+
+  /**  
+   * For RRC inference, we calculate this precisely based on the number and size
+   * of packets sent.  For the TCP handshake and DNS tasks, we use small, fixed 
+   * values based on the average data consumption measured for those tasks.
+   * 
+   * For the HTTP task, we count <i>all</i> data sent during the task time towards
+   * the budget.  This will tend to overestimate the data used, but due to 
+   * retransmissions, etc, it is impossible to get a remotely accurate estimate 
+   * otherwise, I found.
+   */
+  @Override
+  public long getDataConsumed() {
+    return data_consumed;
   }
 }
