@@ -60,7 +60,8 @@ public interface Config {
   public static final int DEFAULT_BATTERY_LEVEL = 0;
   /** The default maximum battery level if we cannot read it from the system */
   public static final int DEFAULT_BATTERY_SCALE = 100;
-  /** Tasks expire in seven days. Expired tasks will be removed from the scheduler */
+  /** Tasks expire in seven days. Expired tasks will be removed from the scheduler.
+   * In general, schedule updates from the server should take care of this automatically. */
   public static final long TASK_EXPIRATION_MSEC = 7 * 24 * 3600 * 1000;
 
   

@@ -72,7 +72,9 @@ public class PingTask extends MeasurementTask {
   private String PING_METHOD_HTTP = "http";
   private String targetIp = null;
   
+  // Track data consumption for this task to avoid exceeding user's limit  
   private long dataConsumed;
+  
   /**
    * Encode ping specific parameters, along with common parameters inherited from MeasurmentDesc
    * @author wenjiezeng@google.com (Steve Zeng)
@@ -111,7 +113,7 @@ public class PingTask extends MeasurementTask {
         String val = null;
         if ((val = params.get("packet_size_byte")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {
-        	this.packetSizeByte = Integer.parseInt(val);  
+          this.packetSizeByte = Integer.parseInt(val);  
         }
         if ((val = params.get("ping_timeout_sec")) != null && val.length() > 0 &&
             Integer.parseInt(val) > 0) {
@@ -485,8 +487,14 @@ public class PingTask extends MeasurementTask {
     cleanUp(pingProc);
   }
 
-    @Override
-    public long getDataConsumed() {
-        return dataConsumed;
-    }
+  
+  /**
+   * Data sent so far by this task.
+   * 
+   * We count packets sent directly to calculate the data sent
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
+  }
 }

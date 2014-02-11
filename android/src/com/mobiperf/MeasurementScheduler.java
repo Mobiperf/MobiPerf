@@ -121,6 +121,10 @@ public class MeasurementScheduler extends Service {
   private ArrayList<String> userResults;
   private ArrayList<String> systemResults;
   private ArrayList<String> systemConsole;
+  
+  // We keep track of the current tasks running, indexed by their unique IDs,
+  // for the purpose of selectively updating our schedule when new tasks are
+  // received from the server
   private Hashtable<String, MeasurementTask> currentSchedule;
 
   private PhoneUtils phoneUtils;
@@ -165,6 +169,7 @@ public class MeasurementScheduler extends Service {
             new TaskComparator());
     this.pendingTasks =
         new ConcurrentHashMap<MeasurementTask, Future<MeasurementResult>>();
+    
     // expect it to be the same size as the queue
     this.currentSchedule =
         new Hashtable<String, MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE);
@@ -219,6 +224,7 @@ public class MeasurementScheduler extends Service {
               completedMeasurementCnt++;
             }
             if (intent.getStringExtra(UpdateIntent.RESULT_PAYLOAD) != null) {
+              Logger.d("Measurement result intent received");
               saveResultToFile(intent
                   .getStringExtra(UpdateIntent.RESULT_PAYLOAD));
 
@@ -347,13 +353,6 @@ public class MeasurementScheduler extends Service {
         }
 
         MeasurementDesc desc = task.getDescription();
-
-        /*// The RRC task should run no more than once an hour.
-        // It can take a long time to run, due to all the pauses.
-        if (desc.type == "rrc" && desc.intervalSec <= 3600) {
-          desc.intervalSec = 3600;
-          Logger.i("Interval set too long for rrc task, setting to one hour");
-        }*/
 
         long newStartTime =
             desc.startTime.getTime() + (long) desc.intervalSec * 1000;
@@ -635,13 +634,10 @@ public class MeasurementScheduler extends Service {
           getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
 
-      int prevDataLimit = powerManager.getDataLimit();
+      // Fetch the data limit with 250 MB as a default
       powerManager.setDataUsageLimit(prefs.getString(
           getString(R.string.dataLimitPrefKey), "250 MB"));
-      int newDataLimit = powerManager.getDataLimit();
-      //if (prevDataLimit != newDataLimit) {
-      //  powerManager.resetDataUsage();
-      //}
+
 
       this.setCheckinInterval(Integer.parseInt(prefs.getString(
           getString(R.string.checkinIntervalPrefKey),
@@ -729,7 +725,7 @@ public class MeasurementScheduler extends Service {
    * Alternately, disregards the task altogether, if a -1 is passed.
    * 
    * @param task The task to adjust
-   * @return false if the task is to be ignored
+   * @return false if the task should not be scheduled, based on the profile
    */
   private boolean adjustInterval(MeasurementTask task) {
 
@@ -771,61 +767,67 @@ public class MeasurementScheduler extends Service {
 
   }
 
-/**
- * Update the schedule based on a set of tasks from the server.
- * <p>
- * The current tasks to schedule are in a hash table indexed by a unique task key.
- * <p>
- * Remove all tasks from the schedule that are not in the new list or that have changed.
- * Then, add all tasks from the new list that were not in the schedule, or have changed.
- * Then, the schedule will match the one in the server, and unchanged tasks are left as they are.
- * 
- * <p>
- * If the state has changed and the schedule was received from the server, save it to disk
- * so it can be recovered in case of a crash. 
- * 
- * @param newTasks List of MeasurementTasks from the server
- * @param reLoad if it's True, we're loading from disk: don't adjust frequencies or save to disk.
- */
+  /**
+   * Update the schedule based on a set of tasks from the server.
+   * <p>
+   * The current tasks to schedule are in a hash table indexed by a unique task key.
+   * <p>
+   * Remove all tasks from the schedule that are not in the new list or that have changed.
+   * Then, add all tasks from the new list that were not in the schedule, or have changed.
+   * Then, the schedule will match the one in the server, and unchanged tasks are left as they are.
+   * 
+   * <p>
+   * If the state has changed and the schedule was received from the server, save it to disk
+   * so it can be recovered in case of a crash. 
+   * 
+   * @param newTasks List of MeasurementTasks from the server
+   * @param reLoad if it's True, we're loading from disk: don't adjust frequencies or save to disk again.
+   */
   private void updateSchedule(List<MeasurementTask> newTasks, boolean reLoad) {
 
-    // Keep track of what tasks to change
+    // Keep track of what tasks need to be added.
+    // Altered tasks are removed and then added, so they go here too
     Vector<MeasurementTask> tasksToAdd = new Vector<MeasurementTask>();
 
-    // Keep track of what keys are not being used
-    Set<String> scheduleKeys = new HashSet<String>(currentSchedule.keySet());
+    // Keep track of what keys are not being used. Remove keys from this as
+    // you find they are in use.
+    Set<String> missingKeys = new HashSet<String>(currentSchedule.keySet());
     Set<String> keysToRemove = new HashSet<String>();
+
     Logger.i("Attempting to add new tasks");
 
     for (MeasurementTask newTask : newTasks) {
 
-      // Adjust the frequency of the new task, or ignore it if requested.
+      // Adjust the frequency of the new task, based on the selected data consumption profile,
+      // or ignore it if the task is disabled for this profile.
       // If we are loading again, don't re-adjust task frequencies.
       if (!reLoad) {
         if (!adjustInterval(newTask)) {
           continue;
         }
-
       }
 
       String newKey = newTask.getDescription().key;
-      if (!scheduleKeys.contains(newKey)) {
+      if (!missingKeys.contains(newKey)) {
         tasksToAdd.add(newTask);
       } else {
-        // check for changes
+        // check for changes. If any parameter changes, it counts as a change.
         if (!currentSchedule.get(newKey).getDescription()
             .equals(newTask.getDescription())) {
+          // If there's a change, replace the task with the new task from the server
           keysToRemove.add(newKey);
           tasksToAdd.add(newTask);
         }
-        scheduleKeys.remove(newKey);
+        // We've seen the task
+        missingKeys.remove(newKey);
       }
     }
 
     // scheduleKeys now contain all keys that do not exist
-    keysToRemove.addAll(scheduleKeys);
+    keysToRemove.addAll(missingKeys);
 
-    // remove all bad tasks from the queue and schedule
+    // Add all new tasks, and copy all unmodified tasks, to a new queue.
+    // Also update currentSchedule accordingly.
     PriorityBlockingQueue<MeasurementTask> newQueue =
         new PriorityBlockingQueue<MeasurementTask>(Config.MAX_TASK_QUEUE_SIZE,
             new TaskComparator());
@@ -838,6 +840,7 @@ public class MeasurementScheduler extends Service {
           newQueue.add(task);
         } else {
           Logger.w("Removing task with key" + taskKey);
+          // Also need to keep our master schedule up to date
           currentSchedule.remove(taskKey);
         }
       }
@@ -853,23 +856,21 @@ public class MeasurementScheduler extends Service {
     if (!reLoad && (!tasksToAdd.isEmpty() || !keysToRemove.isEmpty())) {
       saveSchedulerState();
     }
-
   }
 
   /**
    * Save the results of a task to a file, for later uploading.
+   * This way, if the application crashes, is halted, etc. between the
+   * task and checkin, no results are lost.
    * 
-   * @param result A string from the JSON representation of a result
+   * @param result The JSON representation of a result, as a string
    */
   private synchronized void saveResultToFile(String result) {
     try {
       Logger.i("Saving result to file...");
-      // Logger.i(result);
       BufferedOutputStream writer =
           new BufferedOutputStream(openFileOutput("results",
               Context.MODE_PRIVATE | Context.MODE_APPEND));
-      // JSONObject jsonResult = MeasurementJsonConvertor.encodeToJson(string);
-      // writer.write(jsonResult.toString().getBytes());
       result += "\n";
       writer.write(result.getBytes());
       writer.close();
@@ -899,8 +900,6 @@ public class MeasurementScheduler extends Service {
         JSONObject jsonTask;
         try {
           jsonTask = new JSONObject(line);
-          // Logger.i(line);
-          // Logger.i(jsonTask.toString());
           results.put(jsonTask);
         } catch (JSONException e) {
           e.printStackTrace();
@@ -911,7 +910,7 @@ public class MeasurementScheduler extends Service {
       streamreader.close();
       inputstream.close();
 
-      // delete file once done
+      // delete file once done, to avoid uploading results twice
       deleteFile("results");
 
 
@@ -925,7 +924,7 @@ public class MeasurementScheduler extends Service {
 
   /**
    * Save the entire current schedule to a file, in JSON format, like how
-   * tasks are recieved from the server.
+   * tasks are received from the server.
    * 
    * One item per line.
    */
@@ -936,7 +935,7 @@ public class MeasurementScheduler extends Service {
             new BufferedOutputStream(openFileOutput("schedule",
                 Context.MODE_PRIVATE));
 
-        Logger.i("Saving schedule to disk...");
+        Logger.i("Saving schedule to a file...");
         for (Map.Entry<String, MeasurementTask> entry : currentSchedule
             .entrySet()) {
           try {
@@ -981,7 +980,10 @@ public class MeasurementScheduler extends Service {
             MeasurementTask newTask =
                 MeasurementJsonConvertor.makeMeasurementTaskFromJson(jsonTask,
                     getApplicationContext());
+            
             // If the task is scheduled in the past, re-schedule it in the future
+            // We assume tasks in the past have run, otherwise we can wind up getting
+            // stuck trying to run a large backlog of tasks
             
             long curtime = System.currentTimeMillis();
             if (curtime > newTask.getDescription().startTime.getTime()) {
@@ -1016,7 +1018,6 @@ public class MeasurementScheduler extends Service {
 
   @SuppressWarnings("unchecked")
   private void uploadResults() {
-    // Vector<MeasurementResult> finishedTasks = new Vector<MeasurementResult>();
     MeasurementResult result;
     Future<MeasurementResult> future;
     JSONArray results = readResultsFromFile();

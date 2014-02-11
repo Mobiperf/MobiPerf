@@ -35,14 +35,11 @@ class Checkin(webapp.RequestHandler):
 
   def Checkin(self, **unused_args):
     """Handler for checkin requests."""
-    
-    
     if self.request.method.lower() != 'post':
       raise error.BadRequest('Not a POST request.')
 
     checkin = json.loads(self.request.body)
     logging.info('Got checkin: %s', self.request.body)
-    
 
     try:
       # Change device id such that it is anonymized, but preserve TAC.
@@ -52,20 +49,20 @@ class Checkin(webapp.RequestHandler):
       device_id = checkin['id']
       logging.info('Checkin from device %s', device_id)
       device_info = model.DeviceInfo.get_or_insert(device_id)
- 
+
       device_info.user = users.get_current_user()
       # Don't want the embedded properties in the device_info structure.
       device_info_dict = dict(checkin)
       del device_info_dict['properties']
       util.ConvertFromDict(device_info, device_info_dict)
       device_info.put()
- 
+
       # Extract DeviceProperties.
       device_properties = model.DeviceProperties(parent=device_info)
       device_properties.device_info = device_info
       util.ConvertFromDict(device_properties, checkin['properties'])
       device_properties.put()
- 
+
       device_schedule = GetDeviceSchedule(device_properties)
       device_schedule_json = EncodeScheduleAsJson(device_schedule)
       logging.info('Sending checkin response: %s', device_schedule_json)

@@ -61,8 +61,8 @@ public class UDPBurstTask extends MeasurementTask {
 
   private static int seq = 1;
   
+  // Track data consumption for this task to avoid exceeding user's limit
   private long dataConsumed;
-
 
   /**
    * Encode UDP specific parameters, along with common parameters 
@@ -550,8 +550,11 @@ public class UDPBurstTask extends MeasurementTask {
     return resp;
   }
 
-    @Override
-    public long getDataConsumed() {
-        return dataConsumed;
-    }
+  /**
+   * Based on a direct accounting of UDP packet sizes.
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
+  }
 }

@@ -120,6 +120,7 @@ public class PhoneUtils {
   
   private int currentSignalStrength = NeighboringCellInfo.UNKNOWN_RSSI;
   
+  /** For monitoring the current network connection type**/
   public static int TYPE_WIFI = 1;
   public static int TYPE_MOBILE = 2;
   public static int TYPE_NOT_CONNECTED = 0;
@@ -149,10 +150,10 @@ public class PhoneUtils {
     updateBatteryStat(powerIntent);
     
     networkBroadcastReceiver = new ConnectivityChangeReceiver();
-    // Registers a receiver for battery change events.
-    Intent connectivityIntent = globalContext.registerReceiver(networkBroadcastReceiver, 
+    // Registers a receiver for network change events.
+    globalContext.registerReceiver(networkBroadcastReceiver, 
         new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
-    updateConnectivityInfo();
+    updateConnectivityInfo(); // does not require the intent to determine connectivity
   }
 
   /**
@@ -267,8 +268,7 @@ public class PhoneUtils {
     initNetwork();
     telephonyManager.listen(new SignalStrengthChangeListener(), 
         PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-  }
-  
+  }  
   
   /** Returns the network that the phone is on (e.g. Wifi, Edge, GPRS, etc). */
   public String getNetwork() {
@@ -643,33 +643,40 @@ public class PhoneUtils {
     }
   }
   
+  /**
+   * Fetches the new connectivity state from the connectivity manager directly.
+   */
   private synchronized void updateConnectivityInfo() {
-	  ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-      NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-      if (activeNetwork!=null) {
-          if(activeNetwork.getType() == ConnectivityManager.TYPE_WIFI){
-              PhoneUtils.this.currentNetworkConnection=TYPE_WIFI;
-          }
-          if(activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE){
-              PhoneUtils.this.currentNetworkConnection=TYPE_MOBILE;
-          }
+    ConnectivityManager cm = (ConnectivityManager) context
+            .getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+    if (activeNetwork != null) {
+      if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+        PhoneUtils.this.currentNetworkConnection = TYPE_WIFI;
       }
-      else{
-          PhoneUtils.this.currentNetworkConnection=TYPE_NOT_CONNECTED;
-      }  
+      if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+        PhoneUtils.this.currentNetworkConnection = TYPE_MOBILE;
+      }
+    } else {
+      PhoneUtils.this.currentNetworkConnection = TYPE_NOT_CONNECTED;
+    }
   }
   
+  /**
+   * When alerted that the network connectivity has changed, change the 
+   * stored connectivity value.
+   */
   private class ConnectivityChangeReceiver extends BroadcastReceiver {
 
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		updateConnectivityInfo();
-		
-	}
+    @Override
+    public void onReceive(Context context, Intent intent) {
+      updateConnectivityInfo();
+
+    }
   }
-  
-  public synchronized int getCurrentNetworkConnection(){
-	  return currentNetworkConnection;
+
+  public synchronized int getCurrentNetworkConnection() {
+    return currentNetworkConnection;
   }
   
   private String getVersionStr() {
@@ -859,7 +866,7 @@ public class PhoneUtils {
     }
     String versionName = PhoneUtils.getPhoneUtils().getAppVersionName();
     PhoneUtils utils = PhoneUtils.getPhoneUtils();
-
+    
     return new DeviceProperty(getDeviceInfo().deviceId, versionName,
         System.currentTimeMillis() * 1000, getVersionStr(), ipConnectivity,
         dnResolvability, location.getLongitude(), location.getLatitude(), 
