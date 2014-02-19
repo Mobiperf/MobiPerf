@@ -45,7 +45,7 @@ import org.json.JSONException;
  * based on the current battery level: no measurements will be scheduled if the current battery
  * is lower than a threshold.
  */
-public class BatteryCapPowerManager {
+public class ResourceCapManager {
 
   public enum DataUsageProfile {
     PROFILE1, PROFILE2, PROFILE3, PROFILE4, UNLIMITED
@@ -69,7 +69,7 @@ public class BatteryCapPowerManager {
   // The good news is that this value is basically constant!
   public static int PHONEUTILCOST = 3 * 1024;
 
-  public BatteryCapPowerManager(int batteryThresh, Context context) {
+  public ResourceCapManager(int batteryThresh, Context context) {
     this.minBatteryThreshold = batteryThresh;
     this.dataLimit=PROFILE3_LIMIT;
     this.context=context;
@@ -358,10 +358,10 @@ public class BatteryCapPowerManager {
   public static class PowerAwareTask implements Callable<MeasurementResult> {
 
     private MeasurementTask realTask;
-    private BatteryCapPowerManager pManager;
+    private ResourceCapManager pManager;
     private MeasurementScheduler scheduler;
 
-    public PowerAwareTask(MeasurementTask task, BatteryCapPowerManager manager, 
+    public PowerAwareTask(MeasurementTask task, ResourceCapManager manager, 
                           MeasurementScheduler scheduler) {
       realTask = task;
       pManager = manager;

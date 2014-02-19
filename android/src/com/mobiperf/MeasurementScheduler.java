@@ -65,8 +65,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.myjson.reflect.TypeToken;
-import com.mobiperf.BatteryCapPowerManager.DataUsageProfile;
-import com.mobiperf.BatteryCapPowerManager.PowerAwareTask;
+import com.mobiperf.ResourceCapManager.DataUsageProfile;
+import com.mobiperf.ResourceCapManager.PowerAwareTask;
 import com.mobiperf.util.MeasurementJsonConvertor;
 import com.mobiperf.util.PhoneUtils;
 import com.mobiperf.R;
@@ -102,7 +102,7 @@ public class MeasurementScheduler extends Service {
   private PendingIntent checkinRetryIntentSender;
   private PendingIntent measurementIntentSender;
   private AlarmManager alarmManager;
-  private BatteryCapPowerManager powerManager;
+  private ResourceCapManager resourceCapManager;
   /*
    * Both taskQueue and pendingTasks are thread safe and operations on them are atomic. To guarantee
    * reliable value propagation between threads, use volatile keyword.
@@ -178,8 +178,8 @@ public class MeasurementScheduler extends Service {
         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     this.alarmManager =
         (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    this.powerManager =
-        new BatteryCapPowerManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
+    this.resourceCapManager =
+        new ResourceCapManager(Config.DEFAULT_BATTERY_THRESH_PRECENT, this);
 
     restoreState();
 
@@ -245,7 +245,7 @@ public class MeasurementScheduler extends Service {
   }
 
   public boolean hasBatteryToScheduleExperiment() {
-    return powerManager.canScheduleExperiment();
+    return resourceCapManager.canScheduleExperiment();
   }
 
   /**
@@ -312,7 +312,7 @@ public class MeasurementScheduler extends Service {
       sendStringMsg("Skipping checkin - app is paused");
       return;
     }
-    if (!force && !powerManager.canScheduleExperiment()) {
+    if (!force && !resourceCapManager.canScheduleExperiment()) {
       sendStringMsg("Skipping checkin - below battery threshold");
       return;
     }
@@ -345,7 +345,7 @@ public class MeasurementScheduler extends Service {
         } else {
           sendStringMsg("Scheduling task:\n" + task);
           future =
-              measurementExecutor.submit(new PowerAwareTask(task, powerManager,
+              measurementExecutor.submit(new PowerAwareTask(task, resourceCapManager,
                   this));
         }
         synchronized (pendingTasks) {
@@ -462,8 +462,8 @@ public class MeasurementScheduler extends Service {
   /**
    * Returns the power manager used by the scheduler
    * */
-  public BatteryCapPowerManager getPowerManager() {
-    return this.powerManager;
+  public ResourceCapManager resourceCapManager() {
+    return this.resourceCapManager;
   }
 
   /** Set the interval for checkin in seconds */
@@ -630,12 +630,12 @@ public class MeasurementScheduler extends Service {
     SharedPreferences prefs =
         PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     try {
-      powerManager.setBatteryThresh(Integer.parseInt(prefs.getString(
+      resourceCapManager.setBatteryThresh(Integer.parseInt(prefs.getString(
           getString(R.string.batteryMinThresPrefKey),
           String.valueOf(Config.DEFAULT_BATTERY_THRESH_PRECENT))));
 
       // Fetch the data limit with 250 MB as a default
-      powerManager.setDataUsageLimit(prefs.getString(
+      resourceCapManager.setDataUsageLimit(prefs.getString(
           getString(R.string.dataLimitPrefKey), "250 MB"));
 
 
@@ -647,7 +647,7 @@ public class MeasurementScheduler extends Service {
 
       Logger.i("Preference set from SharedPreference: " + "checkinInterval="
           + checkinIntervalSec + ", minBatThres= "
-          + powerManager.getBatteryThresh());
+          + resourceCapManager.getBatteryThresh());
     } catch (ClassCastException e) {
       Logger.e("exception when casting preference values", e);
     }
@@ -713,7 +713,7 @@ public class MeasurementScheduler extends Service {
       return;
     }
     checkin.getCookie();
-    List<MeasurementTask> tasksFromServer = checkin.checkin(powerManager);
+    List<MeasurementTask> tasksFromServer = checkin.checkin(resourceCapManager);
 
     updateSchedule(tasksFromServer, false);
 
@@ -732,27 +732,27 @@ public class MeasurementScheduler extends Service {
     Map<String, String> params = task.getDescription().parameters;
     float adjust = 1; // default
     if (params.containsKey("profile_1_freq")
-        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE1) {
+        && resourceCapManager.getDataUsageProfile() == DataUsageProfile.PROFILE1) {
       adjust = Float.parseFloat(params.get("profile_1_freq"));
       Logger.i("Task " + task.getDescription().key
           + " adjusted using profile 1");
     } else if (params.containsKey("profile_2_freq")
-        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE2) {
+        && resourceCapManager.getDataUsageProfile() == DataUsageProfile.PROFILE2) {
       adjust = Float.parseFloat(params.get("profile_2_freq"));
       Logger.i("Task " + task.getDescription().key
           + " adjusted using profile 2");
     } else if (params.containsKey("profile_3_freq")
-        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE3) {
+        && resourceCapManager.getDataUsageProfile() == DataUsageProfile.PROFILE3) {
       adjust = Float.parseFloat(params.get("profile_3_freq"));
       Logger.i("Task " + task.getDescription().key
           + " adjusted using profile 3");
     } else if (params.containsKey("profile_4_freq")
-        && powerManager.getDataUsageProfile() == DataUsageProfile.PROFILE4) {
+        && resourceCapManager.getDataUsageProfile() == DataUsageProfile.PROFILE4) {
       adjust = Float.parseFloat(params.get("profile_4_freq"));
       Logger.i("Task " + task.getDescription().key
           + " adjusted using profile 4");
     } else if (params.containsKey("profile_unlimited")
-        && powerManager.getDataUsageProfile() == DataUsageProfile.UNLIMITED) {
+        && resourceCapManager.getDataUsageProfile() == DataUsageProfile.UNLIMITED) {
       adjust = Float.parseFloat(params.get("profile_unlimited"));
       Logger.i("Task " + task.getDescription().key
           + " adjusted using unlimited profile");
@@ -1103,7 +1103,7 @@ public class MeasurementScheduler extends Service {
 
     if (results.length() > 0) {
       try {
-        this.checkin.uploadMeasurementResult(results, powerManager);
+        this.checkin.uploadMeasurementResult(results, resourceCapManager);
       } catch (IOException e) {
         Logger.e("Error when uploading message");
       }
@@ -1178,7 +1178,7 @@ public class MeasurementScheduler extends Service {
       Throwable error) {
       
     try {
-        powerManager.updateDataUsage(BatteryCapPowerManager.PHONEUTILCOST);
+        resourceCapManager.updateDataUsage(ResourceCapManager.PHONEUTILCOST);
     } catch (IOException e) {
         e.printStackTrace();
     }

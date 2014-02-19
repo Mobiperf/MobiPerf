@@ -107,7 +107,7 @@ public class Checkin {
     return this.lastCheckin;
   }
 
-  public List<MeasurementTask> checkin(BatteryCapPowerManager powerManager) throws IOException {
+  public List<MeasurementTask> checkin(ResourceCapManager resourceCapManager) throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
     try {
@@ -121,14 +121,14 @@ public class Checkin {
       status
           .put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils
               .getDeviceProperty()));
-      powerManager.updateDataUsage(BatteryCapPowerManager.PHONEUTILCOST);
+      resourceCapManager.updateDataUsage(ResourceCapManager.PHONEUTILCOST);
 
       Logger.d(status.toString());
       sendStringMsg("Checking in");
 
       String result = serviceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
-      powerManager.updateDataUsage(result.length());
+      resourceCapManager.updateDataUsage(result.length());
 
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
@@ -179,16 +179,16 @@ public class Checkin {
    * Upload results from non-RRC measurements to the server
    * 
    * @param resultArray a JSON array of results to date
-   * @param powerManager used to update data consumption based on traffic from the checkin
+   * @param resourceCapManager used to update data consumption based on traffic from the checkin
    * @throws IOException
    */
-  public void uploadMeasurementResult(JSONArray resultArray, BatteryCapPowerManager powerManager)
+  public void uploadMeasurementResult(JSONArray resultArray, ResourceCapManager resourceCapManager)
       throws IOException {
 
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
         + resultArray.toString());
-    powerManager.updateDataUsage(resultArray.toString().length());
+    resourceCapManager.updateDataUsage(resultArray.toString().length());
     String response = serviceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
