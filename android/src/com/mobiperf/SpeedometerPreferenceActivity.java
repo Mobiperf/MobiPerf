@@ -129,7 +129,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     if (selectedDataLimitAccount != null) {
     	dataLimitLp.setValue(selectedDataLimitAccount);
     }else{
-    	dataLimitLp.setValue("Unlimited");
+    	dataLimitLp.setValue("250 MB");
     }
     
     /**

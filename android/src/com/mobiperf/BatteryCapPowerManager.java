@@ -73,7 +73,7 @@ public class BatteryCapPowerManager {
     this.minBatteryThreshold = batteryThresh;
     this.dataLimit=PROFILE3_LIMIT;
     this.context=context;
-    this.dataUsageProfile=DataUsageProfile.PROFILE2;		
+    this.dataUsageProfile=DataUsageProfile.PROFILE3;		
   }
 
   /** 
