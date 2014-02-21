@@ -48,6 +48,7 @@ public class UpdateIntent extends Intent {
       PACKAGE_PREFIX + ".SCHEDULER_CONNECTED_ACTION";
   public static final String SCHEDULE_UPDATE_ACTION =
       PACKAGE_PREFIX + ".SCHEDULE_UPDATE_ACTION";
+  public static final String RESULT_PAYLOAD = PACKAGE_PREFIX + ".RESULT_ACTION";
   
   /**
    * Creates an intent of the specified action with an optional message

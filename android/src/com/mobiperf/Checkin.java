@@ -107,7 +107,7 @@ public class Checkin {
     return this.lastCheckin;
   }
 
-  public List<MeasurementTask> checkin() throws IOException {
+  public List<MeasurementTask> checkin(ResourceCapManager resourceCapManager) throws IOException {
     Logger.i("Checkin.checkin() called");
     boolean checkinSuccess = false;
     try {
@@ -121,12 +121,14 @@ public class Checkin {
       status
           .put("properties", MeasurementJsonConvertor.encodeToJson(phoneUtils
               .getDeviceProperty()));
+      resourceCapManager.updateDataUsage(ResourceCapManager.PHONEUTILCOST);
 
       Logger.d(status.toString());
       sendStringMsg("Checking in");
 
       String result = serviceRequest("checkin", status.toString());
       Logger.d("Checkin result: " + result);
+      resourceCapManager.updateDataUsage(result.length());
 
       // Parse the result
       Vector<MeasurementTask> schedule = new Vector<MeasurementTask>();
@@ -173,20 +175,20 @@ public class Checkin {
     }
   }
 
-  public void uploadMeasurementResult(Vector<MeasurementResult> finishedTasks)
+  /**
+   * Upload results from non-RRC measurements to the server
+   * 
+   * @param resultArray a JSON array of results to date
+   * @param resourceCapManager used to update data consumption based on traffic from the checkin
+   * @throws IOException
+   */
+  public void uploadMeasurementResult(JSONArray resultArray, ResourceCapManager resourceCapManager)
       throws IOException {
-    JSONArray resultArray = new JSONArray();
-    for (MeasurementResult result : finishedTasks) {
-      try {
-        resultArray.put(MeasurementJsonConvertor.encodeToJson(result));
-      } catch (JSONException e1) {
-        Logger.e("Error when adding " + result);
-      }
-    }
 
     sendStringMsg("Uploading " + resultArray.length() + " measurement results.");
     Logger.i("TaskSchedule.uploadMeasurementResult() uploading: "
         + resultArray.toString());
+    resourceCapManager.updateDataUsage(resultArray.toString().length());
     String response = serviceRequest("postmeasurement", resultArray.toString());
     try {
       JSONObject responseJson = new JSONObject(response);
@@ -205,6 +207,7 @@ public class Checkin {
    * 
    * Sent as a separate call because the data is formatted in a different, 
    * more complicated way than other measurement tasks.
+   * TODO do this on checkin
    * 
    * @param data Contains data to upload
    * @throws IOException
@@ -231,6 +234,7 @@ public class Checkin {
 
   /**
    * Impact of packet sizes on rrc inference results.
+   * TODO do this on checkin
    * 
    * @param sizeData Contains data to upload
    */

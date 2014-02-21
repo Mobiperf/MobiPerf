@@ -82,6 +82,8 @@ public class TCPThroughputTask extends MeasurementTask {
   private int totalSendSize = 0;
   // downlink accumulative data
   private int totalRevSize = 0;
+  
+  
 
   // class constructor
   public TCPThroughputTask(MeasurementDesc desc, Context context) {
@@ -360,6 +362,7 @@ public class TCPThroughputTask extends MeasurementTask {
     result.addResult("data_limit_exceeded", this.DATA_LIMIT_EXCEEDED);
     result.addResult("duration", this.taskDuration);
     result.addResult("server_version", this.serverVersion);
+    result.addResult("total_data_sent_received",this.totalSendSize+this.totalRevSize );
     Logger.i(MeasurementJsonConvertor.toJsonString(result));
     return result;
   }
@@ -626,5 +629,14 @@ public class TCPThroughputTask extends MeasurementTask {
     }
     array.add(i,item);
     return array;
+  }
+
+  /**
+   * Based on the measured total data sent and received, the same returned as
+   * a measurement result
+   */
+  @Override
+  public long getDataConsumed() {
+    return totalSendSize + totalRevSize;
   }
 }

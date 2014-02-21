@@ -378,4 +378,4 @@ class RRCInferenceSizesRawData(db.Model):
   time_delay = db.IntegerProperty()
   result = db.IntegerProperty()
   size = db.IntegerProperty()
-
+  

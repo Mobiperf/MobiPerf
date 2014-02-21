@@ -61,7 +61,7 @@ public abstract class MeasurementDesc {
     this.type = type;
     this.key = key;
     if (startTime == null) {
-      this.startTime = Calendar.getInstance().getTime();
+      updateStartTime();
     } else {
       this.startTime = new Date(startTime.getTime());
     }
@@ -82,6 +82,18 @@ public abstract class MeasurementDesc {
     this.parameters = params;
   }
   
+  /**
+   * We might adjust the interval based on the data consumption profile.
+   * 
+   * In that case, we need to update the start time accordingly.
+   */
+  public void updateStartTime() {
+    Calendar now = Calendar.getInstance();
+    now.add(Calendar.SECOND, (int)intervalSec);
+    this.startTime = now.getTime();
+    
+  }
+  
   /** Return the type of the measurement (DNS, Ping, Traceroute, etc.)*/
   public abstract String getType();
   
@@ -93,4 +105,26 @@ public abstract class MeasurementDesc {
     return "<MeasurementTask> " + this.type + " deadline:" + endTime +
       " params:" + parameters;
   }  
+
+  /**
+   * To determine if a task has changed when receiving a new schedule from
+   * the server.
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof MeasurementDesc)) return false;
+
+    MeasurementDesc otherDesc = (MeasurementDesc) obj;
+    if (!this.type.equals(otherDesc.type)) return false;
+    if (!this.key.equals(otherDesc.key)) return false;
+    if (this.intervalSec != otherDesc.intervalSec) return false;
+    if (this.count != otherDesc.count) return false;
+    if (this.priority != otherDesc.priority) return false;
+    if (this.parameters == null) {
+      return otherDesc.parameters == null;
+    }
+    if (!this.parameters.equals(otherDesc.parameters)) return false;
+
+    return true;
+  }
 }

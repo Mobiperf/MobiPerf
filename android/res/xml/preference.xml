@@ -23,4 +23,8 @@
     android:title="Select Authentication Account"
     android:summary="Account used for checkin authentication."
     android:key="@string/accountPrefKey"/>
+  <ListPreference
+    android:title="Select Data Consumption Limit"
+    android:summary="Maximum cellular data this application can use per month"
+    android:key="@string/dataLimitPrefKey"/>
 </PreferenceScreen>

@@ -38,7 +38,7 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
     
     Preference intervalPref = findPreference(getString(R.string.checkinIntervalPrefKey));
     Preference batteryPref = findPreference(getString(R.string.batteryMinThresPrefKey));
-    
+        
     /* This should never occur. */
     if (intervalPref == null || batteryPref == null) {
       Logger.w("Cannot find some of the preferences");
@@ -113,6 +113,42 @@ public class SpeedometerPreferenceActivity extends PreferenceActivity {
         return true;
       }
     });
+    
+    // Restore current data limit settings
+    ListPreference dataLimitLp = (ListPreference)findPreference(Config.PREF_KEY_DATA_LIMIT);
+    final CharSequence[] dataLimitItems=new CharSequence[5];
+    dataLimitItems[0]="50 MB";
+    dataLimitItems[1]="100 MB";
+    dataLimitItems[2]="250 MB";
+    dataLimitItems[3]="500 MB";
+    dataLimitItems[4]="Unlimited";
+    dataLimitLp.setEntries(dataLimitItems);
+    dataLimitLp.setEntryValues(dataLimitItems);
+ 
+    String selectedDataLimitAccount = prefs.getString(Config.PREF_KEY_SELECTED_DATA_LIMIT, null);
+    if (selectedDataLimitAccount != null) {
+    	dataLimitLp.setValue(selectedDataLimitAccount);
+    }else{
+    	dataLimitLp.setValue("250 MB");
+    }
+    
+    /**
+     * If the data limit changes, update it immediately
+     */
+    dataLimitLp.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+      @Override
+      public boolean onPreferenceChange(Preference preference, Object newValue) {
+        final String limit = newValue.toString();
+        Logger.i("new data limit is selected: " + limit);
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(Config.PREF_KEY_SELECTED_DATA_LIMIT, limit);
+        editor.commit();
+        return true;
+      }
+    });
+    
     
     intervalPref.setOnPreferenceChangeListener(prefChangeListener);
     batteryPref.setOnPreferenceChangeListener(prefChangeListener);

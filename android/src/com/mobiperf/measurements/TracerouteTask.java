@@ -39,7 +39,6 @@ import com.mobiperf.MeasurementDesc;
 import com.mobiperf.MeasurementError;
 import com.mobiperf.MeasurementResult;
 import com.mobiperf.MeasurementTask;
-import com.mobiperf.R;
 
 /**
  * A Callable task that handles Traceroute measurements
@@ -60,6 +59,10 @@ public class TracerouteTask extends MeasurementTask {
   
   private Process pingProc = null;
   private boolean stopRequested = false;
+  
+  // Track data consumption for this task to avoid exceeding user's limit
+  private long dataConsumed;
+
   /**
    * The description of the Traceroute measurement 
    */
@@ -146,7 +149,8 @@ public class TracerouteTask extends MeasurementTask {
   
   public TracerouteTask(MeasurementDesc desc, Context parent) {
     super(new TracerouteDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
-      desc.count, desc.priority, desc.parameters), parent);
+      desc.count, desc.priority, desc.parameters), parent);    
+    dataConsumed = 0;
   }
   
   /**
@@ -207,6 +211,10 @@ public class TracerouteTask extends MeasurementTask {
         int effectiveTask = 0;
         for (int i = 0; i < task.pingsPerHop; i++) {
           pingProc = Runtime.getRuntime().exec(command);
+          
+          // Actual packet is 28 bytes larger than the size specified.
+          // Three packets are sent in each direction
+          dataConsumed += (task.packetSizeByte + 28) * 2 * 3;
           
           // Wait for process to finish
           // Enforce thread timeout if pingProc doesn't respond
@@ -457,5 +465,13 @@ public class TracerouteTask extends MeasurementTask {
         Logger.e("Traceroute thread gets interrupted");
       }
     }  
+  }
+
+  /**
+   * Based on counting the number of pings sent
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
   }
 }

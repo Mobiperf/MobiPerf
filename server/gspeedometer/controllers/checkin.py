@@ -68,7 +68,7 @@ class Checkin(webapp.RequestHandler):
       logging.info('Sending checkin response: %s', device_schedule_json)
       self.response.headers['Content-Type'] = 'application/json'
       self.response.out.write(device_schedule_json)
-
+ 
     except Exception, e:
       logging.error('Got exception during checkin: %s', e)
       self.response.headers['Content-Type'] = 'application/json'

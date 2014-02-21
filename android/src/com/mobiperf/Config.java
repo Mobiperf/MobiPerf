@@ -26,7 +26,7 @@ public interface Config {
   public static final int DEFAULT_DNS_COUNT_PER_MEASUREMENT = 1;
   
   // Default interval in seconds between system measurements of a given measurement type
-  public static final double DEFAULT_SYSTEM_MEASUREMENT_INTERVAL_SEC = 15 * 60;
+  public static final double DEFAULT_SYSTEM_MEASUREMENT_INTERVAL_SEC = 60 * 60;
   // Default interval in seconds between user measurements of a given measurement type
   public static final double DEFAULT_USER_MEASUREMENT_INTERVAL_SEC = 5;
   // Default value for the '-i' option in the ping command
@@ -51,7 +51,7 @@ public interface Config {
   public static final int MAX_CHECKIN_RETRY_COUNT = 3;
   public static final long PAUSE_BETWEEN_CHECKIN_CHANGE_MSEC = 2 * 1000L;
   // default minimum battery percentage to run measurements
-  public static final int DEFAULT_BATTERY_THRESH_PRECENT = 80;
+  public static final int DEFAULT_BATTERY_THRESH_PRECENT = 60;
   public static final boolean DEFAULT_MEASURE_WHEN_CHARGE = true;
   public static final long MIN_TIME_BETWEEN_MEASUREMENT_ALARM_MSEC = 3 * 1000L;
   
@@ -60,8 +60,10 @@ public interface Config {
   public static final int DEFAULT_BATTERY_LEVEL = 0;
   /** The default maximum battery level if we cannot read it from the system */
   public static final int DEFAULT_BATTERY_SCALE = 100;
-  /** Tasks expire in one day. Expired tasks will be removed from the scheduler */
-  public static final long TASK_EXPIRATION_MSEC = 24 * 3600 * 1000;
+  /** Tasks expire in seven days. Expired tasks will be removed from the scheduler.
+   * In general, schedule updates from the server should take care of this automatically. */
+  public static final long TASK_EXPIRATION_MSEC = 7 * 24 * 3600 * 1000;
+
   
   /** Constants used in MeasurementMonitorActivity.java */
   public static final int MAX_LIST_ITEMS = 128;
@@ -85,6 +87,13 @@ public interface Config {
   public static final String PREF_KEY_CONSENTED = "PREF_KEY_CONSENTED";
   public static final String PREF_KEY_ACCOUNT = "PREF_KEY_ACCOUNT";
   public static final String PREF_KEY_SELECTED_ACCOUNT = "PREF_KEY_SELECTED_ACCOUNT";
+  public static final String PREF_KEY_SELECTED_DATA_LIMIT = "PREF_KEY_SELECTED_DATA_LIMIT";
+  public static final String PREF_KEY_DATA_LIMIT = "PREF_KEY_DATA_LIMIT";
+  
+  
+  public static final int DEFAULT_DATA_MONITOR_PERIOD_DAY= 1;
+  
+  
   
   /** Constants for the splash screen */
   public static final long SPLASH_SCREEN_DURATION_MSEC = 1500;

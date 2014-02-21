@@ -59,7 +59,7 @@ class Schedule(webapp.RequestHandler):
         logging.warning('Type in POST is invalid: %s', error)
         self.error(501)
         return
-
+      
       # dynamically creates a form based on the specified fields
       add_to_schedule_form = type(
           'AddToScheduleForm', (forms.BaseForm,),
@@ -98,6 +98,10 @@ class Schedule(webapp.RequestHandler):
         count = add_to_schedule_form.cleaned_data['count'] or -1
         interval = add_to_schedule_form.cleaned_data['interval']
         priority = add_to_schedule_form.cleaned_data['priority']
+        p1 = add_to_schedule_form.cleaned_data['profile_1_freq']
+        p2 = add_to_schedule_form.cleaned_data['profile_2_freq']
+        p3 = add_to_schedule_form.cleaned_data['profile_3_freq']
+        p4 = add_to_schedule_form.cleaned_data['profile_4_freq']
 
         logging.info('Got TYPE: ' + thetype)
 

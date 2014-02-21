@@ -62,7 +62,7 @@ class Home(webapp.RequestHandler):
     self.response.out.write(template.render(
         'templates/home.html', template_args))
 
-  def _GetDeviceList(self, cursor=None, show_inactive=False):
+  def _GetDeviceList(self, cursor=None, show_inactive=True):
     device_query = model.DeviceInfo.GetDeviceListWithAcl(cursor=cursor)
     devices = list(device_query.fetch(config.NUM_DEVICES_IN_LIST))
 

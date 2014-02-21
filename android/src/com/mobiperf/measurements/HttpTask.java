@@ -71,10 +71,14 @@ public class HttpTask extends MeasurementTask {
   public static final int DEFAULT_STATUS_CODE = 0;
   
   private AndroidHttpClient httpClient = null;
+  
+  // Track data consumption for this task to avoid exceeding user's limit  
+  private long dataConsumed;
 
   public HttpTask(MeasurementDesc desc, Context parent) {
     super(new HttpDesc(desc.key, desc.startTime, desc.endTime, desc.intervalSec,
       desc.count, desc.priority, desc.parameters), parent);
+    dataConsumed = 0;
   }
   
   /**
@@ -148,6 +152,14 @@ public class HttpTask extends MeasurementTask {
     String errorMsg = "";
     InputStream inputStream = null;
     
+    // This is not the ideal way of doing things, as we can pick up data
+    // from other processes and be overly cautious in running measurements.
+    // However, taking the packet sizes is completely inaccurate, and it's hard to
+    // come up with a consistent expected value, unlike with DNS
+    RRCTask.PacketMonitor packetmonitor = new RRCTask.PacketMonitor();
+    packetmonitor.setBySize();
+    packetmonitor.readCurrentPacketValues();
+    
     try {
       // set the download URL, a URL that points to a file on the Internet
       // this is the file to be downloaded
@@ -168,7 +180,7 @@ public class HttpTask extends MeasurementTask {
       } else {
         // Use GET by default
         request = new HttpGet(urlStr);
-      }
+      }      
       
       if (task.headers != null && task.headers.trim().length() > 0) {
         for (String headerLine : task.headers.split("\r\n")) {
@@ -179,8 +191,7 @@ public class HttpTask extends MeasurementTask {
             throw new MeasurementError("Incorrect header line: " + headerLine);
           }
         }
-      }
-      
+      } 
       
       byte[] readBuffer = new byte[HttpTask.READ_BUFFER_SIZE];
       int readLen;      
@@ -252,7 +263,9 @@ public class HttpTask extends MeasurementTask {
           phoneUtils.getDeviceProperty(), HttpTask.TYPE, System.currentTimeMillis() * 1000,
           success, this.measurementDesc);
       
-      result.addResult("code", statusCode);
+      result.addResult("code", statusCode);      
+     
+      dataConsumed = packetmonitor.getPacketsSentDiff();
       
       if (success) {
         result.addResult("time_ms", duration);
@@ -281,7 +294,7 @@ public class HttpTask extends MeasurementTask {
       if (httpClient != null) {
         httpClient.close();
       }
-      
+
     }
     throw new MeasurementError("Cannot get result from HTTP measurement because " + 
       errorMsg);
@@ -314,5 +327,19 @@ public class HttpTask extends MeasurementTask {
     if (httpClient != null) {
       httpClient.close();
     }
+  }
+
+  /**
+   * Data used so far by the task.
+   * 
+   * To calculate this, we measure <i>all</i> data sent while the task
+   * is running. This will tend to overestimate the data consumed, but due
+   * to retransmissions, etc, especially when signal strength is poor, attempting
+   * to calculate the size directly will tend to greatly underestimate the data
+   * consumed.
+   */
+  @Override
+  public long getDataConsumed() {
+    return dataConsumed;
   }
 }
