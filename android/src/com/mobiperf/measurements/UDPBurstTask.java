@@ -447,8 +447,8 @@ public class UDPBurstTask extends MeasurementTask {
           desc.dstPort);
       
       try {
-        dataConsumed += packet.getLength();
         sock.send(packet);
+        dataConsumed += packet.getLength();
       } catch (IOException e) {
         sock.close();
         throw new MeasurementError("Error sending " + desc.target);
