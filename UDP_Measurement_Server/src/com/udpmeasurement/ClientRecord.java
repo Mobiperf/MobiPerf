@@ -33,7 +33,8 @@ public class ClientRecord {
   public int outOfOrderCount;
   private int maxPacketNum;
   public ArrayList<Long> offsetedDelayList;  
-
+  
+  public Thread timeoutChecker;
   public ClientRecord() {
     maxPacketNum = -1;
     packetCount = 0;
@@ -41,14 +42,14 @@ public class ClientRecord {
     offsetedDelayList = new ArrayList<Long>();
   }
 
-  public void addPacketInfo(int packetNum, long timestamp, long lastTimestamp) {
+  public void addPacketInfo(int packetNum, long delay, long lastTimestamp) {
     if ( packetNum > maxPacketNum ) {
       maxPacketNum = packetNum;
     }
     else {
       outOfOrderCount++;
     }
-    offsetedDelayList.add(timestamp);
+    offsetedDelayList.add(delay);
     this.lastTimestamp = lastTimestamp;
     packetCount++;
   }

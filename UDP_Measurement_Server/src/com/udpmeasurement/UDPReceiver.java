@@ -62,7 +62,7 @@ public class UDPReceiver implements Runnable {
     while ( true ) {
       try {
         // get client's request
-        socket.setSoTimeout(Config.DEFAULT_TIMEOUT);
+        socket.setSoTimeout(Config.GLOBAL_TIMEOUT);
         socket.receive(receivedPacket);
         ClientIdentifier clientId = new ClientIdentifier(
           receivedPacket.getAddress(), receivedPacket.getPort()); 
@@ -71,8 +71,7 @@ public class UDPReceiver implements Runnable {
         // processing message
         try {
           MeasurementPacket packet = new MeasurementPacket(
-              clientId,
-              receivedPacket.getData());
+              clientId, receivedPacket.getData());
           processPacket(packet);
         } catch (MeasurementError e) {
           Config.logmsg("Error processing message: " + e.getMessage());
@@ -99,7 +98,7 @@ public class UDPReceiver implements Runnable {
    * @param packet received packet
    * @throws MeasurementError
    */
-  private void processPacket(MeasurementPacket packet)
+  private void processPacket(final MeasurementPacket packet)
       throws MeasurementError {
     if ( packet.type == Config.PKT_REQUEST ) {
       // Create a new thread to burst udp packets
@@ -143,9 +142,9 @@ public class UDPReceiver implements Runnable {
       
       // Create a new thread for downlink burst. Otherwise the uplink burst
       // at the same time may be blocked and lead to wrong delay estimation 
-      RequestHandler respHandle = new RequestHandler(
+      RequestHandler respHandle = new RequestHandler(socket,
         packet.clientId, clientRecord);
-      new Thread(respHandle).start();
+      new Thread(respHandle).start();      
     }
     else if ( packet.type == Config.PKT_DATA )  { 
       // Look up the client map to find the corresponding recorder
@@ -174,7 +173,7 @@ public class UDPReceiver implements Runnable {
               clientRecord.seq);
         }
       }
-      else {    // Receive UDP burst from a new client 
+      else {    // Receive the first UDP packet from a new client 
         long timeNow = System.currentTimeMillis();
         clientRecord = new ClientRecord();
         clientRecord.burstCount = packet.burstCount;
@@ -182,6 +181,49 @@ public class UDPReceiver implements Runnable {
         clientRecord.seq = packet.seq;
         clientRecord.addPacketInfo(packet.packetNum, 
           timeNow - packet.timestamp, timeNow);
+        
+        clientRecord.timeoutChecker = new Thread(new Runnable() {
+          /*
+           * (non-Javadoc)
+           * @see java.lang.Runnable#run()
+           * Check whether this client is timeout. If so, send result back 
+           * and remove it from client map.
+           */
+          @Override
+          public void run() {
+            long timeToSleep = Config.DEFAULT_TIMEOUT;
+            while ( true ) {
+              try {
+                Thread.sleep(timeToSleep);
+              } catch (InterruptedException e1) {
+                Config.logmsg(e1.getMessage());
+              }
+
+              ClientRecord clientRecord = clientMap.get(packet.clientId);
+              if ( clientRecord == null
+                  || clientRecord.packetCount == clientRecord.burstCount ) {
+                // UDP burst finished. No need to handle timeout
+                return;
+              }
+              timeToSleep = clientRecord.lastTimestamp + Config.DEFAULT_TIMEOUT
+                  - System.currentTimeMillis();
+              if ( timeToSleep <= 0 ) {
+                Config.logmsg("Client " + packet.clientId.toString() + " timeouted");
+                try {
+                  sendPacket(Config.PKT_RESPONSE, packet.clientId, clientRecord);
+                  return;
+                } catch (MeasurementError e) {
+                  Config.logmsg(e.getMessage());
+                  return;
+                } finally {
+                  clientMap.remove(packet.clientId);
+                }
+              }
+            }
+          }
+          
+        });
+        clientRecord.timeoutChecker.start();
 
         clientMap.put(packet.clientId, clientRecord);
       }
@@ -192,22 +234,11 @@ public class UDPReceiver implements Runnable {
       if (clientRecord.packetCount == clientRecord.burstCount) {
         try {
           sendPacket(Config.PKT_RESPONSE, packet.clientId, clientRecord);
+          return;
         } catch (MeasurementError e) {
           throw e;
         } finally {
           clientMap.remove(packet.clientId);
-        }
-      }
-      
-      // Checking whether other ClientRecords were timeout
-      // TODO(Hongyi): this method is not scalable, need discussion
-      for(Map.Entry<ClientIdentifier, ClientRecord> entry : clientMap.entrySet()){
-        if ( !entry.getKey().equals(packet.clientId) ) {
-          long timeNow = System.currentTimeMillis();
-          long timePrev = entry.getValue().lastTimestamp;
-          if ( timeNow - timePrev > Config.DEFAULT_TIMEOUT ) {
-            sendPacket(Config.PKT_RESPONSE, entry.getKey(), entry.getValue());
-          }
         }
       }
     }

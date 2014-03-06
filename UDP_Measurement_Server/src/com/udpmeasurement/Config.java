@@ -23,7 +23,6 @@ import java.text.SimpleDateFormat;
  * which will probabaly be used in other classes
  */
 public class Config {
-  // TODO(Hongyi): Arbitrary port number, need further discuss
   public static final int DEFAULT_PORT = 31341;
   // Larger then normal Ethernet MTU, leave enough margin
   public static final int BUFSIZE = 1500;
@@ -42,11 +41,11 @@ public class Config {
   /**
    *  TODO(Hongyi): Interval between packets in millisecond level seems too long
    *  for regular UDP transmission. Microsecond level may be better.
-   *  Need Discussion
    */
   public static final int MAX_INTERVAL = 1;
 
   public static final int DEFAULT_TIMEOUT = 1000; // Max one-way delay, in msec
+  public static final int GLOBAL_TIMEOUT = 60000; // 'Catch-all' case
   
   public static final int PKT_ERROR = 1;
   public static final int PKT_RESPONSE = 2;

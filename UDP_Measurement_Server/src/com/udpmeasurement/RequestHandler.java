@@ -17,7 +17,6 @@ package com.udpmeasurement;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 
 /**
  * @author Hongyi Yao (hyyao@umich.edu)
@@ -36,8 +35,10 @@ public class RequestHandler implements Runnable {
    * @param clientId corresponding client identifier
    * @param clientRecord the downlink request
    */
-  public RequestHandler(ClientIdentifier clientId,
+  public RequestHandler(DatagramSocket socket,
+                        ClientIdentifier clientId,
                         ClientRecord  clientRecord) {
+    this.socket = socket;
     this.clientId = clientId;
     this.clientRecord = clientRecord;
   }
@@ -74,12 +75,6 @@ public class RequestHandler implements Runnable {
    */
   @Override
   public void run() {
-    try {
-      socket = new DatagramSocket();
-    } catch (SocketException e1) {
-      Config.logmsg("Socket creation failed when sending data packets");
-    }
-
     MeasurementPacket dataPacket = new MeasurementPacket(clientId);
     dataPacket.type = Config.PKT_DATA;
     dataPacket.burstCount = clientRecord.burstCount;
@@ -100,8 +95,6 @@ public class RequestHandler implements Runnable {
         Config.logmsg("sleep is interrupted: " + e.getMessage());
       }
     }
-    // Recycle socket resource
-    socket.close();
   }
 
 }
