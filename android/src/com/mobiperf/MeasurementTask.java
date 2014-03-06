@@ -111,13 +111,6 @@ public abstract class MeasurementTask implements Callable<MeasurementResult>, Co
   public static Class getTaskClassForMeasurement(String type) {
     return measurementTypes.get(type);
   }
-  
-  /**
-   * Get UI visibility for a measurement task
-   */
-  public static boolean getVisibilityForMeasurementName(String name) {
-    return (boolean)(measurementUIVisibility.get(name));
-  }
 
   /* This is put here for consistency that all MeasurementTask should
    * have a getDescClassForMeasurement() method. However, the MeasurementDesc is abstract 
