@@ -24,7 +24,7 @@ public class UDPServer {
    * Check the port and create the receiver thread  
    * @param args port used by server 
    */
-  private static final String VERSION = "2.1";
+  private static final String VERSION = "2.2.3";
   public static void main(String[] args) {
     UDPReceiver deamon;
     int port = 0;
