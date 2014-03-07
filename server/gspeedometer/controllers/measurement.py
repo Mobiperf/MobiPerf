@@ -39,7 +39,7 @@ MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('traceroute', 'traceroute'),
                      ('http', 'HTTP get'),
                      ('tcpthroughput', 'TCP throughput'),
-                     ('rrc', 'RRC inference')]
+                     ('rrc', 'RRC inference'),
                      ('udp_burst', 'UDP burst')]
 
 class Measurement(webapp.RequestHandler):
@@ -282,7 +282,7 @@ class MeasurementType:
           ('target', 'Target (IP or hostname)'),
           ('packet_size_byte', 'packet size (bytes)'),
           ('packet_burst', 'the number of UDP packets'),
-          ('udp_interval', 'the interval between two packets (ms)'), ]))
+          ('udp_interval', 'the interval between two packets (ms)'),
           ('profile_1_freq', 'Profile 1 frequency (float)'),
           ('profile_2_freq', 'Profile 2 frequency (float)'),
           ('profile_3_freq', 'Profile 3 frequency (float)'),
