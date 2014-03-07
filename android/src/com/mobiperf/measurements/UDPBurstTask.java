@@ -174,7 +174,7 @@ public class UDPBurstTask extends MeasurementTask {
 
       String dir = null;
       if ((dir = params.get("direction")) != null && dir.length() > 0) {
-        if (dir.compareTo("Up") == 0) {
+        if (dir.compareToIgnoreCase("Up") == 0) {
           this.dirUp = true;
         }
       }
@@ -286,7 +286,11 @@ public class UDPBurstTask extends MeasurementTask {
      * @return the inversion number of the current UDP burst
      */
     public double calculateOutOfOrderRatio() {
-      return (double)outOfOrderCount / packetCount;
+      if (packetCount != 0) {
+        return (double) outOfOrderCount / packetCount;
+      } else {
+        return 0.0;
+      }
     }
 
     /**
@@ -355,7 +359,7 @@ public class UDPBurstTask extends MeasurementTask {
       try {
         type = dataIn.readInt();
         burstCount = dataIn.readInt();
-        packetNum  = dataIn.readInt();
+        packetNum = dataIn.readInt();
         outOfOrderNum = dataIn.readInt();
         timestamp = dataIn.readLong();
         packetSize = dataIn.readInt();
