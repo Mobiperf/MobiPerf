@@ -497,11 +497,11 @@ public class UDPBurstTask extends MeasurementTask {
         + targetIp);
 
     byte buffer[] = new byte[UDPBurstTask.MIN_PACKETSIZE];
-    DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
+    DatagramPacket recvPacket = new DatagramPacket(buffer, buffer.length);
 
     try {
       sock.setSoTimeout(RCV_UP_TIMEOUT);
-      sock.receive(recvpacket);
+      sock.receive(recvPacket);
     } catch (SocketException e1) {
       sock.close();
       throw new MeasurementError("Timed out reading from " + desc.target);
@@ -510,7 +510,7 @@ public class UDPBurstTask extends MeasurementTask {
       throw new MeasurementError("Error reading from " + desc.target);
     }
     // Reconstruct UDP packet from flattened network data
-    UDPPacket responsePacket = new UDPPacket(recvpacket.getData());
+    UDPPacket responsePacket = new UDPPacket(recvPacket.getData());
 
     if ( responsePacket.type == PKT_RESPONSE ) {
       // Received seq number must be same with client seq
@@ -612,20 +612,20 @@ public class UDPBurstTask extends MeasurementTask {
 
     // Reconstruct UDP packet from flattened network data
     byte buffer[] = new byte[desc.packetSizeByte];
-    DatagramPacket recvpacket = new DatagramPacket(buffer, buffer.length);
+    DatagramPacket recvPacket = new DatagramPacket(buffer, buffer.length);
     MetricCalculator metricCalculator = new MetricCalculator(
       desc.udpBurstCount);
     for (int i = 0; i < desc.udpBurstCount; i++) {
       try {
         sock.setSoTimeout(RCV_DOWN_TIMEOUT);
-        sock.receive(recvpacket);
+        sock.receive(recvPacket);
       } catch (IOException e) {
         break;
       }
 
-      dataConsumed += recvpacket.getLength();
+      dataConsumed += recvPacket.getLength();
 
-      UDPPacket dataPacket = new UDPPacket(recvpacket.getData());
+      UDPPacket dataPacket = new UDPPacket(recvPacket.getData());
       if (dataPacket.type == UDPBurstTask.PKT_DATA) {
         // Received seq number must be same with client seq
         if ( dataPacket.seq != seq ) {
@@ -671,7 +671,7 @@ public class UDPBurstTask extends MeasurementTask {
     DatagramSocket socket = null;
     float response = 0.0F;
     UDPResult udpResult;
-    int pktrecv = 0;
+    int pktRecv = 0;
     boolean isMeasurementSuccessful = false;
 
     UDPBurstDesc desc = (UDPBurstDesc) measurementDesc;
@@ -699,14 +699,14 @@ public class UDPBurstTask extends MeasurementTask {
       if (desc.dirUp == true) {
         socket = sendUpBurst();
         udpResult = recvUpResponse(socket);
-        pktrecv = udpResult.packetCount;
-        response = pktrecv / (float) desc.udpBurstCount;
+        pktRecv = udpResult.packetCount;
+        response = pktRecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       } else {
         socket = sendDownRequest();
         udpResult = recvDownResponse(socket);
-        pktrecv = udpResult.packetCount;
-        response = pktrecv / (float) desc.udpBurstCount;
+        pktRecv = udpResult.packetCount;
+        response = pktRecv / (float) desc.udpBurstCount;
         isMeasurementSuccessful = true;
       }
     } catch (MeasurementError e) {
