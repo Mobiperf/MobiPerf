@@ -12,22 +12,35 @@ public class ServerConfigWorker extends Thread {
   }
   
   public void run() {
+    OutputStream oStream = null;
     try {
       client.setSoTimeout(Definition.RECV_TIMEOUT);
       client.setTcpNoDelay(true);
-      OutputStream oStream = client.getOutputStream(); 
+      oStream = client.getOutputStream(); 
 
       // TODO (Haokun): Use JSON for multiple configuration data if necessary 
       byte [] finalResult = Definition.SERVER_VERSION.getBytes();
       oStream.write(finalResult, 0, finalResult.length);
       oStream.flush();
-      
-      oStream.close();
-      client.close();
     } catch (IOException e) {
       e.printStackTrace();
       System.out.println("Configuration worker failed: port <" +
                          Definition.PORT_CONFIG + ">");
+    } finally {
+      if (null != oStream) {
+        try {
+          oStream.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket output stream.");
+        }
+        try {
+          client.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket client.");
+        }
+      }
     }
   }
 }

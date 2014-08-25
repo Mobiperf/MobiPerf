@@ -15,9 +15,10 @@ public class DownlinkWorker extends Thread {
   }
 
   public void run() {
+    OutputStream oStream = null;
     try {
       client.setSoTimeout(Definition.RECV_TIMEOUT);
-      OutputStream oStream = client.getOutputStream();
+      oStream = client.getOutputStream();
 
       SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyyMMdd:HH:mm:ss:SSS");
       long threadId = this.getId();
@@ -35,8 +36,6 @@ public class DownlinkWorker extends Thread {
         oStream.flush();
         end = System.currentTimeMillis();
       }
-      oStream.close();
-      client.close();
       String endDate = sDateFormat.format(new Date()).toString();
       System.out.println("[" + endDate + "]" + " Downlink worker <" +
                          threadId + "> Thread ends");
@@ -44,6 +43,21 @@ public class DownlinkWorker extends Thread {
       e.printStackTrace();
       System.out.println("Downlink worker failed: port <" +
                          Definition.PORT_DOWNLINK + ">");
+    } finally {
+      if (null != oStream) {
+        try {
+          oStream.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket output stream.");
+        }
+        try {
+          client.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket client.");
+        }
+      }
     }
   }
 }
