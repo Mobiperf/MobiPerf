@@ -1,4 +1,6 @@
 #!/bin/bash
+exec >> /var/log/mobiperf 2>&1
+echo "####### Running /home/michigan_1/init/initialize.sh at `date` ########"
 
 set -e
 # install java JDK

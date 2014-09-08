@@ -1,4 +1,6 @@
 #!/bin/bash
+exec >> /var/log/mobiperf 2>&1
+echo "####### Running /home/michigan_1/init/start.sh at `date` ########"
 
 cd /home/michigan_1/mobiperf
 
