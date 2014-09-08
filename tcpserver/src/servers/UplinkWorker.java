@@ -28,12 +28,14 @@ public class UplinkWorker extends Thread {
   }
 
   public void run() {
+    InputStream iStream = null;
+    OutputStream oStream = null;
     try {
       client.setSoTimeout(Definition.RECV_TIMEOUT);
       client.setTcpNoDelay(true);
 
-      InputStream iStream = client.getInputStream();
-      OutputStream oStream = client.getOutputStream(); 
+      iStream = client.getInputStream();
+      oStream = client.getOutputStream(); 
       SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyyMMdd:HH:mm:ss:SSS");
       long threadId = this.getId();
       String startDate = sDateFormat.format(new Date()).toString();
@@ -68,9 +70,6 @@ public class UplinkWorker extends Thread {
         oStream.write(finalResult, 0, finalResult.length);
         oStream.flush();
       }      
-      oStream.close();
-      iStream.close();
-      client.close();
       String endDate = sDateFormat.format(new Date()).toString();
       System.out.println("[" + endDate + "]" + " Uplink worker <" +
                          threadId + "> Thread ends");
@@ -79,6 +78,29 @@ public class UplinkWorker extends Thread {
       e.printStackTrace();
       System.out.println("Uplink worker failed: port <" +
                          Definition.PORT_DOWNLINK + ">");
+    } finally {
+      if (null != oStream) {
+        try {
+          oStream.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket output stream.");
+        }
+      }
+      if (null != iStream) {
+        try {
+          iStream.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket input stream.");
+        }
+        try {
+          client.close();
+        } catch (IOException e) {
+          // nothing to be done, really; logging is probably over kill
+          System.err.println("Error closing socket client.");
+        }
+      }
     }
   }
 
