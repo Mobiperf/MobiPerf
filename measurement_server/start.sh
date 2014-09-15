@@ -7,8 +7,9 @@ cd /home/michigan_1/mobiperf
 dl_port=6001
 ul_port=6002
 config_port=6003
+udpserver_port=31341
 
-for i in Downlink Uplink ServerConfig
+for i in Downlink Uplink ServerConfig UDPServer
 do
 	echo "Running $i ..."
 	java -Xmx128M -jar $i.jar &
@@ -16,7 +17,7 @@ do
 done
 
 echo "Verifying on ports ..."
-for port in $dl_port $ul_port $config_port
+for port in $dl_port $ul_port $config_port $udpserver_port
 do
 	is_up=$(netstat -atup | grep "$port" | wc -l)
 	if [ $is_up == 0 ];then
