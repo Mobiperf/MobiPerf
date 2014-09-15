@@ -307,7 +307,8 @@ public class PhoneUtils {
 
     int networkType = telephonyManager.getNetworkType();
     if (networkType < NETWORK_TYPES.length) {
-      return NETWORK_TYPES[telephonyManager.getNetworkType()];
+      // Network type might get changed if getNetwokrType() called twice
+      return NETWORK_TYPES[networkType];
     } else {
       return "Unrecognized: " + networkType;
     }
@@ -803,6 +804,11 @@ public class PhoneUtils {
     } catch (UnknownHostException e) {
       // Fail to resolve domain name
       Logger.e("UnknownHostException in checkDomainNameResolvable() "
+               + e.getMessage());
+      return DN_UNRESOLVABLE;
+    } catch (InvalidParameterException e) {
+     // Fail to resolve domain name
+      Logger.e("InvalidParameterException in checkIPCompatibility(). "
                + e.getMessage());
       return DN_UNRESOLVABLE;
     }

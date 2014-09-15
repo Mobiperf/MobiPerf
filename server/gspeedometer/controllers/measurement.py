@@ -17,7 +17,8 @@
 """Service to collect and visualize mobile network performance data."""
 
 __author__ = ('mdw@google.com (Matt Welsh), '
-              'drchoffnes@gmail.com (David Choffnes)')
+              'drchoffnes@gmail.com (David Choffnes), '
+              'hyyao@umich.edu (Hongyi Yao)')
 
 import logging
 
@@ -38,7 +39,8 @@ MEASUREMENT_TYPES = [('ping', 'ping'),
                      ('traceroute', 'traceroute'),
                      ('http', 'HTTP get'),
                      ('tcpthroughput', 'TCP throughput'),
-                     ('rrc', 'RRC inference')]
+                     ('rrc', 'RRC inference'),
+                     ('udp_burst', 'UDP burst')]
 
 class Measurement(webapp.RequestHandler):
   """Measurement request handler."""
@@ -273,5 +275,18 @@ class MeasurementType:
           which to increment each packet"),
           ('result_visibility', 'Whether RRC result visible to users \
           (true/false)')]))
+    elif measurement_type == 'udp_burst':
+      return MeasurementType(
+          'udp_burst', 'UDP burst',
+          SortedDict([('direction', 'Set Up for upload, otherwise download'),
+          ('target', 'Target (IP or hostname)'),
+          ('packet_size_byte', 'packet size (bytes)'),
+          ('packet_burst', 'the number of UDP packets'),
+          ('udp_interval', 'the interval between two packets (ms)'),
+          ('profile_1_freq', 'Profile 1 frequency (float)'),
+          ('profile_2_freq', 'Profile 2 frequency (float)'),
+          ('profile_3_freq', 'Profile 3 frequency (float)'),
+          ('profile_4_freq', 'Profile 4 frequency (float)'),
+          ('profile_unlimited', 'Unlimited profile frequency (float)') ]))
     else:
       raise RuntimeError('Invalid measurement type: %s' % measurement_type)

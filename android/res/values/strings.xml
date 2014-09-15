@@ -5,8 +5,8 @@
     <string name="default_user_agent">"MobiPerf-2.0 (Linux; Android)"</string>
     <string name="ping_executable">ping</string>
     <string name="ping6_executable">ping6</string>
-    <string name="serverUrl">https://openmobiledata.appspot.com</string>
-    <string name="anonymousServerUrl">https://openmobiledata.appspot.com/anonymous</string>
+    <string name="serverUrl">http://openmobiledata.appspot.com</string>
+    <string name="anonymousServerUrl">http://openmobiledata.appspot.com</string>
     <string name="testServerUrl"></string>
     <string name="menuQuit">Quit</string>
     <string name="menumPause">Pause</string>
@@ -23,7 +23,13 @@
     <string name="tracerouteTargetLabel">Target hostname/IP?</string>
     <string name="UDPBurstTargetLabel">Server name/IP?</string>
     <string name="UDPBurstDirLabel">Direction:</string>
+    <string name="UDPBurstIntervalLabel">Interval between packets(ms): </string>
     <string name="UDPBurstTargetHint">www.google.com</string>
+    <string name="UDPBurstIntervalHint">1</string>
+    <string name="UDPBurstPacketSizeLabel">Packet Size(byte): </string>
+    <string name="UDPBurstPacketSizeHint">100</string>
+    <string name="UDPBurstPacketCountLabel">Number of packets to be sent: </string>
+    <string name="UDPBurstPacketCountHint">16</string>
     <string name="httpUrlHint">www.google.com</string>
     <string name="httpUrlLabel">URL Address</string>
     <string name="checkinIntervalPrefKey">KEY_CHECKEDIN_INTERVAL</string>

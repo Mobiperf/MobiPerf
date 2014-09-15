@@ -148,7 +148,8 @@
     <TableRow
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:id="@+id/UDPBurstDirView">
+      android:id="@+id/UDPBurstDirView"
+      android:paddingTop="@dimen/marginBetweenRows">
       <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -174,6 +175,88 @@
             android:text="Down" />
         </RadioGroup> 
       </LinearLayout>          
+    </TableRow>
+    <Button android:id="@+id/UDPSettingsButton" 
+      android:layout_width="wrap_content" 
+      android:layout_height="wrap_content" 
+      android:text="Expand Advanced Settings" />
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/UDPBurstPacketSizeView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/UDPBurstPacketSizeLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/UDPBurstPacketSizeText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/UDPBurstPacketSizeHint"
+          android:inputType="number"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/UDPBurstPacketSizeHint"/>
+      </LinearLayout>        
+    </TableRow>
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/UDPBurstPacketCountView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/UDPBurstPacketCountLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/UDPBurstPacketCountText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/UDPBurstPacketCountHint"
+          android:inputType="number"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/UDPBurstPacketCountHint"/>
+      </LinearLayout>        
+    </TableRow>
+    <TableRow
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/UDPBurstIntervalView"
+      android:paddingTop="@dimen/marginBetweenRows">
+      <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|center_vertical"
+        android:textSize="@dimen/regularTextSize"
+        android:text="@string/UDPBurstIntervalLabel"/>
+      <LinearLayout
+        android:paddingLeft="@dimen/marginBetweenColumns"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <EditText android:id="@+id/UDPBurstIntervalText"
+          android:layout_height="@dimen/editTextBoxHeight"
+          android:layout_width="match_parent"
+          android:hint="@string/UDPBurstIntervalHint"
+          android:inputType="number"
+          android:lines="1"
+          android:textSize="@dimen/smallTextSize"
+          android:text="@string/UDPBurstIntervalHint"/>
+      </LinearLayout>        
     </TableRow>
     <TableRow
       android:layout_width="match_parent"
