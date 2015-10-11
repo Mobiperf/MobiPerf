@@ -37,12 +37,12 @@ public class Config {
   public static final int MAX_PACKETSIZE = 512;
   public static final int DEFAULT_UDP_PACKET_SIZE = 100;
   
-  public static final int MAX_BURSTCOUNT = 100;
+  public static final int MAX_BURSTCOUNT = 2000;
   /**
    *  TODO(Hongyi): Interval between packets in millisecond level seems too long
    *  for regular UDP transmission. Microsecond level may be better.
    */
-  public static final int MAX_INTERVAL = 1;
+  public static final int MAX_INTERVAL = 10;
 
   public static final int DEFAULT_TIMEOUT = 1000; // Max one-way delay, in msec
   public static final int GLOBAL_TIMEOUT = 60000; // 'Catch-all' case
