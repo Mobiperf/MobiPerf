@@ -438,7 +438,7 @@ public class ResourceCapManager {
               throw new MeasurementSkippedException("Over data limit");
             }
           } catch (IOException e) {
-            Logger.e("Exception occured during R/Wing of data stat file");
+            Logger.e("Exception occurred during R/Wing of data stat file");
             e.printStackTrace();
           }
 

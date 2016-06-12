@@ -741,7 +741,7 @@ class Mapper(object):
         """Internal Route matcher
         
         Matches a URL against a route, and returns a tuple of the match dict
-        and the route object if a match is successfull, otherwise it returns 
+        and the route object if a match is successful, otherwise it returns 
         empty.
         
         For internal use only.

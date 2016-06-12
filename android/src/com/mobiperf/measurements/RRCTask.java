@@ -943,7 +943,7 @@ public class RRCTask extends MeasurementTask {
     
     try {
       for (int i = 0; i < times.length; i++) {
-        // We try until we reach a threshhold or until there is no
+        // We try until we reach a threshold or until there is no
         // competing traffic.
         for (int j = 0; j < desc.GIVEUP_THRESHHOLD; j++) {
           // Sometimes the network can change in the middle of a test
@@ -1181,7 +1181,7 @@ public class RRCTask extends MeasurementTask {
     try {
       // For each inter-packet interval...
       for (int i = 0; i < times.length; i++) {
-        // On a failure, try again until a threshhold is reached.
+        // On a failure, try again until a threshold is reached.
         for (int j = 0; j < desc.GIVEUP_THRESHHOLD; j++) {
           checkIfWifi();
           if (stop) {
